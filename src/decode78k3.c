@@ -38,9 +38,28 @@
 #include "dasmxx.h"
 
 
+/******************************************************************************/
+/* TODO */
+/*
 
-char * dasm_name = "dasm78k";
-char * dasm_description = "NEC 78k";
+	- add xrefs
+	- try out table-driven parser
+	- find bugs and fix'em
+	
+
+
+
+
+*/
+
+
+//#define USE_RECURSIVE_DESCENT_PARSER
+#define USE_TABLE_PARSER
+
+
+const char * dasm_name            = "dasm78k3";
+const char * dasm_description     = "NEC 78K/III";
+const int    dasm_max_insn_length = 5;
 
 
 
@@ -137,501 +156,6 @@ static char * output_buffer = NULL;
  *        Private Functions
  *****************************************************************************/
 
-/***********************************************************
- *
- ***********************************************************/
-
-
-/*------------------------------------------------------------------------------*/
-#if 0
-
-/***********************************************************
- *
- * FUNCTION
- *      do_sjmp
- *
- * DESCRIPTION
- *      Handle sjmp (short jump) instructions
- *
- * RETURNS
- *      void
- *
- ************************************************************/
-
-static int do_sjmp( int addr, unsigned char *buf, int n )
-{
-   int column = 0;
-    short offset;
-    
-    offset = ( ( buf[0] & 0x03 ) << 8 ) | buf[1];
-    
-    if ( buf[0] & 4 )
-        offset |= 0xFC00;
-    
-    columprintf( "sjmp    %s", emitwordaddr( addr + offset ) );
-    xref_addxref( X_JMP, addr - n, addr + offset );
-	 
-	 return column;
-}
-
-/***********************************************************
- *
- * FUNCTION
- *      do_scall
- *
- * DESCRIPTION
- *      Handle scall (short call) instructions
- *
- * RETURNS
- *      void
- *
- ************************************************************/
-
-static int do_scall( int addr, unsigned char *buf, int n )
-{
-   int column = 0;
-    short offset;
-    
-    offset = ( ( buf[0] & 0x03 ) << 8 ) | buf[1];
-    
-    if ( buf[0] & 4 )
-        offset |= 0xFC00;
-    
-    columprintf( "scall   %s", emitwordaddr( addr + offset ) );
-    xref_addxref( X_CALL, addr - n, addr + offset );
-	 
-	 return column;
-}
-
-/***********************************************************
- *
- * FUNCTION
- *      do_jbc
- *
- * DESCRIPTION
- *      Handle jbc (jump if bit clear) instruction
- *
- * RETURNS
- *      void
- *
- ************************************************************/
-
-static int do_jbc( int addr, unsigned char *buf, int n )
-{
-   int column = 0;
-    columprintf( "jbc     R%02X,%d, %s", buf[1], buf[0] & 0x07, emitwordaddr( addr + (char)buf[2] ) );
-    xref_addxref( X_JMP, addr - n, addr + (char)buf[2] );
-	 return column;
-}
-
-/***********************************************************
- *
- * FUNCTION
- *      do_jbs
- *
- * DESCRIPTION
- *      Handle jbs (jump if bit set) instruction
- *
- * RETURNS
- *      void
- *
- ************************************************************/
-
-static int do_jbs( int addr, unsigned char *buf, int n )
-{
-   int column = 0;
-    columprintf( "jbs     R%02X,%d, %s", buf[1], buf[0] & 0x07, emitwordaddr( addr + (char)buf[2] ) );
-    xref_addxref( X_JMP, addr - n, addr + (char)buf[2] );
-	 return column;
-}
-
-/***********************************************************
- *
- * FUNCTION
- *      do_condjump
- *
- * DESCRIPTION
- *      Handle conditional jumps
- *
- * RETURNS
- *      void
- *
- ************************************************************/
-
-static int do_condjmp( int addr, unsigned char *buf, int n )
-{
-   int column = 0;
-    char *opcodes[] = { "jnst",     "jnh",      "jgt",      "jnc",
-                        "jnvt",     "jnv",      "jge",      "jne",
-                        "jst",      "jh",       "jle",      "jc", 
-                        "jvt",      "jv",       "jlt",      "je" };
-
-    columprintf( "%-6s  %s", opcodes[buf[0] & 0x0F], emitwordaddr( addr + (char)buf[1] ) );
-    xref_addxref( X_JMP, addr - n, addr + (char)buf[1] );
-	 
-	 return column;
-}
-
-/***********************************************************
- *
- * FUNCTION
- *      do_f0
- *
- * DESCRIPTION
- *      Handle instructions in the opcode group Fx
- *
- * RETURNS
- *      void
- *
- ************************************************************/
-
-static int do_f0( int addr, unsigned char *buf, int n )
-{
-   int column = 0;
-    char *opcodes[] = { "ret",      "",         "pushf",    "popf",
-                        "pusha",    "popa",     "idlpd",    "trap",
-                        "clrc",     "setc",     "di",       "ei",
-                        "clrvt",    "nop",      "",         "rst" };
-
-    columprintf( "%s", opcodes[buf[0] & 0x0F] );
-	 
-	return column;
-}
-
-/***********************************************************
- *
- * FUNCTION
- *      do_middle
- *
- * DESCRIPTION
- *      Handles 4x .. Bx instruction groups (the middle of the
- *       instruction table).
- *
- * RETURNS
- *      void
- *
- ************************************************************/
-
-static int do_middle( int addr, unsigned char *buf, int n, int isSigned )
-{
-   int column = 0;
-    char *opcodes[] = { "and",      "add",      "sub",      "mul",
-                        "and",      "add",      "sub",      "mul",
-                        "or",       "xor",      "cmp",      "div",
-                        "ld",       "addc",     "subc",     "ldbse" };
-
-    int op;
-    int i;
-    
-    op = 0;
-    
-        /*
-        01.t00..  and     b
-        01.t01..  add     b
-        01.t10..  sbb     b
-        01.t11..  mulu    b
-        100t00..  or      b
-        100t01..  xor     b
-        100t10..  cmp     b
-        100t11..  divu    b
-        101t00..  ld      b
-        101t01..  addc    b
-        101t10..  subc    b
-        101t11..  ldbse  /ze
-        */
-    
-    if ( buf[0] & 0x80 ) op |= 8;
-    if ( buf[0] & 0x20 ) op |= 4;
-    if ( buf[0] & 0x08 ) op |= 2;
-    if ( buf[0] & 0x04 ) op |= 1;
-    
-    if ( op == 0x0F )   /* Handle ldb{s|z}e */
-        columprintf( "%s", ( buf[0] & 0x10 ) ? "ldbse " : "ldbze " );
-    else
-    {
-        if ( isSigned )
-            columprintf( "%s%s%c", opcodes[op], 
-                    ( isSigned ) ? "" : "u", 
-                    ( buf[0] & 0x10 ) ? 'b' : ' ' );
-        else
-            columprintf( "%s%c", opcodes[op], ( buf[0] & 0x10 ) ? 'b' : ' ' );
-    }
-    
-    for ( i = strlen( opcodes[op] ); i < 7; i++ )
-        putchar( ' ' ), column++;
-    
-    switch( buf[0] & 0x3 )
-    {
-        case ADDR_DIRECT:
-            if ( n == 3 )
-                columprintf( "R%02X, R%02X", buf[2], buf[1] );
-            else
-                columprintf( "R%02X, R%02X, R%02X", buf[3], buf[2], buf[1] );
-            break;
-            
-        case ADDR_IMMED:
-            if ( buf[0] & 0x10 || op == 0x0F)
-            {
-                /* byte const */
-                
-                if ( n == 4 )
-                    columprintf( "R%02X, ", buf[3] );
-                
-                columprintf( "R%02X, #%02X", buf[2], buf[1] );
-            }
-            else
-            {
-                /* word const */
-                if ( n == 5 )
-                    columprintf( "R%02X, ", buf[4] );
-                columprintf( "R%02X, #%s", buf[3], 
-                        emitwordaddr( getaddress(&buf[1]) ) );
-                xref_addxref( X_DATA, addr - n, getaddress(&buf[1]) );
-            }
-            break;
-
-        case ADDR_INDIR:
-            if ( n == 4 )
-                columprintf( "R%02X, ", buf[3] );
-            
-            if ( n >= 3 )
-                columprintf( "R%02X, ", buf[2] );
-            
-            columprintf( "[R%02X]", buf[1] & 0xFE );
-            if ( buf[1] & 0x01 )
-                putchar( '+' ), column++;
-
-            break;
-
-        case ADDR_INDEX:
-            if ( ( buf[0] & 0xE0 ) == 0x40 )
-            {
-                /* three-op instruction */
-                if ( buf[1] & 0x01 )
-                {
-                    /* word offset */
-                    columprintf( "R%02X, R%02X, %s[R%02X]", buf[5], buf[4], 
-                            emitwordaddr( getaddress(&buf[2]) ), buf[1] & 0xFE );
-                    xref_addxref( X_PTR, addr - n, getaddress( &buf[2] ) );
-                }
-                else
-                {
-                    /* byte offset */
-                    columprintf( "R%02X, R%02X, %02X[R%02X]", buf[4], buf[3], buf[2], buf[1] & 0xFE );
-                }
-            }
-            else
-            {
-                /* two-op instruction */                
-                if ( buf[1] & 0x01 )
-                {
-                    /* word offset */
-                    columprintf( "R%02X, %s[R%02X]", buf[4], emitwordaddr( getaddress(&buf[2]) ),
-                            buf[1] & 0xFE );
-                    xref_addxref( X_PTR, addr - n, getaddress(&buf[2]) );                    
-                }
-                else
-                {
-                    /* byte offset */
-                    columprintf( "R%02X, %02X[R%02X]", buf[3], buf[2], buf[1] & 0xFE );
-                }
-            }
-            break;
-    }
-	 
-	 return column;
-}
-
-/***********************************************************
- *
- * FUNCTION
- *      do_00
- *
- * DESCRIPTION
- *      Handle instructions in the opcode group 0x
- *
- * RETURNS
- *      void
- *
- ************************************************************/
-
-static int do_00( int addr, unsigned char *buf, int n )
-{
-   int column = 0;
-    char *opcodes[] = { "skip",     "clr",      "not",      "neg",
-                        "",         "dec",      "ext",      "inc",
-                        "shr",      "shl",      "shra",     "",
-                        "shrl",     "shll",     "shral",    "norml",
-            
-                        "",         "clrb",     "notb",     "negb",
-                        "",         "decb",     "extb",     "incb",
-                        "shrb",     "shlb",     "shrab",    "",
-                        "",         "",         "",         "" };
-    
-    columprintf( "%-6s  ", opcodes[buf[0] & 0x1F] );
-    
-    if ( buf[0] & 0x08 )
-    {
-        columprintf( "R%02X, ", buf[2] );
-        if ( buf[0] != 0x0F && buf[1] < 0x10 )
-            columprintf( "#%02X", buf[1] );
-        else
-            columprintf( "R%02X", buf[1] );
-    }
-    else
-        columprintf( "R%02X", buf[1] );
-		  
-	return column;
-}
-
-/***********************************************************
- *
- * FUNCTION
- *      do_c0
- *
- * DESCRIPTION
- *      Handle instructions in the opcode group Cx
- *       store, push and pop
- *
- * RETURNS
- *      void
- *
- ************************************************************/
-
-static int do_c0( int addr, unsigned char *buf, int n )
-{
-   int column = 0;
-    char *opcodes[] = { "st",       "bmov",     "st",       "st",
-                        "stb",      "cmpl",     "stb",      "stb",
-                        "push",     "push",     "push",     "push", 
-                        "pop",      "",         "pop",      "pop" };
-
-    if ( buf[0] == 0xC1 )
-    {
-        /* 80196 -- bmov */
-        
-        columprintf( "bmov    R%02X, R%02X", buf[1], buf[2] );
-    }
-    else if ( buf[0] == 0xC5 )
-    {
-        /* 80196 -- cmpl */
-        
-        columprintf( "cmpl    R%02X, R%02X", buf[1], buf[2] );        
-    }
-    else 
-    {
-        columprintf( "%-6s  ", opcodes[buf[0] & 0x0F] );
-        
-        switch( buf[0] & 0x03 )
-        {
-            case ADDR_DIRECT:
-                if ( n == 3 )
-                    columprintf( "R%02X, ", buf[2] );
-                columprintf( "R%02X", buf[1] );
-                break;
-                
-            case ADDR_IMMED:    /* only PUSH words on to stack */
-                columprintf( "#%s", emitwordaddr( getaddress(&buf[1]) ) );
-                break;
-                
-            case ADDR_INDIR:
-                if ( n == 3 )
-                    columprintf( "R%02X, ", buf[2] );
-                columprintf( "[R%02X]", buf[1] & 0xFE );
-                if ( buf[1] & 0x01 )
-                    putchar( '+' ), column++;
-                break;
-                
-            case ADDR_INDEX:
-                if ( buf[0] & 0x08 )
-                {
-                    /* push/pop */
-                    if ( n == 3 )
-                        columprintf( "%02X[R%02X]", buf[2], buf[1] & 0xFE );
-                    else
-                    {
-                        columprintf( "%s[R%02X]", emitwordaddr( getaddress(&buf[2]) ), buf[1] & 0xFE );
-                        xref_addxref( X_PTR, addr - n, getaddress(&buf[2]) );
-                    }
-                }
-                else
-                {
-                    /* st(b) */
-                    if ( n == 4 )
-                        columprintf( "R%02X, %02X[R%02X]", buf[3], buf[2], buf[1] & 0xFE );
-                    else
-                    {
-                        columprintf( "R%02X, %s[R%02X]", buf[4], emitwordaddr( getaddress(&buf[2]) ),
-                                buf[1] & 0xFE);
-                        xref_addxref( X_PTR, addr - n, getaddress(&buf[2]) );
-                    }
-                }
-                break;
-        }
-    }
-	 
-	 return column;
-}
-
-/***********************************************************
- *
- * FUNCTION
- *      do_e0
- *
- * DESCRIPTION
- *      Handle instructions in the opcode group Ex
- *       djnz, br, ljmp, lcall
- *
- * RETURNS
- *      void
- *
- ************************************************************/
- 
-#define OP_DJNZ     0xE0
-#define OP_DJNZW    0xE1
-#define OP_BR       0xE3
-#define OP_LJMP     0xE7
-#define OP_LCALL    0xEF
-
-static int do_e0( int addr, unsigned char *buf, int n )
-{
-   int column = 0;
-    switch(buf[0])
-    {
-        case OP_DJNZ:
-            columprintf( "djnz    R%02X, %s", buf[1], emitwordaddr( addr + (char)buf[2] ) );
-            xref_addxref( X_JMP, addr - n, addr + (char)buf[2] );
-            break;
-
-        case OP_DJNZW:
-            /* 80196 */
-            columprintf( "djnzw   R%02X, %s", buf[1], emitwordaddr( addr + (char)buf[2] ) );
-            xref_addxref( X_JMP, addr - n, addr + (char)buf[2] );
-            break;
-            
-        case OP_BR:
-            columprintf( "br      [R%02X]", buf[1] );
-            break;
-            
-        case OP_LJMP:
-            columprintf( "ljmp    %s", emitwordaddr( addr + getoffset(buf + 1) ) );
-            xref_addxref( X_JMP, addr - n, addr + getoffset(buf + 1) );
-            break;
-        
-        case OP_LCALL:
-            columprintf( "lcall   %s", emitwordaddr( addr + getoffset(buf + 1) ) );
-            xref_addxref( X_CALL, addr - n, addr + getoffset(buf + 1) );
-            break;
-        
-        default:
-            columprintf("???");
-    }
-	 
-	 return column;
-}
-#endif
-
-/*------------------------------------------------------------------------------*/
 
 
 static void opcode( const char *opcode )
@@ -654,9 +178,9 @@ static void operand( const char *operand, ... )
 
 
 
-
-
-
+/*********************************************************************************/
+#if defined(USE_RECURSIVE_DESCENT_PARSER)
+/*********************************************************************************/
 
 static void arith_operands2( int opc, int opc2 )
 {
@@ -718,7 +242,12 @@ case 0x11: case 0x13:
 case 0x0B: case 0x0F:
 		opcode( "call" );
 		operand( op == 0x0B ? "%s" : "[%s]", RP1[arg] );
-		break;	
+		break;
+		
+case 0x19:
+		opcode( arg == 0x00 ? "incw" : "decw" );
+		operand( "SP" );
+		break;
 	}
 }
 
@@ -1863,6 +1392,206 @@ case 0x01:
 	operand( "........%02X %02X %02X", opc, opc2, opc3 );
    return addr;
 }
+
+/******************************************************************************/
+#elif defined(USE_TABLE_PARSER)
+/******************************************************************************/
+
+
+
+typedef struct optab_s {
+	UBYTE opc;
+	const char * opcode;
+	void (*operands)( FILE *, ADDR *, UBYTE); /* operand function */
+	enum {
+		OPTAB_UNUSED,
+		OPTAB_INSN,
+		OPTAB_RANGE,
+		OPTAB_MASK,
+		OPTAB_TABLE
+	} type;
+	union {
+		struct {
+			UBYTE min, max;
+		} range;
+		struct {
+			UBYTE mask, val;
+		} mask;
+		struct optab_s * table;
+	} u;
+} optab_t;
+
+
+/******************************************************************************/
+
+#define TABLE(M_tablename)		{ .type = OPTAB_TABLE, .u.table = M_tablename },
+
+#define INSN(M_opcode, M_ops, M_opc)				{ 	.opc      = M_opc, 				\
+																.type     = OPTAB_INSN, 			\
+																.opcode   = M_opcode, 			\
+																.operands = operand_ ## M_ops 	\
+															},
+
+#define RANGE(M_opcode, M_ops, M_min, M_max)	{ 	.type = OPTAB_RANGE, 				\
+																.opcode = M_opcode,				\
+																.operands = operand_ ## M_ops, \
+																.u.range.min = M_min,				\
+																.u.range.max = M_max				\
+															},
+																	
+#define MASK(M_opcode, M_ops, M_mask, M_val)	{ 	.type = OPTAB_MASK,				\
+																.opcode = M_opcode,				\
+																.operands = operand_ ## M_ops, \
+																.u.mask.mask = M_mask,			\
+																.u.mask.val = M_val				\
+															},
+
+#define END		{ .opcode = NULL }
+
+
+/******************************************************************************/
+
+void operand_none( FILE * f, ADDR * addr, UBYTE opc )
+{
+	/* empty */
+}
+
+void operand_r1_byte( FILE * f, ADDR * addr, UBYTE opc )
+{
+	UBYTE data = next( f, addr );
+	UBYTE r1 = opc & 0x07;
+	
+	operand( "R%d, #" FORMAT_NUM_8BIT, r1, data );
+}
+
+void operand_r1( FILE * f, ADDR * addr, UBYTE opc )
+{
+	UBYTE r1 = opc & 0x07;
+	
+	operand( "R%d", r1 );
+}
+
+void operand_rp2( FILE * f, ADDR * addr, UBYTE opc )
+{
+	UBYTE rp2 = opc & 0x03;
+	
+	operand( "%s", RP2[rp2] );
+}
+
+/******************************************************************************/
+
+static optab_t base_optab[] = {
+
+	RANGE( "incw", rp2, 0x44, 0x47 )
+	
+	RANGE( "decw", rp2, 0x4C, 0x4F )
+
+	INSN( "ei", none, 0x4B )
+
+	
+	
+	
+	
+	RANGE( "mov", r1_byte, 0xB8, 0xBF )
+	
+	RANGE( "inc", r1, 0xC0, 0xC7 )
+	RANGE( "dec", r1, 0xC8, 0xCF )
+
+
+	END
+};
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      walk_table
+ *
+ * DESCRIPTION
+ *      Disassembles the next instruction in the input stream.
+ *      f - file stream to read (pass to calls to next() )
+ *      outbuf - pointer to output buffer
+ *      addr - address of first input byte for this insn
+ *
+ * RETURNS
+ *      1 if a valid instruction found, else 0.
+ *
+ ************************************************************/
+
+static int walk_table( FILE * f, ADDR * addr, optab_t * optab, UBYTE opc )
+{
+	if ( optab == NULL )
+		return;
+		
+	while ( optab->opcode != NULL )
+	{
+		if ( optab->type == OPTAB_TABLE && optab->opc == opc )
+		{
+			opc = next( f, addr );
+			return walk_table( f, addr, optab->u.table, opc );
+		}
+		else if ( ( optab->type == OPTAB_INSN && opc == optab->opc )
+					||
+					 ( optab->type == OPTAB_RANGE && opc >= optab->u.range.min && opc <= optab->u.range.max )
+					||
+					 ( optab->type == OPTAB_MASK && ( ( opc & optab->u.mask.mask ) == optab->u.mask.val ) ) )
+		{
+			opcode( optab->opcode );
+			optab->operands( f, addr, opc );
+			return 1;
+		}
+		
+		optab++;	
+	}
+	
+	return 0;
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      dasm_insn
+ *
+ * DESCRIPTION
+ *      Disassembles the next instruction in the input stream.
+ *      f - file stream to read (pass to calls to next() )
+ *      outbuf - pointer to output buffer
+ *      addr - address of first input byte for this insn
+ *
+ * RETURNS
+ *      address of next input byte
+ *
+ ************************************************************/
+ 
+ADDR dasm_insn( FILE *f, char *outbuf, ADDR addr )
+{
+	int opc;
+	UWORD insn_addr = addr;
+	int found = 0;
+	
+	output_buffer = outbuf;
+
+	opc = next( f, &addr );
+
+	found = walk_table( f, &addr, base_optab, opc );
+	
+	if ( !found )
+	{
+		opcode( "???" );
+	}	
+	
+	return addr;
+}
+
+/******************************************************************************/
+#else
+/******************************************************************************/
+
+#error Undefined parser type!!!
+
+/******************************************************************************/
+#endif
+/******************************************************************************/
+
 
 /******************************************************************************/
 /******************************************************************************/

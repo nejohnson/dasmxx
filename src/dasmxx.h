@@ -29,6 +29,23 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  *****************************************************************************/
+ 
+#ifndef _DASMXX_H_
+#define _DASMXX_H_
+
+
+
+/*****************************************************************************/
+/*                              Machine Types                                */
+/*****************************************************************************/
+
+typedef unsigned char      UBYTE;
+typedef signed char        BYTE;
+typedef unsigned short     UWORD;
+typedef signed short       WORD;
+typedef unsigned int       ADDR;
+
+#define FORMAT_ADDR		"%04X"
 
 /*****************************************************************************/
 /*                              System / Utility                             */
@@ -36,37 +53,45 @@
 
 extern void error( char *fmt, ... );
 extern void *zalloc( size_t n );
-extern int next( FILE* fp, int *addr );
+extern UBYTE next( FILE* fp, ADDR *addr );
 extern char * dupstr( const char *s );
 
 /*****************************************************************************/
 /*                              Cross Referencing                            */
 /*****************************************************************************/
 
-#define X_JMP           0
-#define X_CALL          1
-#define X_IMM           2
-#define X_TABLE         3
-#define X_DIRECT        4
-#define X_DATA          5
-#define X_PTR           6
+typedef enum {
+   X_NONE   = -1,
+   X_JMP    = 0,
+   X_CALL   = 1,
+   X_IMM    = 2,
+   X_TABLE  = 3,
+   X_DIRECT = 4,
+   X_DATA   = 5,
+   X_PTR    = 6
+} XREF_TYPE;
 
-extern void xref_setmin( int min );
-extern void xref_setmax( int max );
-extern int  xref_inrange( int ref );
-extern void xref_addxref( int type, int addr, int ref );
-extern void xref_addxreflabel( int ref, char *label );
-extern char * xref_findaddrlabel( int addr );
-extern char * xref_genwordaddr( char * buf, const char * prefix, int addr );
+extern void xref_setmin( ADDR min );
+extern void xref_setmax( ADDR max );
+extern int  xref_inrange( ADDR ref );
+extern void xref_addxref( XREF_TYPE type, ADDR addr, ADDR ref );
+extern void xref_addxreflabel( ADDR ref, char *label );
+extern char * xref_findaddrlabel( ADDR addr );
+extern char * xref_genwordaddr( char * buf, const char * prefix, ADDR addr );
 extern void xref_dump( void );
 
 /*****************************************************************************/
 /*                              Disassembler                                 */
 /*****************************************************************************/
 
-extern int dasm_insn( FILE *f, char * outbuf, int addr );
-extern char * dasm_name;
-extern char * dasm_description;
+extern ADDR dasm_insn( FILE *f, char * outbuf, ADDR addr );
+extern const char * dasm_name;
+extern const char * dasm_description;
+extern const int    dasm_max_insn_length;
+
+/******************************************************************************/
+
+#endif
 
 /******************************************************************************/
 /******************************************************************************/

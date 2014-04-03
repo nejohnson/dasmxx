@@ -8,7 +8,7 @@
 #
 #################################################
 
-TARGETS = dasm78k dasm96
+TARGETS = dasm78k3 dasm96
 
 CORE_OBJS = dasmxx.o xref.o
 
@@ -18,17 +18,17 @@ all:	${TARGETS}
 
 #################################################
 
-D78K_OBJS = ${CORE_OBJS} decode78k.o
+D78K3_OBJS = ${CORE_OBJS} decode78k3.o
 
-dasm78k: ${D78K_OBJS}
-	$(CC) ${D78K_OBJS} -o dasm78k
+dasm78k3: ${D78K3_OBJS}
+	$(CC) ${D78K3_OBJS} -o ${@}
 
 #################################################
 
 D96_OBJS = ${CORE_OBJS} decode96.o
 
 dasm96: ${D96_OBJS}
-	$(CC) ${D96_OBJS} -o dasm96
+	$(CC) ${D96_OBJS} -o ${@}
 
 #################################################
 	

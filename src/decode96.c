@@ -39,8 +39,9 @@
 
 
 
-char * dasm_name = "dasm96";
-char * dasm_description = "Intel 8096";
+const char * dasm_name            = "dasm96";
+const char * dasm_description     = "Intel 8096";
+const int    dasm_max_insn_length = 8;
 
 
 
@@ -643,7 +644,7 @@ static void do_e0( int addr, unsigned char *buf, int n )
  *      address of next input byte
  *
  ************************************************************/
-int dasm_insn( FILE *f, char * outbuf, int addr )
+ADDR dasm_insn( FILE *f, char * outbuf, ADDR addr )
 {
 	int isSigned = 0;
 	int opc;

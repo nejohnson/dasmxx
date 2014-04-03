@@ -113,7 +113,7 @@ struct comment {
 
 struct fmt {
     int             mode;
-    int             addr;
+    ADDR             addr;
     char            *name;
     struct fmt      *n;
 };
@@ -124,6 +124,7 @@ struct fmt {
 #define BYTES_PER_LINE  16
 #define NOTE_BUF_SIZE   1024
 #define COL_LINECOMMENT 60
+
 
 /*****************************************************************************
  *        Global Data
@@ -150,10 +151,10 @@ static char datchars[] = "cbsewapv";
 
 
 
-char *inputfile = NULL;
+static char *inputfile = NULL;
 
-
-
+static UBYTE *insn_byte_buffer = NULL;
+static UBYTE  insn_byte_idx = 0;
 
 
 /*****************************************************************************
@@ -178,7 +179,7 @@ char *inputfile = NULL;
  *
  ************************************************************/
 
-static void addcomment( struct comment **list, int ref, char *text )
+static void addcomment( struct comment **list, ADDR ref, char *text )
 {
     struct comment  *p;
     struct comment  *q;
@@ -191,7 +192,7 @@ static void addcomment( struct comment **list, int ref, char *text )
     
     /* Find entry in specified comment list */
     
-    while ( p != NULL && (unsigned)ref > (unsigned)p->ref )
+    while ( p != NULL && ref > p->ref )
     {
         q = p;
         p = p->next;
@@ -238,7 +239,7 @@ static void addcomment( struct comment **list, int ref, char *text )
  *
  ************************************************************/
 
-static int printcomment( struct comment *list, int ref, int padding )
+static int printcomment( struct comment *list, ADDR ref, int padding )
 {
     int i;
     char *p;
@@ -285,7 +286,7 @@ static int printcomment( struct comment *list, int ref, int padding )
  *
  ************************************************************/
 
-static int commentexists( struct comment *list, int ref )
+static int commentexists( struct comment *list, ADDR ref )
 {
     while( list )
     {
@@ -311,14 +312,14 @@ static int commentexists( struct comment *list, int ref )
  *
  ************************************************************/
 
-static int emitaddr( int addr )
+static int emitaddr( ADDR addr )
 {
 	char * label = xref_findaddrlabel( addr );
 
    if ( label )
       printf( "%s:\n", label );
 
-   return printf( "    %04X:    ", addr);
+   return printf( "    " FORMAT_ADDR ":    ", addr);
 }
 
 /***********************************************************
@@ -334,7 +335,7 @@ static int emitaddr( int addr )
  *
  ************************************************************/
 
-static void addlist( int addr, int mode, char *name )
+static void addlist( ADDR addr, int mode, char *name )
 {
     struct fmt *p = list, *q = NULL;
     
@@ -385,7 +386,7 @@ static void readlist( char *name )
 {
     FILE *f;
     char buf[256], *p, *q;
-    int addr;
+    ADDR addr;
     int cmd;
     char notebuf[NOTE_BUF_SIZE];
     int notelength;
@@ -454,11 +455,11 @@ static void readlist( char *name )
 
                     case 'r':   /* Xref range */
 						  {
-							  unsigned int rng;
+							  ADDR rng;
 							  
 							  sscanf( p + 2, "%x", &rng );
                         if ( p[1] == '0' )
-                            xref_setmin(rng);
+                            xref_setmin( rng );
                         else
                             xref_setmax( rng );
                         break;
@@ -656,14 +657,17 @@ char * dupstr( const char *s )
  *
  ************************************************************/
 
- int next( FILE* fp, int *addr )
+UBYTE next( FILE* fp, ADDR *addr )
 {
-	int c;
+	UBYTE c;
 	
-	c = getc( fp );
+	c = (UBYTE)getc( fp );
 	if ( feof( fp ) )
 		error( "run out of input file" );
 		
+	if ( insn_byte_idx < dasm_max_insn_length )
+		insn_byte_buffer[insn_byte_idx++] = c;
+	
 	(*addr)++;
 	return c;
 }
@@ -686,7 +690,7 @@ int main(int argc, char **argv)
 	 FILE *f;
 	 long filelength;
 	 int c;
-	 int addr, startaddr, lineaddr;
+	 ADDR addr, startaddr, lineaddr;
 	 int i;
 	 int mode;
 	 char *name;
@@ -741,6 +745,9 @@ int main(int argc, char **argv)
     mode = list->mode;
     name = list->name;
     list = list->n;
+	 
+	 insn_byte_buffer = zalloc( dasm_max_insn_length );
+	 insn_byte_idx = 0;
     
     while ( !feof( f ) && list )
     {
@@ -763,10 +770,21 @@ int main(int argc, char **argv)
             
             column = emitaddr( addr);
             lineaddr = addr;
+				insn_byte_idx = 0;
             
 				{
 					char insnbuf[256];
+					
 				   addr = dasm_insn( f, insnbuf, addr );
+					
+					for ( i = 0; i < dasm_max_insn_length; i++ )
+						if ( i < insn_byte_idx )
+							printf( "%02X ", insn_byte_buffer[i] );
+						else
+							printf( "   " );
+							
+					printf( "   " );
+					
 					i = printf("%s", insnbuf );
 				}
 				column += i;
@@ -928,6 +946,7 @@ int main(int argc, char **argv)
                 c = c | ((unsigned char)next( f, &addr ) << 8 );
 
                 printf( "%s\n", xref_genwordaddr( NULL, "", c ) );
+					 xref_addxref( X_TABLE, addr - 2, c );
                 
                 i++;
             }

@@ -42,14 +42,14 @@
  *****************************************************************************/
 
 struct addrlist {
-    int             addr;
-    int             type;
+    ADDR           addr;
+    XREF_TYPE       type;
     struct addrlist *n;
 };
 
 struct xref {
 	struct xref     *n;
-   int             ref;
+   ADDR            ref;
    char            *label;
    struct addrlist *list;
 };
@@ -58,11 +58,10 @@ struct xref {
  *        Global Data
  *****************************************************************************/
 
-struct xref     *xref       = NULL;
+struct xref *xref = NULL;
 
-unsigned int    minxref     = 0;
-unsigned int    maxxref     = 0xffff;
-
+ADDR    minxref  = 0;
+ADDR    maxxref  = 0xffff;
 
 /*****************************************************************************
  *        Public Functions
@@ -81,7 +80,7 @@ unsigned int    maxxref     = 0xffff;
  *
  ************************************************************/
  
-void xref_setmin( int min )
+void xref_setmin( ADDR min )
 {
    minxref = min;
 }
@@ -99,7 +98,7 @@ void xref_setmin( int min )
  *
  ************************************************************/
  
-void xref_setmax( int max )
+void xref_setmax( ADDR max )
 {
    maxxref = max;
 }
@@ -117,9 +116,9 @@ void xref_setmax( int max )
  *
  ************************************************************/
  
-int  xref_inrange( int ref )
+int  xref_inrange( ADDR ref )
 {
-   if ( minxref <= (unsigned)ref && (unsigned)ref <= maxxref )
+   if ( minxref <= ref && ref <= maxxref )
         return 1;
    return 0;
 }
@@ -137,7 +136,7 @@ int  xref_inrange( int ref )
  *
  ************************************************************/
 
- void xref_addxref( int type, int addr, int ref )
+ void xref_addxref( int type, ADDR addr, ADDR ref )
 {
     struct xref     *p;
     struct xref     *q;
@@ -157,7 +156,7 @@ int  xref_inrange( int ref )
     
     /* Find entry in list for xref */
     
-    while ( p != NULL && (unsigned)ref > (unsigned)p->ref )
+    while ( p != NULL && ref > p->ref )
     {
         q = p;
         p = p->n;
@@ -204,7 +203,7 @@ int  xref_inrange( int ref )
  *
  ************************************************************/
 
-void xref_addxreflabel( int ref, char *label )
+void xref_addxreflabel( ADDR ref, char *label )
 {
     struct xref     *p;
     struct xref     *q;
@@ -218,7 +217,7 @@ void xref_addxreflabel( int ref, char *label )
     
     /* Find entry in list for xref */
     
-    while ( p != NULL && (unsigned)ref > (unsigned)p->ref )
+    while ( p != NULL && ref > p->ref )
     {
         q = p;
         p = p->n;
@@ -264,7 +263,7 @@ void xref_addxreflabel( int ref, char *label )
  *
  ************************************************************/
 
-char * xref_findaddrlabel( int addr )
+char * xref_findaddrlabel( ADDR addr )
 {
    struct xref *p;
     
@@ -289,21 +288,25 @@ char * xref_findaddrlabel( int addr )
  *
  ************************************************************/
 
-char * xref_genwordaddr( char * buf, const char * prefix, int addr )
+char * xref_genwordaddr( char * buf, const char * prefix, ADDR addr )
 {
-	 char * label = xref_findaddrlabel( addr );
+	char * label = xref_findaddrlabel( addr );
 	 
-    if ( label )
-       return label;
+	if ( label )
+		return label;
     
-    /* Either xref not found or not labelled */
-    if ( buf == NULL ) buf = zalloc( 5 + prefix ? strlen( prefix ) : 0 );
-    if ( prefix )
-	 	sprintf( buf, "%s%04X", prefix, (unsigned short)addr );
+   /* Either xref not found or not labelled */
+	 
+	if ( buf )
+		sprintf( buf, "%s" FORMAT_ADDR, prefix, addr );
 	else
-	   sprintf( buf, "%04X", (unsigned short)addr );
+	{
+		char local[256];
+		sprintf( local, "%s" FORMAT_ADDR, prefix, addr );
+		buf = dupstr(local);	
+	}
     
-    return buf;
+   return buf;
 }
 
 /***********************************************************
@@ -324,37 +327,43 @@ void xref_dump( void )
     struct xref *p;
     struct addrlist *q;
 
+	 puts( "---------------------------\n" );
     for ( p = xref; p != NULL; p = p->n )
     {
         int i = 0;
+		  
+		  if ( !p->list )
+		    continue;
         
         for (q = p->list; q != NULL; q = q->n )
         {
             if ( i++ == 0 )
-                printf( "%04X: ", p->ref );
+                printf( FORMAT_ADDR ": ", p->ref );
             else
                 printf( "      " );
             
             switch( q->type )
             {
-                case X_CALL : printf( "Call  @ " ); break;
-                case X_JMP  : printf( "Jump  @ " ); break;
-                case X_IMM  : printf( "Imm   @ " ); break;
-                case X_TABLE: printf( "Table @ " ); break;
-                case X_DATA : printf( "Data  @ " ); break;
-                case X_PTR  : printf( "Ptr   @ " ); break;
+                case X_JMP    : printf( "Jump   @ " ); break;
+                case X_CALL   : printf( "Call   @ " ); break;
+                case X_IMM    : printf( "Imm    @ " ); break;
+                case X_TABLE  : printf( "Table  @ " ); break;
+                case X_DIRECT : printf( "Direct @ " ); break;
+                case X_DATA   : printf( "Data   @ " ); break;
+                case X_PTR    : printf( "Ptr    @ " ); break;
                 default:
-                    printf( "\nILLEGAL XREF TYPE %d, addr=%04X. Aborting..\n",
+                    printf( "\nILLEGAL XREF TYPE %d, addr=" FORMAT_ADDR ". Aborting..\n",
                         q->type, q->addr );
                     return;
             }
-            printf( "%04X", q->addr );
+            printf( FORMAT_ADDR, q->addr );
             if ( p->label && i == 1 )
                 printf( "   (%s)", p->label );
             putchar( '\n' );
         }
         putchar( '\n' );
     }
+	 puts( "---------------------------\n" );
 }
  
 /******************************************************************************/
