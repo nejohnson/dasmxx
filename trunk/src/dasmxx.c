@@ -659,18 +659,48 @@ char * dupstr( const char *s )
 
 UBYTE next( FILE* fp, ADDR *addr )
 {
-	UBYTE c;
+	int c;
 	
-	c = (UBYTE)getc( fp );
-	if ( feof( fp ) )
+	c = fgetc( fp );
+	if ( c == EOF )
 		error( "run out of input file" );
 		
 	if ( insn_byte_idx < dasm_max_insn_length )
-		insn_byte_buffer[insn_byte_idx++] = c;
+		insn_byte_buffer[insn_byte_idx++] = (UBYTE)c;
 	
 	(*addr)++;
-	return c;
+	return (UBYTE)c;
 }
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      peek
+ *
+ * DESCRIPTION
+ *      Gets the next byte from the file stream but does not
+ *       increment the stream pointer.  If EOF then abort.
+ *
+ * RETURNS
+ *      next byte in fp
+ *
+ ************************************************************/
+
+UBYTE peek( FILE *fp )
+{
+	int c;
+	
+	c = fgetc( fp );
+	if ( c == EOF )
+		error( "run out of input file" );
+		
+	c = ungetc( c, fp );
+	if ( c == EOF )
+		error( "unable to peek at input file" );
+	
+	return (UBYTE)c;
+}
+ 
 
 /***********************************************************
  *

@@ -54,6 +54,7 @@ typedef unsigned int       ADDR;
 extern void error( char *fmt, ... );
 extern void *zalloc( size_t n );
 extern UBYTE next( FILE* fp, ADDR *addr );
+extern UBYTE peek( FILE *fp );
 extern char * dupstr( const char *s );
 
 /*****************************************************************************/
