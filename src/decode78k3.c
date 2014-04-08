@@ -1423,6 +1423,26 @@ static void operand_none( FILE * f, ADDR * addr, UBYTE opc )
 /***********************************************************
  *
  * FUNCTION
+ *      operand_bit
+ *
+ * DESCRIPTION
+ *      Process ".bit" operand.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_bit( FILE * f, ADDR * addr, UBYTE opc )
+{
+	UBYTE bit = opc & 0x07;
+	
+	operand( ".%d", bit );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
  *      operand_r
  *
  * DESCRIPTION
@@ -1460,6 +1480,27 @@ static void operand_r1( FILE * f, ADDR * addr, UBYTE opc )
 	UBYTE r1 = opc & 0x07;
 	
 	operand( "R%d", r1 );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_r2
+ *
+ * DESCRIPTION
+ *      Process "r2" operand.
+ *			r2 comes from opc byte.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_r2( FILE * f, ADDR * addr, UBYTE opc )
+{
+	UBYTE r2 = opc & 0x01;
+	
+	operand( "%s", R2[r2] );
 }
 
 /***********************************************************
@@ -1528,11 +1569,55 @@ static void operand_rp2( FILE * f, ADDR * addr, UBYTE opc )
 /***********************************************************
  *
  * FUNCTION
+ *      operand_RBn
+ *
+ * DESCRIPTION
+ *      Process "RBn" operands.
+ *			n comes from opc byte.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_RBn( FILE * f, ADDR * addr, UBYTE opc )
+{
+	UBYTE n = opc & 0x07;
+	
+	operand( "RB%d", n );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_RBn_ALT
+ *
+ * DESCRIPTION
+ *      Process "RBn,ALT" operands.
+ *			n comes from opc byte.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_RBn_ALT( FILE * f, ADDR * addr, UBYTE opc )
+{
+	UBYTE n = opc & 0x07;
+	
+	operand( "RB%d", n );
+	COMMA;
+	operand( "ALT" );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
  *      operand_byte
  *
  * DESCRIPTION
  *      Process "#byte" operands.
- *			byte comes from opc byte.
+ *			byte comes from next byte.
  *
  * RETURNS
  *      void
@@ -1541,7 +1626,9 @@ static void operand_rp2( FILE * f, ADDR * addr, UBYTE opc )
  
 static void operand_byte( FILE * f, ADDR * addr, UBYTE opc )
 {
-	operand( "#" FORMAT_NUM_8BIT, opc );
+   UBYTE byte = next( f, addr );
+	
+	operand( "#" FORMAT_NUM_8BIT, byte );
 }
 
 /***********************************************************
@@ -1560,7 +1647,30 @@ static void operand_byte( FILE * f, ADDR * addr, UBYTE opc )
  
 static void operand_saddr( FILE * f, ADDR * addr, UBYTE opc )
 {
-	operand( FORMAT_NUM_16BIT, opc + SADDR_OFFSET );
+   UBYTE saddr_offset = next( f, addr );
+	
+	operand( FORMAT_NUM_16BIT, saddr_offset + SADDR_OFFSET );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_saddrp
+ *
+ * DESCRIPTION
+ *      Process "saddrp" operands.
+ *			saddr comes from opc byte.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_saddrp( FILE * f, ADDR * addr, UBYTE opc )
+{
+   UBYTE saddr_offset = next( f, addr );
+	
+	operand( FORMAT_NUM_16BIT, saddr_offset + SADDR_OFFSET );
 }
 
 /***********************************************************
@@ -1579,12 +1689,42 @@ static void operand_saddr( FILE * f, ADDR * addr, UBYTE opc )
  
 static void operand_sfr( FILE * f, ADDR * addr, UBYTE opc )
 {
+   UBYTE sfr_offset = next( f, addr );
+	
 	if ( opc == 0xFE )
 		operand( "PSWL" );
 	else if ( opc == 0xFF )
 		operand( "PSWH" );
 	else
-		operand( FORMAT_NUM_16BIT, opc + SFR_OFFSET );
+		operand( FORMAT_NUM_16BIT, sfr_offset + SFR_OFFSET );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_sfrp
+ *
+ * DESCRIPTION
+ *      Process "sfrp" operands.
+ *			sfr comes from next byte.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_sfrp( FILE * f, ADDR * addr, UBYTE opc )
+{
+   UBYTE sfr_offset = next( f, addr );
+	
+	if ( opc == 0xFC )
+		operand( "SP" );
+	else if ( opc == 0xFE )
+		operand( "PSWL" );
+	else if ( opc == 0xFF )
+		operand( "PSWH" );
+	else
+		operand( FORMAT_NUM_16BIT, sfr_offset + SFR_OFFSET );
 }
 
 /***********************************************************
@@ -1647,6 +1787,46 @@ static void operand_memmod( FILE * f, ADDR * addr, UBYTE opc )
 /***********************************************************
  *
  * FUNCTION
+ *      operand_ind_addr5
+ *
+ * DESCRIPTION
+ *      Process "[addr5]" operand.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_ind_addr5( FILE * f, ADDR * addr, UBYTE opc )
+{
+	UBYTE addr5 = opc & 0x1f;
+	
+	operand( "[" FORMAT_NUM_16BIT "]", 0x0040 + ( 2 * addr5 ) );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_addr11
+ *
+ * DESCRIPTION
+ *      Process "addr11" operand.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_addr11( FILE * f, ADDR * addr, UBYTE opc )
+{
+	UBYTE low_addr = next( f, addr );
+	
+	operand( "!" FORMAT_NUM_16BIT, MK_WORD( low_addr, opc & 0x07 ) );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
  *      operand_addr16
  *
  * DESCRIPTION
@@ -1664,7 +1844,226 @@ static void operand_addr16( FILE * f, ADDR * addr, UBYTE opc )
 	low_addr  = next( f, addr );
 	high_addr = next( f, addr );
 	
-	operand( FORMAT_NUM_16BIT, MK_WORD( low_addr, high_addr ) );
+	operand( "!" FORMAT_NUM_16BIT, MK_WORD( low_addr, high_addr ) );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_addr16_rel
+ *
+ * DESCRIPTION
+ *      Process "$addr16" operand.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_addr16_rel( FILE * f, ADDR * addr, UBYTE opc )
+{
+	BYTE jdisp = (BYTE)next( f, addr );
+	
+	operand( "$" FORMAT_NUM_16BIT, *addr + jdisp );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_word
+ *
+ * DESCRIPTION
+ *      Process "word" operands.
+ *			word comes from next 2 bytes.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_word( FILE * f, ADDR * addr, UBYTE opc )
+{
+	UBYTE low_byte, high_byte;
+	
+	low_byte = next( f, addr );
+	high_byte  = next( f, addr );
+	
+	operand( "#" FORMAT_NUM_16BIT, MK_WORD( low_byte, high_byte ) );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_A
+ *
+ * DESCRIPTION
+ *      Process "A" operands.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_A( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand( "A" );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_CY
+ *
+ * DESCRIPTION
+ *      Process "CY" operands.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_CY( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand( "CY" );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_SP
+ *
+ * DESCRIPTION
+ *      Process "SP" operands.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_SP( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand( "SP" );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_post
+ *
+ * DESCRIPTION
+ *      Process "post" operands.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_post( FILE * f, ADDR * addr, UBYTE opc )
+{
+	UBYTE post = next( f, addr );
+	int bit;
+	int comma = 0;
+	
+	for ( bit = 0; bit < 8; bit++ )
+	{
+		if ( post & BIT(bit) )
+		{
+			if ( comma )
+				operand( "," );
+			operand( RP[bit] );
+			comma = 1;
+		}
+	}
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_PSW
+ *
+ * DESCRIPTION
+ *      Process "PSW" operands.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_PSW( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand( "PSW" );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_DE_inc
+ *
+ * DESCRIPTION
+ *      Process "[DE+]" operands.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_DE_inc( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand( "[DE+]" );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_DE_dec
+ *
+ * DESCRIPTION
+ *      Process "[DE-]" operands.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_DE_dec( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand( "[DE-]" );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_HL_inc
+ *
+ * DESCRIPTION
+ *      Process "[HL+]" operands.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_HL_inc( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand( "[HL+]" );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_HL_dec
+ *
+ * DESCRIPTION
+ *      Process "HL_dec" operands.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_HL_dec( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand( "[HL-]" );
 }
 
 /******************************************************************************/
@@ -1687,11 +2086,30 @@ static void operand_addr16( FILE * f, ADDR * addr, UBYTE opc )
  
 static void operand_r1_byte( FILE * f, ADDR * addr, UBYTE opc )
 {
-	UBYTE data = next( f, addr );
-	
 	operand_r1( f, addr, opc );
 	COMMA;
-	operand_byte( f, addr, data );
+	operand_byte( f, addr, opc );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_A_byte
+ *
+ * DESCRIPTION
+ *      Process "A,#byte" operands.
+ *			byte comes from next byte.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_A_byte( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand_A( f, addr, opc );
+	COMMA;
+	operand_byte( f, addr, opc );
 }
 
 /***********************************************************
@@ -1710,12 +2128,9 @@ static void operand_r1_byte( FILE * f, ADDR * addr, UBYTE opc )
  
 static void operand_saddr_byte( FILE * f, ADDR * addr, UBYTE opc )
 {
-	UBYTE saddr_offset = next( f, addr );
-	UBYTE data         = next( f, addr );
-	
-	operand_saddr( f, addr, saddr_offset );
+	operand_saddr( f, addr, opc );
 	COMMA;
-	operand_byte( f, addr, data );
+	operand_byte( f, addr, opc );
 }
 
 /***********************************************************
@@ -1734,12 +2149,9 @@ static void operand_saddr_byte( FILE * f, ADDR * addr, UBYTE opc )
  
 static void operand_sfr_byte( FILE * f, ADDR * addr, UBYTE opc )
 {
-	UBYTE sfr_offset = next( f, addr );
-	UBYTE data       = next( f, addr );
-	
-	operand_sfr( f, addr, sfr_offset );
+	operand_sfr( f, addr, opc );
 	COMMA;
-	operand_byte( f, addr, data );
+	operand_byte( f, addr, opc );
 }
 
 /***********************************************************
@@ -1804,7 +2216,7 @@ static void operand_rp_rp1( FILE * f, ADDR * addr, UBYTE opc )
  
 static void operand_A_r1( FILE * f, ADDR * addr, UBYTE opc )
 {
-	operand( "A" );
+	operand_A( f, addr, opc );
 	COMMA;
 	operand_r1( f, addr, opc );
 }
@@ -1825,9 +2237,9 @@ static void operand_A_r1( FILE * f, ADDR * addr, UBYTE opc )
  
 static void operand_A_saddr( FILE * f, ADDR * addr, UBYTE opc )
 {
-	operand( "A" );
+	operand_A( f, addr, opc );
 	COMMA;
-	operand_saddr( f, addr, next( f, addr ) );
+	operand_saddr( f, addr, opc );
 }
 
 /***********************************************************
@@ -1846,9 +2258,9 @@ static void operand_A_saddr( FILE * f, ADDR * addr, UBYTE opc )
  
 static void operand_saddr_A( FILE * f, ADDR * addr, UBYTE opc )
 {
-	operand_saddr( f, addr, next( f, addr ) );
+	operand_saddr( f, addr, opc );
 	COMMA;
-	operand( "A" );
+	operand_A( f, addr, opc );
 }
 
 /***********************************************************
@@ -1867,9 +2279,9 @@ static void operand_saddr_A( FILE * f, ADDR * addr, UBYTE opc )
  
 static void operand_saddr_saddr( FILE * f, ADDR * addr, UBYTE opc )
 {
-	operand_saddr( f, addr, next( f, addr ) );
+	operand_saddr( f, addr, opc );
 	COMMA;
-	operand_saddr( f, addr, next( f, addr ) );
+	operand_saddr( f, addr, opc );
 }
 
 /***********************************************************
@@ -1888,9 +2300,9 @@ static void operand_saddr_saddr( FILE * f, ADDR * addr, UBYTE opc )
  
 static void operand_A_sfr( FILE * f, ADDR * addr, UBYTE opc )
 {
-	operand( "A" );
+	operand_A( f, addr, opc );
 	COMMA;
-	operand_sfr( f, addr, next( f, addr ) );
+	operand_sfr( f, addr, opc );
 }
 
 /***********************************************************
@@ -1909,9 +2321,9 @@ static void operand_A_sfr( FILE * f, ADDR * addr, UBYTE opc )
  
 static void operand_sfr_A( FILE * f, ADDR * addr, UBYTE opc )
 {
-	operand_sfr( f, addr, next( f, addr ) );
+	operand_sfr( f, addr, opc );
 	COMMA;
-	operand( "A" );
+	operand_A( f, addr, opc );
 }
 
 /***********************************************************
@@ -1930,7 +2342,7 @@ static void operand_sfr_A( FILE * f, ADDR * addr, UBYTE opc )
  
 static void operand_A_mem( FILE * f, ADDR * addr, UBYTE opc )
 {
-	operand( "A" );
+	operand_A( f, addr, opc );
 	COMMA;
 	operand_mem( f, addr, opc );
 }
@@ -1953,7 +2365,7 @@ static void operand_mem_A( FILE * f, ADDR * addr, UBYTE opc )
 {
 	operand_mem( f, addr, opc );
 	COMMA;
-	operand( "A" );
+	operand_A( f, addr, opc );
 }
 
 /***********************************************************
@@ -1972,7 +2384,7 @@ static void operand_mem_A( FILE * f, ADDR * addr, UBYTE opc )
  
 static void operand_A_memmod( FILE * f, ADDR * addr, UBYTE opc )
 {
-	operand( "A" );
+	operand_A( f, addr, opc );
 	COMMA;
 	operand_memmod( f, addr, opc );
 }
@@ -1994,7 +2406,7 @@ static void operand_memmod_A( FILE * f, ADDR * addr, UBYTE opc )
 {
 	operand_memmod( f, addr, opc );
 	COMMA;
-	operand( "A" );
+	operand_A( f, addr, opc );
 }
 
 /***********************************************************
@@ -2013,10 +2425,10 @@ static void operand_memmod_A( FILE * f, ADDR * addr, UBYTE opc )
  
 static void operand_A_saddrp( FILE * f, ADDR * addr, UBYTE opc )
 {
-	operand( "A" );
+	operand_A( f, addr, opc );
 	COMMA;
 	operand( "[" );
-	operand_saddr( f, addr, next( f, addr ) );
+	operand_saddrp( f, addr, opc );
 	operand( "]" );
 }
 
@@ -2037,10 +2449,10 @@ static void operand_A_saddrp( FILE * f, ADDR * addr, UBYTE opc )
 static void operand_saddrp_A( FILE * f, ADDR * addr, UBYTE opc )
 {
 	operand( "[" );
-	operand_saddr( f, addr, next( f, addr ) );
+	operand_saddrp( f, addr, opc );
 	operand( "]" );
 	COMMA;
-	operand( "A" );
+	operand_A( f, addr, opc );
 }
 
 /***********************************************************
@@ -2059,9 +2471,8 @@ static void operand_saddrp_A( FILE * f, ADDR * addr, UBYTE opc )
 
 static void operand_A_addr16( FILE * f, ADDR * addr, UBYTE opc )
 {
-	operand( "A" );
+	operand_A( f, addr, opc );
 	COMMA;
-	operand( "!" );
 	operand_addr16( f, addr, opc );
 }
  
@@ -2081,17 +2492,1079 @@ static void operand_A_addr16( FILE * f, ADDR * addr, UBYTE opc )
 
 static void operand_addr16_A( FILE * f, ADDR * addr, UBYTE opc )
 {
-	operand( "!" );
 	operand_addr16( f, addr, opc );
 	COMMA;
-	operand( "A" );
+	operand_A( f, addr, opc );
 }
 
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_rp1_word
+ *
+ * DESCRIPTION
+ *      Process "rp1,#word" operands.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_rp1_word( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand_rp1( f, addr, opc );
+	COMMA;
+	operand_word( f, addr, opc );
+}
 
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_saddrp_word
+ *
+ * DESCRIPTION
+ *      Process "saddrp,#word" operands.
+ *			saddr come from next byte.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_saddrp_word( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand_saddrp( f, addr, opc );
+	COMMA;
+	operand_word( f, addr, opc );
+}
 
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_sfrp_word
+ *
+ * DESCRIPTION
+ *      Process "sfrp,#word" operands.
+ *			sf come from next byte.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_sfrp_word( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand_sfrp( f, addr, opc );
+	COMMA;
+	operand_word( f, addr, opc );
+}
 
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_AX_saddrp
+ *
+ * DESCRIPTION
+ *      Process "AX,saddrp" operands.
+ *			saddr come from next byte.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_AX_saddrp( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand( "AX" );
+	COMMA;
+	operand_saddrp( f, addr, opc );
+}
 
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_saddrp_AX
+ *
+ * DESCRIPTION
+ *      Process "saddr,A" operands.
+ *			saddr come from next byte.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_saddrp_AX( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand_saddrp( f, addr, opc );
+	COMMA;
+	operand( "AX" );
+}
 
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_saddrp_saddrp
+ *
+ * DESCRIPTION
+ *      Process "saddrp,saddrp" operands.
+ *			saddrs come from next bytes.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_saddrp_saddrp( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand_saddrp( f, addr, opc );
+	COMMA;
+	operand_saddrp( f, addr, opc );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_AX_sfrp
+ *
+ * DESCRIPTION
+ *      Process "AX,sfrp" operands.
+ *			sfr come from next byte.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_AX_sfrp( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand( "AX" );
+	COMMA;
+	operand_sfrp( f, addr, opc );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_sfrp_AX
+ *
+ * DESCRIPTION
+ *      Process "sfrp,AX" operands.
+ *			sfr come from next byte.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_sfrp_AX( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand_sfrp( f, addr, opc );
+	COMMA;
+	operand( "AX" );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_rp1_addr16
+ *
+ * DESCRIPTION
+ *      Process "rp1,!addr16" operands.
+ *			addr come from next 2 bytes.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+
+static void operand_rp1_addr16( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand_rp1( f, addr, opc );
+	COMMA;
+	operand_addr16( f, addr, opc );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_addr16_rp1
+ *
+ * DESCRIPTION
+ *      Process "!addr16,rp1" operands.
+ *			addr come from next 2 bytes.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+
+static void operand_addr16_rp1( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand_addr16( f, addr, opc );
+	COMMA;
+	operand_rp1( f, addr, opc );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_AX_word
+ *
+ * DESCRIPTION
+ *      Process "AX,#word" operands.
+ *			word comes from next bytes.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_AX_word( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand( "AX" );
+	COMMA;
+	operand_word( f, addr, next( f, addr ) );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_r1_n
+ *
+ * DESCRIPTION
+ *      Process "r1,n" operands.
+ *			operands come from next byte.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_r1_n( FILE * f, ADDR * addr, UBYTE opc )
+{
+   UBYTE args = next( f, addr );
+	
+	operand_r1( f, addr, args );
+	COMMA;
+	operand( "%d", ( args >> 3 ) & 0x07 );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_rp1_n
+ *
+ * DESCRIPTION
+ *      Process "rp1,n" operands.
+ *			operands come from next byte.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_rp1_n( FILE * f, ADDR * addr, UBYTE opc )
+{
+   UBYTE args = next( f, addr );
+	
+	operand_rp1( f, addr, args );
+	COMMA;
+	operand( "%d", ( args >> 3 ) & 0x07 );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_rp1_ind
+ *
+ * DESCRIPTION
+ *      Process "[rp1]" operands.
+ *			operands come from opc byte.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_rp1_ind( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand( "[" );
+	operand_rp1( f, addr, opc );
+	operand( "]" );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_saddr_bit
+ *
+ * DESCRIPTION
+ *      Process "saddr.bit" operands.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_saddr_bit( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand_saddr( f, addr, opc );
+	operand_bit( f, addr, opc );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_sfr_bit
+ *
+ * DESCRIPTION
+ *      Process "sfr.bit" operands.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_sfr_bit( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand_sfr( f, addr, opc );
+	operand_bit( f, addr, opc );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_A_bit
+ *
+ * DESCRIPTION
+ *      Process "A.bit" operands.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_A_bit( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand_A( f, addr, opc );
+	operand_bit( f, addr, opc );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_X_bit
+ *
+ * DESCRIPTION
+ *      Process "X.bit" operands.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_X_bit( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand( "X" );
+	operand_bit( f, addr, opc );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_PSWL_bit
+ *
+ * DESCRIPTION
+ *      Process "PSWL.bit" operands.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_PSWL_bit( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand( "PSWL" );
+	operand_bit( f, addr, opc );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_PSWH_bit
+ *
+ * DESCRIPTION
+ *      Process "PSWH.bit" operands.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_PSWH_bit( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand( "PSWH" );
+	operand_bit( f, addr, opc );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_CY_saddr_bit
+ *
+ * DESCRIPTION
+ *      Process "CY,saddr.bit" operands.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_CY_saddr_bit( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand_CY( f, addr, opc);
+	COMMA;
+	operand_saddr_bit( f, addr, opc );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_CY_sfr_bit
+ *
+ * DESCRIPTION
+ *      Process "CY,sfr.bit" operands.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_CY_sfr_bit( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand_CY( f, addr, opc);
+	COMMA;
+	operand_sfr_bit( f, addr, opc );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_CY_A_bit
+ *
+ * DESCRIPTION
+ *      Process "CY,A.bit" operands.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_CY_A_bit( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand_CY( f, addr, opc);
+	COMMA;
+	operand_A_bit( f, addr, opc );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_CY_X_bit
+ *
+ * DESCRIPTION
+ *      Process "CY,X.bit" operands.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_CY_X_bit( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand_CY( f, addr, opc);
+	COMMA;
+	operand_X_bit( f, addr, opc );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_CY_PSWL_bit
+ *
+ * DESCRIPTION
+ *      Process "CY,PSWL.bit" operands.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_CY_PSWL_bit( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand_CY( f, addr, opc);
+	COMMA;
+	operand_PSWL_bit( f, addr, opc );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_CY_PSWH_bit
+ *
+ * DESCRIPTION
+ *      Process "CY,PSWH.bit" operands.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_CY_PSWH_bit( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand_CY( f, addr, opc);
+	COMMA;
+	operand_PSWH_bit( f, addr, opc );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_CY_n_saddr_bit
+ *
+ * DESCRIPTION
+ *      Process "CY,/saddr.bit" operands.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_CY_n_saddr_bit( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand_CY( f, addr, opc);
+	COMMA;
+	operand( "/" );
+	operand_saddr_bit( f, addr, opc );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_CY_n_sfr_bit
+ *
+ * DESCRIPTION
+ *      Process "CY,/sfr.bit" operands.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_CY_n_sfr_bit( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand_CY( f, addr, opc);
+	COMMA;
+	operand( "/" );
+	operand_sfr_bit( f, addr, opc );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_CY_n_A_bit
+ *
+ * DESCRIPTION
+ *      Process "CY,/A.bit" operands.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_CY_n_A_bit( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand_CY( f, addr, opc);
+	COMMA;
+	operand( "/" );
+	operand_A_bit( f, addr, opc );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_CY_n_X_bit
+ *
+ * DESCRIPTION
+ *      Process "CY,/X.bit" operands.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_CY_n_X_bit( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand_CY( f, addr, opc);
+	COMMA;
+	operand( "/" );
+	operand_X_bit( f, addr, opc );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_CY_n_PSWL_bit
+ *
+ * DESCRIPTION
+ *      Process "CY,/PSWL.bit" operands.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_CY_n_PSWL_bit( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand_CY( f, addr, opc);
+	COMMA;
+	operand( "/" );
+	operand_PSWL_bit( f, addr, opc );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_CY_n_PSWH_bit
+ *
+ * DESCRIPTION
+ *      Process "CY,/PSWH.bit" operands.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_CY_n_PSWH_bit( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand_CY( f, addr, opc);
+	COMMA;
+	operand( "/" );
+	operand_PSWH_bit( f, addr, opc );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_saddr_bit_CY
+ *
+ * DESCRIPTION
+ *      Process "saddr.bit,CY" operands.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_saddr_bit_CY( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand_saddr_bit( f, addr, opc );
+	COMMA;
+	operand_CY( f, addr, opc);
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_sfr_bit_CY
+ *
+ * DESCRIPTION
+ *      Process "sfr.bit,CY" operands.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_sfr_bit_CY( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand_sfr_bit( f, addr, opc );
+	COMMA;
+	operand_CY( f, addr, opc);
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_A_bit_CY
+ *
+ * DESCRIPTION
+ *      Process "A.bit,CY" operands.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_A_bit_CY( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand_A_bit( f, addr, opc );
+	COMMA;
+	operand_CY( f, addr, opc);
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_X_bit_CY
+ *
+ * DESCRIPTION
+ *      Process "X.bit,CY" operands.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_X_bit_CY( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand_X_bit( f, addr, opc );
+	COMMA;
+	operand_CY( f, addr, opc);
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_PSWL_bit_CY
+ *
+ * DESCRIPTION
+ *      Process "PSWL.bit,CY" operands.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_PSWL_bit_CY( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand_PSWL_bit( f, addr, opc );
+	COMMA;
+	operand_CY( f, addr, opc);
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_PSWH_bit_CY
+ *
+ * DESCRIPTION
+ *      Process "PSWH.bit,CY" operands.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+ 
+static void operand_PSWH_bit_CY( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand_PSWH_bit( f, addr, opc );
+	COMMA;
+	operand_CY( f, addr, opc);
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_saddr_bit_addr16_rel
+ *
+ * DESCRIPTION
+ *      Process "saddr.bit,$addr16" operands.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+
+static void operand_saddr_bit_addr16_rel( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand_saddr_bit( f, addr, opc );
+	COMMA;
+	operand_addr16_rel( f, addr, opc );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_sfr_bit_addr16_rel
+ *
+ * DESCRIPTION
+ *      Process "sfr.bit,$addr16" operands.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+
+static void operand_sfr_bit_addr16_rel( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand_sfr_bit( f, addr, opc );
+	COMMA;
+	operand_addr16_rel( f, addr, opc );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_A_bit_addr16_rel
+ *
+ * DESCRIPTION
+ *      Process "A.bit,$addr16" operands.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+
+static void operand_A_bit_addr16_rel( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand_A_bit( f, addr, opc );
+	COMMA;
+	operand_addr16_rel( f, addr, opc );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_X_bit_addr16_rel
+ *
+ * DESCRIPTION
+ *      Process "X.bit,$addr16" operands.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+
+static void operand_X_bit_addr16_rel( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand_X_bit( f, addr, opc );
+	COMMA;
+	operand_addr16_rel( f, addr, opc );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_PSWH_bit_addr16_rel
+ *
+ * DESCRIPTION
+ *      Process "PSWH.bit,$addr16" operands.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+
+static void operand_PSWH_bit_addr16_rel( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand_PSWH_bit( f, addr, opc );
+	COMMA;
+	operand_addr16_rel( f, addr, opc );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_PSWL_bit_addr16_rel
+ *
+ * DESCRIPTION
+ *      Process "PSWL.bit,$addr16" operands.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+
+static void operand_PSWL_bit_addr16_rel( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand_PSWL_bit( f, addr, opc );
+	COMMA;
+	operand_addr16_rel( f, addr, opc );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_r2_addr16_rel
+ *
+ * DESCRIPTION
+ *      Process "r2,$addr16" operands.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+
+static void operand_r2_addr16_rel( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand_r2( f, addr, opc );
+	COMMA;
+	operand_addr16_rel( f, addr, opc );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_saddr_addr16_rel
+ *
+ * DESCRIPTION
+ *      Process "saddr,$addr16" operands.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+
+static void operand_saddr_addr16_rel( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand_saddr( f, addr, opc );
+	COMMA;
+	operand_addr16_rel( f, addr, opc );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_DE_inc_A
+ *
+ * DESCRIPTION
+ *      Process "[DE+],A" operands.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+
+static void operand_DE_inc_A( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand_DE_inc( f, addr, opc );
+	COMMA;
+	operand_A( f, addr, opc );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_DE_dec_A
+ *
+ * DESCRIPTION
+ *      Process "[DE-],A" operands.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+
+static void operand_DE_dec_A( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand_DE_dec( f, addr, opc );
+	COMMA;
+	operand_A( f, addr, opc );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_DE_inc_HL_inc
+ *
+ * DESCRIPTION
+ *      Process "[DE+],[HL+]" operands.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+
+static void operand_DE_inc_HL_inc( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand_DE_inc( f, addr, opc );
+	COMMA;
+	operand_HL_inc( f, addr, opc );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_DE_dec_HL_dec
+ *
+ * DESCRIPTION
+ *      Process "[DE-],[HL-]" operands.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+
+static void operand_DE_dec_HL_dec( FILE * f, ADDR * addr, UBYTE opc )
+{
+	operand_DE_dec( f, addr, opc );
+	COMMA;
+	operand_HL_dec( f, addr, opc );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_STBC_byte
+ *
+ * DESCRIPTION
+ *      Process "STBC,#byte" operands.
+ *      This is a weird one, as the byte is actually stored first as the 
+ *      inverted value followed by the normal value.
+ *      In thise case we simply consume the inverted byte and 
+ *      present the normal byte.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+
+static void operand_STBC_byte( FILE * f, ADDR * addr, UBYTE opc )
+{
+	(void)next( f, addr );
+	
+	operand( "STBC" );
+	COMMA;
+	operand_byte( f, addr, opc );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand_WDM_byte
+ *
+ * DESCRIPTION
+ *      Process "WDM,#byte" operands.
+ *      This is a weird one, as the byte is actually stored first as the 
+ *      inverted value followed by the normal value.
+ *      In thise case we simply consume the inverted byte and 
+ *      present the normal byte.
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+
+static void operand_WDM_byte( FILE * f, ADDR * addr, UBYTE opc )
+{
+	(void)next( f, addr );
+	
+	operand( "WDM" );
+	COMMA;
+	operand_byte( f, addr, opc );
+}
 
 
 /******************************************************************************/
@@ -2199,9 +3672,213 @@ typedef struct optab_s {
 
 static optab_t optab_01[] = {
 	
-	INSN  ( "xch",  A_sfr,    0x21 )
+	INSN  ( "xch",  A_sfr,     0x21 )
+	INSN  ( "xchw", AX_sfrp,   0x1B ) 
+	
+#undef BYTE_OP
+#define BYTE_OP(M_name, M_code)	INSN  ( M_name,  sfr_byte,    ( 0x60 | M_code ) ) \
+											INSN  ( M_name,  A_sfr,       ( 0x90 | M_code ) )
+										
+	BYTE_OP( "add",  0x08 )
+	BYTE_OP( "addc", 0x09 )
+	BYTE_OP( "sub",  0x0A )
+	BYTE_OP( "subc", 0x0B )
+	BYTE_OP( "and",  0x0C )
+	BYTE_OP( "or",   0x0E )
+	BYTE_OP( "xor",  0x0D )
+	BYTE_OP( "cmp",  0x0F )
 
+#undef WORD_OP
+#define WORD_OP(M_name, M_code)	INSN  ( M_name,  sfrp_word,    ( 0x00 | M_code ) ) \
+											INSN  ( M_name,  AX_sfrp,      ( 0x10 | M_code )	)
+											
+	WORD_OP( "addw", 0x0D )
+	WORD_OP( "subw", 0x0E )
+	WORD_OP( "cmpw", 0x0F )
+	
+	END
+};
 
+/******************************************************************************/
+
+static optab_t optab_02[] = {
+	
+	RANGE ( "mov1",  CY_PSWH_bit,  0x08, 0x0F )
+	RANGE ( "mov1",  CY_PSWL_bit,  0x00, 0x07 )
+	RANGE ( "mov1",  PSWH_bit_CY,  0x18, 0x1F )
+	RANGE ( "mov1",  PSWL_bit_CY,  0x10, 0x17 )
+	
+	RANGE ( "and1",  CY_PSWH_bit,    0x28, 0x2F )
+	RANGE ( "and1",  CY_n_PSWH_bit,  0x38, 0x3F )
+	RANGE ( "and1",  CY_PSWL_bit,    0x20, 0x27 )
+	RANGE ( "and1",  CY_n_PSWL_bit,  0x30, 0x37 )
+
+	RANGE ( "or1",   CY_PSWH_bit,    0x48, 0x4F )
+	RANGE ( "or1",   CY_n_PSWH_bit,  0x58, 0x5F )
+	RANGE ( "or1",   CY_PSWL_bit,    0x40, 0x47 )
+	RANGE ( "or1",   CY_n_PSWL_bit,  0x50, 0x57 )
+	
+	RANGE ( "xor1",  CY_PSWH_bit,    0x68, 0x6F )
+	RANGE ( "xor1",  CY_PSWL_bit,    0x60, 0x67 )
+
+   RANGE ( "set1",  PSWH_bit,       0x88, 0x8F )
+	RANGE ( "set1",  PSWL_bit,       0x80, 0x87 )
+	
+	RANGE ( "clr1",  PSWH_bit,       0x98, 0x9F )
+	RANGE ( "clr1",  PSWL_bit,       0x90, 0x97 )
+	
+	RANGE ( "not1",  PSWH_bit,       0x78, 0x7F )
+	RANGE ( "not1",  PSWL_bit,       0x70, 0x77 )
+	
+	RANGE ( "bt",    PSWH_bit_addr16_rel, 0xB8, 0xBF )
+	RANGE ( "bt",    PSWL_bit_addr16_rel, 0xB0, 0xB7 )
+	
+	RANGE ( "bf",    PSWH_bit_addr16_rel, 0xA8, 0xAF )
+	RANGE ( "bf",    PSWL_bit_addr16_rel, 0xA0, 0xA7 )
+	
+	RANGE ( "btclr", PSWH_bit_addr16_rel, 0xD8, 0xDF )
+	RANGE ( "btclr", PSWL_bit_addr16_rel, 0xD0, 0xD7 )
+	
+	RANGE ( "bfset", PSWH_bit_addr16_rel, 0xC8, 0xCF )
+	RANGE ( "bfset", PSWL_bit_addr16_rel, 0xC0, 0xC7 )
+	
+	END
+};
+
+/******************************************************************************/
+
+static optab_t optab_03[] = {
+	
+	INSN  ( "incw",  saddrp,     0xE8 )
+	INSN  ( "decw",  saddrp,     0xE9 )
+	
+	RANGE ( "mov1",  CY_A_bit,   0x08, 0x0F )
+	RANGE ( "mov1",  CY_X_bit,   0x00, 0x07 )
+	RANGE ( "mov1",  A_bit_CY,   0x18, 0x1F )
+	RANGE ( "mov1",  X_bit_CY,   0x10, 0x17 )
+	
+	RANGE ( "and1",  CY_A_bit,   0x28, 0x2F )
+	RANGE ( "and1",  CY_n_A_bit, 0x38, 0x3F )
+	RANGE ( "and1",  CY_X_bit,   0x20, 0x27 )
+	RANGE ( "and1",  CY_n_X_bit, 0x30, 0x37 )
+	
+	RANGE ( "or1",   CY_A_bit,   0x48, 0x4F )
+	RANGE ( "or1",   CY_n_A_bit, 0x58, 0x5F )
+	RANGE ( "or1",   CY_X_bit,   0x40, 0x47 )
+	RANGE ( "or1",   CY_n_X_bit, 0x50, 0x57 )
+	
+	RANGE ( "xor1",  CY_A_bit,   0x68, 0x6F )
+	RANGE ( "xor1",  CY_X_bit,   0x60, 0x67 )
+	
+	RANGE ( "set1",  A_bit,      0x88, 0x8F )
+	RANGE ( "set1",  X_bit,      0x80, 0x87 )
+	
+	RANGE ( "clr1",  A_bit,      0x98, 0x9F )
+	RANGE ( "clr1",  X_bit,      0x90, 0x97 )
+	
+	RANGE ( "not1",  A_bit,      0x78, 0x7F )
+	RANGE ( "not1",  X_bit,      0x70, 0x77 )
+	
+	RANGE ( "bt",    A_bit_addr16_rel, 0xB8, 0xBF )
+	RANGE ( "bt",    X_bit_addr16_rel, 0xB0, 0xB7 )
+	
+	RANGE ( "bf",    A_bit_addr16_rel, 0xA8, 0xAF )
+	RANGE ( "bf",    X_bit_addr16_rel, 0xA0, 0xA7 )
+	
+	RANGE ( "btclr", A_bit_addr16_rel, 0xD8, 0xDF )
+	RANGE ( "btclr", X_bit_addr16_rel, 0xD0, 0xD7 )
+	
+	RANGE ( "bfset", A_bit_addr16_rel, 0xC8, 0xCF )
+	RANGE ( "bfset", X_bit_addr16_rel, 0xC0, 0xC7 )
+	
+	END
+};
+
+/******************************************************************************/
+
+static optab_t optab_05[] = {
+	
+	RANGE ( "mulu",  r1,       0x08, 0x0F )
+	RANGE ( "divuw", r1,       0x18, 0x1F )
+	RANGE ( "muluw", rp1,      0x28, 0x2F )
+	RANGE ( "divux", rp1,      0xE8, 0xEF )
+	
+	RANGE ( "ror4",  rp1_ind,  0x88, 0x8F )
+	RANGE ( "rol4",  rp1_ind,  0x98, 0x9F )
+	
+	RANGE ( "call",  rp1,      0x58, 0x5F )
+	RANGE ( "call",  rp1_ind,  0x78, 0x7F )
+	
+	INSN  ( "incw",  SP,       0xC8 )
+	INSN  ( "decw",  SP,       0xC9 )
+	
+	RANGE ( "br",    rp1,      0x48, 0x4F )
+	RANGE ( "br",    rp1_ind,  0x68, 0x6F )
+	
+	RANGE ( "brkcs", RBn,      0xD8, 0xDF )
+	
+	RANGE ( "sel",    RBn,     0xA8, 0xAF )
+	RANGE ( "sel",    RBn_ALT, 0xB8, 0xBF )
+	
+	END
+};
+
+/******************************************************************************/
+
+static optab_t optab_07[] = {
+	
+	INSN  ( "incw",  saddrp,     0xE8 )
+	INSN  ( "decw",  saddrp,     0xE9 )
+	
+	INSN  ( "bgt",   addr16_rel, 0xFB )
+	INSN  ( "bge",   addr16_rel, 0xF9 )
+	INSN  ( "blt",   addr16_rel, 0xF8 )
+	INSN  ( "ble",   addr16_rel, 0xFA )
+	INSN  ( "bh",    addr16_rel, 0xFD )
+	INSN  ( "bnh",   addr16_rel, 0xFC )
+	
+	END
+};
+
+/******************************************************************************/
+
+static optab_t optab_08[] = {
+	
+	RANGE ( "mov1", CY_saddr_bit,		0x00, 0x07 )
+	RANGE ( "mov1", CY_sfr_bit,       0x08, 0x0F )
+	RANGE ( "mov1", saddr_bit_CY,     0x10, 0x17 )
+	RANGE ( "mov1", sfr_bit_CY,       0x18, 0x1F )
+	
+	RANGE ( "and1", CY_saddr_bit,		0x20, 0x27 )
+	RANGE ( "and1", CY_n_saddr_bit,	0x30, 0x37 )
+	RANGE ( "and1", CY_sfr_bit,       0x28, 0x2F )
+	RANGE ( "and1", CY_n_sfr_bit,     0x38, 0x3F )
+	
+	RANGE ( "or1",  CY_saddr_bit,		0x40, 0x47 )
+	RANGE ( "or1",  CY_n_saddr_bit,	0x50, 0x57 )
+	RANGE ( "or1",  CY_sfr_bit,       0x48, 0x4F )
+	RANGE ( "or1",  CY_n_sfr_bit,     0x58, 0x5F )
+	
+	RANGE ( "xor1", CY_saddr_bit,		0x60, 0x67 )
+	RANGE ( "xor1", CY_sfr_bit,       0x68, 0x6F )
+	
+	RANGE ( "set1", sfr_bit,          0x88, 0x8F )
+	RANGE ( "clr1", sfr_bit,          0x98, 0x9F )
+	
+	RANGE ( "not1", saddr_bit,        0x70, 0x77 )
+	RANGE ( "not1", sfr_bit,          0x78, 0x7F )
+	
+	RANGE ( "bt",   sfr_bit_addr16_rel,    0xB8, 0xBF )
+	
+	RANGE ( "bf",   saddr_bit_addr16_rel,  0xA0, 0xA7 )
+	RANGE ( "bf",   sfr_bit_addr16_rel,    0xA8, 0xAF )
+	
+	RANGE ( "btclr", saddr_bit_addr16_rel, 0xD0, 0xD7 )
+	RANGE ( "btclr", sfr_bit_addr16_rel,   0xD8, 0xDF )
+	
+	RANGE ( "bfset", saddr_bit_addr16_rel, 0xC0, 0xC7 )
+	RANGE ( "bfset", sfr_bit_addr16_rel,   0xC8, 0xCF )
+	
 	END
 };
 
@@ -2211,7 +3888,49 @@ static optab_t optab_09[] = {
 	
 	INSN  ( "mov",  A_addr16, 0xF0 )
 	INSN  ( "mov",  addr16_A, 0xF1 )
+	
+	RANGE ( "movw", rp1_addr16, 0x80, 0x87 )
+	RANGE ( "movw", addr16_rp1, 0x90, 0x97 )
 
+	INSN  ( "mov",  STBC_byte,  0x44 )
+	INSN  ( "mov",  WDM_byte,   0x42 )
+
+	END
+};
+
+/******************************************************************************/
+
+static optab_t optab_15[] = {
+	
+   INSN  ( "movm",    DE_inc_A,       0x00 )
+	INSN  ( "movm",    DE_dec_A,       0x10 )
+	INSN  ( "movbk",   DE_inc_HL_inc,  0x20 )
+	INSN  ( "movbk",   DE_dec_HL_dec,  0x30 )
+	
+	INSN  ( "xchm",    DE_inc_A,       0x01 )
+	INSN  ( "xchm",    DE_dec_A,       0x11 )
+	INSN  ( "xchbk",   DE_inc_HL_inc,  0x21 )
+	INSN  ( "xchbk",   DE_dec_HL_dec,  0x31 )
+	
+	INSN  ( "cmpme",   DE_inc_A,       0x04 )
+	INSN  ( "cmpme",   DE_dec_A,       0x14 )
+	INSN  ( "cmpbke",  DE_inc_HL_inc,  0x24 )
+	INSN  ( "cmpbke",  DE_dec_HL_dec,  0x34 )
+	
+	INSN  ( "cmpmne",  DE_inc_A,       0x05 )
+	INSN  ( "cmpmne",  DE_dec_A,       0x15 )
+	INSN  ( "cmpbkne", DE_inc_HL_inc,  0x25 )
+	INSN  ( "cmpbkne", DE_dec_HL_dec,  0x35 )
+	
+	INSN  ( "cmpmc",   DE_inc_A,       0x07 )
+	INSN  ( "cmpmc",   DE_dec_A,       0x17 )
+	INSN  ( "cmpbkc",  DE_inc_HL_inc,  0x27 )
+	INSN  ( "cmpbkc",  DE_dec_HL_dec,  0x37 )
+	
+	INSN  ( "cmpmnc",  DE_inc_A,       0x06 )
+	INSN  ( "cmpmnc",  DE_dec_A,       0x16 )
+	INSN  ( "cmpbknc", DE_inc_HL_inc,  0x26 )
+	INSN  ( "cmpbknc", DE_dec_HL_dec,  0x36 )
 
 	END
 };
@@ -2224,66 +3943,240 @@ static optab_t base_optab[] = {
   Data Transfer
   ----------------------------------------------------------------------------*/
 
-	RANGE ( "mov",  r1_byte,     0xB8, 0xBF )
-	INSN  ( "mov",  saddr_byte,  0x3A )
-	INSN  ( "mov",  sfr_byte,    0x2B )
-	MASK2 ( "mov",  r_r1,        0x22, 0x08, 0x00 )
-	RANGE ( "mov",  A_r1,        0xD0, 0xD7 )
-	INSN  ( "mov",  A_saddr,     0x20 )
-	INSN  ( "mov",  saddr_A,     0x22 )
-	INSN  ( "mov",  saddr_saddr, 0x38 )
-	INSN  ( "mov",  A_sfr,       0x10 )
-	INSN  ( "mov",  sfr_A,       0x12 )
-	RANGE ( "mov",  A_mem,       0x58, 0x5D )
-	MEMMOD( "mov",  A_memmod,    0x00 ) 
-	RANGE ( "mov",  mem_A,       0x50, 0x55 )
-	MEMMOD( "mov",  memmod_A,    0x80 )
-	INSN  ( "mov",  A_saddrp,    0x18 )
-	INSN  ( "mov",  saddrp_A,    0x19 )
+	RANGE ( "mov",  r1_byte,       0xB8, 0xBF )
+	INSN  ( "mov",  saddr_byte,    0x3A )
+	INSN  ( "mov",  sfr_byte,      0x2B )
+	MASK2 ( "mov",  r_r1,          0x24, 0x08, 0x00 )
+	RANGE ( "mov",  A_r1,          0xD0, 0xD7 )
+	INSN  ( "mov",  A_saddr,       0x20 )
+	INSN  ( "mov",  saddr_A,       0x22 )
+	INSN  ( "mov",  saddr_saddr,   0x38 )
+	INSN  ( "mov",  A_sfr,         0x10 )
+	INSN  ( "mov",  sfr_A,         0x12 )
+	RANGE ( "mov",  A_mem,         0x58, 0x5D )
+	MEMMOD( "mov",  A_memmod,      0x00 ) 
+	RANGE ( "mov",  mem_A,         0x50, 0x55 )
+	MEMMOD( "mov",  memmod_A,      0x80 )
+	INSN  ( "mov",  A_saddrp,      0x18 )
+	INSN  ( "mov",  saddrp_A,      0x19 )
 	
-	
-	RANGE ( "xch",  A_r1,        0xD8, 0xDF )
-	MASK2 ( "xch",  r_r1,        0x25, 0x08, 0x00 )
-	MEMMOD( "xch",  A_memmod,    0x04 )
-	INSN  ( "xch",  A_saddr,     0x21 )
-	INSN  ( "xch",  A_saddrp,    0x23 )
-	INSN  ( "mov",  saddr_saddr, 0x39 )
-	
-	
-	
-	
-	
-	MASK2 ( "movw", rp_rp1,      0x22, 0x08, 0x08 )
-	
-	
-	
-	
-	
-	
-	
+	/* ----------------------------------------------- */
 
+ 	RANGE ( "xch",  A_r1,          0xD8, 0xDF )
+	MASK2 ( "xch",  r_r1,          0x25, 0x08, 0x00 )
+	MEMMOD( "xch",  A_memmod,      0x04 )
+	INSN  ( "xch",  A_saddr,       0x21 )
+	INSN  ( "xch",  A_saddrp,      0x23 )
+	INSN  ( "xch",  saddr_saddr,   0x39 )
+	
+	/* ----------------------------------------------- */
+	
+	RANGE ( "moww", rp1_word,	   0x60, 0x67 )
+	INSN  ( "movw", saddrp_word,   0x0C )
+	INSN  ( "movw", sfrp_word,     0x0B )
+	MASK2 ( "movw", rp_rp1,        0x24, 0x08, 0x08 )
+	INSN  ( "movw", AX_saddrp,     0x1C )
+	INSN  ( "movw", saddrp_AX,     0x1A )
+	INSN  ( "movw", saddrp_saddrp, 0x3C )
+	INSN  ( "movw", AX_sfrp,       0x11 )
+	INSN  ( "movw", sfrp_AX,       0x13 )
+	
+	/* ----------------------------------------------- */
+	
+	INSN  ( "xchw", AX_saddrp,     0x1B )
+	INSN  ( "xchw", saddrp_saddrp, 0x2A )
+	MASK2 ( "xchw", rp_rp1,        0x25, 0x08, 0x08 )
 
-	RANGE( "incw", rp2, 0x44, 0x47 )
+/*----------------------------------------------------------------------------
+  8-Bit Operations
+  ----------------------------------------------------------------------------*/
+  
+  /* These all follow a pattern so we can use a macro here to do the work for
+   * us.
+	*/
+  
+#undef BYTE_OP
+#define BYTE_OP(M_name, M_code)	INSN  ( M_name,  A_byte,        ( 0xA0 | M_code ) ) \
+											INSN  ( M_name,  saddr_byte,    ( 0x60 | M_code ) ) \
+											MASK2 ( M_name,  r_r1,          ( 0x80 | M_code ), 0x08, 0x00 ) \
+											INSN  ( M_name,  A_saddr,       ( 0x90 | M_code ) ) \
+											INSN  ( M_name,  saddr_saddr,   ( 0x70 | M_code ) ) \
+											MEMMOD( M_name,  A_memmod,      ( 0x00 | M_code ) ) \
+											MEMMOD( M_name,  memmod_A,      ( 0x80 | M_code ) )
+											
+	BYTE_OP( "add",  0x08 )
+	BYTE_OP( "addc", 0x09 )
+	BYTE_OP( "sub",  0x0A )
+	BYTE_OP( "subc", 0x0B )
+	BYTE_OP( "and",  0x0C )
+	BYTE_OP( "or",   0x0E )
+	BYTE_OP( "xor",  0x0D )
+	BYTE_OP( "cmp",  0x0F )
 	
-	RANGE( "decw", rp2, 0x4C, 0x4F )
+/*----------------------------------------------------------------------------
+  16-Bit Operations
+  ----------------------------------------------------------------------------*/
 
-	INSN( "ei", none, 0x4B )
+   /* These mostly follow a pattern so we can use a macro here to do the work
+	 * for us.
+	 */
+	
+#undef WORD_OP
+#define WORD_OP(M_name, M_code)	INSN  ( M_name, AX_word,       ( 0x20 | M_code ) ) \
+											INSN  ( M_name, saddrp_word,   ( 0x00 | M_code ) ) \
+											INSN  ( M_name, AX_saddrp,     ( 0x10 | M_code ) ) \
+											INSN  ( M_name, saddrp_saddrp, ( 0x30 | M_code ) )
 
+	WORD_OP( "addw", 0x0D )
+	WORD_OP( "subw", 0x0E )
+	WORD_OP( "cmpw", 0x0F )
 	
+	/* Some ops don't fit the pattern */	
+	MASK2 ( "addw", rp_rp1,        0x88, 0x08, 0x08 )
+	MASK2 ( "subw", rp_rp1,        0x8A, 0x08, 0x08 )
+	MASK2 ( "cmpw", rp_rp1,        0x8F, 0x08, 0x08 )
+  
+/*----------------------------------------------------------------------------
+  Multiplication/Division
+  ----------------------------------------------------------------------------*/
+  
+	/* See optab_05 */
+
+/*----------------------------------------------------------------------------
+  Increment/Decrement
+  ----------------------------------------------------------------------------*/	
 	
+	RANGE ( "inc",  r1,         0xC0, 0xC7 )
+	INSN  ( "inc",  saddr,      0x26 )
 	
-	RANGE( "inc",  r1,         0xC0, 0xC7 )
-	RANGE( "dec",  r1,         0xC8, 0xCF )
+	RANGE ( "dec",  r1,         0xC8, 0xCF )
+	INSN  ( "dec",  saddr,      0x27 )	
 	
+	RANGE ( "incw", rp2,        0x44, 0x47 )
+	/* incw saddrp in optab_03 */
 	
+	RANGE ( "decw", rp2,        0x4C, 0x4F )
+	/* decw saddrp in optab_03 */
+
+/*----------------------------------------------------------------------------
+  Shift and Rotate
+  ----------------------------------------------------------------------------*/	
 	
+	MASK2 ( "ror",  r1_n,    0x30, 0xC0, 0x40 )
+	MASK2 ( "rol",  r1_n,    0x31, 0xC0, 0x40 )
+	MASK2 ( "rorc", r1_n,    0x30, 0xC0, 0x00 )
+	MASK2 ( "rolc", r1_n,    0x31, 0xC0, 0x00 )
 	
+	MASK2 ( "shr",  r1_n,    0x30, 0xC0, 0x80 )
+	MASK2 ( "shl",  r1_n,    0x31, 0xC0, 0x80 )
+	MASK2 ( "shrw", rp1_n,   0x30, 0xC0, 0xC0 )
+	MASK2 ( "shlw", rp1_n,   0x31, 0xC0, 0xC0 )
+	
+	/* ror4 and rol4 in optab_05 */
+	
+/*----------------------------------------------------------------------------
+  BCD Adjustment
+  ----------------------------------------------------------------------------*/
+  
+   INSN  ( "adj4", none, 0x04 )
+	
+/*----------------------------------------------------------------------------
+  Bit Manipulation
+  ----------------------------------------------------------------------------*/	
+ 
+	/* See tables optab_02, optab_03 and optab_08 */
+	
+   RANGE ( "set1", saddr_bit,  0xB0, 0xB7 )
+	RANGE ( "clr1", saddr_bit,  0xA0, 0xA7 )
+	
+	INSN  ( "set1", CY,         0x41 )
+	INSN  ( "clr1", CY,         0x40 )
+	INSN  ( "not1", CY,         0x42 )
+	
+/*----------------------------------------------------------------------------
+  Call/Return
+  ----------------------------------------------------------------------------*/
+  
+   INSN  ( "call",   addr16,     0x28 )
+	RANGE ( "callf",  addr11,     0x90, 0x97 )
+	RANGE ( "callt",  ind_addr5,  0xE0, 0xFF )
+   INSN  ( "brk",    none,       0x5E )
+	INSN  ( "ret",    none,       0x56 )
+	INSN  ( "reti",   none,       0x57 )
+	
+/*----------------------------------------------------------------------------
+  Stack Manipulation
+  ----------------------------------------------------------------------------*/	
+	
+	INSN  ( "push",   post,       0x35 )
+	INSN  ( "push",   PSW,        0x49 )
+	INSN  ( "pushu",  post,       0x37 )
+	INSN  ( "pop",    post,       0x34 )
+	INSN  ( "pop",    PSW,        0x48 )
+	INSN  ( "popu",   post,       0x36 )
+	
+/*----------------------------------------------------------------------------
+  Unconditional Branch
+  ----------------------------------------------------------------------------*/	
+	
+	INSN  ( "br",     addr16,     0x2C )
+	INSN  ( "br",     addr16_rel, 0x14 )
+	
+/*----------------------------------------------------------------------------
+  Conditional Branch
+  ----------------------------------------------------------------------------*/	
+	
+   INSN  ( "bc",     addr16_rel, 0x83 )
+	INSN  ( "bnc",    addr16_rel, 0x82 )
+	INSN  ( "bz",     addr16_rel, 0x81 )
+	INSN  ( "bnz",    addr16_rel, 0x80 )
+	INSN  ( "bv",     addr16_rel, 0x85 )
+	INSN  ( "bnv",    addr16_rel, 0x84 )
+	INSN  ( "bn",     addr16_rel, 0x87 )
+	INSN  ( "bp",     addr16_rel, 0x86 )
+	
+   /* Bit test */
+	
+	RANGE ( "bt",     saddr_bit_addr16_rel,  0x70, 0x77 )
+	
+	RANGE ( "dbnz",   r2_addr16_rel,         0x32, 0x33 )
+	INSN  ( "dbnz",   saddr_addr16_rel,      0x3B )
+	
+/*----------------------------------------------------------------------------
+  Context Switch
+  ----------------------------------------------------------------------------*/	
+	
+	/* BRKCS in optab_05 */
+	INSN  ( "retcs",  addr16,  0x29 )
+	
+/*----------------------------------------------------------------------------
+  String
+  ----------------------------------------------------------------------------*/	
+	
+	/* See optab_15 */
+	
+/*----------------------------------------------------------------------------
+  CPU Control
+  ----------------------------------------------------------------------------*/
+	
+	INSN  ( "swrs",   none,    0x43 )
+	INSN  ( "nop",    none,    0x00 )
+	INSN  ( "ei",     none,    0x4B )
+	INSN  ( "di",     none,    0x4A )
+	
+/*----------------------------------------------------------------------------
+  Instruction Sub-Group Tables
+  ----------------------------------------------------------------------------*/
 	
 	TABLE ( optab_01, 0x01 )
+	TABLE ( optab_02, 0x02 )
+	TABLE ( optab_03, 0x03 )
+	TABLE ( optab_05, 0x05 )
+	TABLE ( optab_07, 0x07 )
+	TABLE ( optab_08, 0x08 )
 	TABLE ( optab_09, 0x09 )
+	TABLE ( optab_15, 0x15 )
 
-	
-	
 	END
 };
 
