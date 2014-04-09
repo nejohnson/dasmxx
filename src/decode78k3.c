@@ -37,33 +37,166 @@
 
 #include "dasmxx.h"
 
-
 /******************************************************************************/
 /* TODO */
 /*
 
 	- add xrefs
-	- try out table-driven parser
 	- find bugs and fix'em
-	
-
-
-
 
 */
 
 
+
+
+/*****************************************************************************
+ * Gloablly-visible decoder properties
+ *****************************************************************************/
+
+/* Decoder short name */
+const char * dasm_name            = "dasm78k3";
+
+/* Decoder description */
+const char * dasm_description     = "NEC 78K/III";
+
+/* Decoder maximum instruction length in bytes */
+const int    dasm_max_insn_length = 5;
+
+/*****************************************************************************
+ * Private data types, macros, constants.
+ *****************************************************************************/
+
 //#define USE_RECURSIVE_DESCENT_PARSER
 #define USE_TABLE_PARSER
 
+/* Common address offsets */
+#define SADDR_OFFSET			( 0xFE20 )
+#define SFR_OFFSET				( 0xFF00 )
 
-const char * dasm_name            = "dasm78k3";
-const char * dasm_description     = "NEC 78K/III";
-const int    dasm_max_insn_length = 5;
+/* Common output formats */
+#define FORMAT_NUM_8BIT		"$%02X"
+#define FORMAT_NUM_16BIT		"$%04X"
+#define FORMAT_REG				"R%d"
 
+/* Create a single-bit mask */
+#define BIT(n)					( 1 << (n) )
 
+/* Construct a 16-bit word out of low and high bytes */
+#define MK_WORD(l,h)			( ((l) & 0xFF) | (((h) & 0xFF) << 8) )
 
+/* Indicate whether decode was successful or not. */
+#define INSN_FOUND				( 1 )
+#define INSN_NOT_FOUND		( 0 )
 
+/* Neaten up emitting a comma "," within an operand. */
+#define COMMA	operand( ", " )
+
+/**
+	The optab_t type describes each entry in the op tables.
+**/
+typedef struct optab_s {
+	UBYTE opc;
+	const char * opcode;
+	void (*operands)( FILE *, ADDR *, UBYTE); /* operand function */
+	enum {
+		OPTAB_INSN,
+		OPTAB_RANGE,
+		OPTAB_MASK,
+		OPTAB_MASK2,
+		OPTAB_MEMMOD,
+		OPTAB_TABLE
+	} type;
+	union {
+		struct {
+			UBYTE min, max;
+		} range;
+		struct {
+			UBYTE mask, val;
+		} mask;
+		struct optab_s * table;
+	} u;
+} optab_t;
+
+/**
+	Macros to construct entries in op tables.
+**/
+
+/**
+	The given instruction byte jumps to another decode table.
+**/
+#define TABLE(M_tablename, M_opc)					{ 	.type    = OPTAB_TABLE,			\
+																.opc     = M_opc, 					\
+																.opcode  = "TABLE",				\
+																.u.table = M_tablename 			\
+															},
+
+/**
+	A single insruction matches against one op byte.
+**/	
+#define INSN(M_opcode, M_ops, M_opc)				{ 	.type     = OPTAB_INSN, 			\
+																.opc      = M_opc, 				\
+																.opcode   = M_opcode, 			\
+																.operands = operand_ ## M_ops 	\
+															},
+
+/**
+	A RANGE matches the first byte anywhere between M_min and M_max inclusive.
+**/	
+#define RANGE(M_opcode, M_ops, M_min, M_max)	{ 	.type     = OPTAB_RANGE, 		\
+																.opcode   = M_opcode,				\
+																.operands = operand_ ## M_ops, \
+																.u.range.min = M_min,				\
+																.u.range.max = M_max				\
+															},
+
+/**
+	A MASK matches a set of instruction bytes described by a bit mask and a
+   value to match against applied to the first search byte.
+**/	
+#define MASK(M_opcode, M_ops, M_mask, M_val)  {	.type     = OPTAB_MASK,			\
+																.opcode   = M_opcode,				\
+																.operands = operand_ ## M_ops, \
+																.u.mask.mask = M_mask,			\
+																.u.mask.val  = M_val				\
+															},
+
+/**
+	A MASK2 matches a set of instruction bytes described by a bit mask and a
+   value to match against applied to the second search byte.
+**/	
+#define MASK2(M_opcode, M_ops, M_opc, M_mask, M_val) 									\
+															{	.type     = OPTAB_MASK2,			\
+																.opcode   = M_opcode,				\
+																.opc      = M_opc, 				\
+																.operands = operand_ ## M_ops, \
+																.u.mask.mask = M_mask,			\
+																.u.mask.val  = M_val				\
+															},
+															
+/**
+	A MEMMOD describes an instruction with four memory-modifer combinations
+	which must be decoded together for a prospective match.
+**/	
+#define MEMMOD(M_opcode, M_ops, M_opc) 			{	.type     = OPTAB_MEMMOD,		\
+																.opcode   = M_opcode,				\
+																.opc      = M_opc, 				\
+																.operands = operand_ ## M_ops	\
+															},
+															
+/**
+	Mark end of op table.
+**/
+#define END		{ .opcode = NULL }
+
+/*****************************************************************************
+ * Private data.
+ *****************************************************************************/
+
+/* Start address of each instruction as it is decoded. */
+static ADDR g_insn_addr = 0;
+
+/* Global output buffer into which the decoded output is written. */
+static char * g_output_buffer = NULL;
 
 /* Tables of register names used in addressing modes */
 
@@ -132,51 +265,54 @@ static const char * R2[2] = {
 	"C", "B"
 };
 
-#define SADDR_OFFSET		( 0xFE20 )
-#define SFR_OFFSET			( 0xFF00 )
-
-
-/* Common output formats */
-#define FORMAT_NUM_8BIT		"$%02X"
-#define FORMAT_NUM_16BIT		"$%04X"
-#define FORMAT_REG				"R%d"
-
-#define BIT(n)				( 1 << (n) )
-
-/* Construct a 16-bit word out of low and high bytes */
-#define MK_WORD(l,h)		( ((l) & 0xFF) | (((h) & 0xFF) << 8) )
-
-
-#define INSN_FOUND			( 1 )
-#define INSN_NOT_FOUND	( 0 )
-
-
-static char * output_buffer = NULL;
-
-
-
 /*****************************************************************************
  *        Private Functions
  *****************************************************************************/
 
-
-
+/***********************************************************
+ *
+ * FUNCTION
+ *      opcode
+ *
+ * DESCRIPTION
+ *      Writes the given opcode string into the output buffer.
+ *
+ * RETURNS
+ *      none
+ *
+ ************************************************************/
+ 
 static void opcode( const char *opcode )
 {
-	int n = sprintf( output_buffer, "%-9s", opcode );
-	output_buffer += n;
+	int n = sprintf( g_output_buffer, "%-9s", opcode );
+	g_output_buffer += n;
 }
 
+/***********************************************************
+ *
+ * FUNCTION
+ *      operand
+ *
+ * DESCRIPTION
+ *      Writes the given operand string and any arguments
+ *      into the output buffer.  The string is processed with
+ *      the usual printf() conversions.
+ *
+ * RETURNS
+ *      none
+ *
+ ************************************************************/
+ 
 static void operand( const char *operand, ... )
 {
 	va_list ap;
 	int n;
 	
 	va_start( ap, operand );
-	n = vsprintf( output_buffer, operand, ap );
+	n = vsprintf( g_output_buffer, operand, ap );
 	va_end( ap );
 	
-	output_buffer += n;
+	g_output_buffer += n;
 }
 
 
@@ -646,7 +782,7 @@ ADDR dasm_insn( FILE *f, char *outbuf, ADDR addr )
 {
 	UBYTE opc, opc2, opc3, opc4, opc5;
 	
-	output_buffer = outbuf;
+	g_output_buffer = outbuf;
 
 	opc = next( f, &addr );
 	
@@ -751,7 +887,7 @@ case 0x4A:
 		break;
 	}
 	
-	if ( output_buffer != outbuf )
+	if ( g_output_buffer != outbuf )
 	{
 		return addr;
 	}
@@ -953,7 +1089,7 @@ case 0x15:
 	
 	}
 	
-	if ( output_buffer != outbuf )
+	if ( g_output_buffer != outbuf )
 	{
 		return addr;
 	}
@@ -1173,7 +1309,7 @@ case 0x02: case 0x03:
 		break;		
 	}
 	
-	if ( output_buffer != outbuf )
+	if ( g_output_buffer != outbuf )
 	{
 		return addr;
 	}
@@ -1355,7 +1491,7 @@ case 0x08:
 		break;
 	}
 	
-	if ( output_buffer != outbuf )
+	if ( g_output_buffer != outbuf )
 	{
 		return addr;
 	}
@@ -1385,7 +1521,7 @@ case 0x01:
 		break;
 	}
 	
-	if ( output_buffer != outbuf )
+	if ( g_output_buffer != outbuf )
 	{
 		return addr;
 	}
@@ -1402,10 +1538,7 @@ case 0x01:
 
 
 
-/**
-	Neaten up emitting a comma ","
-**/
-#define COMMA	operand( ", " )
+
 
 /******************************************************************************/
 /**                            Empty Operands                                **/
@@ -1421,16 +1554,7 @@ static void operand_none( FILE * f, ADDR * addr, UBYTE opc )
 /******************************************************************************/
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_bit
- *
- * DESCRIPTION
- *      Process ".bit" operand.
- *
- * RETURNS
- *      void
- *
+ * Process ".bit" operand.
  ************************************************************/
  
 static void operand_bit( FILE * f, ADDR * addr, UBYTE opc )
@@ -1441,59 +1565,32 @@ static void operand_bit( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_r
- *
- * DESCRIPTION
- *      Process "r" operand.
- *			r comes from opc byte.
- *
- * RETURNS
- *      void
- *
+ * Process "r" operand.
+ *	r comes from opc byte.
  ************************************************************/
  
 static void operand_r( FILE * f, ADDR * addr, UBYTE opc )
 {
 	UBYTE r = opc & 0x0F;
 	
-	operand( "R%d", r );
+	operand( FORMAT_REG, r );
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_r1
- *
- * DESCRIPTION
- *      Process "r1" operand.
- *			r1 comes from opc byte.
- *
- * RETURNS
- *      void
- *
+ * Process "r1" operand.
+ *	r1 comes from opc byte.
  ************************************************************/
  
 static void operand_r1( FILE * f, ADDR * addr, UBYTE opc )
 {
 	UBYTE r1 = opc & 0x07;
 	
-	operand( "R%d", r1 );
+	operand( FORMAT_REG, r1 );
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_r2
- *
- * DESCRIPTION
- *      Process "r2" operand.
- *			r2 comes from opc byte.
- *
- * RETURNS
- *      void
- *
+ * Process "r2" operand.
+ *	r2 comes from opc byte.
  ************************************************************/
  
 static void operand_r2( FILE * f, ADDR * addr, UBYTE opc )
@@ -1504,17 +1601,8 @@ static void operand_r2( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_rp
- *
- * DESCRIPTION
- *      Process "r" operand.
- *			r comes from opc byte.
- *
- * RETURNS
- *      void
- *
+ * Process "r" operand.
+ *	r comes from opc byte.
  ************************************************************/
  
 static void operand_rp( FILE * f, ADDR * addr, UBYTE opc )
@@ -1525,17 +1613,8 @@ static void operand_rp( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_rp1
- *
- * DESCRIPTION
- *      Process "rp1" operand.
- *			rp1 comes from opc byte.
- *
- * RETURNS
- *      void
- *
+ * Process "rp1" operand.
+ *	rp1 comes from opc byte.
  ************************************************************/
  
 static void operand_rp1( FILE * f, ADDR * addr, UBYTE opc )
@@ -1546,17 +1625,8 @@ static void operand_rp1( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_rp2
- *
- * DESCRIPTION
- *      Process "rp2" operands.
- *			r1 comes from opc byte.
- *
- * RETURNS
- *      void
- *
+ * Process "rp2" operands.
+ *	rp2 comes from opc byte.
  ************************************************************/
  
 static void operand_rp2( FILE * f, ADDR * addr, UBYTE opc )
@@ -1567,17 +1637,8 @@ static void operand_rp2( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_RBn
- *
- * DESCRIPTION
- *      Process "RBn" operands.
- *			n comes from opc byte.
- *
- * RETURNS
- *      void
- *
+ * Process "RBn" operands.
+ *	n comes from opc byte.
  ************************************************************/
  
 static void operand_RBn( FILE * f, ADDR * addr, UBYTE opc )
@@ -1588,17 +1649,8 @@ static void operand_RBn( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_RBn_ALT
- *
- * DESCRIPTION
- *      Process "RBn,ALT" operands.
- *			n comes from opc byte.
- *
- * RETURNS
- *      void
- *
+ * Process "RBn,ALT" operands.
+ *	n comes from opc byte.
  ************************************************************/
  
 static void operand_RBn_ALT( FILE * f, ADDR * addr, UBYTE opc )
@@ -1611,17 +1663,8 @@ static void operand_RBn_ALT( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_byte
- *
- * DESCRIPTION
- *      Process "#byte" operands.
- *			byte comes from next byte.
- *
- * RETURNS
- *      void
- *
+ * Process "#byte" operands.
+ *	byte comes from next byte.
  ************************************************************/
  
 static void operand_byte( FILE * f, ADDR * addr, UBYTE opc )
@@ -1632,114 +1675,79 @@ static void operand_byte( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_saddr
- *
- * DESCRIPTION
- *      Process "saddr" operands.
- *			saddr comes from opc byte.
- *
- * RETURNS
- *      void
- *
+ * Process "saddr" operands.
+ *	saddr comes from next byte.
  ************************************************************/
  
 static void operand_saddr( FILE * f, ADDR * addr, UBYTE opc )
 {
    UBYTE saddr_offset = next( f, addr );
+	ADDR saddr = saddr_offset + SADDR_OFFSET;
 	
-	operand( FORMAT_NUM_16BIT, saddr_offset + SADDR_OFFSET );
+	operand( xref_genwordaddr( NULL, "$", saddr ) );
+	xref_addxref( X_PTR, g_insn_addr, saddr );
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_saddrp
- *
- * DESCRIPTION
- *      Process "saddrp" operands.
- *			saddr comes from opc byte.
- *
- * RETURNS
- *      void
- *
+ * Process "saddrp" operands.
+ *	saddr comes from next byte.
  ************************************************************/
  
 static void operand_saddrp( FILE * f, ADDR * addr, UBYTE opc )
 {
    UBYTE saddr_offset = next( f, addr );
+	ADDR saddr = saddr_offset + SADDR_OFFSET;
 	
-	operand( FORMAT_NUM_16BIT, saddr_offset + SADDR_OFFSET );
+	operand( xref_genwordaddr( NULL, "$", saddr ) );
+	xref_addxref( X_PTR, g_insn_addr, saddr );
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_sfr
- *
- * DESCRIPTION
- *      Process "sfr" operands.
- *			sfr comes from opc byte.
- *
- * RETURNS
- *      void
- *
+ * Process "sfr" operands.
+ *	sfr comes from next byte.
  ************************************************************/
  
 static void operand_sfr( FILE * f, ADDR * addr, UBYTE opc )
 {
    UBYTE sfr_offset = next( f, addr );
 	
-	if ( opc == 0xFE )
+	if ( sfr_offset == 0xFE )
 		operand( "PSWL" );
-	else if ( opc == 0xFF )
+	else if ( sfr_offset == 0xFF )
 		operand( "PSWH" );
 	else
-		operand( FORMAT_NUM_16BIT, sfr_offset + SFR_OFFSET );
+	{
+		operand( xref_genwordaddr( NULL, "$", sfr_offset + SFR_OFFSET ) );
+		xref_addxref( X_PTR, g_insn_addr, sfr_offset + SFR_OFFSET );
+	}
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_sfrp
- *
- * DESCRIPTION
- *      Process "sfrp" operands.
- *			sfr comes from next byte.
- *
- * RETURNS
- *      void
- *
+ * Process "sfrp" operands.
+ *	sfr comes from next byte.
  ************************************************************/
  
 static void operand_sfrp( FILE * f, ADDR * addr, UBYTE opc )
 {
    UBYTE sfr_offset = next( f, addr );
 	
-	if ( opc == 0xFC )
+	if ( sfr_offset == 0xFC )
 		operand( "SP" );
-	else if ( opc == 0xFE )
+	else if ( sfr_offset == 0xFE )
 		operand( "PSWL" );
-	else if ( opc == 0xFF )
+	else if ( sfr_offset == 0xFF )
 		operand( "PSWH" );
 	else
-		operand( FORMAT_NUM_16BIT, sfr_offset + SFR_OFFSET );
+	{
+		operand( xref_genwordaddr( NULL, "$", sfr_offset + SFR_OFFSET ) );
+		xref_addxref( X_PTR, g_insn_addr, sfr_offset + SFR_OFFSET );
+	}
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_mem
- *
- * DESCRIPTION
- *      Process "mem" operand, which is a restricted subset
- *			of the register-indirect mode.
- *			mem comes from opc byte.
- *
- * RETURNS
- *      void
- *
+ * Process "mem" operand, which is a restricted subset
+ *	of the register-indirect mode.
+ *	mem comes from opc byte.
  ************************************************************/
  
 static void operand_mem( FILE * f, ADDR * addr, UBYTE opc )
@@ -1750,17 +1758,8 @@ static void operand_mem( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_memmod
- *
- * DESCRIPTION
- *      Process larger "mem" operand.
- *			quite a tricky jobby.
- *
- * RETURNS
- *      void
- *
+ * Process larger "mem" operand.
+ *	quite a tricky jobby.
  ************************************************************/
  
 static void operand_memmod( FILE * f, ADDR * addr, UBYTE opc )
@@ -1781,60 +1780,44 @@ static void operand_memmod( FILE * f, ADDR * addr, UBYTE opc )
 	else if ( mod == 0x06 )
 		operand( "%s" FORMAT_NUM_8BIT "]", MEM_MOD_BASE[mem], low_offset );
 	else if ( mod == 0x0A )
-		operand( FORMAT_NUM_16BIT "%s", MK_WORD(low_offset, high_offset), MEM_MOD_INDEX[mem] );
+	{
+		ADDR base = MK_WORD(low_offset, high_offset);
+		operand( "%s%s", 
+		         xref_genwordaddr( NULL, "$", base ), 
+					MEM_MOD_INDEX[mem] ); 
+		xref_addxref( X_TABLE, g_insn_addr, base );
+	}
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_ind_addr5
- *
- * DESCRIPTION
- *      Process "[addr5]" operand.
- *
- * RETURNS
- *      void
- *
+ * Process "[addr5]" operand.
  ************************************************************/
  
 static void operand_ind_addr5( FILE * f, ADDR * addr, UBYTE opc )
 {
 	UBYTE addr5 = opc & 0x1f;
+	ADDR  vector = 0x0040 + ( 2 * addr5 );
 	
-	operand( "[" FORMAT_NUM_16BIT "]", 0x0040 + ( 2 * addr5 ) );
+	operand( "[" FORMAT_NUM_16BIT "]", vector );
+	xref_addxref( X_TABLE, g_insn_addr, vector );
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_addr11
- *
- * DESCRIPTION
- *      Process "addr11" operand.
- *
- * RETURNS
- *      void
- *
+ * Process "addr11" operand.
+ * Only ever used by call insn so no special variants.
  ************************************************************/
  
 static void operand_addr11( FILE * f, ADDR * addr, UBYTE opc )
 {
 	UBYTE low_addr = next( f, addr );
+	ADDR addr11 = MK_WORD( low_addr, opc & 0x07 );
 	
-	operand( "!" FORMAT_NUM_16BIT, MK_WORD( low_addr, opc & 0x07 ) );
+	operand( xref_genwordaddr( NULL, "$", addr11 ) );
+	xref_addxref( X_CALL, g_insn_addr, addr11 );
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_addr16
- *
- * DESCRIPTION
- *      Process "addr16" operand.
- *
- * RETURNS
- *      void
- *
+ * Process "addr16" operand.
  ************************************************************/
  
 static void operand_addr16( FILE * f, ADDR * addr, UBYTE opc )
@@ -1844,41 +1827,55 @@ static void operand_addr16( FILE * f, ADDR * addr, UBYTE opc )
 	low_addr  = next( f, addr );
 	high_addr = next( f, addr );
 	
-	operand( "!" FORMAT_NUM_16BIT, MK_WORD( low_addr, high_addr ) );
+	operand( xref_genwordaddr( NULL, "$", MK_WORD( low_addr, high_addr ) ) );
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_addr16_rel
- *
- * DESCRIPTION
- *      Process "$addr16" operand.
- *
- * RETURNS
- *      void
- *
+ * Process "addr16_jmp" operand.
+ * Variant for br jumps.
+ ************************************************************/
+ 
+static void operand_addr16_jmp( FILE * f, ADDR * addr, UBYTE opc )
+{
+	UBYTE low_addr  = next( f, addr );
+	UBYTE high_addr = next( f, addr );;
+	ADDR  addr16    = MK_WORD( low_addr, high_addr );
+
+	operand( xref_genwordaddr( NULL, "$", addr16 ) );
+	xref_addxref( X_JMP, g_insn_addr, addr16 );
+}
+
+/***********************************************************
+ * Process "addr16_call" operand.
+ * Variant for calls.
+ ************************************************************/
+ 
+static void operand_addr16_call( FILE * f, ADDR * addr, UBYTE opc )
+{
+	UBYTE low_addr  = next( f, addr );
+	UBYTE high_addr = next( f, addr );;
+	ADDR  addr16    = MK_WORD( low_addr, high_addr );
+
+	operand( xref_genwordaddr( NULL, "$", addr16 ) );
+	xref_addxref( X_CALL, g_insn_addr, addr16 );
+}
+
+/***********************************************************
+ * Process "$addr16" operand.
  ************************************************************/
  
 static void operand_addr16_rel( FILE * f, ADDR * addr, UBYTE opc )
 {
 	BYTE jdisp = (BYTE)next( f, addr );
+	ADDR addr16 = *addr + jdisp;
 	
-	operand( "$" FORMAT_NUM_16BIT, *addr + jdisp );
+	operand( xref_genwordaddr( NULL, "$", addr16 ) );
+	xref_addxref( X_JMP, g_insn_addr, addr16 );
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_word
- *
- * DESCRIPTION
- *      Process "word" operands.
- *			word comes from next 2 bytes.
- *
- * RETURNS
- *      void
- *
+ * Process "word" operands.
+ *	word comes from next 2 bytes.
  ************************************************************/
  
 static void operand_word( FILE * f, ADDR * addr, UBYTE opc )
@@ -1888,20 +1885,11 @@ static void operand_word( FILE * f, ADDR * addr, UBYTE opc )
 	low_byte = next( f, addr );
 	high_byte  = next( f, addr );
 	
-	operand( "#" FORMAT_NUM_16BIT, MK_WORD( low_byte, high_byte ) );
+	operand( "#%s", xref_genwordaddr( NULL, "$", MK_WORD( low_byte, high_byte ) ) );
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_A
- *
- * DESCRIPTION
- *      Process "A" operands.
- *
- * RETURNS
- *      void
- *
+ * Process "A" operands.
  ************************************************************/
  
 static void operand_A( FILE * f, ADDR * addr, UBYTE opc )
@@ -1910,16 +1898,7 @@ static void operand_A( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_CY
- *
- * DESCRIPTION
- *      Process "CY" operands.
- *
- * RETURNS
- *      void
- *
+ * Process "CY" operands.
  ************************************************************/
  
 static void operand_CY( FILE * f, ADDR * addr, UBYTE opc )
@@ -1928,16 +1907,7 @@ static void operand_CY( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_SP
- *
- * DESCRIPTION
- *      Process "SP" operands.
- *
- * RETURNS
- *      void
- *
+ * Process "SP" operands.
  ************************************************************/
  
 static void operand_SP( FILE * f, ADDR * addr, UBYTE opc )
@@ -1946,16 +1916,8 @@ static void operand_SP( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_post
- *
- * DESCRIPTION
- *      Process "post" operands.
- *
- * RETURNS
- *      void
- *
+ * Process "post" operands.
+ * post comes from next byte.
  ************************************************************/
  
 static void operand_post( FILE * f, ADDR * addr, UBYTE opc )
@@ -1977,16 +1939,7 @@ static void operand_post( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_PSW
- *
- * DESCRIPTION
- *      Process "PSW" operands.
- *
- * RETURNS
- *      void
- *
+ * Process "PSW" operands.
  ************************************************************/
  
 static void operand_PSW( FILE * f, ADDR * addr, UBYTE opc )
@@ -1995,16 +1948,7 @@ static void operand_PSW( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_DE_inc
- *
- * DESCRIPTION
- *      Process "[DE+]" operands.
- *
- * RETURNS
- *      void
- *
+ * Process "[DE+]" operands.
  ************************************************************/
  
 static void operand_DE_inc( FILE * f, ADDR * addr, UBYTE opc )
@@ -2013,16 +1957,7 @@ static void operand_DE_inc( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_DE_dec
- *
- * DESCRIPTION
- *      Process "[DE-]" operands.
- *
- * RETURNS
- *      void
- *
+ * Process "[DE-]" operands.
  ************************************************************/
  
 static void operand_DE_dec( FILE * f, ADDR * addr, UBYTE opc )
@@ -2031,16 +1966,7 @@ static void operand_DE_dec( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_HL_inc
- *
- * DESCRIPTION
- *      Process "[HL+]" operands.
- *
- * RETURNS
- *      void
- *
+ * Process "[HL+]" operands.
  ************************************************************/
  
 static void operand_HL_inc( FILE * f, ADDR * addr, UBYTE opc )
@@ -2049,16 +1975,7 @@ static void operand_HL_inc( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_HL_dec
- *
- * DESCRIPTION
- *      Process "HL_dec" operands.
- *
- * RETURNS
- *      void
- *
+ * Process "HL_dec" operands.
  ************************************************************/
  
 static void operand_HL_dec( FILE * f, ADDR * addr, UBYTE opc )
@@ -2071,17 +1988,8 @@ static void operand_HL_dec( FILE * f, ADDR * addr, UBYTE opc )
 /******************************************************************************/
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_r1_byte
- *
- * DESCRIPTION
- *      Process "r1,#byte" operands.
- *			r1 comes from opc byte, byte comes from next byte.
- *
- * RETURNS
- *      void
- *
+ * Process "r1,#byte" operands.
+ *	r1 comes from opc byte, byte comes from next byte.
  ************************************************************/
  
 static void operand_r1_byte( FILE * f, ADDR * addr, UBYTE opc )
@@ -2092,17 +2000,8 @@ static void operand_r1_byte( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_A_byte
- *
- * DESCRIPTION
- *      Process "A,#byte" operands.
- *			byte comes from next byte.
- *
- * RETURNS
- *      void
- *
+ * Process "A,#byte" operands.
+ *	byte comes from next byte.
  ************************************************************/
  
 static void operand_A_byte( FILE * f, ADDR * addr, UBYTE opc )
@@ -2113,17 +2012,8 @@ static void operand_A_byte( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_saddr_byte
- *
- * DESCRIPTION
- *      Process "saddr,#byte" operands.
- *			saddr comes from next byte, byte comes from next byte.
- *
- * RETURNS
- *      void
- *
+ * Process "saddr,#byte" operands.
+ *	saddr comes from next byte, byte comes from next byte.
  ************************************************************/
  
 static void operand_saddr_byte( FILE * f, ADDR * addr, UBYTE opc )
@@ -2134,17 +2024,8 @@ static void operand_saddr_byte( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_sfr_byte
- *
- * DESCRIPTION
- *      Process "sfr,#byte" operands.
- *			sfr comes from next byte, byte comes from next byte.
- *
- * RETURNS
- *      void
- *
+ * Process "sfr,#byte" operands.
+ *	sfr comes from next byte, byte comes from next byte.
  ************************************************************/
  
 static void operand_sfr_byte( FILE * f, ADDR * addr, UBYTE opc )
@@ -2155,17 +2036,8 @@ static void operand_sfr_byte( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_r_r1
- *
- * DESCRIPTION
- *      Process "r,r1" operands.
- *			both registers come from next byte.
- *
- * RETURNS
- *      void
- *
+ * Process "r,r1" operands.
+ *	both registers come from next byte.
  ************************************************************/
  
 static void operand_r_r1( FILE * f, ADDR * addr, UBYTE opc )
@@ -2178,17 +2050,8 @@ static void operand_r_r1( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_rp_rp1
- *
- * DESCRIPTION
- *      Process "rp,rp1" operands.
- *			both registers come from next byte.
- *
- * RETURNS
- *      void
- *
+ * Process "rp,rp1" operands.
+ *	both registers come from next byte.
  ************************************************************/
  
 static void operand_rp_rp1( FILE * f, ADDR * addr, UBYTE opc )
@@ -2201,17 +2064,8 @@ static void operand_rp_rp1( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_A_r1
- *
- * DESCRIPTION
- *      Process "A,r1" operands.
- *			r1 come from opc byte.
- *
- * RETURNS
- *      void
- *
+ * Process "A,r1" operands.
+ *	r1 come from opc byte.
  ************************************************************/
  
 static void operand_A_r1( FILE * f, ADDR * addr, UBYTE opc )
@@ -2222,17 +2076,7 @@ static void operand_A_r1( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_A_saddr
- *
- * DESCRIPTION
- *      Process "A,saddr" operands.
- *			saddr come from next byte.
- *
- * RETURNS
- *      void
- *
+ * Process "A,saddr" operands.
  ************************************************************/
  
 static void operand_A_saddr( FILE * f, ADDR * addr, UBYTE opc )
@@ -2243,17 +2087,7 @@ static void operand_A_saddr( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_saddr_A
- *
- * DESCRIPTION
- *      Process "saddr,A" operands.
- *			saddr come from next byte.
- *
- * RETURNS
- *      void
- *
+ * Process "saddr,A" operands.
  ************************************************************/
  
 static void operand_saddr_A( FILE * f, ADDR * addr, UBYTE opc )
@@ -2264,17 +2098,7 @@ static void operand_saddr_A( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_saddr_saddr
- *
- * DESCRIPTION
- *      Process "saddr,saddr" operands.
- *			saddrs come from next bytes.
- *
- * RETURNS
- *      void
- *
+ * Process "saddr,saddr" operands.
  ************************************************************/
  
 static void operand_saddr_saddr( FILE * f, ADDR * addr, UBYTE opc )
@@ -2285,17 +2109,7 @@ static void operand_saddr_saddr( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_A_sfr
- *
- * DESCRIPTION
- *      Process "A,sfr" operands.
- *			sfr comes from next byte.
- *
- * RETURNS
- *      void
- *
+ * Process "A,sfr" operands.
  ************************************************************/
  
 static void operand_A_sfr( FILE * f, ADDR * addr, UBYTE opc )
@@ -2306,17 +2120,7 @@ static void operand_A_sfr( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_sfr_A
- *
- * DESCRIPTION
- *      Process "sfr,A" operands.
- *			sfr comes from next byte.
- *
- * RETURNS
- *      void
- *
+ * Process "sfr,A" operands.
  ************************************************************/
  
 static void operand_sfr_A( FILE * f, ADDR * addr, UBYTE opc )
@@ -2327,17 +2131,8 @@ static void operand_sfr_A( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_A_mem
- *
- * DESCRIPTION
- *      Process "A,mem" operands.
- *			mem comes from opc byte translated.
- *
- * RETURNS
- *      void
- *
+ * Process "A,mem" operands.
+ *	mem comes from opc byte translated.
  ************************************************************/
  
 static void operand_A_mem( FILE * f, ADDR * addr, UBYTE opc )
@@ -2348,17 +2143,8 @@ static void operand_A_mem( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_mem_A
- *
- * DESCRIPTION
- *      Process "mem,A" operands.
- *			mem comes from opc byte translated.
- *
- * RETURNS
- *      void
- *
+ * Process "mem,A" operands.
+ *	mem comes from opc byte translated.
  ************************************************************/
  
 static void operand_mem_A( FILE * f, ADDR * addr, UBYTE opc )
@@ -2369,17 +2155,7 @@ static void operand_mem_A( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_A_memmod
- *
- * DESCRIPTION
- *      Process larger "A,mem" operands.
- *			quite a tricky jobby.
- *
- * RETURNS
- *      void
- *
+ * Process larger "A,mem" operands.
  ************************************************************/
  
 static void operand_A_memmod( FILE * f, ADDR * addr, UBYTE opc )
@@ -2390,16 +2166,7 @@ static void operand_A_memmod( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_memmod_A
- *
- * DESCRIPTION
- *      Process larger "mem,A" operands.
- *
- * RETURNS
- *      void
- *
+ * Process larger "mem,A" operands.
  ************************************************************/
  
 static void operand_memmod_A( FILE * f, ADDR * addr, UBYTE opc )
@@ -2410,17 +2177,7 @@ static void operand_memmod_A( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_A_saddrp
- *
- * DESCRIPTION
- *      Process "A,[saddrp]" operands.
- *			saddr come from next byte.
- *
- * RETURNS
- *      void
- *
+ * Process "A,[saddrp]" operands.
  ************************************************************/
  
 static void operand_A_saddrp( FILE * f, ADDR * addr, UBYTE opc )
@@ -2433,17 +2190,7 @@ static void operand_A_saddrp( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_saddrp_A
- *
- * DESCRIPTION
- *      Process "[saddrp],A" operands.
- *			saddr come from next byte.
- *
- * RETURNS
- *      void
- *
+ * Process "[saddrp],A" operands.
  ************************************************************/
  
 static void operand_saddrp_A( FILE * f, ADDR * addr, UBYTE opc )
@@ -2456,17 +2203,7 @@ static void operand_saddrp_A( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_A_addr16
- *
- * DESCRIPTION
- *      Process "A,!addr16" operands.
- *			addr16 come from next bytes.
- *
- * RETURNS
- *      void
- *
+ * Process "A,!addr16" operands.
  ************************************************************/
 
 static void operand_A_addr16( FILE * f, ADDR * addr, UBYTE opc )
@@ -2477,17 +2214,7 @@ static void operand_A_addr16( FILE * f, ADDR * addr, UBYTE opc )
 }
  
 /***********************************************************
- *
- * FUNCTION
- *      operand_addr16_A
- *
- * DESCRIPTION
- *      Process "!addr16,A" operands.
- *			addr16 come from next bytes.
- *
- * RETURNS
- *      void
- *
+ * Process "!addr16,A" operands.
  ************************************************************/
 
 static void operand_addr16_A( FILE * f, ADDR * addr, UBYTE opc )
@@ -2498,16 +2225,7 @@ static void operand_addr16_A( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_rp1_word
- *
- * DESCRIPTION
- *      Process "rp1,#word" operands.
- *
- * RETURNS
- *      void
- *
+ * Process "rp1,#word" operands.
  ************************************************************/
  
 static void operand_rp1_word( FILE * f, ADDR * addr, UBYTE opc )
@@ -2518,17 +2236,7 @@ static void operand_rp1_word( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_saddrp_word
- *
- * DESCRIPTION
- *      Process "saddrp,#word" operands.
- *			saddr come from next byte.
- *
- * RETURNS
- *      void
- *
+ * Process "saddrp,#word" operands.
  ************************************************************/
  
 static void operand_saddrp_word( FILE * f, ADDR * addr, UBYTE opc )
@@ -2539,17 +2247,7 @@ static void operand_saddrp_word( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_sfrp_word
- *
- * DESCRIPTION
- *      Process "sfrp,#word" operands.
- *			sf come from next byte.
- *
- * RETURNS
- *      void
- *
+ * Process "sfrp,#word" operands.
  ************************************************************/
  
 static void operand_sfrp_word( FILE * f, ADDR * addr, UBYTE opc )
@@ -2560,17 +2258,7 @@ static void operand_sfrp_word( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_AX_saddrp
- *
- * DESCRIPTION
- *      Process "AX,saddrp" operands.
- *			saddr come from next byte.
- *
- * RETURNS
- *      void
- *
+ * Process "AX,saddrp" operands.
  ************************************************************/
  
 static void operand_AX_saddrp( FILE * f, ADDR * addr, UBYTE opc )
@@ -2581,17 +2269,7 @@ static void operand_AX_saddrp( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_saddrp_AX
- *
- * DESCRIPTION
- *      Process "saddr,A" operands.
- *			saddr come from next byte.
- *
- * RETURNS
- *      void
- *
+ * Process "saddr,A" operands.
  ************************************************************/
  
 static void operand_saddrp_AX( FILE * f, ADDR * addr, UBYTE opc )
@@ -2602,17 +2280,7 @@ static void operand_saddrp_AX( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_saddrp_saddrp
- *
- * DESCRIPTION
- *      Process "saddrp,saddrp" operands.
- *			saddrs come from next bytes.
- *
- * RETURNS
- *      void
- *
+ * Process "saddrp,saddrp" operands.
  ************************************************************/
  
 static void operand_saddrp_saddrp( FILE * f, ADDR * addr, UBYTE opc )
@@ -2623,17 +2291,7 @@ static void operand_saddrp_saddrp( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_AX_sfrp
- *
- * DESCRIPTION
- *      Process "AX,sfrp" operands.
- *			sfr come from next byte.
- *
- * RETURNS
- *      void
- *
+ * Process "AX,sfrp" operands.
  ************************************************************/
  
 static void operand_AX_sfrp( FILE * f, ADDR * addr, UBYTE opc )
@@ -2644,17 +2302,7 @@ static void operand_AX_sfrp( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_sfrp_AX
- *
- * DESCRIPTION
- *      Process "sfrp,AX" operands.
- *			sfr come from next byte.
- *
- * RETURNS
- *      void
- *
+ * Process "sfrp,AX" operands.
  ************************************************************/
  
 static void operand_sfrp_AX( FILE * f, ADDR * addr, UBYTE opc )
@@ -2665,17 +2313,7 @@ static void operand_sfrp_AX( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_rp1_addr16
- *
- * DESCRIPTION
- *      Process "rp1,!addr16" operands.
- *			addr come from next 2 bytes.
- *
- * RETURNS
- *      void
- *
+ * Process "rp1,!addr16" operands.
  ************************************************************/
 
 static void operand_rp1_addr16( FILE * f, ADDR * addr, UBYTE opc )
@@ -2686,17 +2324,7 @@ static void operand_rp1_addr16( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_addr16_rp1
- *
- * DESCRIPTION
- *      Process "!addr16,rp1" operands.
- *			addr come from next 2 bytes.
- *
- * RETURNS
- *      void
- *
+ * Process "!addr16,rp1" operands.
  ************************************************************/
 
 static void operand_addr16_rp1( FILE * f, ADDR * addr, UBYTE opc )
@@ -2707,17 +2335,7 @@ static void operand_addr16_rp1( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_AX_word
- *
- * DESCRIPTION
- *      Process "AX,#word" operands.
- *			word comes from next bytes.
- *
- * RETURNS
- *      void
- *
+ * Process "AX,#word" operands.
  ************************************************************/
  
 static void operand_AX_word( FILE * f, ADDR * addr, UBYTE opc )
@@ -2728,17 +2346,8 @@ static void operand_AX_word( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_r1_n
- *
- * DESCRIPTION
- *      Process "r1,n" operands.
- *			operands come from next byte.
- *
- * RETURNS
- *      void
- *
+ * Process "r1,n" operands.
+ * n comes from next byte.
  ************************************************************/
  
 static void operand_r1_n( FILE * f, ADDR * addr, UBYTE opc )
@@ -2751,17 +2360,8 @@ static void operand_r1_n( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_rp1_n
- *
- * DESCRIPTION
- *      Process "rp1,n" operands.
- *			operands come from next byte.
- *
- * RETURNS
- *      void
- *
+ * Process "rp1,n" operands.
+ * n comes from next byte.
  ************************************************************/
  
 static void operand_rp1_n( FILE * f, ADDR * addr, UBYTE opc )
@@ -2774,17 +2374,7 @@ static void operand_rp1_n( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_rp1_ind
- *
- * DESCRIPTION
- *      Process "[rp1]" operands.
- *			operands come from opc byte.
- *
- * RETURNS
- *      void
- *
+ * Process "[rp1]" operands.
  ************************************************************/
  
 static void operand_rp1_ind( FILE * f, ADDR * addr, UBYTE opc )
@@ -2795,16 +2385,7 @@ static void operand_rp1_ind( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_saddr_bit
- *
- * DESCRIPTION
- *      Process "saddr.bit" operands.
- *
- * RETURNS
- *      void
- *
+ * Process "saddr.bit" operands.
  ************************************************************/
  
 static void operand_saddr_bit( FILE * f, ADDR * addr, UBYTE opc )
@@ -2814,16 +2395,7 @@ static void operand_saddr_bit( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_sfr_bit
- *
- * DESCRIPTION
- *      Process "sfr.bit" operands.
- *
- * RETURNS
- *      void
- *
+ * Process "sfr.bit" operands.
  ************************************************************/
  
 static void operand_sfr_bit( FILE * f, ADDR * addr, UBYTE opc )
@@ -2833,16 +2405,7 @@ static void operand_sfr_bit( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_A_bit
- *
- * DESCRIPTION
- *      Process "A.bit" operands.
- *
- * RETURNS
- *      void
- *
+ * Process "A.bit" operands.
  ************************************************************/
  
 static void operand_A_bit( FILE * f, ADDR * addr, UBYTE opc )
@@ -2852,16 +2415,7 @@ static void operand_A_bit( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_X_bit
- *
- * DESCRIPTION
- *      Process "X.bit" operands.
- *
- * RETURNS
- *      void
- *
+ * Process "X.bit" operands.
  ************************************************************/
  
 static void operand_X_bit( FILE * f, ADDR * addr, UBYTE opc )
@@ -2871,16 +2425,7 @@ static void operand_X_bit( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_PSWL_bit
- *
- * DESCRIPTION
- *      Process "PSWL.bit" operands.
- *
- * RETURNS
- *      void
- *
+ * Process "PSWL.bit" operands.
  ************************************************************/
  
 static void operand_PSWL_bit( FILE * f, ADDR * addr, UBYTE opc )
@@ -2890,16 +2435,7 @@ static void operand_PSWL_bit( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_PSWH_bit
- *
- * DESCRIPTION
- *      Process "PSWH.bit" operands.
- *
- * RETURNS
- *      void
- *
+ * Process "PSWH.bit" operands.
  ************************************************************/
  
 static void operand_PSWH_bit( FILE * f, ADDR * addr, UBYTE opc )
@@ -2909,16 +2445,7 @@ static void operand_PSWH_bit( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_CY_saddr_bit
- *
- * DESCRIPTION
- *      Process "CY,saddr.bit" operands.
- *
- * RETURNS
- *      void
- *
+ * Process "CY,saddr.bit" operands.
  ************************************************************/
  
 static void operand_CY_saddr_bit( FILE * f, ADDR * addr, UBYTE opc )
@@ -2929,16 +2456,7 @@ static void operand_CY_saddr_bit( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_CY_sfr_bit
- *
- * DESCRIPTION
- *      Process "CY,sfr.bit" operands.
- *
- * RETURNS
- *      void
- *
+ * Process "CY,sfr.bit" operands.
  ************************************************************/
  
 static void operand_CY_sfr_bit( FILE * f, ADDR * addr, UBYTE opc )
@@ -2949,16 +2467,7 @@ static void operand_CY_sfr_bit( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_CY_A_bit
- *
- * DESCRIPTION
- *      Process "CY,A.bit" operands.
- *
- * RETURNS
- *      void
- *
+ * Process "CY,A.bit" operands.
  ************************************************************/
  
 static void operand_CY_A_bit( FILE * f, ADDR * addr, UBYTE opc )
@@ -2969,16 +2478,7 @@ static void operand_CY_A_bit( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_CY_X_bit
- *
- * DESCRIPTION
- *      Process "CY,X.bit" operands.
- *
- * RETURNS
- *      void
- *
+ * Process "CY,X.bit" operands.
  ************************************************************/
  
 static void operand_CY_X_bit( FILE * f, ADDR * addr, UBYTE opc )
@@ -2989,16 +2489,7 @@ static void operand_CY_X_bit( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_CY_PSWL_bit
- *
- * DESCRIPTION
- *      Process "CY,PSWL.bit" operands.
- *
- * RETURNS
- *      void
- *
+ * Process "CY,PSWL.bit" operands.
  ************************************************************/
  
 static void operand_CY_PSWL_bit( FILE * f, ADDR * addr, UBYTE opc )
@@ -3009,16 +2500,7 @@ static void operand_CY_PSWL_bit( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_CY_PSWH_bit
- *
- * DESCRIPTION
- *      Process "CY,PSWH.bit" operands.
- *
- * RETURNS
- *      void
- *
+ * Process "CY,PSWH.bit" operands.
  ************************************************************/
  
 static void operand_CY_PSWH_bit( FILE * f, ADDR * addr, UBYTE opc )
@@ -3029,16 +2511,7 @@ static void operand_CY_PSWH_bit( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_CY_n_saddr_bit
- *
- * DESCRIPTION
- *      Process "CY,/saddr.bit" operands.
- *
- * RETURNS
- *      void
- *
+ * Process "CY,/saddr.bit" operands.
  ************************************************************/
  
 static void operand_CY_n_saddr_bit( FILE * f, ADDR * addr, UBYTE opc )
@@ -3050,16 +2523,7 @@ static void operand_CY_n_saddr_bit( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_CY_n_sfr_bit
- *
- * DESCRIPTION
- *      Process "CY,/sfr.bit" operands.
- *
- * RETURNS
- *      void
- *
+ * Process "CY,/sfr.bit" operands.
  ************************************************************/
  
 static void operand_CY_n_sfr_bit( FILE * f, ADDR * addr, UBYTE opc )
@@ -3071,16 +2535,7 @@ static void operand_CY_n_sfr_bit( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_CY_n_A_bit
- *
- * DESCRIPTION
- *      Process "CY,/A.bit" operands.
- *
- * RETURNS
- *      void
- *
+ * Process "CY,/A.bit" operands.
  ************************************************************/
  
 static void operand_CY_n_A_bit( FILE * f, ADDR * addr, UBYTE opc )
@@ -3092,16 +2547,7 @@ static void operand_CY_n_A_bit( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_CY_n_X_bit
- *
- * DESCRIPTION
- *      Process "CY,/X.bit" operands.
- *
- * RETURNS
- *      void
- *
+ * Process "CY,/X.bit" operands.
  ************************************************************/
  
 static void operand_CY_n_X_bit( FILE * f, ADDR * addr, UBYTE opc )
@@ -3113,16 +2559,7 @@ static void operand_CY_n_X_bit( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_CY_n_PSWL_bit
- *
- * DESCRIPTION
- *      Process "CY,/PSWL.bit" operands.
- *
- * RETURNS
- *      void
- *
+ * Process "CY,/PSWL.bit" operands.
  ************************************************************/
  
 static void operand_CY_n_PSWL_bit( FILE * f, ADDR * addr, UBYTE opc )
@@ -3134,16 +2571,7 @@ static void operand_CY_n_PSWL_bit( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_CY_n_PSWH_bit
- *
- * DESCRIPTION
- *      Process "CY,/PSWH.bit" operands.
- *
- * RETURNS
- *      void
- *
+ * Process "CY,/PSWH.bit" operands.
  ************************************************************/
  
 static void operand_CY_n_PSWH_bit( FILE * f, ADDR * addr, UBYTE opc )
@@ -3155,16 +2583,7 @@ static void operand_CY_n_PSWH_bit( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_saddr_bit_CY
- *
- * DESCRIPTION
- *      Process "saddr.bit,CY" operands.
- *
- * RETURNS
- *      void
- *
+ * Process "saddr.bit,CY" operands.
  ************************************************************/
  
 static void operand_saddr_bit_CY( FILE * f, ADDR * addr, UBYTE opc )
@@ -3175,16 +2594,7 @@ static void operand_saddr_bit_CY( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_sfr_bit_CY
- *
- * DESCRIPTION
- *      Process "sfr.bit,CY" operands.
- *
- * RETURNS
- *      void
- *
+ * Process "sfr.bit,CY" operands.
  ************************************************************/
  
 static void operand_sfr_bit_CY( FILE * f, ADDR * addr, UBYTE opc )
@@ -3195,16 +2605,7 @@ static void operand_sfr_bit_CY( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_A_bit_CY
- *
- * DESCRIPTION
- *      Process "A.bit,CY" operands.
- *
- * RETURNS
- *      void
- *
+ * Process "A.bit,CY" operands.
  ************************************************************/
  
 static void operand_A_bit_CY( FILE * f, ADDR * addr, UBYTE opc )
@@ -3215,16 +2616,7 @@ static void operand_A_bit_CY( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_X_bit_CY
- *
- * DESCRIPTION
- *      Process "X.bit,CY" operands.
- *
- * RETURNS
- *      void
- *
+ * Process "X.bit,CY" operands.
  ************************************************************/
  
 static void operand_X_bit_CY( FILE * f, ADDR * addr, UBYTE opc )
@@ -3235,16 +2627,7 @@ static void operand_X_bit_CY( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_PSWL_bit_CY
- *
- * DESCRIPTION
- *      Process "PSWL.bit,CY" operands.
- *
- * RETURNS
- *      void
- *
+ * Process "PSWL.bit,CY" operands.
  ************************************************************/
  
 static void operand_PSWL_bit_CY( FILE * f, ADDR * addr, UBYTE opc )
@@ -3255,16 +2638,7 @@ static void operand_PSWL_bit_CY( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_PSWH_bit_CY
- *
- * DESCRIPTION
- *      Process "PSWH.bit,CY" operands.
- *
- * RETURNS
- *      void
- *
+ * Process "PSWH.bit,CY" operands.
  ************************************************************/
  
 static void operand_PSWH_bit_CY( FILE * f, ADDR * addr, UBYTE opc )
@@ -3275,16 +2649,7 @@ static void operand_PSWH_bit_CY( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_saddr_bit_addr16_rel
- *
- * DESCRIPTION
- *      Process "saddr.bit,$addr16" operands.
- *
- * RETURNS
- *      void
- *
+ * Process "saddr.bit,$addr16" operands.
  ************************************************************/
 
 static void operand_saddr_bit_addr16_rel( FILE * f, ADDR * addr, UBYTE opc )
@@ -3295,16 +2660,7 @@ static void operand_saddr_bit_addr16_rel( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_sfr_bit_addr16_rel
- *
- * DESCRIPTION
- *      Process "sfr.bit,$addr16" operands.
- *
- * RETURNS
- *      void
- *
+ * Process "sfr.bit,$addr16" operands.
  ************************************************************/
 
 static void operand_sfr_bit_addr16_rel( FILE * f, ADDR * addr, UBYTE opc )
@@ -3315,16 +2671,7 @@ static void operand_sfr_bit_addr16_rel( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_A_bit_addr16_rel
- *
- * DESCRIPTION
- *      Process "A.bit,$addr16" operands.
- *
- * RETURNS
- *      void
- *
+ * Process "A.bit,$addr16" operands.
  ************************************************************/
 
 static void operand_A_bit_addr16_rel( FILE * f, ADDR * addr, UBYTE opc )
@@ -3335,16 +2682,7 @@ static void operand_A_bit_addr16_rel( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_X_bit_addr16_rel
- *
- * DESCRIPTION
- *      Process "X.bit,$addr16" operands.
- *
- * RETURNS
- *      void
- *
+ * Process "X.bit,$addr16" operands.
  ************************************************************/
 
 static void operand_X_bit_addr16_rel( FILE * f, ADDR * addr, UBYTE opc )
@@ -3355,16 +2693,7 @@ static void operand_X_bit_addr16_rel( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_PSWH_bit_addr16_rel
- *
- * DESCRIPTION
- *      Process "PSWH.bit,$addr16" operands.
- *
- * RETURNS
- *      void
- *
+ * Process "PSWH.bit,$addr16" operands.
  ************************************************************/
 
 static void operand_PSWH_bit_addr16_rel( FILE * f, ADDR * addr, UBYTE opc )
@@ -3375,16 +2704,7 @@ static void operand_PSWH_bit_addr16_rel( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_PSWL_bit_addr16_rel
- *
- * DESCRIPTION
- *      Process "PSWL.bit,$addr16" operands.
- *
- * RETURNS
- *      void
- *
+ * Process "PSWL.bit,$addr16" operands.
  ************************************************************/
 
 static void operand_PSWL_bit_addr16_rel( FILE * f, ADDR * addr, UBYTE opc )
@@ -3395,16 +2715,7 @@ static void operand_PSWL_bit_addr16_rel( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_r2_addr16_rel
- *
- * DESCRIPTION
- *      Process "r2,$addr16" operands.
- *
- * RETURNS
- *      void
- *
+ * Process "r2,$addr16" operands.
  ************************************************************/
 
 static void operand_r2_addr16_rel( FILE * f, ADDR * addr, UBYTE opc )
@@ -3415,16 +2726,7 @@ static void operand_r2_addr16_rel( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_saddr_addr16_rel
- *
- * DESCRIPTION
- *      Process "saddr,$addr16" operands.
- *
- * RETURNS
- *      void
- *
+ * Process "saddr,$addr16" operands.
  ************************************************************/
 
 static void operand_saddr_addr16_rel( FILE * f, ADDR * addr, UBYTE opc )
@@ -3435,16 +2737,7 @@ static void operand_saddr_addr16_rel( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_DE_inc_A
- *
- * DESCRIPTION
- *      Process "[DE+],A" operands.
- *
- * RETURNS
- *      void
- *
+ * Process "[DE+],A" operands.
  ************************************************************/
 
 static void operand_DE_inc_A( FILE * f, ADDR * addr, UBYTE opc )
@@ -3455,16 +2748,7 @@ static void operand_DE_inc_A( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_DE_dec_A
- *
- * DESCRIPTION
- *      Process "[DE-],A" operands.
- *
- * RETURNS
- *      void
- *
+ * Process "[DE-],A" operands.
  ************************************************************/
 
 static void operand_DE_dec_A( FILE * f, ADDR * addr, UBYTE opc )
@@ -3475,16 +2759,7 @@ static void operand_DE_dec_A( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_DE_inc_HL_inc
- *
- * DESCRIPTION
- *      Process "[DE+],[HL+]" operands.
- *
- * RETURNS
- *      void
- *
+ * Process "[DE+],[HL+]" operands.
  ************************************************************/
 
 static void operand_DE_inc_HL_inc( FILE * f, ADDR * addr, UBYTE opc )
@@ -3495,16 +2770,7 @@ static void operand_DE_inc_HL_inc( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_DE_dec_HL_dec
- *
- * DESCRIPTION
- *      Process "[DE-],[HL-]" operands.
- *
- * RETURNS
- *      void
- *
+ * Process "[DE-],[HL-]" operands.
  ************************************************************/
 
 static void operand_DE_dec_HL_dec( FILE * f, ADDR * addr, UBYTE opc )
@@ -3515,20 +2781,11 @@ static void operand_DE_dec_HL_dec( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_STBC_byte
- *
- * DESCRIPTION
- *      Process "STBC,#byte" operands.
- *      This is a weird one, as the byte is actually stored first as the 
- *      inverted value followed by the normal value.
- *      In thise case we simply consume the inverted byte and 
- *      present the normal byte.
- *
- * RETURNS
- *      void
- *
+ * Process "STBC,#byte" operands.
+ * This is a weird one, as the byte is actually stored first as the 
+ * inverted value followed by the normal value.
+ * In thise case we simply consume the inverted byte and 
+ * present the normal byte.
  ************************************************************/
 
 static void operand_STBC_byte( FILE * f, ADDR * addr, UBYTE opc )
@@ -3541,20 +2798,11 @@ static void operand_STBC_byte( FILE * f, ADDR * addr, UBYTE opc )
 }
 
 /***********************************************************
- *
- * FUNCTION
- *      operand_WDM_byte
- *
- * DESCRIPTION
- *      Process "WDM,#byte" operands.
- *      This is a weird one, as the byte is actually stored first as the 
- *      inverted value followed by the normal value.
- *      In thise case we simply consume the inverted byte and 
- *      present the normal byte.
- *
- * RETURNS
- *      void
- *
+ * Process "WDM,#byte" operands.
+ * This is a weird one, as the byte is actually stored first as the 
+ * inverted value followed by the normal value.
+ * In thise case we simply consume the inverted byte and 
+ * present the normal byte.
  ************************************************************/
 
 static void operand_WDM_byte( FILE * f, ADDR * addr, UBYTE opc )
@@ -3566,108 +2814,9 @@ static void operand_WDM_byte( FILE * f, ADDR * addr, UBYTE opc )
 	operand_byte( f, addr, opc );
 }
 
-
 /******************************************************************************/
-
-/**
-	The optab_t type describes each entry in the op tables.
-**/
-typedef struct optab_s {
-	UBYTE opc;
-	const char * opcode;
-	void (*operands)( FILE *, ADDR *, UBYTE); /* operand function */
-	enum {
-		OPTAB_INSN,
-		OPTAB_RANGE,
-		OPTAB_MASK,
-		OPTAB_MASK2,
-		OPTAB_MEMMOD,
-		OPTAB_TABLE
-	} type;
-	union {
-		struct {
-			UBYTE min, max;
-		} range;
-		struct {
-			UBYTE mask, val;
-		} mask;
-		struct optab_s * table;
-	} u;
-} optab_t;
-
-/******************************************************************************/
-
-/**
-	Macros to construct entries in op tables.
-**/
-
-/**
-	The given instruction byte jumps to another table.
-**/
-#define TABLE(M_tablename, M_opc)					{ 	.type    = OPTAB_TABLE,			\
-																.opc     = M_opc, 					\
-																.opcode  = "TABLE",				\
-																.u.table = M_tablename 			\
-															},
-
-/**
-	A single insruction matches against one op byte.
-**/	
-#define INSN(M_opcode, M_ops, M_opc)				{ 	.type     = OPTAB_INSN, 			\
-																.opc      = M_opc, 				\
-																.opcode   = M_opcode, 			\
-																.operands = operand_ ## M_ops 	\
-															},
-
-/**
-	A RANGE matches the first byte anywhere between M_min and M_max inclusive.
-**/	
-#define RANGE(M_opcode, M_ops, M_min, M_max)	{ 	.type     = OPTAB_RANGE, 		\
-																.opcode   = M_opcode,				\
-																.operands = operand_ ## M_ops, \
-																.u.range.min = M_min,				\
-																.u.range.max = M_max				\
-															},
-
-/**
-	A MASK matches a set of instruction bytes described by a bit mask and a
-   value to match against applied to the first search byte.
-**/	
-#define MASK(M_opcode, M_ops, M_mask, M_val)  {	.type     = OPTAB_MASK,			\
-																.opcode   = M_opcode,				\
-																.operands = operand_ ## M_ops, \
-																.u.mask.mask = M_mask,			\
-																.u.mask.val  = M_val				\
-															},
-
-/**
-	A MASK2 matches a set of instruction bytes described by a bit mask and a
-   value to match against applied to the second search byte.
-**/	
-#define MASK2(M_opcode, M_ops, M_opc, M_mask, M_val) 									\
-															{	.type     = OPTAB_MASK2,			\
-																.opcode   = M_opcode,				\
-																.opc      = M_opc, 				\
-																.operands = operand_ ## M_ops, \
-																.u.mask.mask = M_mask,			\
-																.u.mask.val  = M_val				\
-															},
-															
-/**
-	A MASK2 matches a set of instruction bytes described by a bit mask and a
-   value to match against applied to the second search byte.
-**/	
-#define MEMMOD(M_opcode, M_ops, M_opc) 			{	.type     = OPTAB_MEMMOD,		\
-																.opcode   = M_opcode,				\
-																.opc      = M_opc, 				\
-																.operands = operand_ ## M_ops	\
-															},
-															
-/**
-	Mark end of op table.
-**/
-#define END		{ .opcode = NULL }
-
+/** Instruction Decoding Tables                                              **/
+/** Note: tables are here as they refer to operand functions defined above.  **/
 /******************************************************************************/
 
 static optab_t optab_01[] = {
@@ -3817,8 +2966,8 @@ static optab_t optab_05[] = {
 	
 	RANGE ( "brkcs", RBn,      0xD8, 0xDF )
 	
-	RANGE ( "sel",    RBn,     0xA8, 0xAF )
-	RANGE ( "sel",    RBn_ALT, 0xB8, 0xBF )
+	RANGE ( "sel",   RBn,      0xA8, 0xAF )
+	RANGE ( "sel",   RBn_ALT,  0xB8, 0xBF )
 	
 	END
 };
@@ -4097,12 +3246,12 @@ static optab_t base_optab[] = {
   Call/Return
   ----------------------------------------------------------------------------*/
   
-   INSN  ( "call",   addr16,     0x28 )
-	RANGE ( "callf",  addr11,     0x90, 0x97 )
-	RANGE ( "callt",  ind_addr5,  0xE0, 0xFF )
-   INSN  ( "brk",    none,       0x5E )
-	INSN  ( "ret",    none,       0x56 )
-	INSN  ( "reti",   none,       0x57 )
+   INSN  ( "call",   addr16_call, 0x28 )
+	RANGE ( "callf",  addr11,      0x90, 0x97 )
+	RANGE ( "callt",  ind_addr5,   0xE0, 0xFF )
+   INSN  ( "brk",    none,        0x5E )
+	INSN  ( "ret",    none,        0x56 )
+	INSN  ( "reti",   none,        0x57 )
 	
 /*----------------------------------------------------------------------------
   Stack Manipulation
@@ -4119,7 +3268,7 @@ static optab_t base_optab[] = {
   Unconditional Branch
   ----------------------------------------------------------------------------*/	
 	
-	INSN  ( "br",     addr16,     0x2C )
+	INSN  ( "br",     addr16_jmp, 0x2C )
 	INSN  ( "br",     addr16_rel, 0x14 )
 	
 /*----------------------------------------------------------------------------
@@ -4192,7 +3341,8 @@ static optab_t base_optab[] = {
  *      addr - address of first input byte for this insn
  *
  * RETURNS
- *      1 if a valid instruction found, else 0.
+ *      INSN_FOUND if a valid instruction found.
+ *      INSN_NOT_FOUND otherwise.
  *
  ************************************************************/
 
@@ -4202,7 +3352,7 @@ static int walk_table( FILE * f, ADDR * addr, optab_t * optab, UBYTE opc )
 	int have_peeked = 0;
 	
 	if ( optab == NULL )
-		return;
+		return 0;
 		
 	while ( optab->opcode != NULL )
 	{
@@ -4260,6 +3410,10 @@ static int walk_table( FILE * f, ADDR * addr, optab_t * optab, UBYTE opc )
 	return INSN_NOT_FOUND;
 }
 
+/*****************************************************************************
+ *        Public Functions
+ *****************************************************************************/
+ 
 /***********************************************************
  *
  * FUNCTION
@@ -4279,16 +3433,18 @@ static int walk_table( FILE * f, ADDR * addr, optab_t * optab, UBYTE opc )
 ADDR dasm_insn( FILE *f, char *outbuf, ADDR addr )
 {
 	int opc;
-	UWORD insn_addr = addr;
 	int found = 0;
+
+	/* Store start address in a global for use in xref calls */	
+	g_insn_addr = addr;
 	
-	/* Setup output_buffer to point to caller's output buffer */
-	output_buffer = outbuf;
+	/* Setup g_output_buffer to point to caller's output buffer */
+	g_output_buffer = outbuf;
 
 	/* Get first opcode byte */
 	opc = next( f, &addr );
 
-	/* Now walk table(e) looking for an instruction */
+	/* Now walk table(s) looking for an instruction match */
 	found = walk_table( f, &addr, base_optab, opc );
 	
 	/* If we didn't find a match, indicate this to the output */
