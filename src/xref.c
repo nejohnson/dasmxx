@@ -144,6 +144,9 @@ int  xref_inrange( ADDR ref )
     
     if ( !xref_inrange(ref) )
         return;
+		  
+	 if ( type == X_NONE )
+	     return;
     
     /* Create new address reference entry */
     new = zalloc( sizeof( struct addrlist ) );
@@ -351,6 +354,7 @@ void xref_dump( void )
                 case X_DIRECT : printf( "Direct @ " ); break;
                 case X_DATA   : printf( "Data   @ " ); break;
                 case X_PTR    : printf( "Ptr    @ " ); break;
+					case X_REG     : printf( "Reg    @ " ); break;
                 default:
                     printf( "\nILLEGAL XREF TYPE %d, addr=" FORMAT_ADDR ". Aborting..\n",
                         q->type, q->addr );

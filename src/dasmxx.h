@@ -69,7 +69,8 @@ typedef enum {
    X_TABLE  = 3,
    X_DIRECT = 4,
    X_DATA   = 5,
-   X_PTR    = 6
+   X_PTR    = 6,
+   X_REG    = 7
 } XREF_TYPE;
 
 extern void xref_setmin( ADDR min );
