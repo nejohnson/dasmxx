@@ -1950,7 +1950,7 @@ static optab_t base_optab[] = {
 	
 	/* ----------------------------------------------- */
 	
-	RANGE ( "moww", rp1_word,	   0x60, 0x67, X_NONE )
+	RANGE ( "movw", rp1_word,	   0x60, 0x67, X_NONE )
 	INSN  ( "movw", saddrp_word,   0x0C, X_NONE )
 	INSN  ( "movw", sfrp_word,     0x0B, X_NONE )
 	MASK2 ( "movw", rp_rp1,        0x24, 0x08, 0x08, X_NONE )
