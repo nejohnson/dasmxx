@@ -40,12 +40,11 @@
  *
  * Command line:
  *
- *      dasmXX listfile [start_addr]
+ *      dasmXX listfile
  *
  * where
  *      XX         - target name (78k, 96, etc)
  *      listfile   - is the name of the command list file
- *      start_addr - is the start address (TBD)
  *
  * The command list file contains a list of memory segment definitions, used during
  *  processing to tell the disassembler what the memory at a particular address
@@ -536,16 +535,6 @@ static void readlist( char *name )
     fclose(f);
 }
 
-
-
-
-
-
-
-
-
-
-
 /***********************************************************
  *
  * FUNCTION
@@ -755,21 +744,12 @@ int main(int argc, char **argv)
 	 
 	 printf( "   Processing \"%s\" (%ld bytes)\n", inputfile, filelength );
     
-    /* If third arg (start addr) get it and convert to address */
-    if ( argc == 3 )
-    {
-        startaddr = strtol( argv[2], (char **)NULL, 0 );
-        fseek( f, (unsigned long)startaddr - list->addr, SEEK_SET );
-        while ( startaddr > list->addr )
-            list = list->n;
-        addr = startaddr;
-    }
-    else if ( list )
+    if ( list )
         addr = list->addr;
 	 else
 	     error( "empty list file" );
 	 
-	 printf( "   Start address: 0x%04X\n", addr );
+	 printf( "   Disassembly start address: 0x%04X\n", addr );
 	 printf( "   String terminator: 0x%02x\n", string_terminator );
     
     mode = list->mode;
