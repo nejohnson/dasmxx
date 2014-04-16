@@ -52,21 +52,28 @@
  *
  * The commands are (where XXXX denotes hexadecimal address):
  *
+ * File commands:
  *      fName       input file = `Name'
  *      iName       include file `Name' in place of include command
- *      cXXXX       code starts at XXXX
+ *
+ * Configuration commands:
+ *      tXX         string terminator byte (default = 00)
+ *      eXXXX       end of disassembly
+ *      rSSSS,EEEE  set cross-reference range, SSSS = start addr, EEEE = end addr
+ *
+ * Dump commands:
+ *      aXXXX       alphanumeric dump
  *      bXXXX       byte dump
  *      sXXXX       string dump
- *      eXXXX       end of disassembly
  *      wXXXX       word dump
  *      vXXXX       vector address dump
- *      aXXXX       alphanum dump
+ *
+ * Code disassembly commands:
+ *      cXXXX       code disassembly starts at XXXX
  *      pXXXX       procedure start
- *      lXXXX       attach a label to address
- *      tXX         string terminator byte (default = 00)
- *      rFXXXX      set cross-reference range (F=0 start, F=1 end)
+ *      lXXXX       attach a label to address XXXX
  *      kXXXX       one-line (k)comment for address XXXX
- *      nXXXX       multi-line block comment
+ *      nXXXX       multi-line block comment, ends with line starting '.'
  *
  *  Commands c,b,s,e,w,a,p,l can have a comment string separated from the
  *   address by whitespace (tab or space).  The comment is printed in
@@ -98,18 +105,18 @@
 
 #include "dasmxx.h"
 
-
-
 /*****************************************************************************
  *        Data Types, Macros, Constants
  *****************************************************************************/
- 
+
+/* Comment list type */
 struct comment {
     int             ref;
     char            *text;
     struct comment  *next;
 };
 
+/* Dump format list type */
 struct fmt {
     int             mode;
     ADDR             addr;
@@ -117,13 +124,10 @@ struct fmt {
     struct fmt      *n;
 };
 
-
-
-
+/* Set various physical limits */
 #define BYTES_PER_LINE  16
 #define NOTE_BUF_SIZE   1024
 #define COL_LINECOMMENT 60
-
 
 /*****************************************************************************
  *        Global Data
@@ -131,7 +135,7 @@ struct fmt {
 
 struct comment  *linecmt    = NULL;
 struct comment  *blockcmt   = NULL;
-struct fmt      *list;
+struct fmt      *list       = NULL;
 
 int             string_terminator = '\0';
 
@@ -153,17 +157,12 @@ static char datchars[] = "cbsewapv";
 static char *inputfile = NULL;
 
 static UBYTE *insn_byte_buffer = NULL;
-static UBYTE  insn_byte_idx = 0;
+static UBYTE  insn_byte_idx    = 0;
 
 
 /*****************************************************************************
  *        Private Functions
  *****************************************************************************/
-
-
-
-
-
 
 /***********************************************************
  *
@@ -180,48 +179,46 @@ static UBYTE  insn_byte_idx = 0;
 
 static void addcomment( struct comment **list, ADDR ref, char *text )
 {
-    struct comment  *p;
-    struct comment  *q;
-    
-    if ( !xref_inrange( ref ) )
-        return;
-    
-    p = *list;
-    q = NULL;
-    
-    /* Find entry in specified comment list */
-    
-    while ( p != NULL && ref > p->ref )
-    {
-        q = p;
-        p = p->next;
-    }
+	struct comment  *p;
+	struct comment  *q;
 
-    if ( p != NULL && ref == p->ref)  /* new addr for ref */
-    {
-        if ( p->text )
-        {
-            error( "Error: multiple comments for same address. Aborting\n" );
-        }
-        else
-            p->text = dupstr( text );
-    }
-    else /* insert */
-    {
-        if ( q == NULL )
-        {
-            q = zalloc( sizeof( struct comment ) );
-            *list = q;
-        }
-        else
-        {
-            q->next = zalloc( sizeof( struct comment ) );
-            q = q->next;
-        }
-        q->next  = p;
-        q->ref   = ref;
-        q->text  = dupstr( text );
-    }
+	if ( !xref_inrange( ref ) )
+		return;
+
+	p = *list;
+	q = NULL;
+
+	/* Find entry in specified comment list */
+
+	while ( p != NULL && ref > p->ref )
+	{
+		q = p;
+		p = p->next;
+	}
+
+	if ( p != NULL && ref == p->ref)  /* new addr for ref */
+	{
+		if ( p->text )
+			error( "Error: multiple comments for same address. Aborting\n" );
+		else
+			p->text = dupstr( text );
+	}
+	else /* insert */
+	{
+		if ( q == NULL )
+		{
+			q = zalloc( sizeof( struct comment ) );
+			*list = q;
+		}
+		else
+		{
+			q->next = zalloc( sizeof( struct comment ) );
+			q = q->next;
+		}
+		q->next  = p;
+		q->ref   = ref;
+		q->text  = dupstr( text );
+	}
 }
 
 /***********************************************************
@@ -240,35 +237,35 @@ static void addcomment( struct comment **list, ADDR ref, char *text )
 
 static int printcomment( struct comment *list, ADDR ref, int padding )
 {
-    int i;
-    char *p;
-    struct comment *plist = list;
-    
-    while( plist )
-    {
-        if ( plist->ref == ref )
-        {
-            for ( ; padding > 0; padding-- )
-                    putchar( ' ' );
-            
-            printf( "; " );
-            for ( p = plist->text; *p; p++ )
-            {
-                if ( *p == '\n' )
-                    printf( "\n; " );
-                else
-                    putchar( *p );
-            }
-            
-            if ( list == blockcmt )
-                putchar( '\n' );
-            
-            return 1;
-        }
-        plist = plist->next;
-    }    
-    
-    return 0;
+	int i;
+	char *p;
+	struct comment *plist = list;
+
+	while( plist )
+	{
+		if ( plist->ref == ref )
+		{
+			for ( ; padding > 0; padding-- )
+				putchar( ' ' );
+
+			printf( "; " );
+			for ( p = plist->text; *p; p++ )
+			{
+				if ( *p == '\n' )
+					printf( "\n; " );
+				else
+					putchar( *p );
+			}
+
+			if ( list == blockcmt )
+				putchar( '\n' );
+
+			return 1;
+		}
+		plist = plist->next;
+	}    
+
+	return 0;
 }
 
 /***********************************************************
@@ -287,14 +284,14 @@ static int printcomment( struct comment *list, ADDR ref, int padding )
 
 static int commentexists( struct comment *list, ADDR ref )
 {
-    while( list )
-    {
-        if ( list->ref == ref )
-            return 1;
-        list = list->next;
-    }    
-    
-    return 0;
+	while( list )
+	{
+		if ( list->ref == ref )
+			return 1;
+		list = list->next;
+	}    
+
+	return 0;
 }
 
 /***********************************************************
@@ -327,7 +324,7 @@ static int emitaddr( ADDR addr )
  *      addlist
  *
  * DESCRIPTION
- *      adds an item to the list
+ *      adds an item to the dump formating list
  *
  * RETURNS
  *      void
@@ -336,36 +333,36 @@ static int emitaddr( ADDR addr )
 
 static void addlist( ADDR addr, int mode, char *name )
 {
-    struct fmt *p = list, *q = NULL;
-    
-    /* scan through address-ordered list to find right place to insert */
-    while ( p != NULL && p->addr < addr )
-    {
-        q = p;
-        p = p->n;
-    }
-    
-    if ( q == NULL )
-    {
-        /* Insert at head of list */
-        q = zalloc( sizeof( struct fmt ) );
-        list = q;
-    }
-    else
-    {
-        /* Insert within list */
-        q->n = zalloc( sizeof( struct fmt ) );
-        q = q->n;
-    }
-    
-    /* Fill in the blanks */
-    q->addr = addr;
-    q->mode = mode;
-    q->n    = p;
-    if ( name != NULL )
-        q->name = dupstr( name );
-    else
-        q->name = NULL;
+	struct fmt *p = list, *q = NULL;
+
+	/* scan through address-ordered list to find right place to insert */
+	while ( p != NULL && p->addr < addr )
+	{
+		q = p;
+		p = p->n;
+	}
+
+	if ( q == NULL )
+	{
+		/* Insert at head of list */
+		q = zalloc( sizeof( struct fmt ) );
+		list = q;
+	}
+	else
+	{
+		/* Insert within list */
+		q->n = zalloc( sizeof( struct fmt ) );
+		q = q->n;
+	}
+
+	/* Fill in the blanks */
+	q->addr = addr;
+	q->mode = mode;
+	q->n    = p;
+	if ( name != NULL )
+		q->name = dupstr( name );
+	else
+		q->name = NULL;
 }
 
 /***********************************************************
@@ -381,158 +378,158 @@ static void addlist( ADDR addr, int mode, char *name )
  *
  ************************************************************/
 
+#define LINE_BUF_LEN		( 256 )
+#define SKIP_SPACE(M_p)	do {\
+									while(*M_p && isspace(*M_p))\
+										M_p++;\
+								} while(0)
+
 static void readlist( char *name )
 {
-    FILE *f;
-    char buf[256], *p, *q;
-    ADDR addr;
-    int cmd;
-    char notebuf[NOTE_BUF_SIZE];
-    int notelength;
-    enum {
-        LINE_CMD,
-        LINE_NOTE
-    } linemode = LINE_CMD;
-        
-            
-    if ( ( f = fopen( name, "r" ) ) == NULL )
-        error( "Failed to open list command file \"%s\".\n", name );
-    
-    list = NULL;
-    
-    /* Process each line of list file */
-    while ( ( p = fgets( buf, 80, f ) ) != NULL )
-    {
-        buf[strlen( buf ) - 1] = 0;    /* clear newline char */
-        
-        if ( linemode == LINE_CMD )
-        {
-            /* Skip comment lines */
-            if ( buf[0] == '#' )
-                continue;
+	FILE *f;
+	char buf[LINE_BUF_LEN + 1], *pbuf, *q;
+	ADDR addr;
+	int cmd;
+	int n;
+	char notebuf[NOTE_BUF_SIZE + 1];
+	int notelength;
+	enum {
+		LINE_CMD,
+		LINE_NOTE
+	} linemode = LINE_CMD;
 
-            /* skip until we find a data specifier character */        
-            for ( q = datchars; *q != 0 && *q != p[0]; q++ ) ;
+	
+	f = fopen( name, "r" );
+	if ( !f )
+		error( "Failed to open list command file \"%s\".\n", name );
 
-            if ( *q )
-            {
-                char *name = NULL;
-                int count;
+	list = NULL;
 
-                /* Process data specifier */
+	/* Process each line of list file */
+	while ( ( pbuf = fgets( buf, LINE_BUF_LEN, f ) ) != NULL )
+	{
+		if ( linemode == LINE_CMD )
+		{
+			/* strip leading whitespace */
+			SKIP_SPACE(pbuf);
+			
+			/* Skip comment and blank lines */
+			if ( *pbuf == '#' || *pbuf == '\n' )
+				continue;
+			
+			/* Remove trailing newline char */
+			if ( q = strchr( pbuf, '\n' ) )
+				*q = '\0';
 
-                /* - get address */
-                sscanf( p + 1, "%x%n", &addr, &count );
+			/* Peel off command code, then do something about it */
+			cmd = *pbuf++;
+			switch ( cmd )
+			{
+			case 'a': /* alphanumeric dump        */
+			case 'b': /* byte dump                */
+			case 'c': /* start of code disassebly */
+			case 'e': /* end of processing        */
+			case 'p': /* start of procedure       */
+			case 's': /* string dump              */
+			case 'v': /* vector dump              */
+			case 'w': /* word dump                */
+				{
+					sscanf( pbuf, "%x%n", &addr, &n );
+					pbuf += n;
 
-                count++;
-                if ( buf[count] )
-                {
-                    while( buf[count] && isspace( buf[count] ) )
-                        count++;
-                    name = &buf[count];
-                }
+					SKIP_SPACE(pbuf);
+						
+					/* If user has provided and optional name for this entity then
+					 * store it in the xref database.
+					 */
+					if ( pbuf )
+						xref_addxreflabel( addr, pbuf );
 
-                addlist( addr, q - datchars, name );
+					addlist( addr, strchr( datchars, cmd ) - datchars, pbuf );
+				}
+				break;
 
-                if ( name )
-                    xref_addxreflabel( addr, name );
-            }
-            else
-            {
-                /* Some other listfile command */
+			case 'f':  /* inputfile */
+				inputfile = dupstr( pbuf );
+				break;
 
-                switch( p[0] )
-                {
-                    case 'f':  /* inputfile */
-                        inputfile = zalloc( strlen( p ) );
-                        strcpy( inputfile, p + 1 );
-                        break;
-								
-						 case 'i':   /* include file */
-						     readlist( &p[1] );
-						     break;
+			case 'i':   /* include file */
+				readlist( pbuf );
+				break;
 
-                    case 'r':   /* Xref range */
-						  {
-							  ADDR rng;
-							  
-							  sscanf( p + 2, "%x", &rng );
-                        if ( p[1] == '0' )
-                            xref_setmin( rng );
-                        else
-                            xref_setmax( rng );
-                        break;
-								}
+			case 'r':   /* Xref range */
+				{
+					ADDR ssss,eeee;
 
-                    case 't':   /* String terminator byte */
-                        sscanf( p + 1, "%x", &string_terminator );
-                        break;
+					sscanf( pbuf, "%x,%x", &ssss, &eeee );
+					xref_setmin( ssss );
+					xref_setmax( eeee );
+				}
+				break;
 
-                    case 'l':   /* Define xref label */
-                        {
-                            char *label = zalloc( strlen( p ) );
+			case 't':   /* String terminator byte */
+				sscanf( pbuf, "%x", &string_terminator );
+				break;
 
-                            sscanf( p + 1, "%x %s", &addr, label );
-                            xref_addxreflabel( addr, label );
-                            free( label );
-                        }
-                        break;
+			case 'l':   /* Define xref label */
+				{
+					sscanf( pbuf, "%x%n", &addr, &n );
+					pbuf += n;
+					
+					SKIP_SPACE(pbuf);
+					if ( *pbuf )
+						xref_addxreflabel( addr, pbuf );
+				}
+				break;
 
-                    case 'k':   /* Single-line (k)comment */
-                        {
-                            int count;
+			case 'k':   /* Single-line (k)comment */
+				{
+					sscanf( pbuf, "%x%n", &addr, &n );
+					pbuf += n;
+					
+					SKIP_SPACE(pbuf);
+					if ( *pbuf )
+						addcomment( &linecmt, addr, pbuf );
+				}
+				break;
 
-                            sscanf( p + 1, "%x%n", &addr, &count );
-                            count++;
-                            while ( isspace( p[count] ) )
-                                count++;
-                            if ( p[count] )
-                                addcomment( &linecmt, addr, &p[count] );
-                        }
-                        break;
+			case 'n':   /* Multiple-line note */
+				{
+					sscanf( pbuf, "%x%n", &addr, &n );
+					pbuf += n;
+					
+					/* Initialise the note buffer and switch to LINE_NOTE mode. */
+					notelength = 0;
+					notebuf[0] = '\0';
+					linemode = LINE_NOTE;
 
-                    case 'n':   /* Multiple-line note */
-                        {
-                            int count;
+					SKIP_SPACE(pbuf);
+					if ( *pbuf )
+					{
+						strcpy( notebuf, pbuf );
+						notelength = strlen( pbuf );
+					}
+				}
+				break;
+			}   /* switch */
+		}
+		else    /* LINE_NOTE */
+		{
+			/* Note mode is terminated by a line starting with '.' */
+			if ( *pbuf == '.' )
+			{
+				linemode = LINE_CMD;
+				addcomment( &blockcmt, addr, notebuf );
+			}
+			else
+			{
+				size_t len = MIN( strlen( pbuf ), NOTE_BUF_SIZE - notelength );
+				strncat( notebuf, pbuf, len );
+			}
+		}
+	}
 
-                            sscanf( p + 1, "%x%n", &addr, &count );
-                            count++;
-                            notelength = 0;
-                            linemode = LINE_NOTE;
-                            notebuf[0] = '\0';
-
-                            while( isspace( p[count] ) )
-                                count++;
-                            if ( p[count] )
-                            {
-                                strcpy( notebuf, &p[count] );
-                                notelength = strlen( &p[count] );
-                            }
-                        }
-                        break;
-                }   /* switch */
-            }   /* else (*p) */
-        }
-        else    /* LINE_NOTE */
-        {
-            if ( p[0] == '.' )
-            {
-                linemode = LINE_CMD;
-                addcomment( &blockcmt, addr, notebuf );
-            }
-            else
-            {
-                strcat( notebuf, "\n" );
-                notelength++;
-                if ( notelength + strlen( p ) < NOTE_BUF_SIZE )
-                    strcat( notebuf, p );
-                else if ( ( NOTE_BUF_SIZE - notelength ) > 0 )
-                    strncat( notebuf, p, ( NOTE_BUF_SIZE - notelength ) );
-            }
-        }
-    }
-    
-    fclose(f);
+	fclose( f );
 }
 
 /***********************************************************
@@ -556,11 +553,9 @@ static void usage( void )
 	exit(EXIT_FAILURE);
 }
 
-
 /*****************************************************************************
  *        Public Functions
  *****************************************************************************/
- 
  
 /***********************************************************
  *
@@ -605,7 +600,7 @@ void *zalloc( size_t n )
 {
 	void *p = calloc( 1, n );
 	
-	if ( p == NULL )
+	if ( !p )
 		error( "out of memory" );
 		
 	return p;
@@ -689,7 +684,6 @@ UBYTE peek( FILE *fp )
 	
 	return (UBYTE)c;
 }
- 
 
 /***********************************************************
  *
