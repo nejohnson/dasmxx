@@ -38,7 +38,7 @@
 #include "dasmxx.h"
 
 /*****************************************************************************
- * Gloablly-visible decoder properties
+ * Gloabally-visible decoder properties
  *****************************************************************************/
 
 /* Decoder short name */
@@ -49,6 +49,9 @@ const char * dasm_description     = "NEC 78K/III";
 
 /* Decoder maximum instruction length in bytes */
 const int    dasm_max_insn_length = 5;
+
+/* Decoder maximum opcode field width */
+const int    dasm_max_opcode_width = 9;
 
 /*****************************************************************************
  * Private data types, macros, constants.
@@ -362,7 +365,7 @@ static const char * R2[2] = {
  
 static void opcode( const char *opcode )
 {
-	int n = sprintf( g_output_buffer, "%-9s", opcode );
+	int n = sprintf( g_output_buffer, "%-*s", dasm_max_opcode_width, opcode );
 	g_output_buffer += n;
 }
 
@@ -630,19 +633,24 @@ OPERAND_FUNC(memmod)
 	
 	mem = next( f, addr );
 	mem = ( mem >> 4 ) & 0x07;
-
-	low_offset  = next( f, addr );
-	high_offset = next( f, addr );
 	
-	if ( mod == 0x16 )
+	if ( mod == 0x16 ) /* Register Indirect Addressing */
 		operand_mem( f, addr, mem, xtype );
-	else if ( mod == 0x17 )
+	else if ( mod == 0x17 ) /* Base Index Addressing */
 		operand( "%s", MEM_MOD_BI[mem] );
-	else if ( mod == 0x06 )
-		operand( "%s" FORMAT_NUM_8BIT "]", MEM_MOD_BASE[mem], low_offset );
-	else if ( mod == 0x0A )
+	else if ( mod == 0x06 ) /* Base Addressing */
 	{
-		UWORD base = MK_WORD(low_offset, high_offset);
+	   low_offset  = next( f, addr );
+		operand( "%s" FORMAT_NUM_8BIT "]", MEM_MOD_BASE[mem], low_offset );
+	}
+	else if ( mod == 0x0A ) /* Index Addressing */
+	{
+		UWORD base;
+		
+		low_offset  = next( f, addr );
+		high_offset = next( f, addr );		
+		base        = MK_WORD(low_offset, high_offset);
+		
 		operand( "%s%s", 
 		         xref_genwordaddr( NULL, "$", base ), 
 					MEM_MOD_INDEX[mem] ); 
@@ -714,8 +722,10 @@ OPERAND_FUNC(word)
 	UBYTE high_byte = next( f, addr );
 	UWORD word      = MK_WORD( low_byte, high_byte );
 	
-	operand( "#%s", xref_genwordaddr( NULL, "$", word ) );
-	xref_addxref( xtype, g_insn_addr, word );
+	operand( "#" FORMAT_NUM_16BIT, word );
+	
+	//operand( "#%s", xref_genwordaddr( NULL, "$", word ) );
+	//xref_addxref( xtype, g_insn_addr, word );
 }
 
 /***********************************************************
@@ -1172,7 +1182,7 @@ OPERAND_FUNC(AX_word)
 {
 	operand( "AX" );
 	COMMA;
-	operand_word( f, addr, next( f, addr ), xtype );
+	operand_word( f, addr, opc, xtype );
 }
 
 /***********************************************************

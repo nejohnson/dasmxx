@@ -38,7 +38,7 @@
 #include "dasmxx.h"
 
 /*****************************************************************************
- * Gloablly-visible decoder properties
+ * Globally-visible decoder properties
  *****************************************************************************/
 
 /* Decoder short name */
@@ -49,6 +49,9 @@ const char * dasm_description     = "MOS Technology 6502";
 
 /* Decoder maximum instruction length in bytes */
 const int    dasm_max_insn_length = 3;
+
+/* Decoder maximum opcode field width */
+const int    dasm_max_opcode_width = 9;
 
 /*****************************************************************************
  * Private data types, macros, constants.
@@ -206,7 +209,7 @@ static char * g_output_buffer = NULL;
  
 static void opcode( const char *opcode )
 {
-	int n = sprintf( g_output_buffer, "%-9s", opcode );
+	int n = sprintf( g_output_buffer, "%-*s", dasm_max_opcode_width, opcode );
 	g_output_buffer += n;
 }
 

@@ -42,7 +42,7 @@
 const char * dasm_name            = "dasm96";
 const char * dasm_description     = "Intel 8096";
 const int    dasm_max_insn_length = 8;
-
+const int    dasm_max_opcode_width = 9;
 
 
 static char * output_buffer = NULL;
@@ -121,7 +121,7 @@ char instrlen[] = {
  
 static void opcode( const char *opcode )
 {
-	int n = sprintf( output_buffer, "%-9s", opcode );
+	int n = sprintf( output_buffer, "%-*s", dasm_max_opcode_width, opcode );
 	output_buffer += n;
 }
 
