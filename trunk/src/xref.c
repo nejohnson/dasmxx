@@ -229,7 +229,7 @@ void xref_addxreflabel( ADDR ref, char *label )
     if ( p != NULL && ref == p->ref)  /* new addr for ref */
     {
         if ( p->label )
-            error( "multiple labels for same address" );
+            error( "multiple labels for same address (0x%X)", ref );
         else
             p->label = dupstr( label );
     }
