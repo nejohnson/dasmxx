@@ -396,6 +396,32 @@ static void operand( const char *operand, ... )
 	g_output_buffer += n;
 }
 
+/***********************************************************
+ *
+ * FUNCTION
+ *      emit_saddr
+ *
+ * DESCRIPTION
+ *      Emits saddr and saddrp addresses, which are a little
+ *      bit tricky.
+ *      If the offset is in the range 00-1F then it is really
+ *      an SFR in the range FF00-FF1F.  This is done to support
+ *      shorter addressing so the most often used SFRs can be
+ *      accessed a little bit quicker.  Deah oh dear, what a
+ *      nasty little hack!
+ *
+ * RETURNS
+ *      none
+ *
+ ************************************************************/
+static void emit_saddr( UBYTE offset )
+{
+   ADDR saddr = offset + ( offset >= 0x20 ? SADDR_OFFSET : SFR_OFFSET );
+	
+	operand( xref_genwordaddr( NULL, "$", saddr ) );
+	xref_addxref( saddr >= SFR_OFFSET ? X_REG : X_PTR, g_insn_addr, saddr );
+}
+
 /******************************************************************************/
 /**                            Operand Functions                             **/
 /******************************************************************************/
@@ -546,10 +572,8 @@ OPERAND_FUNC(byte)
 OPERAND_FUNC(saddr)
 {
    UBYTE saddr_offset = next( f, addr );
-	ADDR saddr = saddr_offset + SADDR_OFFSET;
 	
-	operand( xref_genwordaddr( NULL, "$", saddr ) );
-	xref_addxref( saddr >= SFR_OFFSET ? X_REG : X_PTR, g_insn_addr, saddr );
+	emit_saddr( saddr_offset );
 }
 
 /***********************************************************
@@ -559,11 +583,9 @@ OPERAND_FUNC(saddr)
 
 OPERAND_FUNC(saddrp)
 {
-   UBYTE saddr_offset = next( f, addr );
-	ADDR saddr = saddr_offset + SADDR_OFFSET;
+   UBYTE saddrp_offset = next( f, addr );
 	
-	operand( xref_genwordaddr( NULL, "$", saddr ) );
-	xref_addxref( saddr >= SFR_OFFSET ? X_REG : X_PTR, g_insn_addr, saddr );
+	emit_saddr( saddrp_offset );
 }
 
 /***********************************************************
@@ -939,13 +961,20 @@ OPERAND_FUNC(saddr_A)
 
 /***********************************************************
  * Process "saddr,saddr" operands.
+ *
+ * Nasty: the instruction encodes the source offset followed
+ * by the destination offset, so we need to extract the 
+ * offsets and present them in the opposite order.
  ************************************************************/
 
 OPERAND_FUNC(saddr_saddr)
 {
-	operand_saddr( f, addr, opc, xtype );
+	UBYTE saddr_src_offset = next( f, addr );
+	UBYTE saddr_dst_offset = next( f, addr );
+	
+	emit_saddr( saddr_dst_offset );
 	COMMA;
-	operand_saddr( f, addr, opc, xtype );
+	emit_saddr( saddr_src_offset );
 }
 
 /***********************************************************
@@ -1121,13 +1150,20 @@ OPERAND_FUNC(saddrp_AX)
 
 /***********************************************************
  * Process "saddrp,saddrp" operands.
+ *
+ * Nasty: the instruction encodes the source offset followed
+ * by the destination offset, so we need to extract the 
+ * offsets and present them in the opposite order.
  ************************************************************/
  
 OPERAND_FUNC(saddrp_saddrp)
 {
-	operand_saddrp( f, addr, opc, xtype );
+	UBYTE saddr_src_offset = next( f, addr );
+	UBYTE saddr_dst_offset = next( f, addr );
+	
+	emit_saddr( saddr_dst_offset );
 	COMMA;
-	operand_saddrp( f, addr, opc, xtype );
+	emit_saddr( saddr_src_offset );
 }
 
 /***********************************************************
