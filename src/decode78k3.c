@@ -61,7 +61,7 @@ const int    dasm_max_opcode_width = 9;
 #define USE_ALT_REG_NAMES
 
 /* Common address offsets */
-#define SADDR_OFFSET			( 0xFE20 )
+#define SADDR_OFFSET			( 0xFE00 )
 #define SFR_OFFSET				( 0xFF00 )
 
 /* Common output formats */
