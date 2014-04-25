@@ -20,14 +20,25 @@ n0000
 #    Memory Map:
 #
 #    FFFF  +---------------------------------+
-#          | DEC - hardware blocks           |
+#          | Internal memory/registers       |  0.5k
+#    FE00  +---------------------------------+
+#          | DEC - hardware blocks           |  7.5k
 #    E000  +---------------------------------+
-#          | RAM                             |
+#          | RAM                             |  8k
 #    C000  +---------------------------------+
-#          | RAM/CARD/ROM                    |
+#          | RAM/CARD/ROM (bank select)      |  16k
 #    8000  +---------------------------------+
-#          | ROM                             |
+#          | ROM                             |  32k
 #    0000  +---------------------------------+
+#
+#    Banks are controlled by {P3.5,P3.4}:
+#      00 - RAM
+#      01 - Card
+#      10 - ROM (8000-BFFF)
+#      11 - ROM (C000-FFFF)
+#
+#    Note that in this scheme the top 8k of RAM is not
+#    accessible.
 #
 #----------------------------------------------------------
 .
@@ -93,7 +104,7 @@ p01a7 STF_Handler
 
 
 
-
+#==========================================================
 
 n0170
 #----------------------------------------------------------
@@ -121,12 +132,12 @@ k0177 Spin until counted down
 k017b Clear count-end flag
 k017e Loop for C cycles
 
-
+#==========================================================
 
 n1375
 #----------------------------------------------------------
 # Function:
-#       MemClear
+#       memzero - set a block of memory to zero.
 #
 # Args:
 #       HL = Pointer to memory to clear
@@ -141,8 +152,121 @@ n1375
 # Notes:
 #----------------------------------------------------------
 .
-p1375 MemClear
-l1377 l_memclr
+p1375 memzero
+l1377 mz_1
+
+#==========================================================
+
+n3BBC
+#----------------------------------------------------------
+# Function:
+#       Setup_IO_Ports
+#
+#       Sets up Ports 0-5 at start of day.
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       none
+#
+# Notes:
+#----------------------------------------------------------
+.
+p3BBC Setup_IO_Ports
+
+#==========================================================
+
+n4326
+# Switch RAM into Banked region
+.
+p4326 Bank_Select_RAM
+
+n432A
+# Switch Memory Card into Banked region
+.
+p432A Bank_Select_Card
+
+n4331
+# Switch ROM region 8000-BFFF into Banked region
+.
+p4331 Bank_Select_ROM_8000_BFFF
+
+n4338
+# Switch ROM region C000-FFFF into Banked region
+.
+p4338 Bank_Select_ROM_C000_FFFF
+
+#==========================================================
+
+n3BD8
+#----------------------------------------------------------
+# Function:
+#       Setup_Peripherals
+#
+#       Sets up internal peripherals into initial state.
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       none
+#
+# Notes:
+#----------------------------------------------------------
+.
+p3BD8 Setup_Peripherals
+
+#==========================================================
+
+n3BA6
+#----------------------------------------------------------
+# Function:
+#       Clear_Working_Memory
+#
+#       Clears all of RAM to zero (except top 16 bytes).
+#       Clears all internal RAM (upto and including RB1).
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       A, B, C, DE
+#
+# Notes:
+#----------------------------------------------------------
+.
+p3BA6 Clear_Working_Memory
+k3BA6 Clear external RAM C000-DFEF
+l3BAF cwm_ram_loop
+k3BB4 Clear internal RAM FE00-FEEF
+
+#==========================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -150,9 +274,9 @@ l1377 l_memclr
 # Functions not yet named
 ###############################################
 
-p3bbc FUNC_3BBC
-p3bd8 FUNC_3DB8
-p3ba6 FUNC_3BA6
+
+
+
 p3c3d FUNC_3C3D
 p3cac FUNC_3CAC
 p3c81 FUNC_3C81
@@ -184,6 +308,10 @@ p0384 FUNC_0384
 p1fec FUNC_1FEC
 p690a FUNC_690A
 p673d FUNC_673D
+
+b6763 Data5
+k65d2 Point to Data5
+
 p30ed FUNC_30ED
 
 
@@ -217,8 +345,14 @@ p0736 FUNC_0736
 p022f FUNC_022F
 p04c0 FUNC_04C0
 p04a7 FUNC_04A7
-p4331 FUNC_4331
-p4326 FUNC_4326
+
+
+
+
+
+
+
+
 p5a12 FUNC_5A12
 
 p3af8 FUNC_3AF8
@@ -239,7 +373,15 @@ p0c74 FUNC_0C74
 p1f50 FUNC_1F50
 p6810 FUNC_6810
 p693a FUNC_693A
+
+
 p3ced FUNC_3CED
+w3d45 Data6
+b3d4d Data7
+
+
+
+
 p0f89 FUNC_0F89
 p3a20 FUNC_3A20
 p07c8 FUNC_07C8
@@ -544,8 +686,6 @@ p41E9 FUNC_41E9
 p41FA FUNC_41FA
 p426E FUNC_426E
 p4301 FUNC_4301
-p432A FUNC_432A
-p4338 FUNC_4338
 p433F FUNC_433F
 p4353 FUNC_4353
 p4366 FUNC_4366
@@ -958,7 +1098,11 @@ p7C78 FUNC_7C78
 p7CCB FUNC_7CCB
 p7D44 FUNC_7D44
 p7DBF FUNC_7DBF
+
 p7DE1 FUNC_7DE1
+b7e0f Data4
+
+
 p7E17 FUNC_7E17
 
 
