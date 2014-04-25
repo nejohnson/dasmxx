@@ -183,7 +183,7 @@ lffbf    EXTREG_F
 
 lffc0    CRIC00
 lffc1    CRMS00
-lfcc2    CRIC01
+lffc2    CRIC01
 lffc4    CRIC10
 lffc5    CRMS10
 lffc6    CRIC11
