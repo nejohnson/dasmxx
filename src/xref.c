@@ -226,7 +226,7 @@ void xref_addxreflabel( ADDR ref, char *label )
         p = p->n;
     }
 
-    if ( p != NULL && ref == p->ref)  /* new addr for ref */
+    if ( p != NULL && ref == p->ref)  /* new label for ref */
     {
         if ( p->label )
             error( "multiple labels for same address (0x%X)", ref );
@@ -327,47 +327,47 @@ char * xref_genwordaddr( char * buf, const char * prefix, ADDR addr )
 
 void xref_dump( void )
 {
-    struct xref *p;
-    struct addrlist *q;
+	struct xref *p;
+	struct addrlist *q;
 
-	 puts( "---------------------------\n" );
-    for ( p = xref; p != NULL; p = p->n )
-    {
-        int i = 0;
-		  
-		  if ( !p->list )
-		    continue;
-        
-        for (q = p->list; q != NULL; q = q->n )
-        {
-            if ( i++ == 0 )
-                printf( FORMAT_ADDR ": ", p->ref );
-            else
-                printf( "      " );
-            
-            switch( q->type )
-            {
-                case X_JMP    : printf( "Jump   @ " ); break;
-                case X_CALL   : printf( "Call   @ " ); break;
-                case X_IMM    : printf( "Imm    @ " ); break;
-                case X_TABLE  : printf( "Table  @ " ); break;
-                case X_DIRECT : printf( "Direct @ " ); break;
-                case X_DATA   : printf( "Data   @ " ); break;
-                case X_PTR    : printf( "Ptr    @ " ); break;
-					case X_REG     : printf( "Reg    @ " ); break;
-                default:
-                    printf( "\nILLEGAL XREF TYPE %d, addr=" FORMAT_ADDR ". Aborting..\n",
-                        q->type, q->addr );
-                    return;
-            }
-            printf( FORMAT_ADDR, q->addr );
-            if ( p->label && i == 1 )
-                printf( "   (%s)", p->label );
-            putchar( '\n' );
-        }
-        putchar( '\n' );
-    }
-	 puts( "---------------------------\n" );
+	printf( "\n\nXREFS :\n\n---------------------------\n" );
+	for ( p = xref; p != NULL; p = p->n )
+	{
+		int i = 0;
+
+		if ( !p->list )
+			continue;
+
+		for (q = p->list; q != NULL; q = q->n )
+		{
+			if ( i++ == 0 )
+				printf( FORMAT_ADDR ": ", p->ref );
+			else
+				printf( "      " );
+
+			switch( q->type )
+			{
+				case X_JMP    : printf( "Jump   @ " ); break;
+				case X_CALL   : printf( "Call   @ " ); break;
+				case X_IMM    : printf( "Imm    @ " ); break;
+				case X_TABLE  : printf( "Table  @ " ); break;
+				case X_DIRECT : printf( "Direct @ " ); break;
+				case X_DATA   : printf( "Data   @ " ); break;
+				case X_PTR    : printf( "Ptr    @ " ); break;
+				case X_REG    : printf( "Reg    @ " ); break;
+				default:
+					printf( "\nILLEGAL XREF TYPE %d, addr=" FORMAT_ADDR ". Aborting..\n",
+					q->type, q->addr );
+					return;
+			}
+			printf( FORMAT_ADDR, q->addr );
+			if ( p->label && i == 1 )
+				printf( "   (%s)", p->label );
+			putchar( '\n' );
+		}
+		putchar( '\n' );
+	}
+	puts( "---------------------------\n" );
 }
  
 /******************************************************************************/
