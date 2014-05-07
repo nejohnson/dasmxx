@@ -744,10 +744,8 @@ OPERAND_FUNC(word)
 	UBYTE high_byte = next( f, addr );
 	UWORD word      = MK_WORD( low_byte, high_byte );
 	
-	operand( "#" FORMAT_NUM_16BIT, word );
-	
-	//operand( "#%s", xref_genwordaddr( NULL, "$", word ) );
-	//xref_addxref( xtype, g_insn_addr, word );
+	operand( "#%s", xref_genwordaddr( NULL, "$", word ) );
+	xref_addxref( xtype, g_insn_addr, word );
 }
 
 /***********************************************************
