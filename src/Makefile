@@ -8,7 +8,7 @@
 #
 #################################################
 
-TARGETS = dasm78k3 dasm96 dasm02
+TARGETS = dasm78k3 dasm96 dasm02 dasm7000
 
 CORE_OBJS = dasmxx.o xref.o
 
@@ -36,6 +36,13 @@ D02_OBJS = ${CORE_OBJS} decode02.o
 
 dasm02: ${D02_OBJS}
 	$(CC) ${D02_OBJS} -o ${@}
+
+#################################################
+
+D7000_OBJS = ${CORE_OBJS} decode7000.o
+
+dasm7000: ${D7000_OBJS}
+	$(CC) ${D7000_OBJS} -o ${@}
 	
 #################################################
 	
