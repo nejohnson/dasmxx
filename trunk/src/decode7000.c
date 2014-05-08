@@ -313,14 +313,24 @@ OPERAND_FUNC(iop)
 
 /***********************************************************
  * Peripheral file (I/O register).
- *	reg.num comes from next byte.
+ *	Register number comes from next byte.
+ * Peripheral registers 00-FF are mapped into memory locations
+ * 100-1FF.
  ************************************************************/
+ 
+#define MAX_INTERNAL_PERIP_REG		( 11 )
+#define INTERNAL_PERIP_REG_BASE	( 0x100 )
  
 OPERAND_FUNC(Pn)
 {
    UBYTE pn = next( f, addr );
+	const char * s;
 	
-	operand( "P" FORMAT_NUM_8BIT, pn );
+	if ( pn <= MAX_INTERNAL_PERIP_REG 
+	     && ( s = xref_findaddrlabel( pn + INTERNAL_PERIP_REG_BASE ) ) )
+		operand( "%s", s );
+	else
+		operand( "P" FORMAT_NUM_8BIT, pn );
 }
 
 /***********************************************************
@@ -345,7 +355,7 @@ OPERAND_FUNC(iop16)
 	UBYTE lsb   = next( f, addr );
 	UWORD iop16 = MK_WORD( lsb, msb );
 
-	operand( xref_genwordaddr( "%%", "$", iop16 ) );
+	operand( "%%%s", xref_genwordaddr( NULL, "$", iop16 ) );
 	xref_addxref( xtype, g_insn_addr, iop16 );
 }
 
@@ -371,7 +381,7 @@ OPERAND_FUNC(label)
 	UBYTE lsb_addr  = next( f, addr );
 	UWORD addr16    = MK_WORD( lsb_addr, msb_addr );
 
-	operand( xref_genwordaddr( "@", "$", addr16 ) );
+	operand( "@%s", xref_genwordaddr( NULL, "$", addr16 ) );
 	xref_addxref( xtype, g_insn_addr, addr16 );
 }
 
@@ -875,7 +885,7 @@ static int walk_table( FILE * f, ADDR * addr, optab_t * optab, UBYTE opc )
 				return INSN_FOUND;
 			}
 		}
-		else if ( optab->type == OPTAB_MEMMOD 
+		else if ( optab->type == OPTAB_MEMMOD   /* NEC78k3 */
 					&& ( opc == 0x16 || opc == 0x17 || opc == 0x06 || opc == 0x0A ) )
 		{
 			if ( !have_peeked )

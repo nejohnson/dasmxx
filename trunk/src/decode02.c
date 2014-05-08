@@ -613,22 +613,67 @@ static optab_t base_optab[] = {
 
 static int walk_table( FILE * f, ADDR * addr, optab_t * optab, UBYTE opc )
 {
+	UBYTE peek_byte;
+	int have_peeked = 0;
+	
 	if ( optab == NULL )
 		return 0;
 		
 	while ( optab->opcode != NULL )
 	{
-		if ( opc == optab->opc )
+	   /* printf("type:%d  ", optab->type); */
+		if ( optab->type == OPTAB_TABLE && optab->opc == opc )
+		{
+			opc = next( f, addr );
+			return walk_table( f, addr, optab->u.table, opc );
+		}
+		else if ( ( optab->type == OPTAB_INSN && opc == optab->opc )
+					||
+					 ( optab->type == OPTAB_RANGE 
+					 		&& opc >= optab->u.range.min 
+							&& opc <= optab->u.range.max )
+					||
+					 ( optab->type == OPTAB_MASK 
+					 		&& ( ( opc & optab->u.mask.mask ) == optab->u.mask.val ) ) )
 		{
 			opcode( optab->opcode );
 			optab->operands( f, addr, opc, optab->xtype );
 			return INSN_FOUND;
 		}
+		else if ( optab->type == OPTAB_MASK2 && opc == optab->opc )
+		{
+			if ( !have_peeked )
+			{
+				peek_byte = peek( f );
+				have_peeked = 1;
+			}
+			
+			if ( ( peek_byte & optab->u.mask.mask ) == optab->u.mask.val )
+			{
+				opcode( optab->opcode );
+				optab->operands( f, addr, opc, optab->xtype );
+				return INSN_FOUND;
+			}
+		}
+		else if ( optab->type == OPTAB_MEMMOD   /* NEC78k3 */
+					&& ( opc == 0x16 || opc == 0x17 || opc == 0x06 || opc == 0x0A ) )
+		{
+			if ( !have_peeked )
+			{
+				peek_byte = peek( f );
+				have_peeked = 1;
+			}
+			
+			if ( ( peek_byte & 0x8F ) == optab->opc )
+			{
+				opcode( optab->opcode );
+				optab->operands( f, addr, opc, optab->xtype );
+				return INSN_FOUND;
+			}		
+		}
 		
 		optab++;	
 	}
-	
-	return INSN_NOT_FOUND;
 }
 
 /*****************************************************************************
