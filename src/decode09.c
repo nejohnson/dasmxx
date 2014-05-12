@@ -286,7 +286,9 @@ OPERAND_FUNC(imm16)
 	xref_addxref( xtype, g_insn_addr, imm16 );
 }
 
-
+/***********************************************************
+ * Process "direct" operand.
+ ************************************************************/
 
 OPERAND_FUNC(direct)
 {
@@ -423,6 +425,10 @@ OPERAND_FUNC(indexed)
 	}
 }
 
+/***********************************************************
+ * Process "extended" operands.
+ ************************************************************/
+ 
 OPERAND_FUNC(extended)
 {
 	UBYTE msb    = next( f, addr );
@@ -461,7 +467,9 @@ OPERAND_FUNC(rel16)
 	xref_addxref( xtype, g_insn_addr, dest );
 }
 
-
+/***********************************************************
+ * Process "r1_r2" operands.
+ ************************************************************/
 
 OPERAND_FUNC(r1_r2)
 {
@@ -476,7 +484,7 @@ OPERAND_FUNC(r1_r2)
 		"U",
 		"S",
 		"PC",
-		"", "",
+		"???", "???", /* not used */
 		"A",
 		"B",
 		"CCR",
@@ -569,12 +577,8 @@ static optab_t page3[] = {
 	END
 };
 
-static optab_t base_optab[] = {
+/** Macros to define classes of instruction **/
 
-/*----------------------------------------------------------------------------
-  8-bit Accumulator and Memory
-  ----------------------------------------------------------------------------*/
-  
 #define ACC_ARGS_OP(M_name, M_base)	\
 		INSN(M_name, imm8,     (0x80 | M_base), X_NONE) \
 		INSN(M_name, direct,   (0x90 | M_base), X_NONE) \
@@ -586,22 +590,31 @@ static optab_t base_optab[] = {
 		INSN(M_name, direct,   (0xD0 | M_base), X_NONE) \
 		INSN(M_name, indexed,  (0xE0 | M_base), X_NONE) \
 		INSN(M_name, extended, (0xF0 | M_base), X_NONE)		
-		
-	ACC_ARGS_OP( "SUBD", 0x03 )
-	ACC_ARGS_OP( "CMPX", 0x0C )
-	ACC_ARGS_OP( "LDX",  0x0E )
-	
-	ACC_ARGS_OPD( "ADDD", 0x03 )
-	ACC_ARGS_OPD( "LDD",  0x0C )
-	ACC_ARGS_OPD( "LDU",  0x0E )
-	
-
 
 #define ACC_AB_ARGS_OP(M_name, M_base)	\
 		ACC_ARGS_OP(M_name "A", (0x00 | M_base)) \
 		ACC_ARGS_OP(M_name "B", (0x40 | M_base))
+
+#define SINGLE_OP(M_name, M_base) \
+		INSN(M_name, direct,   (0x00 | M_base), X_NONE) \
+		INSN(M_name, indexed,  (0x60 | M_base), X_NONE) \
+		INSN(M_name, extended, (0x70 | M_base), X_NONE)
 		
-	
+#define ACC_ARGS_OP_NOIMM(M_name, M_base, M_xref)	\
+		INSN(M_name, direct,   (0x90 | M_base), M_xref) \
+		INSN(M_name, indexed,  (0xA0 | M_base), M_xref) \
+		INSN(M_name, extended, (0xB0 | M_base), M_xref)
+		
+#define ACC_OP_INH(M_name, M_base) \
+		INSN( M_name "A", none, ( 0x40 | M_base ), X_NONE ) \
+		INSN( M_name "B", none, ( 0x50 | M_base ), X_NONE )			
+
+static optab_t base_optab[] = {
+
+/*----------------------------------------------------------------------------
+  8-bit Accumulator and Memory
+  ----------------------------------------------------------------------------*/
+  
 	ACC_AB_ARGS_OP( "ADC", 0x09 )
 	ACC_AB_ARGS_OP( "ADD", 0x0B )
 	ACC_AB_ARGS_OP( "AND", 0x04 )
@@ -613,13 +626,9 @@ static optab_t base_optab[] = {
 	ACC_AB_ARGS_OP( "SBC", 0x02 )
 	ACC_AB_ARGS_OP( "SUB", 0x00 )
 	
-	/* Single Operator */
+	ACC_ARGS_OP_NOIMM( "STA", 0x07, X_PTR )
+	ACC_ARGS_OP_NOIMM( "STB", 0x47, X_PTR )
 	
-#define SINGLE_OP(M_name, M_base) \
-		INSN(M_name, direct,   (0x00 | M_base), X_NONE) \
-		INSN(M_name, indexed,  (0x60 | M_base), X_NONE) \
-		INSN(M_name, extended, (0x70 | M_base), X_NONE)
-		
 	SINGLE_OP( "ASL", 0x08 )
 	SINGLE_OP( "ASR", 0x07 )
 	SINGLE_OP( "CLR", 0x0F )
@@ -632,31 +641,6 @@ static optab_t base_optab[] = {
 	SINGLE_OP( "ROL", 0x09 )
 	SINGLE_OP( "ROR", 0x06 )
 	SINGLE_OP( "TST", 0x0D )
-	SINGLE_OP( "JMP", 0x0E )
-	
-	
-	
-	
-	
-	
-	
-	/* INHERENT */
-	
-	INSN ( "ABX",  none, 0x3A, X_NONE )
-	INSN ( "DAA",  none, 0x19, X_NONE )
-	INSN ( "MUL",  none, 0x3D, X_NONE )
-	INSN ( "NOP",  none, 0x12, X_NONE )
-	INSN ( "RTI",  none, 0x3B, X_NONE )
-	INSN ( "RTS",  none, 0x39, X_NONE )
-	INSN ( "SEX",  none, 0x1D, X_NONE )
-	INSN ( "SWI",  none, 0x3F, X_NONE )
-	INSN ( "SYNC", none, 0x13, X_NONE )
-	
-	/* All the inherent A/B insns */
-	
-#define ACC_OP_INH(M_name, M_base) \
-		INSN( M_name "A", none, ( 0x40 | M_base ), X_NONE ) \
-		INSN( M_name "B", none, ( 0x50 | M_base ), X_NONE )	
 	
 	ACC_OP_INH( "ASL", 0x08 )
 	ACC_OP_INH( "ASR", 0x07 )
@@ -671,9 +655,53 @@ static optab_t base_optab[] = {
 	ACC_OP_INH( "ROR", 0x06 )
 	ACC_OP_INH( "TST", 0x0D )
 	
+	INSN ( "ABX",  none, 0x3A, X_NONE )
+	INSN ( "DAA",  none, 0x19, X_NONE )
+	INSN ( "MUL",  none, 0x3D, X_NONE )
+	INSN ( "LBRA", rel16, 0x16, X_JMP )
+	INSN ( "LBSR", rel16, 0x17, X_JMP )
 	
-	INSN ( "BRA", rel8, 0x20, X_JMP )
-	INSN ( "BRN", rel8, 0x21, X_JMP )
+/*----------------------------------------------------------------------------
+  16-bit Accumulator and Memory
+  ----------------------------------------------------------------------------*/
+
+	ACC_ARGS_OPD( "ADDD", 0x03 )
+	ACC_ARGS_OPD( "LDD",  0x0C )
+
+	INSN ( "SEX",  none, 0x1D, X_NONE )
+
+	ACC_ARGS_OP_NOIMM( "STD", 0x4D, X_PTR )
+	ACC_ARGS_OP( "SUBD", 0x03 )
+  
+/*----------------------------------------------------------------------------
+  Index Register/Stack Pointer
+  ----------------------------------------------------------------------------*/
+
+  	ACC_ARGS_OP( "CMPX", 0x0C )
+	
+	INSN ( "EXG",    r1_r2, 0x1E, X_NONE )
+	INSN ( "LEAX", indexed, 0x30, X_NONE )
+	INSN ( "LEAY", indexed, 0x31, X_NONE )
+	INSN ( "LEAS", indexed, 0x32, X_NONE )
+	INSN ( "LEAU", indexed, 0x33, X_NONE )
+	
+	ACC_ARGS_OPD( "LDU",  0x0E )
+  	ACC_ARGS_OP( "LDX",  0x0E )
+  
+	INSN ( "PSHS", imm8, 0x34, X_NONE )
+	INSN ( "PULS", imm8, 0x35, X_NONE )
+	INSN ( "PSHU", imm8, 0x36, X_NONE )
+	INSN ( "PULU", imm8, 0x37, X_NONE )
+  
+	ACC_ARGS_OP_NOIMM( "STU", 0x4F, X_PTR )
+	ACC_ARGS_OP_NOIMM( "STX", 0x0F, X_PTR )
+  
+	INSN ( "TFR",   r1_r2, 0x1F, X_NONE )
+
+/*----------------------------------------------------------------------------
+  Branch
+  ----------------------------------------------------------------------------*/
+	
 	INSN ( "BHI", rel8, 0x22, X_JMP )
 	INSN ( "BLS", rel8, 0x23, X_JMP )
 	
@@ -693,269 +721,35 @@ static optab_t base_optab[] = {
 	INSN ( "BLT", rel8, 0x2D, X_JMP )
 	INSN ( "BGT", rel8, 0x2E, X_JMP )
 	INSN ( "BLE", rel8, 0x2F, X_JMP )
-	
-	
-	
-	
-	
-	
-	
-	INSN ( "CWAI", imm8, 0x3C, X_NONE )
-	
-	
-	INSN ( "LEAX", indexed, 0x30, X_NONE )
-	INSN ( "LEAY", indexed, 0x31, X_NONE )
-	INSN ( "LEAS", indexed, 0x32, X_NONE )
-	INSN ( "LEAU", indexed, 0x33, X_NONE )
-	INSN ( "PHSH", imm8, 0x34, X_NONE )
-	INSN ( "PULS", imm8, 0x35, X_NONE )
-	INSN ( "PSHU", imm8, 0x36, X_NONE )
-	INSN ( "PULU", imm8, 0x37, X_NONE )
-	
-	
-	INSN ( "LBRA", rel16, 0x16, X_JMP )
-	INSN ( "LBSR", rel16, 0x17, X_JMP )
-	
-	INSN ( "ORCC",  imm8, 0x1A, X_NONE )
-	INSN ( "ANDCC", imm8, 0x1C, X_NONE )
-	
-	INSN ( "EXG",   r1_r2, 0x1E, X_NONE )
-	INSN ( "TFR",   r1_r2, 0x1F, X_NONE )
-	
-	
-	
-	
-	INSN ( "BSR", rel8, 0x8D, X_JMP )
-	
-#define ACC_ARGS_OP_NOIMM(M_name, M_base, M_xref)	\
-		INSN(M_name, direct,   (0x90 | M_base), M_xref) \
-		INSN(M_name, indexed,  (0xA0 | M_base), M_xref) \
-		INSN(M_name, extended, (0xB0 | M_base), M_xref)	
-	
-	ACC_ARGS_OP_NOIMM( "JSR", 0x0D, X_CALL )
-	ACC_ARGS_OP_NOIMM( "STA", 0x07, X_PTR )
-	ACC_ARGS_OP_NOIMM( "STX", 0x0F, X_PTR )
-	
-	ACC_ARGS_OP_NOIMM( "STB", 0x47, X_PTR )
-	ACC_ARGS_OP_NOIMM( "STD", 0x4D, X_PTR )
-	ACC_ARGS_OP_NOIMM( "STU", 0x4F, X_PTR )
-	
-/*----------------------------------------------------------------------------
-  16-bit Accumulator and Memory
-  ----------------------------------------------------------------------------*/
-
-
-
   
-/*----------------------------------------------------------------------------
-  Index Register/Stack Pointer
-  ----------------------------------------------------------------------------*/
-
-
-
-
-/*----------------------------------------------------------------------------
-  Branch
-  ----------------------------------------------------------------------------*/
-  
-
-  
-  
-  
+  	INSN ( "BSR", rel8, 0x8D, X_JMP )
+   INSN ( "BRA", rel8, 0x20, X_JMP )
+	INSN ( "BRN", rel8, 0x21, X_JMP )
+	
 /*----------------------------------------------------------------------------
   Miscellaneous
   ----------------------------------------------------------------------------*/
   
-  
-  
-  
-  
+  	INSN ( "ANDCC", imm8, 0x1C, X_NONE )
+	INSN ( "CWAI",  imm8, 0x3C, X_NONE )
+	INSN ( "NOP",   none, 0x12, X_NONE )
+	INSN ( "ORCC",  imm8, 0x1A, X_NONE )
+	INSN ( "RTI",   none, 0x3B, X_NONE )
+	INSN ( "RTS",   none, 0x39, X_NONE )
+	INSN ( "SWI",   none, 0x3F, X_NONE )
+	INSN ( "SYNC",  none, 0x13, X_NONE )
 
+	SINGLE_OP( "JMP", 0x0E )
+   ACC_ARGS_OP_NOIMM( "JSR", 0x0D, X_CALL )
+	
 /*----------------------------------------------------------------------------
   Sub-Pages
   ----------------------------------------------------------------------------*/  
   
-  TABLE ( page2, 0x10 )
-  TABLE ( page3, 0x11 )
+	TABLE ( page2, 0x10 )
+	TABLE ( page3, 0x11 )
   
 /*----------------------------------------------------------------------------*/  
-  
-  
-  
-#if 0  
-
-#undef ACC_OP
-#define ACC_OP(M_name, M_base)		\
-   INSN ( M_name, imm8,       ( 0x09 | M_base ), X_NONE ) \
-	INSN ( M_name, zeropage,   ( 0x05 | M_base ), X_PTR  ) \
-	INSN ( M_name, zeropage_X, ( 0x15 | M_base ), X_PTR  ) \
-	INSN ( M_name, abs16,      ( 0x0D | M_base ), X_PTR  ) \
-	INSN ( M_name, abs16_X,    ( 0x1D | M_base ), X_PTR  ) \
-	INSN ( M_name, abs16_Y,    ( 0x19 | M_base ), X_PTR  ) \
-	INSN ( M_name, ind8_X,     ( 0x01 | M_base ), X_PTR  ) \
-	INSN ( M_name, ind8_Y,     ( 0x11 | M_base ), X_PTR  )
-
-/*----------------------------------------------------------------------------
-  Load/Store
-  ----------------------------------------------------------------------------*/
-
-	ACC_OP( "lda", 0xA0 )
-	
-	INSN ( "ldx", imm8,       0xA2, X_NONE )
-	INSN ( "ldx", zeropage,   0xA6, X_PTR  )
-	INSN ( "ldx", zeropage_Y, 0xB6, X_PTR  )
-	INSN ( "ldx", abs16,      0xAE, X_PTR  )
-	INSN ( "ldx", abs16_Y,    0xBE, X_PTR  )
-	
-   INSN ( "ldy", imm8,       0xA0, X_NONE )
-	INSN ( "ldy", zeropage,   0xA4, X_PTR  )
-	INSN ( "ldy", zeropage_X, 0xB4, X_PTR  )
-	INSN ( "ldy", abs16,      0xAC, X_PTR  )
-	INSN ( "ldy", abs16_X,    0xBC, X_PTR  )
-	
-	INSN ( "sta", zeropage,   0x85, X_PTR  )
-	INSN ( "sta", zeropage_X, 0x95, X_PTR  )
-	INSN ( "sta", abs16,      0x8D, X_PTR  )
-	INSN ( "sta", abs16_X,    0x9D, X_PTR  )
-	INSN ( "sta", abs16_Y,    0x99, X_PTR  )
-	INSN ( "sta", ind8_X,     0x81, X_PTR  )
-	INSN ( "sta", ind8_Y,     0x91, X_PTR  )
-	
-	INSN ( "stx", zeropage,   0x86, X_PTR  )
-	INSN ( "stx", zeropage_Y, 0x96, X_PTR  )
-	INSN ( "stx", abs16,      0x8E, X_PTR  )
-	
-	INSN ( "sty", zeropage,   0x84, X_PTR  )
-	INSN ( "sty", zeropage_X, 0x94, X_PTR  )
-	INSN ( "sty", abs16,      0x8C, X_PTR  )
-	
-/*----------------------------------------------------------------------------
-  Register Transfers
-  ----------------------------------------------------------------------------*/
-  
-   INSN ( "tax",  none,      0xAA, X_NONE )
-   INSN ( "tay",  none,      0xA8, X_NONE )
-   INSN ( "txa",  none,      0x8A, X_NONE )
-   INSN ( "tya",  none,      0x98, X_NONE )
-  
-/*----------------------------------------------------------------------------
-  Stack Operations
-  ----------------------------------------------------------------------------*/
-  
-	INSN ( "tsx",  none,      0xBA, X_NONE )
-	INSN ( "txs",  none,      0x9A, X_NONE )
-	INSN ( "pha",  none,      0x48, X_NONE )
-	INSN ( "php",  none,      0x08, X_NONE )
-	INSN ( "pla",  none,      0x68, X_NONE )
-	INSN ( "plp",  none,      0x28, X_NONE )
-	
-/*----------------------------------------------------------------------------
-  Logical
-  ----------------------------------------------------------------------------*/
-
-   ACC_OP( "and", 0x20 )
-	ACC_OP( "eor", 0x40 )
-   ACC_OP( "ora", 0x00 )
-	
-	INSN ( "bit", zeropage,   0x24, X_PTR  )
-	INSN ( "bit", abs16,      0x2C, X_PTR  )
-	
-/*----------------------------------------------------------------------------
-  Arithmetic
-  ----------------------------------------------------------------------------*/
- 
-	ACC_OP( "adc", 0x60 )
-	ACC_OP( "sbc", 0xE0 )
-	ACC_OP( "cmp", 0xC0 )
-	
-	INSN ( "cpx", imm8,       0xE0, X_NONE )
-	INSN ( "cpx", zeropage,   0xE4, X_PTR  )
-	INSN ( "cpx", abs16,      0xEC, X_PTR  )
-	
-	INSN ( "cpy", imm8,       0xC0, X_NONE )
-	INSN ( "cpy", zeropage,   0xC4, X_PTR  )
-	INSN ( "cpy", abs16,      0xCC, X_PTR  )
-	
-/*----------------------------------------------------------------------------
-  Increment/Decrement
-  ----------------------------------------------------------------------------*/	
-	
-	INSN ( "inc", zeropage,   0xE6, X_PTR  )
-	INSN ( "inc", zeropage_X, 0xF6, X_PTR  )
-	INSN ( "inc", abs16,      0xEE, X_PTR  )
-	INSN ( "inc", abs16_X,    0xFE, X_PTR  )
-	
-	INSN ( "inx", none,       0xE8, X_NONE )
-	INSN ( "iny", none,       0xC8, X_NONE )
-	
-	INSN ( "dec", zeropage,   0xC6, X_PTR  )
-	INSN ( "dec", zeropage_X, 0xD6, X_PTR  )
-	INSN ( "dec", abs16,      0xCE, X_PTR  )
-	INSN ( "dec", abs16_X,    0xDE, X_PTR  )
-	
-	INSN ( "dex", none,       0xCA, X_NONE )
-	INSN ( "dey", none,       0x88, X_NONE )
-	
-/*----------------------------------------------------------------------------
-  Shift and Rotate
-  ----------------------------------------------------------------------------*/	
-	
-#undef ACC_OP
-#define ACC_OP(M_name, M_base)		\
-   INSN ( M_name, none,       ( 0x0A | M_base ), X_NONE ) \
-	INSN ( M_name, zeropage,   ( 0x06 | M_base ), X_PTR  ) \
-	INSN ( M_name, zeropage_X, ( 0x16 | M_base ), X_PTR  ) \
-	INSN ( M_name, abs16,      ( 0x0E | M_base ), X_PTR  ) \
-	INSN ( M_name, abs16_X,    ( 0x1E | M_base ), X_PTR  )
-	
-	ACC_OP( "asl", 0x00 )
-	ACC_OP( "lsr", 0x40 )
-	ACC_OP( "rol", 0x20 )
-	ACC_OP( "ror", 0x60 )	
-	
-/*----------------------------------------------------------------------------
-  Jumps and Calls
-  ----------------------------------------------------------------------------*/
-  
-   INSN ( "jmp", abs16,      0x4C, X_JMP  )
-	INSN ( "jmp", ind16,      0x6C, X_PTR  )
-   INSN ( "jsr", abs16,      0x20, X_CALL )
-   INSN ( "rts", none,       0x60, X_NONE )
-	
-/*----------------------------------------------------------------------------
-  Conditional Branch
-  ----------------------------------------------------------------------------*/	
-	
-   INSN  ( "bcc",    rel8, 0x90, X_JMP )
-	INSN  ( "bcs",    rel8, 0xB0, X_JMP )
-	INSN  ( "beq",    rel8, 0xF0, X_JMP )
-	INSN  ( "bmi",    rel8, 0x30, X_JMP )
-	INSN  ( "bne",    rel8, 0xD0, X_JMP )
-	INSN  ( "bpl",    rel8, 0x10, X_JMP )
-	INSN  ( "bvc",    rel8, 0x50, X_JMP )
-	INSN  ( "bvs",    rel8, 0x70, X_JMP )
-	
-/*----------------------------------------------------------------------------
-  Status Flag Changes
-  ----------------------------------------------------------------------------*/
-	
-	INSN ( "clc",     none, 0x18, X_NONE )
-	INSN ( "cld",     none, 0xD8, X_NONE )
-	INSN ( "cli",     none, 0x58, X_NONE )
-	INSN ( "clv",     none, 0xB8, X_NONE )
-	INSN ( "sec",     none, 0x38, X_NONE )
-	INSN ( "sed",     none, 0xF8, X_NONE )
-	INSN ( "sei",     none, 0x78, X_NONE )
-	
-/*----------------------------------------------------------------------------
-  System Functions
-  ----------------------------------------------------------------------------*/
-	
-	INSN ( "brk",     none, 0x00, X_NONE )
-	INSN ( "nop",     none, 0xEA, X_NONE )
-	INSN ( "rti",     none, 0x40, X_NONE )
-
-#endif
 	
 	END
 };
