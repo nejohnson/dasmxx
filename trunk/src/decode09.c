@@ -296,8 +296,27 @@ OPERAND_FUNC(direct)
 	xref_addxref( xtype, g_insn_addr, a );
 }
 
-#define IND_OPEN(ind)		do{if(ind)operand("[");}while(0)
-#define IND_CLOSE(ind)	do{if(ind)operand("]");}while(0)
+/***********************************************************
+ * Process "indexed" operand.
+ * This mode uses a postbyte to determine the addressing
+ * mode and how many additional instruction bytes to consume.
+ ************************************************************/
+ 
+enum {
+	MODE_AUTO_INC  = 0x00,
+	MODE_AUTO_INC2 = 0x01,
+	MODE_AUTO_DEC  = 0x02,
+	MODE_AUTO_DEC2 = 0x03,
+	MODE_REG_ONLY  = 0x04,
+	MODE_REG_ACCB  = 0x05,
+	MODE_REG_ACCA  = 0x06,
+	MODE_REG_8OFF  = 0x08,
+	MODE_REG_16OFF = 0x09,
+	MODE_REG_D     = 0x0B,
+	MODE_PCR_8OFF  = 0x0C,
+	MODE_PCR_16OFF = 0x0D,
+	MODE_EXT_IND   = 0x0F	
+};
 
 OPERAND_FUNC(indexed)
 {
@@ -307,7 +326,7 @@ OPERAND_FUNC(indexed)
 	
 	if ( postbyte & BIT(7) )
 	{
-		BYTE offset = ( ( postbyte & 0x1F ) << 3 ) >> 3;
+		BYTE offset = ((BYTE)( ( postbyte & 0x1F ) << 3 )) >> 3;
 		
 		operand( "%d, %s", offset, rrtab[rr] );	
 	}
@@ -316,29 +335,91 @@ OPERAND_FUNC(indexed)
 		UBYTE mode = postbyte & 0x0F;
 		int   ind  = postbyte & 0x10;
 		
+		if ( ind )
+			operand("[");
+			
 		switch ( mode )
 		{
-		case 0x00:
+		case MODE_AUTO_INC:
 			operand( ",%s+", rrtab[rr] );
 			break;
 			
-		case 0x01:
-			IND_OPEN(ind);
+		case MODE_AUTO_INC2:
 			operand( ",%s++", rrtab[rr] );
-			IND_CLOSE(ind);
 			break;
 			
-		case 0x02:
+		case MODE_AUTO_DEC:
 			operand( ",-%s", rrtab[rr] );
 			break;
 			
-		case 0x03:
-			IND_OPEN(ind);
+		case MODE_AUTO_DEC2:
 			operand( ",--%s", rrtab[rr] );
-			IND_CLOSE(ind);
 			break;
 			
-		}	
+		case MODE_REG_ONLY:
+			operand( ",%s", rrtab[rr] );
+			break;
+			
+		case MODE_REG_ACCB:
+			operand( "B, %s", rrtab[rr] );
+			break;
+			
+		case MODE_REG_ACCA:
+			operand( "A, %s", rrtab[rr] );
+			break;
+			
+		case MODE_REG_D:
+			operand( "D, %s", rrtab[rr] );
+			break;
+			
+		case MODE_REG_8OFF:
+			{
+				BYTE offset = (BYTE)next( f, addr );
+				operand( "%d, %s", offset, rrtab[rr] );
+			}
+			break;
+			
+		case MODE_REG_16OFF:
+			{
+				UBYTE msb    = next( f, addr );
+				UBYTE lsb    = next( f, addr );
+				WORD  offset = MK_WORD( lsb, msb );
+				operand( "%d, %s", offset, rrtab[rr] );
+			}
+			break;
+			
+		case MODE_PCR_8OFF:
+			{
+				BYTE offset = (BYTE)next( f, addr );
+				operand( "%d, PCR", offset );
+			}
+			break;
+			
+		case MODE_PCR_16OFF:
+			{
+				UBYTE msb    = next( f, addr );
+				UBYTE lsb    = next( f, addr );
+				WORD  offset = MK_WORD( lsb, msb );
+				operand( "%d, PCR", offset );
+			}
+			break;
+			
+		case MODE_EXT_IND:
+			{
+				UBYTE msb = next( f, addr );
+				UBYTE lsb = next( f, addr );
+				WORD  ea  = MK_WORD( lsb, msb );
+				operand( "%d", ea );
+			}
+			break;
+			
+		default:
+			operand( "???" );
+			break;
+		}
+		
+		if ( ind )
+			operand("]");
 	}
 }
 
