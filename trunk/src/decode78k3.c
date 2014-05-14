@@ -1909,11 +1909,11 @@ static optab_t optab_08[] = {
 
 static optab_t optab_09[] = {
 	
-	INSN  ( "mov",  A_addr16,   0xF0, X_NONE )
-	INSN  ( "mov",  addr16_A,   0xF1, X_NONE )
+	INSN  ( "mov",  A_addr16,   0xF0, X_DATA )
+	INSN  ( "mov",  addr16_A,   0xF1, X_DATA )
 	
-	RANGE ( "movw", rp1_addr16, 0x80, 0x87, X_NONE )
-	RANGE ( "movw", addr16_rp1, 0x90, 0x97, X_NONE )
+	RANGE ( "movw", rp1_addr16, 0x80, 0x87, X_DATA )
+	RANGE ( "movw", addr16_rp1, 0x90, 0x97, X_DATA )
 
 	INSN  ( "mov",  STBC_byte,  0x44, X_NONE )
 	INSN  ( "mov",  WDM_byte,   0x42, X_NONE )
