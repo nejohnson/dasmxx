@@ -106,8 +106,60 @@ p01b9 TMR0_Handler
 
 p020c CRF01_Handler
 
+#==========================================================
+n0183
+#----------------------------------------------------------
+# Function:
+#       SEF_Handler - called on serial error interrupt
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       RB2, AX
+#
+# Notes:
+#----------------------------------------------------------
+.
 p0183 SEF_Handler
+k0185 Save current P3
+k0189 Switch to RAM bank
+k018c ???
+k018f Restore RAM bank
+k0193 Enable interrupts and return
 
+n30ed
+#----------------------------------------------------------
+# Function:
+#       MIDI_Error_Handler
+#
+#       Called by serial error interrupt handler.
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       A
+#
+# Notes:
+#		 !! Executes with interrupts turned off !!
+#       Called directly by interupt handler, so needs to be
+#       quick and non-blocking.		
+#----------------------------------------------------------
+.
+p30ed MIDI_Error_Handler
+k30ed Consume bad byte
+k30ef Clear serial interrupt registers
+k30f3 Set mode bit
+k30f7 Clear $FE60
+k30fa Clear $FE5D bit 1
+k30fc All done, return to interrupt handler
 
 #==========================================================
 n0195
@@ -301,7 +353,7 @@ n30fd
 #
 # Notes:
 #		 !! Executes with interrupts turned off !!
-#       Called directly by interupt handler, so needs to be
+#       Called within interrupt context, so needs to be
 #       quick and non-blocking.		
 #----------------------------------------------------------
 .
@@ -312,10 +364,16 @@ k30ff Get byte from serial peripherals
 k3101 If MIDI receive disabled then just return
 k3104 Check if status byte (top bit set)
 #
-
+k3107 MIDI byte -> C reg
+k310a Do we have an active status byte?
+k310c If not, ignore this data byte (could be noise)
+k310e Is this the start of SysEx?
+k3112 If yes, branch to FUNC_354E
+#
+k3117 If $FE60 < $F0 then switch
 
 #
-l3123 MR_check_active_sense
+l3123 MR_handle_status_byte
 k3123 Is this an active sense byte?
 k3127 Yes, set a flag and return
 #
@@ -330,14 +388,78 @@ k314a Exit point
 #
 
 
-v3166 Branch_Table
-c3177 entry1
-c31b1 entry2
-c3176 entry3
-c31ef entry4
-c333a entry5
-c335b entry6
-c3372 entry7
+v3166 MR_switch_table
+c3177 MR_case_0
+c31b1 MR_case_1
+n3176
+Default case
+.
+c3176 MR_default
+c31ef MR_case_3
+c333a MR_case_4
+c335b MR_case_5
+c3372 MR_case_6
+
+
+
+
+#==========================================================
+n354e
+#----------------------------------------------------------
+# Function:
+#       MIDI_SysEx_Processor
+#
+#       Process SysEx bytes
+#
+# Args:
+#       A = active MIDI status byte (should be $F0)
+#       C = received data byte
+#
+# Returns:
+#       none
+#
+# Uses:
+#       lots
+#
+# Notes:
+#		 !! Executes with interrupts turned off !!
+#       Called within interrupt context, so needs to be
+#       non-blocking.		
+#----------------------------------------------------------
+.
+p354E MIDI_SysEx_Processor
+
+l355d SysEx_Abandon
+k355d Bad sysex, clear active status byte and return
+
+v3561 Branch_Table
+c35a1 entry1
+c35bc entry2
+c35ca entry3
+c35f0 entry4
+c35f9 entry5
+c3613 entry7
+c361c entry8
+c363e entry9
+c3653 entry10
+c36c7 entry11
+c36de entry12
+c3729 entry13
+c36d6 entry14
+c3732 entry15
+c3782 entry16
+c37b8 entry17
+c38c1 entry18
+c3838 entry19
+c39c4 entry20
+c377c entry21
+c386c entry22
+c3769 entry23
+c39e9 entry24
+c39c5 entry25
+
+
+
 
 
 ###############################################################################
@@ -346,7 +468,8 @@ c3372 entry7
 
 bDFFF STACK_TOP
 
-
+bFE60 Active_MIDI_Status_Byte
+bDE57 SysEx_Byte_Counter
 
 
 
@@ -415,7 +538,7 @@ p0384
 p1fec
 p690a
 p673d
-p30ed
+
 p39fa
 
 p7E4A
@@ -674,35 +797,6 @@ p34B0
 p34F8
 p353B
 p3545
-
-
-
-p354E FUNC_354E
-v3561 Branch_Table
-c35a1 entry1
-c35bc entry2
-c35ca entry3
-c35f0 entry4
-c35f9 entry5
-c3613 entry7
-c361c entry8
-c363e entry9
-c3653 entry10
-c36c7 entry11
-c36de entry12
-c3729 entry13
-c36d6 entry14
-c3732 entry15
-c3782 entry16
-c37b8 entry17
-c38c1 entry18
-c3838 entry19
-c39c4 entry20
-c377c entry21
-c386c entry22
-c3769 entry23
-c39e9 entry24
-c39c5 entry25
 
 
 
@@ -1836,7 +1930,6 @@ l352C
 l3537
 l3544
 l354B
-l355D
 l35AD
 l35B1
 l35E0
