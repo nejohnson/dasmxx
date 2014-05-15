@@ -50,6 +50,7 @@ n0000
 #          +---------------------------------+
 #    DFFF  | STACK_TOP                       |
 #          |                                 |
+#    C000  | RAM_START                       |
 #          +---------------------------------+
 #
 #----------------------------------------------------------
@@ -75,6 +76,7 @@ n0040
 #----------------------------------------------------------
 .
 p0040 System_Start
+k0042 Turn off interrupts while things get set up
 k0045 Set stack to top of RAM
 l0071 Init_Loop_1
 l007f Wait_Loop_1
@@ -82,6 +84,7 @@ l008a Wait_Loop_2
 l00a5
 l00da Init_Loop_3
 l0108 Init_Loop_4
+k0123 Now turn on interrupts
 l0124 main_loop
 
 
@@ -97,6 +100,9 @@ n0181
 #----------------------------------------------------------
 .
 p0181 Dummy_Int_Handler
+#----------------------------------------------------------
+
+
 
 
 
@@ -104,7 +110,38 @@ p022d EXIF0_Handler
 
 p01b9 TMR0_Handler
 
+#==========================================================
+n020c
+#----------------------------------------------------------
+# Function:
+#       CRF01_Handler - Up/down counter 0 Interrupt handler
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       RB2, AX
+#
+# Notes:
+#		  !! Executes with interrupts turned off !!
+#       Called directly by interupt handler, so needs to be
+#       quick and non-blocking.
+#
+#       @3C1E we find Counter0 set to generate system ticks
+#       period of 32ms (31.25 Hz).
+#
+#       It looks like DE22 is being used as a prescalar,
+#       making this handler do stuff every ~200ms.
+#       Which is about right for Active Sense messages
+#       (MIDI spec says within 300ms).
+#----------------------------------------------------------
+.
 p020c CRF01_Handler
+k0220 Send Active Sense byte
+bde22 Sys_Tick_Prescalar
 
 #==========================================================
 n0183
@@ -127,7 +164,7 @@ n0183
 p0183 SEF_Handler
 k0185 Save current P3
 k0189 Switch to RAM bank
-k018c ???
+k018c Go and do something about the error
 k018f Restore RAM bank
 k0193 Enable interrupts and return
 
@@ -188,8 +225,29 @@ k01a5 Enable interrupts and return
 
 
 #==========================================================
+n01a7
+#----------------------------------------------------------
+# Function:
+#       STF_Handler - called on serial transmit interrupt
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       RB2, AX
+#
+# Notes:
+#----------------------------------------------------------
+.
 p01a7 STF_Handler
-
+k01a9 Save current P3
+k01ad Switch to RAM bank
+k01b0 Load up next byte to send
+k01b3 Restore RAM bank
+k01b7 Enable interrupts and return
 
 
 
@@ -220,6 +278,16 @@ k0177 Spin until counted down
 k017b Clear count-end flag
 k017e Loop for C cycles
 
+
+
+
+
+
+
+
+
+
+
 #==========================================================
 n1375
 #----------------------------------------------------------
@@ -241,6 +309,61 @@ n1375
 .
 p1375 memzero
 l1377 mz_1
+
+
+
+
+
+
+
+
+
+
+#==========================================================
+n3B82
+#----------------------------------------------------------
+# Function:
+#       MIDI_FIFO_Tx_Next
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       A, B
+#
+# Notes:
+#       Notice the lack of wrap-around on the tail index.
+#       This suggests the Tx FIFO is 256 bytes deep, relying
+#       on byte (modulo-256) arithmetic to wrap from $FF 
+#       to $00 for free.
+#----------------------------------------------------------
+.
+p3B82 MIDI_FIFO_Tx_Next
+k3b82 Compare head and tail indicies
+k3b85 Branch if data to send
+k3b87 No data, turn off Tx
+#
+k3b8b Get tail index
+k3b8f Get next byte from FIFO
+k3b93 Bump tail index
+k3b95 And save it
+k3b98 Load next byte into transmit register
+k3b9a Set "tx-in-progress" flag (???)
+
+
+
+#==========================================================
+
+
+
+
+
+
+
+
 
 #==========================================================
 n3BBC
@@ -462,14 +585,97 @@ c39c5 entry25
 
 
 
+
+
+#==========================================================
+n39fa
+#----------------------------------------------------------
+# Function:
+#       MIDI_Tx
+#
+#       Looks like a simple wrapper around a call to 
+#			MIDI_FIFO_Tx_Next
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       none
+#
+# Notes:
+#----------------------------------------------------------
+.
+p39fa MIDI_Tx
+#
+#----------------------------------------------------------
+
+
+
+
+
+
+#==========================================================
+n3B54
+#----------------------------------------------------------
+# Function:
+#       MIDI_Tx_FIFO_Push
+#
+#       Push a byte into the MIDI Tx FIFO
+#
+# Args:
+#       A = MIDI byte to push into the FIFO
+#
+# Returns:
+#       none
+#
+# Uses:
+#       B
+#
+# Notes:
+#----------------------------------------------------------
+.
+p3B54 MIDI_Tx_FIFO_Push
+k3b57 Put byte into B register
+k3b59 Compare head and tail indices
+k3b5c FIFO has some data already, so consumer is active
+k3b5e FIFO empty, are we transmitting?
+k3b62 No, so put byte directly into the UART transmit register
+k3b67 And kick the UART into action
+#
+k3b6a Get head index
+k3b6d Put byte into FIFO head
+k3b71 Bump head index
+#
+k3b72 Check if FIFO is full
+k3b76 Spin around while the FIFO is full
+k3b78 Space now in FIFO, save head index
+#
+k3b7b Enable UART
+
+
+
+
+
+
+
+
 ###############################################################################
 ## Global Data
 ###############################################################################
 
+bc000 RAM_START
 bDFFF STACK_TOP
 
 bFE60 Active_MIDI_Status_Byte
 bDE57 SysEx_Byte_Counter
+
+
+bfe4c MIDI_Tx_FIFO_Tail
+bfe4a MIDI_Tx_FIFO_Head
+bd902 MIDI_Tx_FIFO
 
 
 
@@ -539,7 +745,7 @@ p1fec
 p690a
 p673d
 
-p39fa
+
 
 p7E4A
 v7E55 Branch_Table
@@ -559,7 +765,7 @@ p04D3
 p141F
 p137B
 p22E2
-p3B54
+
 p0376
 p0722
 p072f
@@ -821,7 +1027,7 @@ c3aa7 entry3
 
 p3acc
 p3B23
-p3B82
+
 p3B9D
 p3CB6
 p3CD3
@@ -2755,8 +2961,8 @@ s8000
 b8A95
 
 ba000
-bc000
-be000
+
+be000 DEC_START
 
 
 ## END ##
