@@ -208,7 +208,7 @@ static void addcomment( struct comment **list, ADDR ref, char *text )
 	if ( p != NULL && ref == p->ref)  /* new addr for ref */
 	{
 		if ( p->text )
-			error( "Error: multiple comments for same address. Aborting\n" );
+			error( "Multiple comments for same address ($%04X)", ref );
 
 		p->text = dupstr( text );
 	}
@@ -401,11 +401,11 @@ static void readlist( const char *listfile, struct params *params )
 	} linemode = LINE_CMD;
 	
 	if ( !listfile )
-		error( "No listfile specifed.\n" );
+		error( "No listfile specifed" );
 		
 	f = fopen( listfile, "r" );
 	if ( !f )
-		error( "Failed to open list command file \"%s\".\n", listfile );
+		error( "Failed to open list command file \"%s\"", listfile );
 
 	/* Process each line of list file */
 	while ( ( pbuf = fgets( buf, LINE_BUF_LEN, f ) ) != NULL )
@@ -478,7 +478,7 @@ static void readlist( const char *listfile, struct params *params )
 
 			case 'f':  /* inputfile */
 				if ( params->inputfile )
-					error( "Multiple input files specified.\n" );
+					error( "Multiple input files specified" );
 				params->inputfile = (const char *)dupstr( pbuf );
 				break;
 
@@ -620,7 +620,7 @@ static void run_disasm( struct params params )
 	
 	f = fopen( inputfile, "rb" );
 	if ( !f )
-		error( "failed to open input file" );
+		error( "Failed to open input file" );
 		
 	fseek( f, 0, SEEK_END );
 	filelength = ftell( f );
@@ -954,7 +954,7 @@ static struct params process_args( int argc, char **argv )
          break;
 		
 		default: /* '?' */
-         error( "Uknown command line option `-%c'.  Use `-h' for help.\n", opt );
+         error( "Uknown command line option `-%c'.  Use `-h' for help", opt );
 		}
 	}
 	
@@ -1071,7 +1071,7 @@ void *zalloc( size_t n )
 	void *p = calloc( 1, n );
 	
 	if ( !p )
-		error( "out of memory" );
+		error( "Out of memory" );
 		
 	return p;
 }
@@ -1093,7 +1093,7 @@ char * dupstr( const char *s )
 {
 	char *p = strdup( s );
 	if ( !p )
-		error( "out of memory" );
+		error( "Out of memory" );
 		
 	return p;
 }
@@ -1117,7 +1117,7 @@ UBYTE next( FILE* fp, ADDR *addr )
 	
 	c = fgetc( fp );
 	if ( c == EOF )
-		error( "run out of input file" );
+		error( "Ran past end of input file" );
 		
 	if ( insn_byte_idx < dasm_max_insn_length )
 		insn_byte_buffer[insn_byte_idx++] = (UBYTE)c;
@@ -1146,11 +1146,11 @@ UBYTE peek( FILE *fp )
 	
 	c = fgetc( fp );
 	if ( c == EOF )
-		error( "run out of input file" );
+		error( "Ran past end of input file" );
 		
 	c = ungetc( c, fp );
 	if ( c == EOF )
-		error( "unable to peek at input file" );
+		error( "Unable to peek at input file" );
 	
 	return (UBYTE)c;
 }
@@ -1179,10 +1179,10 @@ int main(int argc, char **argv)
 
 	/* Check things are set up ready to run */
 	if ( !params.cmdlist )
-		error( "empty list file" );
+		error( "Empty list file" );
 
 	if ( !params.inputfile )
-		error( "no input file specified" );
+		error( "No input file specified" );
 		
 	/* Prepare then instruction byte buffer */
 	insn_byte_buffer = zalloc( dasm_max_insn_length );
