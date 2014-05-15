@@ -140,8 +140,13 @@ n020c
 #----------------------------------------------------------
 .
 p020c CRF01_Handler
+k0219 TODO
+k021c TODO
 k0220 Send Active Sense byte
 bde22 Sys_Tick_Prescalar
+k0225 Reset prescaler
+k0227 Update prescaler
+k022b Enable interrupts and exit handler
 
 #==========================================================
 n0183
@@ -662,6 +667,111 @@ k3b7b Enable UART
 
 
 
+
+#==========================================================
+n3076
+#----------------------------------------------------------
+# Function:
+#       MIDI_Send_Identity_Reply
+#
+#       Sends SysEx Identity Reply message
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       A
+#
+# Notes:
+#----------------------------------------------------------
+.
+p3076 MIDI_Send_Identity_Reply
+k3076 byte: system exclusive status
+k307b byte: non-realtime
+k3080 Query channel number
+k3086 byte: channel number
+k3089 byte: sub id #1 - general information
+k308e byte: sub id #2 - device identity reply
+k3093 byte: manufacturer's id
+k3098 byte: synth group lsb
+k309d byte: synth group msb
+k30a2 byte: k4/k4r id lsb
+k30a7 byte: k4/k4r id msb
+k30ac byte: format no.00
+k30b1 byte: format no.00
+k30b6 byte: format no.00
+k30bb byte: format no.00
+k30c0 byte: EOX
+
+
+
+
+
+#==========================================================
+n3545
+#----------------------------------------------------------
+# Function:
+#       Convert_To_MIDI_Pgm
+#
+#       Convert internal program number to MIDI program
+#       number.
+#
+# Args:
+#       A = prog number
+#
+# Returns:
+#       A = MIDI program number
+#
+# Uses:
+#       A
+#
+# Notes:
+#----------------------------------------------------------
+.
+p3545 Convert_To_MIDI_Pgm
+k3545 If bit 7 is set then this is a multi program
+k3548 If not, then mask the single program to 0~63
+k354b Map multi pgm to 64~127
+
+
+#==========================================================
+n3489
+#----------------------------------------------------------
+# Function:
+#       MIDI_Send_Prog_Change
+#
+#       Sends Program Change message
+#
+# Args:
+#       A = prog number
+#
+# Returns:
+#       none
+#
+# Uses:
+#       A
+#
+# Notes:
+#----------------------------------------------------------
+.
+p3489 MIDI_Send_Prog_Change
+
+k348d Get MIDI Tx control
+k3491 If Tx disabled, leave now
+k3494 Get MIDI channel and assemble status byte
+k349c Check for running status
+k349e Same last status byte, so don't resend it
+#
+k34a5 Send new program number
+
+
+
+
+
+
 ###############################################################################
 ## Global Data
 ###############################################################################
@@ -673,6 +783,11 @@ bFE60 Active_MIDI_Status_Byte
 bDE57 SysEx_Byte_Counter
 
 
+bbb26 MIDI_Channel
+bbb27 MIDI_Tx_Ctrl
+
+
+bFE61 MIDI_Last_Status_Byte
 bfe4c MIDI_Tx_FIFO_Tail
 bfe4a MIDI_Tx_FIFO_Head
 bd902 MIDI_Tx_FIFO
@@ -968,7 +1083,7 @@ p2D74
 p2D80
 p2E02
 p2EC3
-p3076
+
 p30C8
 p30D5
 p30DE
@@ -998,11 +1113,11 @@ p33C2
 p33CC
 p33D8
 p346D
-p3489
+
 p34B0
 p34F8
 p353B
-p3545
+
 
 
 
