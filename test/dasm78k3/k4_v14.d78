@@ -17,6 +17,16 @@ i78310_regs.d78
 tC0
 
 ###############################################################################
+##
+##  SYSTEM MODULES
+##
+###############################################################################
+
+# MIDI
+ik4_v14_midi.d78
+
+
+###############################################################################
 
 n0000
 #----------------------------------------------------------
@@ -140,8 +150,16 @@ n020c
 #----------------------------------------------------------
 .
 p020c CRF01_Handler
-k0219 TODO
-k021c TODO
+k0219 Reset running status
+k021c ???
+n0220
+
+!!!!!  Note that trying to send a MIDI byte from within an
+       interrupt handler with interrupts disabled could
+       block forever, as there is no way for the transmit
+       interrupt to empty the Tx FIFO.
+       BIG OOPSIE!!!!
+.
 k0220 Send Active Sense byte
 bde22 Sys_Tick_Prescalar
 k0225 Reset prescaler
@@ -173,35 +191,7 @@ k018c Go and do something about the error
 k018f Restore RAM bank
 k0193 Enable interrupts and return
 
-n30ed
-#----------------------------------------------------------
-# Function:
-#       MIDI_Error_Handler
-#
-#       Called by serial error interrupt handler.
-#
-# Args:
-#       none
-#
-# Returns:
-#       none
-#
-# Uses:
-#       A
-#
-# Notes:
-#		 !! Executes with interrupts turned off !!
-#       Called directly by interupt handler, so needs to be
-#       quick and non-blocking.		
-#----------------------------------------------------------
-.
-p30ed MIDI_Error_Handler
-k30ed Consume bad byte
-k30ef Clear serial interrupt registers
-k30f3 Set mode bit
-k30f7 Clear $FE60
-k30fa Clear $FE5D bit 1
-k30fc All done, return to interrupt handler
+
 
 #==========================================================
 n0195
@@ -324,39 +314,7 @@ l1377 mz_1
 
 
 
-#==========================================================
-n3B82
-#----------------------------------------------------------
-# Function:
-#       MIDI_FIFO_Tx_Next
-#
-# Args:
-#       none
-#
-# Returns:
-#       none
-#
-# Uses:
-#       A, B
-#
-# Notes:
-#       Notice the lack of wrap-around on the tail index.
-#       This suggests the Tx FIFO is 256 bytes deep, relying
-#       on byte (modulo-256) arithmetic to wrap from $FF 
-#       to $00 for free.
-#----------------------------------------------------------
-.
-p3B82 MIDI_FIFO_Tx_Next
-k3b82 Compare head and tail indicies
-k3b85 Branch if data to send
-k3b87 No data, turn off Tx
-#
-k3b8b Get tail index
-k3b8f Get next byte from FIFO
-k3b93 Bump tail index
-k3b95 And save it
-k3b98 Load next byte into transmit register
-k3b9a Set "tx-in-progress" flag (???)
+
 
 
 
@@ -461,312 +419,6 @@ k3BA6 Clear external RAM C000-DFEF
 l3BAF cwm_ram_loop
 k3BB4 Clear internal RAM FE00-FEEF
 
-#==========================================================
-n30fd
-#----------------------------------------------------------
-# Function:
-#       MIDI_Receiver
-#
-#       Called by serial receive interrupt handler when a
-#       new data byte arrives.
-#
-# Args:
-#       none
-#
-# Returns:
-#       none
-#
-# Uses:
-#       A, B, C, DE
-#
-# Notes:
-#		 !! Executes with interrupts turned off !!
-#       Called within interrupt context, so needs to be
-#       quick and non-blocking.		
-#----------------------------------------------------------
-.
-p30FD MIDI_Receiver
-#
-k30fd Set some flag
-k30ff Get byte from serial peripherals
-k3101 If MIDI receive disabled then just return
-k3104 Check if status byte (top bit set)
-#
-k3107 MIDI byte -> C reg
-k310a Do we have an active status byte?
-k310c If not, ignore this data byte (could be noise)
-k310e Is this the start of SysEx?
-k3112 If yes, branch to FUNC_354E
-#
-k3117 If $FE60 < $F0 then switch
-
-#
-l3123 MR_handle_status_byte
-k3123 Is this an active sense byte?
-k3127 Yes, set a flag and return
-#
-l312a MR_check_system_realtime
-k312a Is byte 0xF8 or above?
-k312c If so, ignore it
-
-
-#
-l314a MR_exit
-k314a Exit point
-#
-
-
-v3166 MR_switch_table
-c3177 MR_case_0
-c31b1 MR_case_1
-n3176
-Default case
-.
-c3176 MR_default
-c31ef MR_case_3
-c333a MR_case_4
-c335b MR_case_5
-c3372 MR_case_6
-
-
-
-
-#==========================================================
-n354e
-#----------------------------------------------------------
-# Function:
-#       MIDI_SysEx_Processor
-#
-#       Process SysEx bytes
-#
-# Args:
-#       A = active MIDI status byte (should be $F0)
-#       C = received data byte
-#
-# Returns:
-#       none
-#
-# Uses:
-#       lots
-#
-# Notes:
-#		 !! Executes with interrupts turned off !!
-#       Called within interrupt context, so needs to be
-#       non-blocking.		
-#----------------------------------------------------------
-.
-p354E MIDI_SysEx_Processor
-
-l355d SysEx_Abandon
-k355d Bad sysex, clear active status byte and return
-
-v3561 Branch_Table
-c35a1 entry1
-c35bc entry2
-c35ca entry3
-c35f0 entry4
-c35f9 entry5
-c3613 entry7
-c361c entry8
-c363e entry9
-c3653 entry10
-c36c7 entry11
-c36de entry12
-c3729 entry13
-c36d6 entry14
-c3732 entry15
-c3782 entry16
-c37b8 entry17
-c38c1 entry18
-c3838 entry19
-c39c4 entry20
-c377c entry21
-c386c entry22
-c3769 entry23
-c39e9 entry24
-c39c5 entry25
-
-
-
-
-
-
-
-#==========================================================
-n39fa
-#----------------------------------------------------------
-# Function:
-#       MIDI_Tx
-#
-#       Looks like a simple wrapper around a call to 
-#			MIDI_FIFO_Tx_Next
-#
-# Args:
-#       none
-#
-# Returns:
-#       none
-#
-# Uses:
-#       none
-#
-# Notes:
-#----------------------------------------------------------
-.
-p39fa MIDI_Tx
-#
-#----------------------------------------------------------
-
-
-
-
-
-
-#==========================================================
-n3B54
-#----------------------------------------------------------
-# Function:
-#       MIDI_Tx_FIFO_Push
-#
-#       Push a byte into the MIDI Tx FIFO
-#
-# Args:
-#       A = MIDI byte to push into the FIFO
-#
-# Returns:
-#       none
-#
-# Uses:
-#       B
-#
-# Notes:
-#----------------------------------------------------------
-.
-p3B54 MIDI_Tx_FIFO_Push
-k3b57 Put byte into B register
-k3b59 Compare head and tail indices
-k3b5c FIFO has some data already, so consumer is active
-k3b5e FIFO empty, are we transmitting?
-k3b62 No, so put byte directly into the UART transmit register
-k3b67 And kick the UART into action
-#
-k3b6a Get head index
-k3b6d Put byte into FIFO head
-k3b71 Bump head index
-#
-k3b72 Check if FIFO is full
-k3b76 Spin around while the FIFO is full
-k3b78 Space now in FIFO, save head index
-#
-k3b7b Enable UART
-
-
-
-
-
-
-
-
-
-#==========================================================
-n3076
-#----------------------------------------------------------
-# Function:
-#       MIDI_Send_Identity_Reply
-#
-#       Sends SysEx Identity Reply message
-#
-# Args:
-#       none
-#
-# Returns:
-#       none
-#
-# Uses:
-#       A
-#
-# Notes:
-#----------------------------------------------------------
-.
-p3076 MIDI_Send_Identity_Reply
-k3076 byte: system exclusive status
-k307b byte: non-realtime
-k3080 Query channel number
-k3086 byte: channel number
-k3089 byte: sub id #1 - general information
-k308e byte: sub id #2 - device identity reply
-k3093 byte: manufacturer's id
-k3098 byte: synth group lsb
-k309d byte: synth group msb
-k30a2 byte: k4/k4r id lsb
-k30a7 byte: k4/k4r id msb
-k30ac byte: format no.00
-k30b1 byte: format no.00
-k30b6 byte: format no.00
-k30bb byte: format no.00
-k30c0 byte: EOX
-
-
-
-
-
-#==========================================================
-n3545
-#----------------------------------------------------------
-# Function:
-#       Convert_To_MIDI_Pgm
-#
-#       Convert internal program number to MIDI program
-#       number.
-#
-# Args:
-#       A = prog number
-#
-# Returns:
-#       A = MIDI program number
-#
-# Uses:
-#       A
-#
-# Notes:
-#----------------------------------------------------------
-.
-p3545 Convert_To_MIDI_Pgm
-k3545 If bit 7 is set then this is a multi program
-k3548 If not, then mask the single program to 0~63
-k354b Map multi pgm to 64~127
-
-
-#==========================================================
-n3489
-#----------------------------------------------------------
-# Function:
-#       MIDI_Send_Prog_Change
-#
-#       Sends Program Change message
-#
-# Args:
-#       A = prog number
-#
-# Returns:
-#       none
-#
-# Uses:
-#       A
-#
-# Notes:
-#----------------------------------------------------------
-.
-p3489 MIDI_Send_Prog_Change
-
-k348d Get MIDI Tx control
-k3491 If Tx disabled, leave now
-k3494 Get MIDI channel and assemble status byte
-k349c Check for running status
-k349e Same last status byte, so don't resend it
-#
-k34a5 Send new program number
-
 
 
 
@@ -779,18 +431,7 @@ k34a5 Send new program number
 bc000 RAM_START
 bDFFF STACK_TOP
 
-bFE60 Active_MIDI_Status_Byte
-bDE57 SysEx_Byte_Counter
 
-
-bbb26 MIDI_Channel
-bbb27 MIDI_Tx_Ctrl
-
-
-bFE61 MIDI_Last_Status_Byte
-bfe4c MIDI_Tx_FIFO_Tail
-bfe4a MIDI_Tx_FIFO_Head
-bd902 MIDI_Tx_FIFO
 
 
 
@@ -889,7 +530,6 @@ p022f
 p04c0
 p04a7
 p5a12
-p3af8
 p026c
 p09eb
 p3f05
@@ -908,7 +548,6 @@ p6810
 p693a
 p3ced
 p0f89 
-p3a20 
 p07c8 
 p0cf0 
 p0856 
@@ -919,7 +558,7 @@ p08cf
 p08f8 
 p12c0 
 p69f5 
-p39fe 
+
 p0aef 
 p0aac 
 p0b20 
@@ -1140,10 +779,9 @@ c3a87 entry2
 c3aa7 entry3
 
 
-p3acc
 p3B23
 
-p3B9D
+
 p3CB6
 p3CD3
 p3D51
@@ -1352,7 +990,15 @@ p691B
 p6983
 p69D9
 p69FD
+
+
 p6A64
+b6ae7
+
+
+
+
+
 p6AF7
 p6B0A
 p6B47
