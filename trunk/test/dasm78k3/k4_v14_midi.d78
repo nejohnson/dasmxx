@@ -15,12 +15,13 @@
 ###############################################################################
 
 bFE60 Active_MIDI_Status_Byte
-bDE57 SysEx_Byte_Counter
+bDE57 SysEx_Parser_State
 bDE56 MIDI_Keyboard_Offset
 
 
 bbb26 MIDI_Channel
 bbb27 MIDI_Tx_Ctrl
+bbb28 MIDI_SysEx_Identify_Channel
 
 
 bFE61 MIDI_Last_Status_Byte
@@ -183,7 +184,7 @@ l312a MR_check_system_realtime
 k312a Is byte 0xF8 or above?
 k312c If so, ignore it
 
-k313f Reset sysex counter
+k313f Reset sysex parser state
 
 #
 l314a MR_exit
@@ -212,9 +213,11 @@ c3372 MR_case_6
 n354e
 #----------------------------------------------------------
 # Function:
-#       MIDI_SysEx_Processor
+#       MIDI_SysEx_Parser
 #
-#       Process SysEx bytes
+#       Process SysEx bytes in a state machine that
+#       follows the structure of valid sysex messages
+#       for the K4.
 #
 # Args:
 #       A = active MIDI status byte (should be $F0)
@@ -232,39 +235,93 @@ n354e
 #       non-blocking.		
 #----------------------------------------------------------
 .
-p354E MIDI_SysEx_Processor
+p354E MIDI_SysEx_Parser
 k354e Load current sysex state
-k3552 Move to LSB of table index
+k3552 Move to LSB of state table index
 k3554 Clear bottom 6 bits of table index MSB, and check top 2 bits are 00
 k3556 If top 2 bits not 00 then illegal sysex state
 l355d SysEx_Abandon
 k355d Bad sysex, clear active status byte and return
 
-v3561 Branch_Table
-c35a1 entry1
-c35bc entry2
-c35ca entry3
-c35f0 entry4
-c35f9 entry5
-c3613 entry7
-c361c entry8
-c363e entry9
-c3653 entry10
-c36c7 entry11
-c36de entry12
-c3729 entry13
-c36d6 entry14
-c3732 entry15
-c3782 entry16
-c37b8 entry17
-c38c1 entry18
-c3838 entry19
-c39c4 entry20
-c377c entry21
-c386c entry22
-c3769 entry23
-c39e9 entry24
-c39c5 entry25
+v3561 SysEx_Parser_Table
+
+# Following are the individual parser state actions.
+# They all do something, some of them also modify the 
+# parser state.
+#----------------------------------------------------------
+n35a1
+#----------------------------------------------------------
+if byte == $40 (Kawai format)
+   move to next state
+else if byte == $7E (universal format)
+   move forward 5 states (add $0A)
+else
+   abort
+.
+c35a1 ssx_action_A
+
+#----------------------------------------------------------
+n35bc
+#----------------------------------------------------------
+move to next state
+if (byte & $0F) != identify_channel
+   abort
+.
+c35bc ssx_action_B
+
+#----------------------------------------------------------
+n35ca
+#----------------------------------------------------------
+
+.
+c35ca ssx_action_C
+
+#----------------------------------------------------------
+n35f0
+#----------------------------------------------------------
+
+.
+c35f0 ssx_action_D
+
+#----------------------------------------------------------
+n35f9
+#----------------------------------------------------------
+
+.
+c35f9 ssx_action_E
+
+#----------------------------------------------------------
+n3613
+#----------------------------------------------------------
+
+.
+c3613 ssx_action_F
+
+#----------------------------------------------------------
+n36c1
+#----------------------------------------------------------
+
+.
+c361c ssx_action_G
+
+#----------------------------------------------------------
+c363e ssx_action_H
+c3653 ssx_action_I
+c36c7 ssx_action_J
+c36de ssx_action_K
+c3729 ssx_action_L
+c36d6 ssx_action_M
+c3732 ssx_action_N
+c3782 ssx_action_O
+c37b8 ssx_action_P
+c38c1 ssx_action_Q
+c3838 ssx_action_R
+c39c4 ssx_action_S
+c377c ssx_action_T
+c386c ssx_action_U
+c3769 ssx_action_V
+c39e9 ssx_action_W
+c39c5 ssx_action_X
 
 
 
@@ -272,7 +329,57 @@ c39c5 entry25
 
 
 
+#==========================================================
+n39de
+#----------------------------------------------------------
+# Function:
+#       SysEx_Parser_Next_State
+#
+#       Move to next sysex parser state
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       A
+#
+# Notes:
+#----------------------------------------------------------
+.
+p39de SysEx_Parser_Next_State
+k39de Get current parser state
+k39e2 Bump to next state (add 2 because used as word index)
+k39e4 And save.
+#----------------------------------------------------------
 
+
+
+
+#==========================================================
+n39f6
+#----------------------------------------------------------
+# Function:
+#       MIDI_Clear_Active_Status_Byte
+#
+#       Clears active status byte.
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       none
+#
+# Notes:
+#----------------------------------------------------------
+.
+p39f6 MIDI_Clear_Active_Status_Byte
+#----------------------------------------------------------
 
 
 
