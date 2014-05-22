@@ -1,0 +1,523 @@
+###############################################################################
+#
+# Kawai K4 v1.4 ROM disassembly command file
+#
+# Module: LCD
+#
+# Neil Johnson
+#
+###############################################################################
+
+###############################################################################
+# Notes
+#
+# The LCD is an Optrex Corp DMC16205NY-LY.
+# It has a common HD44780 type controller.
+
+###############################################################################
+##
+## Global Data
+##
+###############################################################################
+
+
+n6763
+#----------------------------------------------------------
+#
+# Custom LCD characters are 5x7 bitmaps, loaded as eight
+# bytes (top 3 bits ignored), last byte being the cursor
+# row.
+#
+# The K4(r) uses funky double-digit characters to save 
+# screen space.
+#----------------------------------------------------------
+.
+m6763 LCD_Custom_Character_Data
+
+
+
+
+
+
+
+###############################################################################
+##
+## Procedures
+##
+###############################################################################
+
+
+
+#==========================================================
+n64c5
+#################################################################################
+#################################################################################
+##
+##       LCD  DRIVER
+##
+#################################################################################
+#################################################################################
+
+#----------------------------------------------------------
+# Function:
+#       LCD_Init
+#
+#       Initialise LCD controller
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       B, C
+#
+# Notes:
+#----------------------------------------------------------
+.
+p64C5 LCD_Init
+k64c5 Set port 1 to output
+k64c8 Clear all three LCD control signals (Write)
+k64cb Set LCD_E high
+k64ce Function Set Command: 8-bit interface
+k64d1 Set LCD_E low
+k64d4 Wait 22ms
+k64da Set LCD_E high
+k64dd Function Set Command: 8-bit interface
+k64e0 Set LCD_E low
+k64e3 Wait 540us
+k64e9 Set LCD_E high
+k64ec Function Set Command: 8-bit interface
+k64ef Set LCD_E low
+k64f8 Function Set Command: 8-bit interface, 2 lines, 5x7 dots
+k6504 Display Off
+#k6510 Entry Mode Set: Increment, no shift
+
+
+#==========================================================
+n651a
+#----------------------------------------------------------
+# Function:
+#       LCD_Spin_Loop
+#
+#       Simple and crude spin loop using B and C regs
+#
+# Args:
+#       B - big delay count
+#       C - small delay count
+#
+# Returns:
+#       none
+#
+# Uses:
+#       none
+#
+# Notes:
+#       A value of $00 equals 256 loop iterations due to 
+#       decrement before test (dbnz) instruction.
+#
+#       Delay time = (5 + 8B*(8C+5)) * 1/Fclk
+#
+#       E.g. BC = $0132
+#           B = $01, C = $32, Fclk = 6MHz, 1/Fclk = 167ns
+#       Delay = 541us
+#----------------------------------------------------------
+.
+p651A LCD_Spin_Loop
+k651a 8 cycles when branch taken 5 when not
+k651c 8 cycles when branch taken 5 when not
+
+
+#==========================================================
+n651f
+#----------------------------------------------------------
+# Function:
+#       LCD_Write_IReg
+#
+#       Write to LCD internal register
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       none
+#
+# Notes:
+#----------------------------------------------------------
+.
+p651F LCD_Write_IReg
+k651f Set port 1 to output
+k6522 Clear LCD_RSEL and LCD_E
+k6525 Clear LCD_RW (Write)
+k6528 pause
+k6529 Set LCD_E
+
+
+#==========================================================
+n652D
+#----------------------------------------------------------
+# Function:
+#       LCD_Switch_To_Read
+#
+#       Put LCD interface into Read state
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       none
+#
+# Notes:
+#----------------------------------------------------------
+.
+p652D LCD_Switch_To_Read
+k652d Set LCD_E low
+k6530 Pause
+k6531 Set all of port 1 to input
+
+
+#==========================================================
+n6535
+#----------------------------------------------------------
+# Function:
+#       LCD_Wait_On_Busy_Flag
+#
+#       Waits for LCD busy flag to clear
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       none
+#
+# Notes:
+#----------------------------------------------------------
+.
+p6535 LCD_Wait_On_Busy_Flag
+k6535 Clear all three LCD control signals
+k6538 Set LCD_RW high (Read)
+k653b pause
+k653c Set LCD_E high
+k653f Check BUSY flag
+k6543 Set LCD_E low
+k6546 Rinse, repeat...
+k6548 Set LCD_E low
+k654b pause, and done
+
+
+#==========================================================
+n65a2
+#----------------------------------------------------------
+# Function:
+#       LCD_Write_To_Data_Register
+#
+#       Write a byte of data into the LCD's data register.
+#
+# Args:
+#       A = byte to write
+#
+# Returns:
+#       none
+#
+# Uses:
+#       none
+#
+# Notes:
+#----------------------------------------------------------
+.
+p65A2 LCD_Write_To_Data_Register
+k65ac Set RSEL to access DR
+
+
+#==========================================================
+n65c9
+#----------------------------------------------------------
+# Function:
+#       LCD_Load_CG_RAM
+#
+#       Load Character Generator (CG) RAM with custom
+#       character data.
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       none
+#
+# Notes:
+#----------------------------------------------------------
+.
+p65C9 LCD_Load_CG_RAM
+k65cb Set CG RAM address to 0
+k65d0 Write 64 bytes
+k65d5 Get next data byte
+
+
+#==========================================================
+n6625
+#----------------------------------------------------------
+# Function:
+#       LCD_Set_CG_RAM_Address
+#
+#       Load Character Generator (CG) RAM with custom
+#       character data.
+#
+# Args:
+#       A = new CG RAM address
+#
+# Returns:
+#       none
+#
+# Uses:
+#       none
+#
+# Notes:
+#----------------------------------------------------------
+.
+p6625 LCD_Set_CG_RAM_Address
+k662d Output new CG RAM address
+k662f DB7:0, DB6:1 == "Set CG RAM Address" function
+k6632 Load and go
+
+#==========================================================
+
+n654d
+# Set display on no cursor
+.
+p654D LCD_Display_On_Cursor_Off
+
+n655e
+# Set display off
+.
+p655E LCD_Display_Off
+
+n656f
+# Set display on with cursor
+.
+p656F LCD_Display_On_Cursor_On
+
+n6580
+# Set display on no cursor
+.
+p6580 LCD_Display_On_Cursor_Off_X
+
+#----------------------------------------------------------
+
+
+#==========================================================
+n65b8
+#----------------------------------------------------------
+# Function:
+#       LCD_Move_Cursor
+#
+#       Turn cursor off, move it, turn it back on
+#
+# Args:
+#       A = new cursor position
+#
+# Returns:
+#       none
+#
+# Uses:
+#       none
+#
+# Notes:
+#----------------------------------------------------------
+.
+p65B8 LCD_Move_Cursor
+
+
+#==========================================================
+n6612
+#----------------------------------------------------------
+# Function:
+#       LCD_Set_DD_RAM_Address
+#
+#       Print something on the LCD
+#
+# Args:
+#       A = new DD RAM address
+#
+# Returns:
+#       none
+#
+# Uses:
+#       none
+#
+# Notes:
+#----------------------------------------------------------
+.
+p6612 LCD_Set_DD_RAM_Address
+k661a Put new address onto data bus
+k661c Set DB7 for "Set DD RAM Address" LCD command code
+
+
+#==========================================================
+n6638
+#----------------------------------------------------------
+# Function:
+#       LCD_Compute_String_Descriptor_Block_Address
+#
+#
+# Args:
+#       none
+#
+# Returns:
+#       HL = ptr to data structure
+#
+# Uses:
+#       A, X
+#
+# Notes:
+#       A very interesting function.  It takes some number
+#       from $FE6B, then multiplies it by the size of a data
+#       type (12 bytes in this case), then adds that offset
+#       into the array starting at BDATA_0009, returning the
+#       resulting pointer.
+#
+#       In C this would look something like:
+#
+#       struct { ... } array[] = { ... };
+#       return &array[i];
+#
+#       where the struct is 12 bytes in size.
+#----------------------------------------------------------
+.
+p6638 LCD_Compute_String_Descriptor_Block_Address
+k663a Get index
+k663c And scale factor
+k663e Compute offset (index * scale factor)
+k6640 Get base address
+k6643 And add offset to produce the resulting pointer
+
+
+#==========================================================
+n66dc
+#----------------------------------------------------------
+# Function:
+#       LCD_Print
+#
+#       Print something on the LCD
+#
+# Args:
+#       ???
+#
+# Returns:
+#       none
+#
+# Uses:
+#       none
+#
+# Notes:
+#----------------------------------------------------------
+.
+p66dc LCD_Print
+
+
+
+
+
+#==========================================================
+n65de
+#----------------------------------------------------------
+# Function:
+#       LCD_Print_String
+#
+#       Print a string to the LCD, including wrap-around.
+#
+# Args:
+#       A = starting position
+#       B = number of characters to print
+#       HL = points to start of string
+#
+# Returns:
+#       none
+#
+# Uses:
+#       C, R7
+#
+# Notes:
+#----------------------------------------------------------
+.
+p65DE LCD_Print_String
+k65de Preserve registers
+k65e0 Put position into R7
+k65e2 LCD line length is 16 chars
+k65e4 Ummm... I guess put the display in a known state?
+k65ea Restore position into A
+k65ee Get first character from memory
+k65ef If FE66.0 is 0 then go and print the character
+k65f3 Else print character 07 (one of the custom ones)
+#
+#
+k65fa Check if we have reached end-of-line
+k65fc If not, go and do next character
+k65fe Move to bottom line, starts at address $40
+k6600 Bump position 
+k6601 Go and set the position
+#
+k6603 Get the next character from memory (and bump mem pointer)
+#
+k6604 Clear the top bit
+k6609 Bump position
+k660a Decrement character count; branch if more to do
+k660c Turn on display again (???)
+k660f Restore registers
+
+#----------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+p673d LCD_Q
+
+
+
+
+p6648 LCD_O
+
+
+
+
+#==========================================================
+#==========================================================
+#==========================================================
+n6591
+
+??? DEAD CODE ??? - if this were called it would clear the display
+.
+
+#----------------------------------------------------------
+n6719
+
+???DEAD CODE ???
+.
+#----------------------------------------------------------
+
+#==========================================================
+#==========================================================
+#==========================================================

@@ -17,6 +17,7 @@
 bFE60 Active_MIDI_Status_Byte
 bDE57 SysEx_Parser_State
 bDE56 MIDI_Keyboard_Offset
+bDE55 MIDI_First_Data_Byte
 
 
 bbb26 MIDI_Channel
@@ -164,7 +165,7 @@ p30FD MIDI_Receiver
 #
 k30fd Set some flag
 k30ff Get byte from serial peripherals
-k3101 If MIDI receive disabled then just return
+k3101 If some flag set then ignore this byte
 k3104 Check if status byte (top bit set)
 #
 k3107 MIDI byte -> C reg
@@ -173,7 +174,8 @@ k310c If not, ignore this data byte (could be noise)
 k310e Is this the start of SysEx?
 k3112 If yes, go and deal with it
 #
-k3117 If $FE60 < $F0 then switch
+k3115 Ignore any other non-channel status byte
+k3117 for $En and below compute switch table offset
 
 #
 l3123 MR_handle_status_byte
@@ -195,17 +197,102 @@ k3154 Send MIDI EOX
 k3160 Reset running status
 
 
-v3166 MR_switch_table
-c3177 MR_case_0
-c31b1 MR_case_1
-n3176
-Default case
+v3166 MR_channel_message_handlers
+
+n3177
+#----------------------------------------------------------
 .
-c3176 MR_default
-c31ef MR_case_3
-c333a MR_case_4
-c335b MR_case_5
-c3372 MR_case_6
+c3177 MR_msg_80_note_off
+k3177 is this the second data byte?
+k317b no, save 1st data byte and return
+#
+k3183 get some configuration byte
+k3187 if some bit not set then force default velocity
+#
+k318c get rx note buffer head index
+k3190 get midi channel
+k3194 get pointer to rx note buffer
+k3197 store in buffer
+k3199 bump index
+k319d get 1st data byte, mask, and store in note buffer
+k31a1 clear top bit (== note off?)
+k31a9 store second data byte in note buffer
+
+n31b1
+#----------------------------------------------------------
+.
+c31b1 MR_msg_90_note_on
+k31b1 is this the second data byte?
+k31b6 no, save 1st data byte and return
+#
+k31bd if velocity == 0 then treat as note-off message
+k31c1 get some configuration byte
+k31c8 if some bit not set then force default velocity
+#
+k31ca get rx note buffer head index
+k31d0 get midi channel
+k31d2 get pointer to rx note buffer
+k31d5 store in buffer
+k31d7 bump index
+k31db get 1st data byte, mask, and store in note buffer
+k31df set top bit (== note on???)
+k31e8 store second data byte in note buffer
+
+#----------------------------------------------------------
+n3176
+Ignore some channel messages
+(polyAT and system common)
+.
+c3176 MR_msg_ignored
+
+#----------------------------------------------------------
+n31ef
+#----------------------------------------------------------
+.
+c31ef MR_msg_B0_ctrl_chg
+k31ef is this the second data byte?
+
+
+
+
+
+
+
+
+
+
+
+c333a MR_msg_C0_prog_chg
+c335b MR_msg_D0_chan_AT
+c3372 MR_msg_E0_pbend
+
+
+
+#==========================================================
+n3399
+#----------------------------------------------------------
+# Function:
+#       MIDI_Check_Note_Rx_Buffer
+#
+#       Checks note Rx buffer, prodding something if data
+#       to consume.
+#
+# Args:
+#       B = note rx buffer index
+#
+# Returns:
+#       none
+#
+# Uses:
+#       A
+#
+# Notes:
+#----------------------------------------------------------
+.
+p3399 MIDI_Check_Note_Rx_Buffer
+k3399 Store new index in write index
+k339c Compare with read index
+k339f If they're the same set some flag (???)
 
 
 
