@@ -24,6 +24,7 @@ tC0
 
 # MIDI
 ik4_v14_midi.d78
+ik4_v14_lcd.d78
 
 
 ###############################################################################
@@ -87,15 +88,28 @@ n0040
 .
 p0040 System_Start
 k0042 Turn off interrupts while things get set up
+k0043 mute on while setting things up
 k0045 Set stack to top of RAM
 l0071 Init_Loop_1
 l007f Wait_Loop_1
 l008a Wait_Loop_2
 l00a5
+#
+n00d5
+
+Initialise 8 things (could be submix channels??)
+.
 l00da Init_Loop_3
+#
+n00fd
+
+Initialise 16 things (could be voices??)
+.
 l0108 Init_Loop_4
 k0123 Now turn on interrupts
 l0124 main_loop
+k0136 mute off
+
 
 
 
@@ -150,6 +164,7 @@ n020c
 #----------------------------------------------------------
 .
 p020c CRF01_Handler
+k020e Check if MIDI byte has been transmitted since last tick
 k0219 Reset running status
 k021c ???
 n0220
@@ -428,6 +443,10 @@ k3BB4 Clear internal RAM FE00-FEEF
 ## Global Data
 ###############################################################################
 
+nc000
+
+For ROM this is the start of the block that can be mapped into 8000-BFFF
+.
 bc000 RAM_START
 bDFFF STACK_TOP
 
@@ -440,7 +459,7 @@ bDFFF STACK_TOP
 ###############################################
 
 b4549
-b6763 Data5
+
 w3d45 Data6
 b3d4d Data7
 b44b5 table
@@ -461,6 +480,85 @@ b0727 Bit_Table2
 b1368 Bit_Table3
 
 
+
+
+
+
+
+
+###############################################
+# Functions called during init
+###############################################
+
+
+p3c3d Init_A
+p3c81 Init_B
+p3cac Init_C
+p05ba Init_D
+p42cc Init_E
+p3cdb Init_F
+p0529 Init_G
+p47c9 Init_H
+p45d9 Init_I
+p3bfb Init_J
+p3f6b Init_K
+p0418 Init_L
+
+
+
+
+###############################################
+# Functions called from main loop
+###############################################
+
+
+p7f9a Main_A
+p3ce1 Main_B
+p046c Main_C
+p0438 Main_D
+p02b7 Main_E
+p2bf6 Main_F
+p2f2c Main_G
+p4626 Main_H
+p4295 Main_I
+p16ad Main_J
+p17a5 Main_K
+p0556 Main_L
+p047a Main_M
+p0384 Main_N
+p1fec Main_O
+p690a Main_P
+
+
+
+
+
+
+
+###############################################
+# Suspected dead code
+###############################################
+
+p406e
+p407c
+p4abc
+p4b0f
+p4b87
+p4c9b
+b4cce
+p4cd1
+p4CB4
+
+
+
+
+
+
+
+
+
+
+
 ###############################################
 # Functions not yet named
 ###############################################
@@ -468,38 +566,10 @@ b1368 Bit_Table3
 
 
 
-p3c3d
-p3cac
-p3c81
-p05ba
-p42cc
 b42FD
-p3cdb
-p0529
-p47c9
-p66dc
-p45d9
-p3bfb
-p3f6b
-p0418
+
 p3c28
-p7f9a
-p3ce1
-p046c
-p0438
-p02b7
-p2bf6
-p2f2c
-p4626
-p4295
-p16ad
-p17a5
-p0556
-p047a
-p0384
-p1fec
-p690a
-p673d
+
 
 
 
@@ -578,7 +648,16 @@ c0dd3 entry3
 
 
 p123b
+
+
 p0c21
+w0C40
+
+
+
+
+
+
 p0c50
 p0182
 p05F9
@@ -746,7 +825,6 @@ c331e entry10
 
 
 
-p3399
 p33A4
 p33C2
 p33CC
@@ -822,7 +900,6 @@ p45B5
 p46A0
 
 v46B1 Jump_Table
-l46b0 return
 
 p702e
 p711e
@@ -961,23 +1038,9 @@ p645B
 p6474
 p6496
 p64A3
-p64C5
-p651A
-p651F
-p652D
-p6535
-p654D
-p655E
-p656F
-p6580
-p65A2
-p65B8
-p65C9
-p65DE
-p6612
-p6625
-p6638
-p6648
+
+
+
 p67A3
 p67AD
 p67C6
@@ -1021,33 +1084,96 @@ p6E24
 p6E3C
 p6E60
 p6E68
-p6E76
-p6E7F
-p6E88
-p6E91
-p6E9A
-p6EA3
-p6EAC
-p6EB5
-p6EBE
-p6EC7
-p6EF2
-p6EFC
-p6F05
-p6F0E
-p6F17
-p6F20
-p6F29
-p6F32
-p6F3B
-p6F44
-p6F4D
-p6F56
 
+p6E76
+p1d97
+
+p6E7F
+p1dcf
+
+p6E88
+p1e1a
+
+p6E91
+p2ab2
+
+
+p6E9A
+p1e52
+
+
+p6EA3
+p2b8f
+
+
+p6EAC
+p1b7b
+
+
+p6EB5
+p1c80
+
+
+p6EBE
+p1be9
+
+
+p6EC7
+
+p6EF2
+p193F
+
+
+p6EFC
+p18ac
+
+p1b26
+
+
+p6F05
+p19AF
+
+
+
+p6F0E
+p18F5
+
+
+
+p6F17
+p1b08
+
+
+
+p6F20
+p1ad8
+
+
+
+p6F29
+p1e5d
+
+p6F32
+p1e92
+
+
+p6F3B
+p1EDB
+
+
+p6F44
+p233d
+
+
+p6F4D
+p23e3
+
+
+p6F56
+p2379
 
 p6F5F FUNC_6F5F
 v6f7e Call_Table
-c6f7d return
 
 p707e
 p707f
@@ -2136,7 +2262,7 @@ l4C40
 l4C41
 l4C60
 l4C97
-l4CB4
+
 l4CF1
 l4D11
 l4D4E
@@ -2706,6 +2832,9 @@ l7F9F
 l7FD6
 
 
+l4d48
+l4d4d
+l4d0a
 
 
 n8000
