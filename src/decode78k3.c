@@ -673,9 +673,24 @@ OPERAND_FUNC(memmod)
 		high_offset = next( f, addr );		
 		base        = MK_WORD(low_offset, high_offset);
 		
-		operand( "%s%s", 
-		         xref_genwordaddr( NULL, "$", base ), 
-					MEM_MOD_INDEX[mem] ); 
+		if ( xref_findaddrlabel( base ) )
+		{
+			operand( "%s%s", 
+		         		xref_genwordaddr( NULL, "$", base ), 
+						MEM_MOD_INDEX[mem] );
+		}
+		else if ( xref_findaddrlabel( base - 1 ) )
+		{
+			operand( "%s+1%s", 
+		         		xref_genwordaddr( NULL, "$", base - 1 ), 
+						MEM_MOD_INDEX[mem] );
+		}
+		else
+		{
+			operand( "$" FORMAT_ADDR "%s", 
+		         		base, 
+						MEM_MOD_INDEX[mem] );
+		}
 		xref_addxref( X_TABLE, g_insn_addr, base );
 	}
 }

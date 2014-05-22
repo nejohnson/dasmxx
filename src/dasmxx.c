@@ -158,8 +158,8 @@ struct comment  *blockcmt   = NULL;
 
 int             string_terminator = '\0';
 
-/* List of display modes.  defines must match entry position. */
-static char datchars[] = "cbsewapv";
+/* List of display modes.  Defines must match entry position. */
+static char datchars[] = "cbsewapvm";
 #define CODE            0
 #define BYTES           1
 #define STRINGS         2
@@ -168,6 +168,7 @@ static char datchars[] = "cbsewapv";
 #define CHARS           5
 #define PROCS           6
 #define VECTORS         7
+#define BITMAPS         8
 
 /* Global instruction byte buffer */
 static UBYTE *insn_byte_buffer = NULL;
@@ -425,6 +426,7 @@ static void readlist( const char *listfile, struct params *params )
 
 			/* Peel off command code, then do something about it */
 			cmd = *pbuf++;
+			cmd = tolower( cmd ); /* Be case-agnostic */
 			switch ( cmd )
 			{
 			case 'a': /* alphanumeric character dump */
@@ -435,6 +437,7 @@ static void readlist( const char *listfile, struct params *params )
 			case 's': /* string dump                 */
 			case 'v': /* vector dump                 */
 			case 'w': /* word dump                   */
+			case 'm': /* bitmap dump                 */
 				{
 					unsigned int cmd_idx = strchr( datchars, cmd ) - datchars;
 					sscanf( pbuf, "%x%n", &addr, &n );
@@ -458,7 +461,8 @@ static void readlist( const char *listfile, struct params *params )
 							{ "WDATA",  1 },
 							{ "CDATA",  1 },
 							{ "PROC",   1 },
-							{ "VCTR",   1 }
+							{ "VCTR",   1 },
+							{ "BMAP",   1 }
 						};
 
 						if ( tbl[cmd_idx].pfx )
@@ -908,6 +912,38 @@ static void run_disasm( struct params params )
 			}
 
 			mode = CODE;
+		}
+		else if ( mode == BITMAPS )
+		{
+			/*****************************************************************
+			*            m - BITMAPS
+			*****************************************************************/
+			
+			putchar( '\n' );
+			printcomment( blockcmt, addr, 0 );
+
+			while ( addr < clist->addr )
+			{
+				UBYTE bitmap;
+				UBYTE mask = 0x80;
+				
+				emitaddr( addr );
+				printf( "DB      " );
+
+				bitmap = (UBYTE)next( f, &addr );
+				printf( "%02X      [", bitmap );
+
+				for ( ; mask; mask >>= 1 )
+					putchar( bitmap & mask ? '#' : ' ' );
+					
+				printf( "]\n" );
+			}
+
+			mode = clist->mode;
+			if ( mode == CODE || mode == PROCS )
+				putchar( '\n' );
+			name = clist->name;
+			clist = clist->n;
 		}
 	} /* while() */
 	 
