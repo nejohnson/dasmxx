@@ -129,6 +129,7 @@ struct comment {
 struct fmt {
 	int              mode;
 	ADDR             addr;
+	unsigned int     bpl; /* bytes per line */
 	char            *name;
 	struct fmt      *n;
 };
@@ -333,7 +334,7 @@ static int emitaddr( ADDR addr )
  *
  ************************************************************/
 
-static void addlist( struct fmt **list, ADDR addr, int mode, char *name )
+static void addlist( struct fmt **list, ADDR addr, int mode, unsigned int bytes_per_line, char *name )
 {
 	struct fmt *p = *list, *q = NULL;
 
@@ -361,6 +362,7 @@ static void addlist( struct fmt **list, ADDR addr, int mode, char *name )
 	q->addr = addr;
 	q->mode = mode;
 	q->n    = p;
+	q->bpl  = bytes_per_line;
 	if ( name != NULL )
 		q->name = dupstr( name );
 	else
@@ -440,8 +442,26 @@ static void readlist( const char *listfile, struct params *params )
 			case 'm': /* bitmap dump                 */
 				{
 					unsigned int cmd_idx = strchr( datchars, cmd ) - datchars;
+					unsigned bytes_per_line = BYTES_PER_LINE;
 					sscanf( pbuf, "%x%n", &addr, &n );
 					pbuf += n;
+					
+					if ( *pbuf == ',' )
+					{
+						unsigned int count;
+						
+						if ( cmd != 'b' )
+							error( "Byte count not supported for command '%c'", cmd );
+						
+						pbuf++;
+						sscanf( pbuf, "%u%n", &count, &n );
+						pbuf += n;
+						
+						if ( count > BYTES_PER_LINE )
+							error( "Too many bytes per line (limit is %d)", BYTES_PER_LINE );
+							
+						bytes_per_line = count;
+					}
 
 					SKIP_SPACE(pbuf);
 						
@@ -476,6 +496,7 @@ static void readlist( const char *listfile, struct params *params )
 					addlist( &(params->cmdlist), 
 								addr, 
 								cmd_idx, 
+								bytes_per_line,
 								pbuf );
 				}
 				break;
@@ -620,6 +641,7 @@ static void run_disasm( struct params params )
 	long  filelength;
 	ADDR  addr;
    int   mode;
+	unsigned int bpl;
 	char *name;
 	
 	f = fopen( inputfile, "rb" );
@@ -633,6 +655,7 @@ static void run_disasm( struct params params )
 	addr  = clist->addr;
 	mode  = clist->mode;
 	name  = clist->name;
+	bpl   = clist->bpl;
 	clist = clist->n;
 	
 	printf( ";   Processing \"%s\" (%ld bytes)\n", inputfile, filelength );
@@ -647,6 +670,7 @@ static void run_disasm( struct params params )
 				putchar ( '\n' );
 			mode  = clist->mode;
 			name  = clist->name;
+			bpl   = clist->bpl;
 			clist = clist->n;
 		}
 		
@@ -707,12 +731,12 @@ static void run_disasm( struct params params )
 				buf[i] = (unsigned char)next( f, &addr );
 				printf( "%02X ", (unsigned char)buf[i] );
 				i++;
-				if ( i == BYTES_PER_LINE )
+				if ( i == bpl )
 				{
 					/* End of a full line */
                 printf( "      " );
 
-                for ( p = 0; p < BYTES_PER_LINE; p++ )
+                for ( p = 0; p < bpl; p++ )
                    if ( isprint( buf[p] ) )
                       putchar( buf[p] );
                    else
@@ -722,11 +746,11 @@ static void run_disasm( struct params params )
 					i = 0;
 				}
 			}
-			if ( i < BYTES_PER_LINE )
+			if ( i < bpl )
 			{
 				/* Partial line, tricky */
 
-				for ( p = i; p < BYTES_PER_LINE; p++ )
+				for ( p = i; p < bpl; p++ )
 					printf( "   " );
 
 				printf( "      " );
@@ -743,7 +767,8 @@ static void run_disasm( struct params params )
 			mode = clist->mode;
 			if ( mode == CODE || mode == PROCS )
 				putchar( '\n' );
-			name = clist->name;
+			name  = clist->name;
+			bpl   = clist->bpl;
 			clist = clist->n;
 		}
 		else if ( mode == STRINGS )
@@ -778,7 +803,8 @@ static void run_disasm( struct params params )
 			mode = clist->mode;
 			if ( mode == CODE || mode == PROCS )
 				putchar( '\n' );
-			name = clist->name; 
+			name  = clist->name; 
+			bpl   = clist->bpl;
 			clist = clist->n;
 		}
 		else if ( mode == WORDS )
@@ -817,7 +843,8 @@ static void run_disasm( struct params params )
 			mode = clist->mode;
 			if ( mode == CODE || mode == PROCS )
 				putchar( '\n' );
-			name = clist->name;
+			name  = clist->name; 
+			bpl   = clist->bpl;
 			clist = clist->n;
 		}
 		else if ( mode == VECTORS )
@@ -849,7 +876,8 @@ static void run_disasm( struct params params )
 			mode = clist->mode;
 			if ( mode == CODE || mode == PROCS )
 				putchar( '\n' );
-			name = clist->name;
+			name  = clist->name; 
+			bpl   = clist->bpl;
 			clist = clist->n;
 		}
 		else if ( mode == CHARS )
@@ -888,7 +916,8 @@ static void run_disasm( struct params params )
 			mode = clist->mode;
 			if ( mode == CODE || mode == PROCS )
 				putchar( '\n' );
-			name = clist->name; 
+			name  = clist->name; 
+			bpl   = clist->bpl;
 			clist = clist->n;
 		}
 		else if ( mode == END )
@@ -942,7 +971,8 @@ static void run_disasm( struct params params )
 			mode = clist->mode;
 			if ( mode == CODE || mode == PROCS )
 				putchar( '\n' );
-			name = clist->name;
+			name  = clist->name; 
+			bpl   = clist->bpl;
 			clist = clist->n;
 		}
 	} /* while() */
