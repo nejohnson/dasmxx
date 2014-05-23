@@ -37,7 +37,36 @@ m6763 LCD_Custom_Character_Data
 
 
 
+n8a95
+#----------------------------------------------------------
+#
+# struct string_descriptor {
+#    byte ???;
+#    byte ???;
+#    byte ???;
+#    word string_address; /* 16-bit pointer */
+#    byte ???;
+#    byte ???;
+#    byte ???;
+#    byte ???;
+#    byte ???;
+#    byte ???;
+#    byte ???;
+# };
+#
+# struct string_descriptor String_Descriptor_Table[168];
+#
+#----------------------------------------------------------
+.
+b8a95,12 String_Descriptor_Table
 
+s8000 String_Table
+b9281,4   Fixed_String_Table_1
+b93b5,2   Fixed_String_Table_2
+b94e3,16  Fixed_String_Table_3
+b9e04,10  Fixed_String_Table_4
+
+b42FD  Firmware_Version_String
 
 
 ###############################################################################
@@ -492,13 +521,70 @@ k660f Restore registers
 
 
 
-
+#==========================================================
+n673d
+#----------------------------------------------------------
+# Function:
+#       LCD_Q
+#
+#       ???
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       A, X, HL
+#
+# Notes:
+#----------------------------------------------------------
+.
 p673d LCD_Q
+k673d Get previous something (???)
+k673f Remove unwanted bits
+k6741 Move to X
+k6743 Get next something (???)
+k6745 Remove unwanted bits
+k6747 Compare previous to next
+k6749 If the same, do nothing
+#
+k674b Save next in previous
+k674d Clear previous bit 0
+k674f If previous value was not 0 then set bottom bit
+#
+k6755 LCD_Print_String( $00, $01, $DB7F)
+k675f ???
+
+#----------------------------------------------------------
 
 
 
 
-p6648 LCD_O
+
+#==========================================================
+n6648
+#----------------------------------------------------------
+# Function:
+#       LCD_Something_To_Do_With_Cursor_Position
+#
+#       ???
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       A, X, HL
+#
+# Notes:
+#----------------------------------------------------------
+.
+p6648 LCD_Something_To_Do_With_Cursor_Position
+
 
 
 

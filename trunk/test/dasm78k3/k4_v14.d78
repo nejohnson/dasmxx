@@ -25,6 +25,8 @@ tC0
 # MIDI
 ik4_v14_midi.d78
 ik4_v14_lcd.d78
+ik4_v14_controls.d78
+
 
 
 ###############################################################################
@@ -176,9 +178,9 @@ n0220
        BIG OOPSIE!!!!
 .
 k0220 Send Active Sense byte
-bde22 Sys_Tick_Prescalar
-k0225 Reset prescaler
-k0227 Update prescaler
+bde22 Active_Sense_Counter
+k0225 Reset counter
+k0227 Update counter
 k022b Enable interrupts and exit handler
 
 #==========================================================
@@ -480,9 +482,12 @@ b0727 Bit_Table2
 b1368 Bit_Table3
 
 
+b93e3
 
 
-
+b9573 SINGLE_DATA_????
+b95F6 MULTI_DATA_????
+b967d
 
 
 
@@ -495,7 +500,13 @@ p3c3d Init_A
 p3c81 Init_B
 p3cac Init_C
 p05ba Init_D
+
+
 p42cc Init_E
+k42cf Select splash screen string
+
+
+
 p3cdb Init_F
 p0529 Init_G
 p47c9 Init_H
@@ -566,7 +577,7 @@ p4CB4
 
 
 
-b42FD
+
 
 p3c28
 
@@ -592,7 +603,6 @@ p141F
 p137B
 p22E2
 
-p0376
 p0722
 p072f
 p0736
@@ -2845,8 +2855,7 @@ n8000
 ##
 #########################################
 .
-s8000
-b8A95
+
 
 ba000
 
