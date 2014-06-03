@@ -21,11 +21,31 @@
 
 
 
+
+
+bDBA4 ADC_Current_PB_Value
+bDBA5 ADC_Current_AT_Value
+bDBA6 ADC_Current_MW_Value
+bDBA7 ADC_Current_Data_Entry_Value
+
+b967c ADC_PB_Mapping
+b96Fc ADC_MW_Mapping
+b977c ADC_AT_Mapping
+
+
 ###############################################################################
 ##
 ## Procedures
 ##
 ###############################################################################
+
+#################################################################################
+#################################################################################
+##
+##       BUTTON  DRIVER
+##
+#################################################################################
+#################################################################################
 
 n0376
 #----------------------------------------------------------
@@ -57,3 +77,182 @@ k037f Disable button scanning
 #----------------------------------------------------------
 
 
+
+
+
+
+p02b7 Main_Scan_And_Debounce_Buttons
+k02ba Scan all four button rows
+k02d1 Compare latest and previous button states
+k02db If no difference go and debounce
+k02dd Restart debounce counter
+k02e0 Update previous button state
+#
+k02eb Debouncing done
+k02ef Bump debounce counter
+k02f1 Tick tock
+#
+n02f3
+
+Compare each row state with the last state change
+and record any changes.
+.
+k02fe Get new state
+k02ff Identify changed buttons
+k0301 Save differences
+k0304 Update last state with new state and bump pointers
+k0306 Loop while rows to process
+#
+n0308
+
+Now check all button states to see if any buttons
+have been pressed. If none pressed, return, otherwise
+further processing needed.
+.
+k0313 ???
+#
+
+
+
+
+
+
+bDBC1 BTN_Scanned_Button_State
+bDBC9 BTN_Prev_Scanned_Button_State
+bDBC5 BTN_Last_Button_State
+bDBCD BTN_Changed_Button_State
+
+
+
+
+
+
+#----------------------------------------
+
+
+
+#################################################################################
+#################################################################################
+##
+##       ADC  DRIVER
+##
+#################################################################################
+#################################################################################
+
+n04a7
+#----------------------------------------------------------
+# Function:
+#       Read_ADC
+#
+#       Read the ADC
+#
+# Args:
+#       A = ADC control byte
+#
+# Returns:
+#       A = conversion result
+#
+# Uses:
+#
+# Notes:
+#       The ADC once started continuously converts one or
+#       more inputs.  In scan mode 1,2,3 or 4 inputs are 
+#       converted in sequence.  In select mode only one
+#       input is continuously converted.
+#
+#       Input channels:
+#         AN0 (xxxxx00x) - Data entry slider
+#         AN1 (xxxxx01x) - Pitch bend wheel
+#         AN2 (xxxxx10x) - Modulation wheel
+#         AN3 (xxxxx11x) - After-touch pressure sensor
+#
+#       I have no idea why this code does two conversions
+#       of the same input.  I think this comes from 
+#       mis-reading the user manual (either that or I have
+#       misread it!).
+#       Or maybe they do two conversions due to noise
+#       problems?
+#----------------------------------------------------------
+.
+p04a7 Read_ADC
+k04A7 Clear interrupt flag
+k04AA Load Mode register (start conversion)
+#
+k04AC Wait for 1st conversion
+k04B0 Clear interrupt and go again
+#
+k04B3 Wait for 2nd conversion
+k04B7 Stop converter
+k04BA Get conversion result from ADC
+k04BC Clear interrupt flag
+
+
+#----------------------------------------------------------
+n046c
+#----------------------------------------------------------
+# Function:
+#       Main_Scan_PitchBend_Wheel
+#
+#       Read the PB channel and update global state.
+#
+# Args:
+#       none
+#
+# Returns:
+#       A, HL
+#
+# Uses:
+#
+# Notes:
+#      Not sure yet what is going on with P3.6 and P3.7
+#      but note that the connections to the PB wheel are:
+#         +5V
+#         P3.6
+#         AN1 (ADC input channel #1)
+#         P3.7
+#
+#      Note the lack of GND, so must be using the ports as
+#      switchable GNDs?  They get twiddled again at 04A2.
+#       
+#----------------------------------------------------------
+.
+p046c Main_Scan_PitchBend_Wheel
+k046f Read Pitch Bend wheel
+
+
+#----------------------------------------------------------
+n0438
+#----------------------------------------------------------
+# Function:
+#       Main_Scan_Convert_ADC_Inputs
+#
+#       Scan and convert the AT, MW and Data Entry ADC inputs.
+#
+# Args:
+#       none
+#
+# Returns:
+#       none 
+#
+# Uses:
+#       A, HL, DE
+#
+# Notes:
+#       
+#----------------------------------------------------------
+.
+p0438 Main_Scan_Convert_ADC_Inputs
+k043b Read After Touch sensor
+k0450 Read Modulation wheel
+k0465 Read Data Entry slider
+
+#----------------------------------------
+
+
+
+
+
+
+#################################################################################
+#################################################################################
+#################################################################################

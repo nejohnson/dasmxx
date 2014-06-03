@@ -487,7 +487,8 @@ b93e3
 
 b9573 SINGLE_DATA_????
 b95F6 MULTI_DATA_????
-b967d
+
+
 
 
 
@@ -510,7 +511,16 @@ k42cf Select splash screen string
 p3cdb Init_F
 p0529 Init_G
 p47c9 Init_H
+
+
 p45d9 Init_I
+bBF32 Translation_Table
+vBEB2 Call_Table_Mode_1
+vBEF2 Call_Table_Mode_2
+
+
+
+
 p3bfb Init_J
 p3f6b Init_K
 p0418 Init_L
@@ -525,9 +535,11 @@ p0418 Init_L
 
 p7f9a Main_A
 p3ce1 Main_B
-p046c Main_C
-p0438 Main_D
-p02b7 Main_E
+
+
+
+
+
 p2bf6 Main_F
 p2f2c Main_G
 p4626 Main_H
@@ -608,7 +620,7 @@ p072f
 p0736
 p022f
 p04c0
-p04a7
+
 p5a12
 p026c
 p09eb
