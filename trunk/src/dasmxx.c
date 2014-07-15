@@ -1195,6 +1195,50 @@ UBYTE next( FILE* fp, ADDR *addr )
 /***********************************************************
  *
  * FUNCTION
+ *      nextw
+ *
+ * DESCRIPTION
+ *      Gets the next word from the file stream.  
+ *      If EOF then abort.
+ *      Need to swap the order that bytes are put in the 
+ *      byte buffer so that they appear in the right order
+ *      in the listing.
+ *
+ * RETURNS
+ *      next word in fp
+ *
+ ************************************************************/
+
+UWORD nextw( FILE* fp, ADDR *addr )
+{
+	int lo, hi;
+	UWORD w = 0;
+	
+	lo = fgetc( fp );
+	if ( lo == EOF )
+		error( "Ran past end of input file" );
+		
+	hi = fgetc( fp );
+	if ( hi == EOF )
+		error( "Ran past end of input file" );	
+		
+	if ( insn_byte_idx < dasm_max_insn_length )
+		insn_byte_buffer[insn_byte_idx++] = (UBYTE)hi;
+		
+	if ( insn_byte_idx < dasm_max_insn_length )
+		insn_byte_buffer[insn_byte_idx++] = (UBYTE)lo;
+	
+	(*addr)++;
+	(*addr)++;
+	
+	w = ( ( hi & 0xFF ) << 8 ) | ( lo & 0xFF );
+	
+	return w;
+}
+
+/***********************************************************
+ *
+ * FUNCTION
  *      peek
  *
  * DESCRIPTION

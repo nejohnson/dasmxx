@@ -60,6 +60,7 @@ extern void error( char *fmt, ... );
 extern void warning( char *fmt, ... );
 extern void *zalloc( size_t n );
 extern UBYTE next( FILE* fp, ADDR *addr );
+extern UWORD nextw( FILE *fp, ADDR *addr );
 extern UBYTE peek( FILE *fp );
 extern char * dupstr( const char *s );
 
