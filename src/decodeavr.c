@@ -721,6 +721,42 @@ OPERAND_FUNC(Z_r)
 /** Note: tables are here as they refer to operand functions defined above.  **/
 /******************************************************************************/
 
+#define DUAL_REG(r)	(((r&0x1F)<<4)|(r&0x0F)|((r<<5)&0x200))
+#define ALT_RR(M_name,M_mask)	\
+	INSN(M_name,rD5,M_mask|DUAL_REG(0x00),X_NONE)	\
+	INSN(M_name,rD5,M_mask|DUAL_REG(0x01),X_NONE)	\
+	INSN(M_name,rD5,M_mask|DUAL_REG(0x02),X_NONE)	\
+	INSN(M_name,rD5,M_mask|DUAL_REG(0x03),X_NONE)	\
+	INSN(M_name,rD5,M_mask|DUAL_REG(0x04),X_NONE)	\
+	INSN(M_name,rD5,M_mask|DUAL_REG(0x05),X_NONE)	\
+	INSN(M_name,rD5,M_mask|DUAL_REG(0x06),X_NONE)	\
+	INSN(M_name,rD5,M_mask|DUAL_REG(0x07),X_NONE)	\
+	INSN(M_name,rD5,M_mask|DUAL_REG(0x08),X_NONE)	\
+	INSN(M_name,rD5,M_mask|DUAL_REG(0x09),X_NONE)	\
+	INSN(M_name,rD5,M_mask|DUAL_REG(0x0A),X_NONE)	\
+	INSN(M_name,rD5,M_mask|DUAL_REG(0x0B),X_NONE)	\
+	INSN(M_name,rD5,M_mask|DUAL_REG(0x0C),X_NONE)	\
+	INSN(M_name,rD5,M_mask|DUAL_REG(0x0D),X_NONE)	\
+	INSN(M_name,rD5,M_mask|DUAL_REG(0x0E),X_NONE)	\
+	INSN(M_name,rD5,M_mask|DUAL_REG(0x0F),X_NONE)	\
+	INSN(M_name,rD5,M_mask|DUAL_REG(0x10),X_NONE)	\
+	INSN(M_name,rD5,M_mask|DUAL_REG(0x11),X_NONE)	\
+	INSN(M_name,rD5,M_mask|DUAL_REG(0x12),X_NONE)	\
+	INSN(M_name,rD5,M_mask|DUAL_REG(0x13),X_NONE)	\
+	INSN(M_name,rD5,M_mask|DUAL_REG(0x14),X_NONE)	\
+	INSN(M_name,rD5,M_mask|DUAL_REG(0x15),X_NONE)	\
+	INSN(M_name,rD5,M_mask|DUAL_REG(0x16),X_NONE)	\
+	INSN(M_name,rD5,M_mask|DUAL_REG(0x17),X_NONE)	\
+	INSN(M_name,rD5,M_mask|DUAL_REG(0x18),X_NONE)	\
+	INSN(M_name,rD5,M_mask|DUAL_REG(0x19),X_NONE)	\
+	INSN(M_name,rD5,M_mask|DUAL_REG(0x1A),X_NONE)	\
+	INSN(M_name,rD5,M_mask|DUAL_REG(0x1B),X_NONE)	\
+	INSN(M_name,rD5,M_mask|DUAL_REG(0x1C),X_NONE)	\
+	INSN(M_name,rD5,M_mask|DUAL_REG(0x1D),X_NONE)	\
+	INSN(M_name,rD5,M_mask|DUAL_REG(0x1E),X_NONE)	\
+	INSN(M_name,rD5,M_mask|DUAL_REG(0x1F),X_NONE)
+	
+
 static optab_t base_optab[] = {
 
 /* Note: listed in opcode numerical order, rather than grouped by function */
@@ -738,13 +774,23 @@ static optab_t base_optab[] = {
 	
 	MASK ( "CPC",    r_r,           0xFC00, 0X0400, X_NONE )
 	MASK ( "SBC",    r_r,           0xFC00, 0X0800, X_NONE )
+	
+	ALT_RR ( "LSL", 0x0C00 )
 	MASK ( "ADD",    r_r,           0xFC00, 0X0C00, X_NONE )
+	
 	MASK ( "CPSE",   r_r,           0xFC00, 0X1000, X_NONE )	
 	MASK ( "CP",     r_r,           0xFC00, 0X1400, X_NONE )	
 	MASK ( "SUB",    r_r,           0xFC00, 0X1800, X_NONE )	
-	MASK ( "ADC",    r_r,           0xFC00, 0X1C00, X_NONE )	
+	
+	ALT_RR ( "ROL", 0x1C00 )
+	MASK ( "ADC",    r_r,           0xFC00, 0X1C00, X_NONE )
+	
+	ALT_RR ( "TST", 0x2000 )
 	MASK ( "AND",    r_r,           0xFC00, 0X2000, X_NONE )
-	MASK ( "EOR",    r_r,           0xFC00, 0X2400, X_NONE )	
+
+   ALT_RR ( "CLR", 0x2400 )	
+	MASK ( "EOR",    r_r,           0xFC00, 0X2400, X_NONE )
+	
 	MASK ( "OR",     r_r,           0xFC00, 0X2800, X_NONE )	
 	MASK ( "MOV",    r_r,           0xFC00, 0X2C00, X_NONE )
 	
