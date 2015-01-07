@@ -8,7 +8,7 @@
 #
 #################################################
 
-TARGETS = dasm78k3 dasm96 dasm02 dasm7000 dasm09 dasmavr
+TARGETS = dasm78k3 dasm96 dasm02 dasm7000 dasm09 dasmavr dasm51
 
 CORE_OBJS = dasmxx.o xref.o
 
@@ -57,6 +57,13 @@ DAVR_OBJS = ${CORE_OBJS} decodeavr.o
 
 dasmavr: ${DAVR_OBJS}
 	$(CC) ${DAVR_OBJS} -o ${@}
+
+#################################################
+
+D51_OBJS = ${CORE_OBJS} decode51.o
+
+dasm51: ${D51_OBJS}
+	$(CC) ${D51_OBJS} -o ${@}
 
 #################################################
 	
