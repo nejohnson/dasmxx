@@ -258,7 +258,7 @@ void xref_addxreflabel( ADDR ref, char *label )
  *      xref_findaddrlabel
  *
  * DESCRIPTION
- *      Searches the xref table for the gven address and returns
+ *      Searches the xref table for the given address and returns
  *      pointer to label if found.
  *
  * RETURNS
