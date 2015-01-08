@@ -86,7 +86,7 @@ extern int  xref_inrange( ADDR ref );
 extern void xref_addxref( XREF_TYPE type, ADDR addr, ADDR ref );
 extern void xref_addxreflabel( ADDR ref, char *label );
 extern char * xref_findaddrlabel( ADDR addr );
-extern char * xref_genwordaddr( char * buf, const char * prefix, ADDR addr );
+extern char * xref_genwordaddr( char * buf, const char * format, ADDR addr );
 extern void xref_dump( void );
 
 /*****************************************************************************/

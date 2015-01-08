@@ -269,7 +269,7 @@ OPERAND_FUNC(bra7)
 	BYTE disp = ((BYTE)(opc >> 2 )) / 2; /* SIGNED arithmetic! */
 	ADDR dest = *addr + ( 2 * disp );
 	
-	operand( xref_genwordaddr( NULL, "$", dest ) );
+	operand( xref_genwordaddr( NULL, FORMAT_NUM_16BIT, dest ) );
 	xref_addxref( xtype, g_insn_addr, dest );
 }
 
@@ -286,7 +286,7 @@ OPERAND_FUNC(rel_k12)
 	
 	ADDR dest = *addr + ( k * 2 );
 	
-	operand( xref_genwordaddr( NULL, "$", dest ) );
+	operand( xref_genwordaddr( NULL, FORMAT_NUM_16BIT, dest ) );
 	xref_addxref( xtype, g_insn_addr, dest ); 
 }
 
@@ -301,7 +301,7 @@ OPERAND_FUNC(long_addr)
 	dest |= ( opc & 0x0001 ) << 16;
 	dest |= ( opc & 0x01F0 ) << 13;
 	
-	operand( xref_genwordaddr( NULL, "$", dest ) );
+	operand( xref_genwordaddr( NULL, FORMAT_NUM_16BIT, dest ) );
 	xref_addxref( xtype, g_insn_addr, dest ); 
 }
 
@@ -503,7 +503,7 @@ OPERAND_FUNC(r_A6)
 	
 	operand_rD5( f, addr, opc, xtype );
 	COMMA;
-	operand( xref_genwordaddr( NULL, "$", A ) );
+	operand( xref_genwordaddr( NULL, FORMAT_NUM_16BIT, A ) );
 	xref_addxref( xtype, g_insn_addr, A );
 }
 
@@ -517,7 +517,7 @@ OPERAND_FUNC(A6_r)
 {
 	UBYTE A = ( opc & 0x0F ) | ( ( opc >> 5 ) & 0x30 );
 	
-	operand( xref_genwordaddr( NULL, "$", A ) );
+	operand( xref_genwordaddr( NULL, FORMAT_NUM_16BIT, A ) );
 	xref_addxref( xtype, g_insn_addr, A );
 	COMMA;
 	operand_rD5( f, addr, opc, xtype );
@@ -684,7 +684,7 @@ OPERAND_FUNC(r_k16)
 	
 	operand_rD5( f, addr, opc, xtype );
 	COMMA;
-	operand( xref_genwordaddr( NULL, "$", dest ) );
+	operand( xref_genwordaddr( NULL, FORMAT_NUM_16BIT, dest ) );
 	xref_addxref( xtype, g_insn_addr, dest ); 
 }
 
@@ -697,7 +697,7 @@ OPERAND_FUNC(k16_r)
 {
 	ADDR dest = (ADDR)nextw( f, addr );
 	
-	operand( xref_genwordaddr( NULL, "$", dest ) );
+	operand( xref_genwordaddr( NULL, FORMAT_NUM_16BIT, dest ) );
 	xref_addxref( xtype, g_insn_addr, dest ); 
 	COMMA;
 	operand_rD5( f, addr, opc, xtype );

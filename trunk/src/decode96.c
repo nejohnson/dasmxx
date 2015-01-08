@@ -54,6 +54,8 @@ static char * output_buffer = NULL;
 #define ADDR_INDEX      3
 
 
+#define FORMAT_NUM_16BIT        "%04X"
+
 
 /*****************************************************************************
  *        Instruction Decoding Tables
@@ -193,7 +195,7 @@ static void do_sjmp( int addr, unsigned char *buf, int n )
     if ( buf[0] & 4 )
         offset |= 0xFC00;
     
-    operand( "sjmp    %s", xref_genwordaddr( NULL, "", addr + offset ) );
+    operand( "sjmp    %s", xref_genwordaddr( NULL, FORMAT_NUM_16BIT, addr + offset ) );
     xref_addxref( X_JMP, addr - n, addr + offset );
 }
 
@@ -219,7 +221,7 @@ static void do_scall( int addr, unsigned char *buf, int n )
     if ( buf[0] & 4 )
         offset |= 0xFC00;
     
-    operand( "scall   %s", xref_genwordaddr( NULL, "", addr + offset ) );
+    operand( "scall   %s", xref_genwordaddr( NULL, FORMAT_NUM_16BIT, addr + offset ) );
     xref_addxref( X_CALL, addr - n, addr + offset );
 }
 
@@ -238,7 +240,7 @@ static void do_scall( int addr, unsigned char *buf, int n )
 
 static void do_jbc( int addr, unsigned char *buf, int n )
 {
-    operand( "jbc     R%02X,%d, %s", buf[1], buf[0] & 0x07, xref_genwordaddr( NULL, "", addr + (char)buf[2] ) );
+    operand( "jbc     R%02X,%d, %s", buf[1], buf[0] & 0x07, xref_genwordaddr( NULL, FORMAT_NUM_16BIT, addr + (char)buf[2] ) );
     xref_addxref( X_JMP, addr - n, addr + (char)buf[2] );
 }
 
@@ -257,7 +259,7 @@ static void do_jbc( int addr, unsigned char *buf, int n )
 
 static void do_jbs( int addr, unsigned char *buf, int n )
 {
-    operand( "jbs     R%02X,%d, %s", buf[1], buf[0] & 0x07, xref_genwordaddr( NULL, "", addr + (char)buf[2] ) );
+    operand( "jbs     R%02X,%d, %s", buf[1], buf[0] & 0x07, xref_genwordaddr( NULL, FORMAT_NUM_16BIT, addr + (char)buf[2] ) );
     xref_addxref( X_JMP, addr - n, addr + (char)buf[2] );
 }
 
@@ -281,7 +283,7 @@ static void do_condjmp( int addr, unsigned char *buf, int n )
                         "jst",      "jh",       "jle",      "jc", 
                         "jvt",      "jv",       "jlt",      "je" };
 
-    operand( "%-6s  %s", opcodes[buf[0] & 0x0F], xref_genwordaddr( NULL, "", addr + (char)buf[1] ) );
+    operand( "%-6s  %s", opcodes[buf[0] & 0x0F], xref_genwordaddr( NULL, FORMAT_NUM_16BIT, addr + (char)buf[1] ) );
     xref_addxref( X_JMP, addr - n, addr + (char)buf[1] );
 }
 
@@ -394,7 +396,7 @@ static do_middle( int addr, unsigned char *buf, int n, int isSigned )
                 if ( n == 5 )
                     operand( "R%02X, ", buf[4] );
                 operand( "R%02X, #%s", buf[3], 
-                        xref_genwordaddr( NULL, "", getAddress(&buf[1]) ) );
+                        xref_genwordaddr( NULL, FORMAT_NUM_16BIT, getAddress(&buf[1]) ) );
                 xref_addxref( X_DATA, addr - n, getAddress(&buf[1]) );
             }
             break;
@@ -420,7 +422,7 @@ static do_middle( int addr, unsigned char *buf, int n, int isSigned )
                 {
                     /* word offset */
                     operand( "R%02X, R%02X, %s[R%02X]", buf[5], buf[4], 
-                            xref_genwordaddr( NULL, "", getAddress(&buf[2]) ), buf[1] & 0xFE );
+                            xref_genwordaddr( NULL, FORMAT_NUM_16BIT, getAddress(&buf[2]) ), buf[1] & 0xFE );
                     xref_addxref( X_PTR, addr - n, getAddress( &buf[2] ) );
                 }
                 else
@@ -435,7 +437,7 @@ static do_middle( int addr, unsigned char *buf, int n, int isSigned )
                 if ( buf[1] & 0x01 )
                 {
                     /* word offset */
-                    operand( "R%02X, %s[R%02X]", buf[4], xref_genwordaddr( NULL, "", getAddress(&buf[2]) ),
+                    operand( "R%02X, %s[R%02X]", buf[4], xref_genwordaddr( NULL, FORMAT_NUM_16BIT, getAddress(&buf[2]) ),
                             buf[1] & 0xFE );
                     xref_addxref( X_PTR, addr - n, getAddress(&buf[2]) );                    
                 }
@@ -534,7 +536,7 @@ static void do_c0( int addr, unsigned char *buf, int n )
                 break;
                 
             case ADDR_IMMED:    /* only PUSH words on to stack */
-                operand( "#%s", xref_genwordaddr( NULL, "", getAddress(&buf[1]) ) );
+                operand( "#%s", xref_genwordaddr( NULL, FORMAT_NUM_16BIT, getAddress(&buf[1]) ) );
                 break;
                 
             case ADDR_INDIR:
@@ -553,7 +555,7 @@ static void do_c0( int addr, unsigned char *buf, int n )
                         operand( "%02X[R%02X]", buf[2], buf[1] & 0xFE );
                     else
                     {
-                        operand( "%s[R%02X]", xref_genwordaddr( NULL, "", getAddress(&buf[2]) ), buf[1] & 0xFE );
+                        operand( "%s[R%02X]", xref_genwordaddr( NULL, FORMAT_NUM_16BIT, getAddress(&buf[2]) ), buf[1] & 0xFE );
                         xref_addxref( X_PTR, addr - n, getAddress(&buf[2]) );
                     }
                 }
@@ -564,7 +566,7 @@ static void do_c0( int addr, unsigned char *buf, int n )
                         operand( "R%02X, %02X[R%02X]", buf[3], buf[2], buf[1] & 0xFE );
                     else
                     {
-                        operand( "R%02X, %s[R%02X]", buf[4], xref_genwordaddr( NULL, "", getAddress(&buf[2]) ),
+                        operand( "R%02X, %s[R%02X]", buf[4], xref_genwordaddr( NULL, FORMAT_NUM_16BIT, getAddress(&buf[2]) ),
                                 buf[1] & 0xFE);
                         xref_addxref( X_PTR, addr - n, getAddress(&buf[2]) );
                     }
@@ -599,13 +601,13 @@ static void do_e0( int addr, unsigned char *buf, int n )
     switch(buf[0])
     {
         case OP_DJNZ:
-            operand( "djnz    R%02X, %s", buf[1], xref_genwordaddr( NULL, "", addr + (char)buf[2] ) );
+            operand( "djnz    R%02X, %s", buf[1], xref_genwordaddr( NULL, FORMAT_NUM_16BIT, addr + (char)buf[2] ) );
             xref_addxref( X_JMP, addr - n, addr + (char)buf[2] );
             break;
 
         case OP_DJNZW:
             /* 80196 */
-            operand( "djnzw   R%02X, %s", buf[1], xref_genwordaddr( NULL, "", addr + (char)buf[2] ) );
+            operand( "djnzw   R%02X, %s", buf[1], xref_genwordaddr( NULL, FORMAT_NUM_16BIT, addr + (char)buf[2] ) );
             xref_addxref( X_JMP, addr - n, addr + (char)buf[2] );
             break;
             
@@ -614,12 +616,12 @@ static void do_e0( int addr, unsigned char *buf, int n )
             break;
             
         case OP_LJMP:
-            operand( "ljmp    %s", xref_genwordaddr( NULL, "", addr + getOffset(buf + 1) ) );
+            operand( "ljmp    %s", xref_genwordaddr( NULL, FORMAT_NUM_16BIT, addr + getOffset(buf + 1) ) );
             xref_addxref( X_JMP, addr - n, addr + getOffset(buf + 1) );
             break;
         
         case OP_LCALL:
-            operand( "lcall   %s", xref_genwordaddr( NULL, "", addr + getOffset(buf + 1) ) );
+            operand( "lcall   %s", xref_genwordaddr( NULL, FORMAT_NUM_16BIT, addr + getOffset(buf + 1) ) );
             xref_addxref( X_CALL, addr - n, addr + getOffset(buf + 1) );
             break;
         

@@ -281,7 +281,7 @@ OPERAND_FUNC(zeropage)
 {
 	UBYTE zp = next( f, addr );
 	
-	operand( xref_genwordaddr( NULL, "$", (ADDR)zp ) );
+	operand( xref_genwordaddr( NULL, FORMAT_NUM_8BIT, (ADDR)zp ) );
 	xref_addxref( xtype, g_insn_addr, zp );
 }
 
@@ -317,7 +317,7 @@ OPERAND_FUNC(abs16)
 	UBYTE high_addr = next( f, addr );
 	UWORD addr16    = MK_WORD( low_addr, high_addr );
 
-	operand( xref_genwordaddr( NULL, "$", addr16 ) );
+	operand( xref_genwordaddr( NULL, FORMAT_NUM_16BIT, addr16 ) );
 	xref_addxref( xtype, g_insn_addr, addr16 );
 }
 
@@ -331,7 +331,7 @@ OPERAND_FUNC(abs16_X)
 	UBYTE high_addr = next( f, addr );
 	UWORD addr16    = MK_WORD( low_addr, high_addr );
 
-	operand( xref_genwordaddr( NULL, "$", addr16 ) );
+	operand( xref_genwordaddr( NULL, FORMAT_NUM_16BIT, addr16 ) );
 	COMMA;
 	operand( "X" );
 	
@@ -348,7 +348,7 @@ OPERAND_FUNC(abs16_Y)
 	UBYTE high_addr = next( f, addr );
 	UWORD addr16    = MK_WORD( low_addr, high_addr );
 
-	operand( xref_genwordaddr( NULL, "$", addr16 ) );
+	operand( xref_genwordaddr( NULL, FORMAT_NUM_16BIT, addr16 ) );
 	COMMA;
 	operand( "Y" );
 	
@@ -390,7 +390,7 @@ OPERAND_FUNC(ind16)
 	UBYTE high_addr = next( f, addr );
 	UWORD addr16    = MK_WORD( low_addr, high_addr );
 
-	operand( "(%s)", xref_genwordaddr( NULL, "$", addr16 ) );
+	operand( "(%s)", xref_genwordaddr( NULL, FORMAT_NUM_16BIT, addr16 ) );
 	
 	xref_addxref( xtype, g_insn_addr, addr16 );
 }
@@ -404,7 +404,7 @@ OPERAND_FUNC(rel8)
 	BYTE disp = (BYTE)next( f, addr );
 	ADDR dest = *addr + disp;
 	
-	operand( xref_genwordaddr( NULL, "$", dest ) );
+	operand( xref_genwordaddr( NULL, FORMAT_NUM_16BIT, dest ) );
 	xref_addxref( xtype, g_insn_addr, dest );
 }
 

@@ -58,22 +58,22 @@ const int    dasm_max_opcode_width = 9;
  *****************************************************************************/
 
 /* Common output formats */
-#define FORMAT_NUM_8BIT      "$%02X"
-#define FORMAT_NUM_16BIT   "$%04X"
-#define FORMAT_REG      "R%d"
+#define FORMAT_NUM_8BIT      "0%02XH"
+#define FORMAT_NUM_16BIT     "0%04XH"
+#define FORMAT_REG           "R%d"
 
 /* Create a single-bit mask */
-#define BIT(n)         ( 1 << (n) )
+#define BIT(n)               ( 1 << (n) )
 
 /* Construct a 16-bit word out of low and high bytes */
-#define MK_WORD(l,h)      ( ((l) & 0xFF) | (((h) & 0xFF) << 8) )
+#define MK_WORD(l,h)         ( ((l) & 0xFF) | (((h) & 0xFF) << 8) )
 
 /* Indicate whether decode was successful or not. */
-#define INSN_FOUND      ( 1 )
-#define INSN_NOT_FOUND      ( 0 )
+#define INSN_FOUND           ( 1 )
+#define INSN_NOT_FOUND       ( 0 )
 
 /* Neaten up emitting a comma "," within an operand. */
-#define COMMA         operand( ", " )
+#define COMMA                operand( ", " )
 
 /**
    The optab_t type describes each entry in the op tables.
@@ -290,7 +290,7 @@ OPERAND_FUNC(indreg)
 {
    UBYTE reg = opc & 0x01;
    
-   operand( "@R%d", reg );
+   operand( "@" FORMAT_REG, reg );
 }
 
 /***********************************************************
@@ -344,7 +344,7 @@ OPERAND_FUNC(iram)
    if ( ( s = xref_findaddrlabel( iaddr ) ) )
       operand( "%s", s );
    else
-      operand( "%%" FORMAT_NUM_8BIT, iaddr );
+      operand( FORMAT_NUM_8BIT, iaddr );
 }
 
 /***********************************************************
@@ -360,7 +360,7 @@ OPERAND_FUNC(addr11)
    UWORD addr16    = (UWORD)*addr;
    addr16 = ( addr16 & 0xF800 ) | addr11;
 
-   operand( "@%s", xref_genwordaddr( NULL, "$", addr16 ) );
+   operand( "%s", xref_genwordaddr( NULL, FORMAT_NUM_16BIT, addr16 ) );
    xref_addxref( xtype, g_insn_addr, addr16 );
 }
 
@@ -375,7 +375,7 @@ OPERAND_FUNC(addr16)
    UBYTE lsb_addr  = next( f, addr );
    UWORD addr16    = MK_WORD( lsb_addr, msb_addr );
 
-   operand( "@%s", xref_genwordaddr( NULL, "$", addr16 ) );
+   operand( "%s", xref_genwordaddr( NULL, FORMAT_NUM_16BIT, addr16 ) );
    xref_addxref( xtype, g_insn_addr, addr16 );
 }
 
@@ -388,7 +388,7 @@ OPERAND_FUNC(rel8)
    BYTE ofst = (BYTE)next( f, addr );
    ADDR dest = *addr + ofst;
    
-   operand( xref_genwordaddr( NULL, "$", dest ) );
+   operand( xref_genwordaddr( NULL, FORMAT_NUM_16BIT, dest ) );
    xref_addxref( xtype, g_insn_addr, dest );
 }
 
