@@ -867,7 +867,7 @@ static void run_disasm( struct params params )
 
 				c = c | ((unsigned char)next( f, &addr ) << 8 );
 
-				printf( "%s\n", xref_genwordaddr( NULL, "", c ) );
+				printf( "%s\n", xref_genwordaddr( NULL, "%04X", c ) );
 				xref_addxref( X_TABLE, addr - 2, c );
 
 				i++;

@@ -291,7 +291,7 @@ char * xref_findaddrlabel( ADDR addr )
  *
  ************************************************************/
 
-char * xref_genwordaddr( char * buf, const char * prefix, ADDR addr )
+char * xref_genwordaddr( char * buf, const char * format, ADDR addr )
 {
 	char * label = xref_findaddrlabel( addr );
 	 
@@ -301,11 +301,11 @@ char * xref_genwordaddr( char * buf, const char * prefix, ADDR addr )
    /* Either xref not found or not labelled */
 	 
 	if ( buf )
-		sprintf( buf, "%s" FORMAT_ADDR, prefix, addr );
+		sprintf( buf, format, addr );
 	else
 	{
 		char local[256];
-		sprintf( local, "%s" FORMAT_ADDR, prefix, addr );
+		sprintf( local, format, addr );
 		buf = dupstr(local);	
 	}
     

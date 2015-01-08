@@ -355,7 +355,7 @@ OPERAND_FUNC(iop16)
 	UBYTE lsb   = next( f, addr );
 	UWORD iop16 = MK_WORD( lsb, msb );
 
-	operand( "%%%s", xref_genwordaddr( NULL, "$", iop16 ) );
+	operand( "%%%s", xref_genwordaddr( NULL, FORMAT_NUM_16BIT, iop16 ) );
 	xref_addxref( xtype, g_insn_addr, iop16 );
 }
 
@@ -381,7 +381,7 @@ OPERAND_FUNC(label)
 	UBYTE lsb_addr  = next( f, addr );
 	UWORD addr16    = MK_WORD( lsb_addr, msb_addr );
 
-	operand( "@%s", xref_genwordaddr( NULL, "$", addr16 ) );
+	operand( "@%s", xref_genwordaddr( NULL, FORMAT_NUM_16BIT, addr16 ) );
 	xref_addxref( xtype, g_insn_addr, addr16 );
 }
 
@@ -415,7 +415,7 @@ OPERAND_FUNC(ofst)
 	BYTE ofst = (BYTE)next( f, addr );
 	ADDR dest = *addr + ofst;
 	
-	operand( xref_genwordaddr( NULL, "$", dest ) );
+	operand( xref_genwordaddr( NULL, FORMAT_NUM_16BIT, dest ) );
 	xref_addxref( xtype, g_insn_addr, dest );
 }
 
