@@ -64,7 +64,6 @@
  * Configuration commands:
  *      tXX         string terminator byte (default = 00)
  *      eXXXX       end of disassembly
- *      rSSSS,EEEE  set cross-reference range, SSSS = start addr, EEEE = end addr
  *
  * Dump commands:
  *      aXXXX       alphanumeric dump
@@ -196,9 +195,6 @@ static void addcomment( struct comment **list, ADDR ref, char *text )
 {
 	struct comment *p = *list;
 	struct comment *q = NULL;
-
-	if ( !xref_inrange( ref ) )
-		return;
 
 	/* Find entry in specified comment list */
 	while ( p != NULL && ref > p->ref )
@@ -516,11 +512,7 @@ static void readlist( const char *listfile, struct params *params )
 
 			case 'r':   /* Xref range */
 				{
-					ADDR ssss,eeee;
-
-					sscanf( pbuf, "%x,%x", &ssss, &eeee );
-					xref_setmin( ssss );
-					xref_setmax( eeee );
+					/* Deprecated */
 				}
 				break;
 
