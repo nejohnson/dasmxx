@@ -80,9 +80,6 @@ typedef enum {
    X_REG    = 7
 } XREF_TYPE;
 
-extern void xref_setmin( ADDR min );
-extern void xref_setmax( ADDR max );
-extern int  xref_inrange( ADDR ref );
 extern void xref_addxref( XREF_TYPE type, ADDR addr, ADDR ref );
 extern void xref_addxreflabel( ADDR ref, char *label );
 extern char * xref_findaddrlabel( ADDR addr );

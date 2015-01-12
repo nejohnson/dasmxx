@@ -60,69 +60,10 @@ struct xref {
 
 struct xref *xref = NULL;
 
-ADDR    minxref  = 0;
-ADDR    maxxref  = 0xffff;
-
 /*****************************************************************************
  *        Public Functions
  *****************************************************************************/
  
-/***********************************************************
- *
- * FUNCTION
- *      xref_setmin
- *
- * DESCRIPTION
- *      Sets minimum xref range of interest.
- *
- * RETURNS
- *      void
- *
- ************************************************************/
- 
-void xref_setmin( ADDR min )
-{
-   minxref = min;
-}
- 
-/***********************************************************
- *
- * FUNCTION
- *      xref_setmax
- *
- * DESCRIPTION
- *      Sets maximum xref range of interest.
- *
- * RETURNS
- *      void
- *
- ************************************************************/
- 
-void xref_setmax( ADDR max )
-{
-   maxxref = max;
-}
- 
-/***********************************************************
- *
- * FUNCTION
- *      xref_inrange
- *
- * DESCRIPTION
- *      Query ref to see if it is the set xref range.
- *
- * RETURNS
- *      1 if in range, else 0.
- *
- ************************************************************/
- 
-int  xref_inrange( ADDR ref )
-{
-   if ( minxref <= ref && ref <= maxxref )
-        return 1;
-   return 0;
-}
-
 /***********************************************************
  *
  * FUNCTION
@@ -142,9 +83,6 @@ int  xref_inrange( ADDR ref )
     struct xref     *q;
     struct addrlist *new;
     
-    if ( !xref_inrange(ref) )
-        return;
-		  
 	 if ( type == X_NONE )
 	     return;
     
@@ -211,9 +149,6 @@ void xref_addxreflabel( ADDR ref, char *label )
     struct xref     *p;
     struct xref     *q;
     struct addrlist *new;
-    
-    if ( !xref_inrange( ref ) )
-        return;
     
     p = xref;
     q = NULL;
