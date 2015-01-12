@@ -397,6 +397,7 @@ static void readlist( const char *listfile, struct params *params )
 	int n;
 	char notebuf[NOTE_BUF_SIZE + 1];
 	int notelength;
+    unsigned int lineno = 0;
    
 	enum {
 		LINE_CMD,
@@ -411,7 +412,7 @@ static void readlist( const char *listfile, struct params *params )
 		error( "Failed to open list command file \"%s\"", listfile );
 
 	/* Process each line of list file */
-	while ( ( pbuf = fgets( buf, LINE_BUF_LEN, f ) ) != NULL )
+	while ( lineno++, ( pbuf = fgets( buf, LINE_BUF_LEN, f ) ) != NULL )
 	{
 		if ( linemode == LINE_CMD )
 		{
@@ -431,6 +432,8 @@ static void readlist( const char *listfile, struct params *params )
 			cmd = tolower( cmd ); /* Be case-agnostic */
 			switch ( cmd )
 			{
+            case 0: break; /* Catch blank line at end of file */
+
 			case 'a': /* alphanumeric character dump */
 			case 'b': /* byte dump                   */
 			case 'c': /* start of code disassembly   */
@@ -451,14 +454,14 @@ static void readlist( const char *listfile, struct params *params )
 						unsigned int count;
 						
 						if ( cmd != 'b' )
-							error( "Byte count not supported for command '%c'", cmd );
+							error( "%s(%u) :: Byte count not supported for command '%c'", listfile, lineno, cmd );
 						
 						pbuf++;
 						sscanf( pbuf, "%u%n", &count, &n );
 						pbuf += n;
 						
 						if ( count > BYTES_PER_LINE )
-							error( "Too many bytes per line (limit is %d)", BYTES_PER_LINE );
+							error( "%s(%u) :: Too many bytes per line (limit is %d)", listfile, lineno, BYTES_PER_LINE );
 							
 						bytes_per_line = count;
 					}
@@ -489,7 +492,7 @@ static void readlist( const char *listfile, struct params *params )
 							sprintf( pbuf, "%s_%04d", tbl[cmd_idx].pfx, tbl[cmd_idx].num++ );
 					}
 					
-					/* Add a cross-ref entry for everything except and end entry */
+					/* Add a cross-ref entry for everything except an end entry */
 					if ( cmd != 'e' )
 						xref_addxreflabel( addr, pbuf );
 
@@ -503,7 +506,7 @@ static void readlist( const char *listfile, struct params *params )
 
 			case 'f':  /* inputfile */
 				if ( params->inputfile )
-					error( "Multiple input files specified" );
+					error( "%s(%u) :: Multiple input files specified", listfile, lineno );
 				params->inputfile = (const char *)dupstr( pbuf );
 				break;
 
@@ -525,7 +528,8 @@ static void readlist( const char *listfile, struct params *params )
 				sscanf( pbuf, "%x", &string_terminator );
 				break;
 
-		   case 'l':   /* Define xref label */
+		   case 'l':   /* Define xref code label */
+           case 'd':   /* Define xref data label */
 				{
 					sscanf( pbuf, "%x%n", &addr, &n );
 					pbuf += n;
@@ -572,6 +576,12 @@ static void readlist( const char *listfile, struct params *params )
 					}
 				}
 				break;
+
+            default: /* Unknown command */
+                {
+                    error( "%s(%u) :: Unknown command code '%d'\n", listfile, lineno, cmd );
+                }
+                break;
 			}   /* switch */
 		}
 		else    /* is LINE_NOTE */
