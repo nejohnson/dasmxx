@@ -326,9 +326,17 @@ OPERAND_FUNC(imm16)
 
 OPERAND_FUNC(addrbit)
 {
-   UBYTE bit = next( f, addr );
-   
-   operand( FORMAT_NUM_8BIT, bit );
+   UBYTE bit      = next( f, addr );
+   int bitnum     = bit % 8;
+   int bytenum    = bit & 0xF8;
+   const char * s = xref_findaddrlabel( bytenum );
+
+   if ( s )
+      operand( "%s", s );
+   else
+      operand( FORMAT_NUM_8BIT, bytenum );
+
+   operand( ".%d", bitnum );
 }
 
 /***********************************************************
