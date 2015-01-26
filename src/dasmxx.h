@@ -1,6 +1,6 @@
 /*****************************************************************************
  *
- * Copyright (C) 2014, Neil Johnson
+ * Copyright (C) 2014-2015, Neil Johnson
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms,
@@ -44,12 +44,17 @@
 /*                              Machine Types                                */
 /*****************************************************************************/
 
+/* Base types */
 typedef unsigned char      UBYTE;
 typedef signed char        BYTE;
 typedef unsigned short     UWORD;
 typedef signed short       WORD;
 typedef unsigned int       ADDR;
 
+/* Derived types */
+typedef UWORD              OPC;
+
+/* Universal address format */
 #define FORMAT_ADDR		"%04X"
 
 /*****************************************************************************/
@@ -94,6 +99,7 @@ extern ADDR dasm_insn( FILE *f, char * outbuf, ADDR addr );
 extern const char * dasm_name;
 extern const char * dasm_description;
 extern const int    dasm_max_insn_length;
+extern const int    dasm_max_opcode_width;
 
 /******************************************************************************/
 
