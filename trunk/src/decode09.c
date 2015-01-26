@@ -1,6 +1,6 @@
 /*****************************************************************************
  *
- * Copyright (C) 2014, Neil Johnson
+ * Copyright (C) 2014-2015, Neil Johnson
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms,
@@ -36,6 +36,7 @@
 #include <stdarg.h>
 
 #include "dasmxx.h"
+#include "optab.h"
 
 /*****************************************************************************
  * Globally-visible decoder properties
@@ -58,167 +59,20 @@ const int    dasm_max_opcode_width = 9;
  *****************************************************************************/
 
 /* Common output formats */
-#define FORMAT_NUM_8BIT        "$%02X"
+#define FORMAT_NUM_8BIT         "$%02X"
 #define FORMAT_NUM_16BIT        "$%04X"
-#define FORMAT_REG                "R%d"
-
-/* Create a single-bit mask */
-#define BIT(n)                    ( 1 << (n) )
+#define FORMAT_REG              "R%d"
 
 /* Construct a 16-bit word out of low and high bytes */
 #define MK_WORD(l,h)            ( ((l) & 0xFF) | (((h) & 0xFF) << 8) )
-
-/* Indicate whether decode was successful or not. */
-#define INSN_FOUND                ( 1 )
-#define INSN_NOT_FOUND        ( 0 )
-
-/* Neaten up emitting a comma "," within an operand. */
-#define COMMA    operand( ", " )
-
-/**
-    The optab_t type describes each entry in the op tables.
-**/
-typedef struct optab_s {
-    UBYTE opc;
-    const char * opcode;
-    void (*operands)( FILE *, ADDR *, UBYTE, XREF_TYPE); /* operand function */
-    XREF_TYPE xtype;
-    enum {
-        OPTAB_INSN,
-        OPTAB_RANGE,
-        OPTAB_MASK,
-        OPTAB_TABLE
-    } type;
-    union {
-        struct {
-            UBYTE min, max;
-        } range;
-        struct {
-            UBYTE mask, val;
-        } mask;
-        struct optab_s * table;
-    } u;
-} optab_t;
-
-/**
-    Macros to construct entries in op tables.
-**/
-
-/**
-    The given instruction byte jumps to another decode table.
-**/
-#define TABLE(M_tablename, M_opc)                    {     .type    = OPTAB_TABLE,            \
-                                                                .opc     = M_opc,                     \
-                                                                .opcode  = "TABLE",                \
-                                                                .u.table = M_tablename             \
-                                                            },
-
-/**
-    A single insruction matches against one op byte.
-**/    
-#define INSN(M_opcode, M_ops, M_opc, M_xt)        {     .type     = OPTAB_INSN,             \
-                                                                .opc      = M_opc,                 \
-                                                                .opcode   = M_opcode,             \
-                                                                .operands = operand_ ## M_ops,    \
-                                                                .xtype    = M_xt                    \
-                                                            },
-
-/**
-    A RANGE matches the first byte anywhere between M_min and M_max inclusive.
-**/    
-#define RANGE(M_opcode, M_ops, M_min, M_max, M_xt)     \
-                                                            {     .type     = OPTAB_RANGE,         \
-                                                                .opcode   = M_opcode,                \
-                                                                .operands = operand_ ## M_ops, \
-                                                                .xtype    = M_xt,                    \
-                                                                .u.range.min = M_min,                \
-                                                                .u.range.max = M_max                \
-                                                            },
-
-/**
-    A MASK matches a set of instruction bytes described by a bit mask and a
-   value to match against applied to the first search byte.
-**/    
-#define MASK(M_opcode, M_ops, M_mask, M_val, M_xt)      \
-                                                            {    .type     = OPTAB_MASK,            \
-                                                                .opcode   = M_opcode,                \
-                                                                .operands = operand_ ## M_ops, \
-                                                                .xtype    = M_xt,                    \
-                                                                .u.mask.mask = M_mask,            \
-                                                                .u.mask.val  = M_val                \
-                                                            },
-
-/**
-    Mark end of op table.
-**/
-#define END        { .opcode = NULL }
-
-/*****************************************************************************
- * Private data.
- *****************************************************************************/
-
-/* Start address of each instruction as it is decoded. */
-static ADDR g_insn_addr = 0;
-
-/* Global output buffer into which the decoded output is written. */
-static char * g_output_buffer = NULL;
 
 /*****************************************************************************
  *        Private Functions
  *****************************************************************************/
 
-/***********************************************************
- *
- * FUNCTION
- *      opcode
- *
- * DESCRIPTION
- *      Writes the given opcode string into the output buffer.
- *
- * RETURNS
- *      none
- *
- ************************************************************/
- 
-static void opcode( const char *opcode )
-{
-    int n = sprintf( g_output_buffer, "%-*s", dasm_max_opcode_width, opcode );
-    g_output_buffer += n;
-}
-
-/***********************************************************
- *
- * FUNCTION
- *      operand
- *
- * DESCRIPTION
- *      Writes the given operand string and any arguments
- *      into the output buffer.  The string is processed with
- *      the usual printf() conversions.
- *
- * RETURNS
- *      none
- *
- ************************************************************/
- 
-static void operand( const char *operand, ... )
-{
-    va_list ap;
-    int n;
-    
-    va_start( ap, operand );
-    n = vsprintf( g_output_buffer, operand, ap );
-    va_end( ap );
-    
-    g_output_buffer += n;
-}
-
 /******************************************************************************/
 /**                            Operand Functions                             **/
 /******************************************************************************/
-
-#define OPERAND_FUNC(M_name) \
-    static void operand_ ## M_name (FILE *f, ADDR * addr, UBYTE opc, XREF_TYPE xtype )
 
 /******************************************************************************/
 /**                            Empty Operands                                **/
@@ -240,7 +94,7 @@ OPERAND_FUNC(none)
 
 OPERAND_FUNC(imm8)
 {
-   UBYTE byte = next( f, addr );
+    UBYTE byte = next( f, addr );
     
     operand( "#" FORMAT_NUM_8BIT, byte );
 }
@@ -582,7 +436,7 @@ static optab_t page3[] = {
         INSN( M_name "A", none, ( 0x40 | M_base ), X_NONE ) \
         INSN( M_name "B", none, ( 0x50 | M_base ), X_NONE )            
 
-static optab_t base_optab[] = {
+optab_t base_optab[] = {
 
 /*----------------------------------------------------------------------------
   8-bit Accumulator and Memory
@@ -650,7 +504,7 @@ static optab_t base_optab[] = {
   Index Register/Stack Pointer
   ----------------------------------------------------------------------------*/
 
-      ACC_ARGS_OP( "CMPX", 0x0C )
+    ACC_ARGS_OP( "CMPX", 0x0C )
     
     INSN ( "EXG",    r1_r2, 0x1E, X_NONE )
     INSN ( "LEAX", indexed, 0x30, X_NONE )
@@ -659,7 +513,7 @@ static optab_t base_optab[] = {
     INSN ( "LEAU", indexed, 0x33, X_NONE )
     
     ACC_ARGS_OPD( "LDU",  0x0E )
-      ACC_ARGS_OP( "LDX",  0x0E )
+    ACC_ARGS_OP( "LDX",  0x0E )
   
     INSN ( "PSHS", imm8, 0x34, X_NONE )
     INSN ( "PULS", imm8, 0x35, X_NONE )
@@ -695,15 +549,15 @@ static optab_t base_optab[] = {
     INSN ( "BGT", rel8, 0x2E, X_JMP )
     INSN ( "BLE", rel8, 0x2F, X_JMP )
   
-      INSN ( "BSR", rel8, 0x8D, X_JMP )
-   INSN ( "BRA", rel8, 0x20, X_JMP )
+    INSN ( "BSR", rel8, 0x8D, X_JMP )
+    INSN ( "BRA", rel8, 0x20, X_JMP )
     INSN ( "BRN", rel8, 0x21, X_JMP )
     
 /*----------------------------------------------------------------------------
   Miscellaneous
   ----------------------------------------------------------------------------*/
   
-      INSN ( "ANDCC", imm8, 0x1C, X_NONE )
+    INSN ( "ANDCC", imm8, 0x1C, X_NONE )
     INSN ( "CWAI",  imm8, 0x3C, X_NONE )
     INSN ( "NOP",   none, 0x12, X_NONE )
     INSN ( "ORCC",  imm8, 0x1A, X_NONE )
@@ -713,7 +567,7 @@ static optab_t base_optab[] = {
     INSN ( "SYNC",  none, 0x13, X_NONE )
 
     SINGLE_OP( "JMP", 0x0E )
-   ACC_ARGS_OP_NOIMM( "JSR", 0x0D, X_CALL )
+    ACC_ARGS_OP_NOIMM( "JSR", 0x0D, X_CALL )
     
 /*----------------------------------------------------------------------------
   Sub-Pages
@@ -726,103 +580,6 @@ static optab_t base_optab[] = {
     
     END
 };
-
-/***********************************************************
- *
- * FUNCTION
- *      walk_table
- *
- * DESCRIPTION
- *      Disassembles the next instruction in the input stream.
- *      f - file stream to read (pass to calls to next() )
- *      outbuf - pointer to output buffer
- *      addr - address of first input byte for this insn
- *
- * RETURNS
- *      INSN_FOUND if a valid instruction found.
- *      INSN_NOT_FOUND otherwise.
- *
- ************************************************************/
-
-static int walk_table( FILE * f, ADDR * addr, optab_t * optab, UBYTE opc )
-{
-    UBYTE peek_byte;
-    int have_peeked = 0;
-    
-    if ( optab == NULL )
-        return 0;
-        
-    while ( optab->opcode != NULL )
-    {
-       /* printf("type:%d  ", optab->type); */
-        if ( optab->type == OPTAB_TABLE && optab->opc == opc )
-        {
-            opc = next( f, addr );
-            return walk_table( f, addr, optab->u.table, opc );
-        }
-        else if ( ( optab->type == OPTAB_INSN && opc == optab->opc )
-                    ||
-                     ( optab->type == OPTAB_RANGE 
-                             && opc >= optab->u.range.min 
-                            && opc <= optab->u.range.max )
-                    ||
-                     ( optab->type == OPTAB_MASK 
-                             && ( ( opc & optab->u.mask.mask ) == optab->u.mask.val ) ) )
-        {
-            opcode( optab->opcode );
-            optab->operands( f, addr, opc, optab->xtype );
-            return INSN_FOUND;
-        }
-        
-        optab++;    
-    }
-
-    return INSN_NOT_FOUND;
-}
-
-/*****************************************************************************
- *        Public Functions
- *****************************************************************************/
- 
-/***********************************************************
- *
- * FUNCTION
- *      dasm_insn
- *
- * DESCRIPTION
- *      Disassembles the next instruction in the input stream.
- *      f - file stream to read (pass to calls to next() )
- *      outbuf - pointer to output buffer
- *      addr - address of first input byte for this insn
- *
- * RETURNS
- *      address of next input byte
- *
- ************************************************************/
- 
-ADDR dasm_insn( FILE *f, char *outbuf, ADDR addr )
-{
-    int opc;
-    int found = 0;
-
-    /* Store start address in a global for use in xref calls */    
-    g_insn_addr = addr;
-    
-    /* Setup g_output_buffer to point to caller's output buffer */
-    g_output_buffer = outbuf;
-
-    /* Get first opcode byte */
-    opc = next( f, &addr );
-
-    /* Now walk table(s) looking for an instruction match */
-    found = walk_table( f, &addr, base_optab, opc );
-    
-    /* If we didn't find a match, indicate this to the output */
-    if ( found != INSN_FOUND )
-        opcode( "???" );
-    
-    return addr;
-}
 
 /******************************************************************************/
 /******************************************************************************/

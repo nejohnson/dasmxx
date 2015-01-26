@@ -1,6 +1,6 @@
 /*****************************************************************************
  *
- * Copyright (C) 2014, Neil Johnson
+ * Copyright (C) 2014-2015, Neil Johnson
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms,
@@ -119,27 +119,27 @@
 
 /* Comment list type */
 struct comment {
-	int              ref;
-	char            *text;
-	struct comment  *next;
+    int              ref;
+    char            *text;
+    struct comment  *next;
 };
 
 /* Dump format list type */
 struct fmt {
-	int              mode;
-	ADDR             addr;
-	unsigned int     bpl; /* bytes per line */
-	char            *name;
-	struct fmt      *n;
+    int              mode;
+    ADDR             addr;
+    unsigned int     bpl; /* bytes per line */
+    char            *name;
+    struct fmt      *n;
 };
 
 struct params {
-	const char * listfile;
-	const char * inputfile;
-	const char * outputfile;
-	struct fmt * cmdlist;
-	
-	int want_xref;
+    const char * listfile;
+    const char * inputfile;
+    const char * outputfile;
+    struct fmt * cmdlist;
+    
+    int want_xref;
 };
 
 /* Set various physical limits */
@@ -147,7 +147,7 @@ struct params {
 #define NOTE_BUF_SIZE   4096
 #define COL_LINECOMMENT 60
 
-#define COMMENT_DELIM		";"
+#define COMMENT_DELIM        ";"
 
 /*****************************************************************************
  *        Global Data
@@ -193,39 +193,39 @@ static UBYTE  insn_byte_idx    = 0;
 
 static void addcomment( struct comment **list, ADDR ref, char *text )
 {
-	struct comment *p = *list;
-	struct comment *q = NULL;
+    struct comment *p = *list;
+    struct comment *q = NULL;
 
-	/* Find entry in specified comment list */
-	while ( p != NULL && ref > p->ref )
-	{
-		q = p;
-		p = p->next;
-	}
+    /* Find entry in specified comment list */
+    while ( p != NULL && ref > p->ref )
+    {
+        q = p;
+        p = p->next;
+    }
 
-	if ( p != NULL && ref == p->ref)  /* new addr for ref */
-	{
-		if ( p->text )
-			error( "Multiple comments for same address ($%04X)", ref );
+    if ( p != NULL && ref == p->ref)  /* new addr for ref */
+    {
+        if ( p->text )
+            error( "Multiple comments for same address ($%04X)", ref );
 
-		p->text = dupstr( text );
-	}
-	else /* insert */
-	{
-		if ( q == NULL )
-		{
-			q = zalloc( sizeof( struct comment ) );
-			*list = q;
-		}
-		else
-		{
-			q->next = zalloc( sizeof( struct comment ) );
-			q = q->next;
-		}
-		q->next  = p;
-		q->ref   = ref;
-		q->text  = dupstr( text );
-	}
+        p->text = dupstr( text );
+    }
+    else /* insert */
+    {
+        if ( q == NULL )
+        {
+            q = zalloc( sizeof( struct comment ) );
+            *list = q;
+        }
+        else
+        {
+            q->next = zalloc( sizeof( struct comment ) );
+            q = q->next;
+        }
+        q->next  = p;
+        q->ref   = ref;
+        q->text  = dupstr( text );
+    }
 }
 
 /***********************************************************
@@ -244,30 +244,30 @@ static void addcomment( struct comment **list, ADDR ref, char *text )
 
 static int printcomment( struct comment *list, ADDR ref, unsigned int padding )
 {
-	int i;
-	char *p;
-	struct comment *plist = list;
-	
-	for ( ; plist; plist = plist->next )
-	{
-		if ( plist->ref == ref )
-		{
-			printf( "%*s ", padding, COMMENT_DELIM );
-			for ( p = plist->text; *p; p++ )
-			{
-				putchar( *p );
-				if ( *p == '\n' )
-					printf( "%*s ", padding, COMMENT_DELIM );
-			}
-			
-			if ( list == blockcmt )
-				putchar( '\n' );
+    int i;
+    char *p;
+    struct comment *plist = list;
+    
+    for ( ; plist; plist = plist->next )
+    {
+        if ( plist->ref == ref )
+        {
+            printf( "%*s ", padding, COMMENT_DELIM );
+            for ( p = plist->text; *p; p++ )
+            {
+                putchar( *p );
+                if ( *p == '\n' )
+                    printf( "%*s ", padding, COMMENT_DELIM );
+            }
+            
+            if ( list == blockcmt )
+                putchar( '\n' );
 
-			return 1;
-		}
-	}    
+            return 1;
+        }
+    }    
 
-	return 0;
+    return 0;
 }
 
 /***********************************************************
@@ -286,11 +286,11 @@ static int printcomment( struct comment *list, ADDR ref, unsigned int padding )
 
 static int commentexists( struct comment *list, ADDR ref )
 {
-	for ( ; list; list = list->next )
-		if ( list->ref == ref )
-			return 1;
+    for ( ; list; list = list->next )
+        if ( list->ref == ref )
+            return 1;
 
-	return 0;
+    return 0;
 }
 
 /***********************************************************
@@ -309,12 +309,12 @@ static int commentexists( struct comment *list, ADDR ref )
 
 static int emitaddr( ADDR addr )
 {
-	char * label = xref_findaddrlabel( addr );
+    char * label = xref_findaddrlabel( addr );
 
-   if ( label )
-      printf( "%s:\n", label );
+    if ( label )
+        printf( "%s:\n", label );
 
-   return printf( "    " FORMAT_ADDR ":    ", addr);
+    return printf( "    " FORMAT_ADDR ":    ", addr);
 }
 
 /***********************************************************
@@ -332,37 +332,37 @@ static int emitaddr( ADDR addr )
 
 static void addlist( struct fmt **list, ADDR addr, int mode, unsigned int bytes_per_line, char *name )
 {
-	struct fmt *p = *list, *q = NULL;
+    struct fmt *p = *list, *q = NULL;
 
-	/* scan through address-ordered list to find right place to insert */
-	while ( p != NULL && p->addr < addr )
-	{
-		q = p;
-		p = p->n;
-	}
+    /* scan through address-ordered list to find right place to insert */
+    while ( p != NULL && p->addr < addr )
+    {
+        q = p;
+        p = p->n;
+    }
 
-	if ( q == NULL )
-	{
-		/* Insert at head of list */
-		q = zalloc( sizeof( struct fmt ) );
-		*list = q;
-	}
-	else
-	{
-		/* Insert within list */
-		q->n = zalloc( sizeof( struct fmt ) );
-		q = q->n;
-	}
+    if ( q == NULL )
+    {
+        /* Insert at head of list */
+        q = zalloc( sizeof( struct fmt ) );
+        *list = q;
+    }
+    else
+    {
+        /* Insert within list */
+        q->n = zalloc( sizeof( struct fmt ) );
+        q = q->n;
+    }
 
-	/* Fill in the blanks */
-	q->addr = addr;
-	q->mode = mode;
-	q->n    = p;
-	q->bpl  = bytes_per_line;
-	if ( name != NULL )
-		q->name = dupstr( name );
-	else
-		q->name = NULL;
+    /* Fill in the blanks */
+    q->addr = addr;
+    q->mode = mode;
+    q->n    = p;
+    q->bpl  = bytes_per_line;
+    if ( name != NULL )
+        q->name = dupstr( name );
+    else
+        q->name = NULL;
 }
 
 /***********************************************************
@@ -378,221 +378,221 @@ static void addlist( struct fmt **list, ADDR addr, int mode, unsigned int bytes_
  *
  ************************************************************/
 
-#define LINE_BUF_LEN		( 256 )
-#define SKIP_SPACE(M_p)	do {\
-									while(*M_p && isspace(*M_p))\
-										M_p++;\
-								} while(0)
+#define LINE_BUF_LEN        ( 256 )
+#define SKIP_SPACE(M_p)    do {\
+                               while(*M_p && isspace(*M_p))\
+                                   M_p++;\
+                           } while(0)
 
 static void readlist( const char *listfile, struct params *params )
 {
-	FILE *f;
-	char buf[LINE_BUF_LEN + 1], *pbuf, *q;
-	ADDR addr;
-	int cmd;
-	int n;
-	char notebuf[NOTE_BUF_SIZE + 1];
-	int notelength;
+    FILE *f;
+    char buf[LINE_BUF_LEN + 1], *pbuf, *q;
+    ADDR addr;
+    int cmd;
+    int n;
+    char notebuf[NOTE_BUF_SIZE + 1];
+    int notelength;
     unsigned int lineno = 0;
    
-	enum {
-		LINE_CMD,
-		LINE_NOTE
-	} linemode = LINE_CMD;
-	
-	if ( !listfile )
-		error( "No listfile specifed" );
-		
-	f = fopen( listfile, "r" );
-	if ( !f )
-		error( "Failed to open list command file \"%s\"", listfile );
+    enum {
+        LINE_CMD,
+        LINE_NOTE
+    } linemode = LINE_CMD;
+    
+    if ( !listfile )
+        error( "No listfile specifed" );
+        
+    f = fopen( listfile, "r" );
+    if ( !f )
+        error( "Failed to open list command file \"%s\"", listfile );
 
-	/* Process each line of list file */
-	while ( lineno++, ( pbuf = fgets( buf, LINE_BUF_LEN, f ) ) != NULL )
-	{
-		if ( linemode == LINE_CMD )
-		{
-			/* strip leading whitespace */
-			SKIP_SPACE(pbuf);
-			
-			/* Skip comment and blank lines */
-			if ( *pbuf == '#' || *pbuf == '\n' )
-				continue;
-			
-			/* Remove trailing newline char */
-			if ( q = strchr( pbuf, '\n' ) )
-				*q = '\0';
+    /* Process each line of list file */
+    while ( lineno++, ( pbuf = fgets( buf, LINE_BUF_LEN, f ) ) != NULL )
+    {
+        if ( linemode == LINE_CMD )
+        {
+            /* strip leading whitespace */
+            SKIP_SPACE(pbuf);
+            
+            /* Skip comment and blank lines */
+            if ( *pbuf == '#' || *pbuf == '\n' )
+                continue;
+            
+            /* Remove trailing newline char */
+            if ( q = strchr( pbuf, '\n' ) )
+                *q = '\0';
 
-			/* Peel off command code, then do something about it */
-			cmd = *pbuf++;
-			cmd = tolower( cmd ); /* Be case-agnostic */
-			switch ( cmd )
-			{
+            /* Peel off command code, then do something about it */
+            cmd = *pbuf++;
+            cmd = tolower( cmd ); /* Be case-agnostic */
+            switch ( cmd )
+            {
             case 0: break; /* Catch blank line at end of file */
 
-			case 'a': /* alphanumeric character dump */
-			case 'b': /* byte dump                   */
-			case 'c': /* start of code disassembly   */
-			case 'e': /* end of processing           */
-			case 'p': /* start of procedure          */
-			case 's': /* string dump                 */
-			case 'v': /* vector dump                 */
-			case 'w': /* word dump                   */
-			case 'm': /* bitmap dump                 */
-				{
-					unsigned int cmd_idx = strchr( datchars, cmd ) - datchars;
-					unsigned bytes_per_line = BYTES_PER_LINE;
-					sscanf( pbuf, "%x%n", &addr, &n );
-					pbuf += n;
-					
-					if ( *pbuf == ',' )
-					{
-						unsigned int count;
-						
-						if ( cmd != 'b' )
-							error( "%s(%u) :: Byte count not supported for command '%c'", listfile, lineno, cmd );
-						
-						pbuf++;
-						sscanf( pbuf, "%u%n", &count, &n );
-						pbuf += n;
-						
-						if ( count > BYTES_PER_LINE )
-							error( "%s(%u) :: Too many bytes per line (limit is %d)", listfile, lineno, BYTES_PER_LINE );
-							
-						bytes_per_line = count;
-					}
+            case 'a': /* alphanumeric character dump */
+            case 'b': /* byte dump                   */
+            case 'c': /* start of code disassembly   */
+            case 'e': /* end of processing           */
+            case 'p': /* start of procedure          */
+            case 's': /* string dump                 */
+            case 'v': /* vector dump                 */
+            case 'w': /* word dump                   */
+            case 'm': /* bitmap dump                 */
+                {
+                    unsigned int cmd_idx = strchr( datchars, cmd ) - datchars;
+                    unsigned bytes_per_line = BYTES_PER_LINE;
+                    sscanf( pbuf, "%x%n", &addr, &n );
+                    pbuf += n;
+                    
+                    if ( *pbuf == ',' )
+                    {
+                        unsigned int count;
+                        
+                        if ( cmd != 'b' )
+                            error( "%s(%u) :: Byte count not supported for command '%c'", listfile, lineno, cmd );
+                        
+                        pbuf++;
+                        sscanf( pbuf, "%u%n", &count, &n );
+                        pbuf += n;
+                        
+                        if ( count > BYTES_PER_LINE )
+                            error( "%s(%u) :: Too many bytes per line (limit is %d)", listfile, lineno, BYTES_PER_LINE );
+                            
+                        bytes_per_line = count;
+                    }
 
-					SKIP_SPACE(pbuf);
-						
-					/* If user has provided an optional name for this entity then
-					 * store it in the xref database.
-					 */
-					if ( !*pbuf )
-					{
-						static struct {
-							char *pfx;
-							unsigned int num;
-						} tbl[] = {
-							{ "CL",     1 },
-							{ "BDATA",  1 }, 
-							{ "STRING", 1 },
-							{ NULL,     0 }, /* END */
-							{ "WDATA",  1 },
-							{ "CDATA",  1 },
-							{ "PROC",   1 },
-							{ "VCTR",   1 },
-							{ "BMAP",   1 }
-						};
+                    SKIP_SPACE(pbuf);
+                        
+                    /* If user has provided an optional name for this entity then
+                     * store it in the xref database.
+                     */
+                    if ( !*pbuf )
+                    {
+                        static struct {
+                            char *pfx;
+                            unsigned int num;
+                        } tbl[] = {
+                            { "CL",     1 },
+                            { "BDATA",  1 }, 
+                            { "STRING", 1 },
+                            { NULL,     0 }, /* END */
+                            { "WDATA",  1 },
+                            { "CDATA",  1 },
+                            { "PROC",   1 },
+                            { "VCTR",   1 },
+                            { "BMAP",   1 }
+                        };
 
-						if ( tbl[cmd_idx].pfx )
-							sprintf( pbuf, "%s_%04d", tbl[cmd_idx].pfx, tbl[cmd_idx].num++ );
-					}
-					
-					/* Add a cross-ref entry for everything except an end entry */
-					if ( cmd != 'e' )
-						xref_addxreflabel( addr, pbuf );
+                        if ( tbl[cmd_idx].pfx )
+                            sprintf( pbuf, "%s_%04d", tbl[cmd_idx].pfx, tbl[cmd_idx].num++ );
+                    }
+                    
+                    /* Add a cross-ref entry for everything except an end entry */
+                    if ( cmd != 'e' )
+                        xref_addxreflabel( addr, pbuf );
 
-					addlist( &(params->cmdlist), 
-								addr, 
-								cmd_idx, 
-								bytes_per_line,
-								pbuf );
-				}
-				break;
+                    addlist( &(params->cmdlist), 
+                                addr, 
+                                cmd_idx, 
+                                bytes_per_line,
+                                pbuf );
+                }
+                break;
 
-			case 'f':  /* inputfile */
-				if ( params->inputfile )
-					error( "%s(%u) :: Multiple input files specified", listfile, lineno );
-				params->inputfile = (const char *)dupstr( pbuf );
-				break;
+            case 'f':  /* inputfile */
+                if ( params->inputfile )
+                    error( "%s(%u) :: Multiple input files specified", listfile, lineno );
+                params->inputfile = (const char *)dupstr( pbuf );
+                break;
 
-			case 'i':   /* include file */
-				readlist( pbuf, params );
-				break;
+            case 'i':   /* include file */
+                readlist( pbuf, params );
+                break;
 
-			case 'r':   /* Xref range */
-				{
-					/* Deprecated */
-				}
-				break;
+            case 'r':   /* Xref range */
+                {
+                    /* Deprecated */
+                }
+                break;
 
-			case 't':   /* String terminator byte */
-				sscanf( pbuf, "%x", &string_terminator );
-				break;
+            case 't':   /* String terminator byte */
+                sscanf( pbuf, "%x", &string_terminator );
+                break;
 
-		   case 'l':   /* Define xref code label */
+           case 'l':   /* Define xref code label */
            case 'd':   /* Define xref data label */
-				{
-					sscanf( pbuf, "%x%n", &addr, &n );
-					pbuf += n;
-					
-					SKIP_SPACE(pbuf);
-					
-					if ( !*pbuf )
-					{
-						static unsigned int auto_label = 1;
+                {
+                    sscanf( pbuf, "%x%n", &addr, &n );
+                    pbuf += n;
+                    
+                    SKIP_SPACE(pbuf);
+                    
+                    if ( !*pbuf )
+                    {
+                        static unsigned int auto_label = 1;
                    
-						sprintf( pbuf, "AL_%04d", auto_label++ );
-					}
-					
-					xref_addxreflabel( addr, pbuf );
-				}
-				break;
+                        sprintf( pbuf, "AL_%04d", auto_label++ );
+                    }
+                    
+                    xref_addxreflabel( addr, pbuf );
+                }
+                break;
 
-			case 'k':   /* Single-line (k)comment */
-				{
-					sscanf( pbuf, "%x%n", &addr, &n );
-					pbuf += n;
-					
-					SKIP_SPACE(pbuf);
-					if ( *pbuf )
-						addcomment( &linecmt, addr, pbuf );
-				}
-				break;
+            case 'k':   /* Single-line (k)comment */
+                {
+                    sscanf( pbuf, "%x%n", &addr, &n );
+                    pbuf += n;
+                    
+                    SKIP_SPACE(pbuf);
+                    if ( *pbuf )
+                        addcomment( &linecmt, addr, pbuf );
+                }
+                break;
 
-			case 'n':   /* Multiple-line note */
-				{
-					sscanf( pbuf, "%x%n", &addr, &n );
-					pbuf += n;
-					
-					/* Initialise the note buffer and switch to LINE_NOTE mode. */
-					notelength = 0;
-					notebuf[0] = '\0';
-					linemode = LINE_NOTE;
+            case 'n':   /* Multiple-line note */
+                {
+                    sscanf( pbuf, "%x%n", &addr, &n );
+                    pbuf += n;
+                    
+                    /* Initialise the note buffer and switch to LINE_NOTE mode. */
+                    notelength = 0;
+                    notebuf[0] = '\0';
+                    linemode = LINE_NOTE;
 
-					SKIP_SPACE(pbuf);
-					if ( *pbuf )
-					{
-						strcpy( notebuf, pbuf );
-						notelength = strlen( pbuf );
-					}
-				}
-				break;
+                    SKIP_SPACE(pbuf);
+                    if ( *pbuf )
+                    {
+                        strcpy( notebuf, pbuf );
+                        notelength = strlen( pbuf );
+                    }
+                }
+                break;
 
             default: /* Unknown command */
                 {
                     error( "%s(%u) :: Unknown command code '%d'\n", listfile, lineno, cmd );
                 }
                 break;
-			}   /* switch */
-		}
-		else    /* is LINE_NOTE */
-		{
-			/* Note mode is terminated by a line starting with '.' */
-			if ( *pbuf == '.' )
-			{
-				linemode = LINE_CMD;
-				addcomment( &blockcmt, addr, notebuf );
-			}
-			else
-			{
-				size_t len = MIN( strlen( pbuf ), NOTE_BUF_SIZE - notelength );
-				strncat( notebuf, pbuf, len );
-			}
-		}
-	}
+            }   /* switch */
+        }
+        else    /* is LINE_NOTE */
+        {
+            /* Note mode is terminated by a line starting with '.' */
+            if ( *pbuf == '.' )
+            {
+                linemode = LINE_CMD;
+                addcomment( &blockcmt, addr, notebuf );
+            }
+            else
+            {
+                size_t len = MIN( strlen( pbuf ), NOTE_BUF_SIZE - notelength );
+                strncat( notebuf, pbuf, len );
+            }
+        }
+    }
 
-	fclose( f );
+    fclose( f );
 }
 
 /***********************************************************
@@ -610,16 +610,16 @@ static void readlist( const char *listfile, struct params *params )
 
 static void usage( void )
 {
-	printf( "%s -- %s Disassembler --\n"
-	        "Usage:\n"
-			  "  %s [options] listfile\n"
-			  "\n"
-			  "  options:\n"
-           "     -h        print helpful usage information\n"
-			  "     -x        with cross-reference list\n"
-			  "     -o foo    write output to `foo' (stdout is default)\n",
-			  dasm_name, dasm_description, dasm_name );
-	exit(EXIT_FAILURE);
+    printf( "%s -- %s Disassembler --\n"
+            "Usage:\n"
+            "  %s [options] listfile\n"
+            "\n"
+            "  options:\n"
+            "     -h        print helpful usage information\n"
+            "     -x        with cross-reference list\n"
+            "     -o foo    write output to `foo' (stdout is default)\n",
+            dasm_name, dasm_description, dasm_name );
+    exit(EXIT_FAILURE);
 }
 
 /***********************************************************
@@ -636,350 +636,350 @@ static void usage( void )
  ************************************************************/
  
 static void run_disasm( struct params params )
-{
-   const char *inputfile = params.inputfile;
-	struct fmt *clist     = params.cmdlist;
-	FILE *f;
-	long  filelength;
-	ADDR  addr;
-   int   mode;
-	unsigned int bpl;
-	char *name;
-	
-	f = fopen( inputfile, "rb" );
-	if ( !f )
-		error( "Failed to open input file" );
-		
-	fseek( f, 0, SEEK_END );
-	filelength = ftell( f );
-	fseek( f, 0, SEEK_SET );
-	
-	addr  = clist->addr;
-	mode  = clist->mode;
-	name  = clist->name;
-	bpl   = clist->bpl;
-	clist = clist->n;
-	
-	printf( ";   Processing \"%s\" (%ld bytes)\n", inputfile, filelength );
-	printf( ";   Disassembly start address: 0x%04X\n", addr );
-	printf( ";   String terminator: 0x%02x\n", string_terminator );
+{ 
+    const char *inputfile = params.inputfile;
+    struct fmt *clist     = params.cmdlist;
+    FILE *f;
+    long  filelength;
+    ADDR  addr;
+    int   mode;
+    unsigned int bpl;
+    char *name;
+    
+    f = fopen( inputfile, "rb" );
+    if ( !f )
+        error( "Failed to open input file" );
+        
+    fseek( f, 0, SEEK_END );
+    filelength = ftell( f );
+    fseek( f, 0, SEEK_SET );
+    
+    addr  = clist->addr;
+    mode  = clist->mode;
+    name  = clist->name;
+    bpl   = clist->bpl;
+    clist = clist->n;
+    
+    printf( ";   Processing \"%s\" (%ld bytes)\n", inputfile, filelength );
+    printf( ";   Disassembly start address: 0x%04X\n", addr );
+    printf( ";   String terminator: 0x%02x\n", string_terminator );
 
-	while ( !feof( f ) && clist )
-	{
-		if ( addr >= clist->addr )
-		{
-			if ( mode != clist->mode )
-				putchar ( '\n' );
-			mode  = clist->mode;
-			name  = clist->name;
-			bpl   = clist->bpl;
-			clist = clist->n;
-		}
-		
-		if ( !clist )
-			break;
+    while ( !feof( f ) && clist )
+    {
+        if ( addr >= clist->addr )
+        {
+            if ( mode != clist->mode )
+                putchar ( '\n' );
+            mode  = clist->mode;
+            name  = clist->name;
+            bpl   = clist->bpl;
+            clist = clist->n;
+        }
+        
+        if ( !clist )
+            break;
 
-		if ( mode == CODE )
-		{
-			/*****************************************************************
-			*            c - CODE
-			*****************************************************************/
-			int column, i;
-			ADDR lineaddr;
-			char insnbuf[256];
+        if ( mode == CODE )
+        {
+            /*****************************************************************
+            *            c - CODE
+            *****************************************************************/
+            int column, i;
+            ADDR lineaddr;
+            char insnbuf[256];
 
-			printcomment( blockcmt, addr, 0 );
+            printcomment( blockcmt, addr, 0 );
 
-			column = emitaddr( addr);
-			lineaddr = addr;
-			insn_byte_idx = 0;
+            column = emitaddr( addr);
+            lineaddr = addr;
+            insn_byte_idx = 0;
 
-			addr = dasm_insn( f, insnbuf, addr );
+            addr = dasm_insn( f, insnbuf, addr );
 
-         for ( i = 0; i < dasm_max_insn_length; i++ )
-            if ( i < insn_byte_idx )
-               printf( "%02X ", insn_byte_buffer[i] );
-            else
-               printf( "   " );
+            for ( i = 0; i < dasm_max_insn_length; i++ )
+                if ( i < insn_byte_idx )
+                    printf( "%02X ", insn_byte_buffer[i] );
+                else
+                    printf( "   " );
 
-         printf( "   " );
+            printf( "   " );
 
-			i = printf("%s", insnbuf );
-			column += i;
+            i = printf("%s", insnbuf );
+            column += i;
 
-			printcomment( linecmt, lineaddr, COL_LINECOMMENT - column );
-			putchar( '\n' );
-		}
-		else if ( mode == BYTES )
-		{
-			/*****************************************************************
-			*            b - BYTES
-			*****************************************************************/
+            printcomment( linecmt, lineaddr, COL_LINECOMMENT - column );
+            putchar( '\n' );
+        }
+        else if ( mode == BYTES )
+        {
+            /*****************************************************************
+            *            b - BYTES
+            *****************************************************************/
 
-			unsigned char buf[BYTES_PER_LINE];
-			int p, i = 0;
+            unsigned char buf[BYTES_PER_LINE];
+            int p, i = 0;
 
-			putchar( '\n' );
-			printcomment( blockcmt, addr, 0 );
+            putchar( '\n' );
+            printcomment( blockcmt, addr, 0 );
 
-			while ( addr < clist->addr )
-			{
-				if ( i == 0 ) 
-				{
-					emitaddr( addr );
-					printf( "DB      " );
-				}
+            while ( addr < clist->addr )
+            {
+                if ( i == 0 ) 
+                {
+                    emitaddr( addr );
+                    printf( "DB      " );
+                }
 
-				buf[i] = (unsigned char)next( f, &addr );
-				printf( "%02X ", (unsigned char)buf[i] );
-				i++;
-				if ( i == bpl )
-				{
-					/* End of a full line */
+                buf[i] = (unsigned char)next( f, &addr );
+                printf( "%02X ", (unsigned char)buf[i] );
+                i++;
+                if ( i == bpl )
+                {
+                    /* End of a full line */
+                    printf( "      " );
+
+                    for ( p = 0; p < bpl; p++ )
+                        if ( isprint( buf[p] ) )
+                            putchar( buf[p] );
+                        else
+                            putchar( '.' );
+
+                    putchar( '\n' );
+                    i = 0;
+                }
+            }
+            if ( i < bpl )
+            {
+                /* Partial line, tricky */
+
+                for ( p = i; p < bpl; p++ )
+                    printf( "   " );
+
                 printf( "      " );
 
-                for ( p = 0; p < bpl; p++ )
-                   if ( isprint( buf[p] ) )
-                      putchar( buf[p] );
-                   else
-                      putchar( '.' );
+                for ( p = 0; p < i; p++ )
+                    if ( isprint( buf[p] ) )
+                        putchar( buf[p] );
+                    else
+                        putchar( '.' );
 
-					putchar( '\n' );
-					i = 0;
-				}
-			}
-			if ( i < bpl )
-			{
-				/* Partial line, tricky */
+                putchar( '\n' );
+            }
 
-				for ( p = i; p < bpl; p++ )
-					printf( "   " );
+            mode = clist->mode;
+            if ( mode == CODE || mode == PROCS )
+                putchar( '\n' );
+            name  = clist->name;
+            bpl   = clist->bpl;
+            clist = clist->n;
+        }
+        else if ( mode == STRINGS )
+        {
+            /*****************************************************************
+            *            s - STRING DATA
+            *****************************************************************/
 
-				printf( "      " );
+            int c;
+            
+            putchar( '\n' );            
+            printcomment( blockcmt, addr, 0 );
 
-				for ( p = 0; p < i; p++ )
-					if ( isprint( buf[p] ) )
-						putchar( buf[p] );
-					else
-						putchar( '.' );
+            while ( addr < clist->addr )
+            {
+                emitaddr( addr );
+                printf( "DB      '" );
 
-				putchar( '\n' );
-			}
+                while ( c = next( f, &addr ) )
+                {
+                    if ( c == string_terminator )
+                        break;
 
-			mode = clist->mode;
-			if ( mode == CODE || mode == PROCS )
-				putchar( '\n' );
-			name  = clist->name;
-			bpl   = clist->bpl;
-			clist = clist->n;
-		}
-		else if ( mode == STRINGS )
-		{
-			/*****************************************************************
-			*            s - STRING DATA
-			*****************************************************************/
+                    if ( isprint( c ) )
+                        putchar( c );
+                    else
+                        printf ("\\%02X", (unsigned char) c );
+                }
+                printf( "'\n" );
+            }
 
-			int c;
-			
-			putchar( '\n' );            
-			printcomment( blockcmt, addr, 0 );
+            mode = clist->mode;
+            if ( mode == CODE || mode == PROCS )
+                putchar( '\n' );
+            name  = clist->name; 
+            bpl   = clist->bpl;
+            clist = clist->n;
+        }
+        else if ( mode == WORDS )
+        {
+            /*****************************************************************
+            *            w - WORD DATA
+            *****************************************************************/
 
-			while ( addr < clist->addr )
-			{
-				emitaddr( addr );
-				printf( "DB      '" );
+            int c, i = 0;
+            
+            putchar( '\n' );
+            printcomment( blockcmt, addr, 0 );
 
-				while ( c = next( f, &addr ) )
-				{
-					if ( c == string_terminator )
-					break;
+            while ( addr < clist->addr )
+            {
+                if ( ( i & 7 ) == 0 ) 
+                {
+                    emitaddr( addr );
+                    printf( "DW      " );
+                }
 
-					if ( isprint( c ) )
-						putchar( c );
-					else
-						printf ("\\%02X", (unsigned char) c );
-				}
-				printf( "'\n" );
-			}
+                c = (unsigned char)next( f, &addr );
 
-			mode = clist->mode;
-			if ( mode == CODE || mode == PROCS )
-				putchar( '\n' );
-			name  = clist->name; 
-			bpl   = clist->bpl;
-			clist = clist->n;
-		}
-		else if ( mode == WORDS )
-		{
-			/*****************************************************************
-			*            w - WORD DATA
-			*****************************************************************/
+                c = c | ((unsigned char)next( f, &addr ) << 8 );
 
-			int c, i = 0;
-			
-			putchar( '\n' );
-			printcomment( blockcmt, addr, 0 );
+                printf( "%04X ", c );
+                xref_addxref( X_TABLE, addr - 2, c );
 
-			while ( addr < clist->addr )
-			{
-				if ( ( i & 7 ) == 0 ) 
-				{
-					emitaddr( addr );
-					printf( "DW      " );
-				}
+                if ( ( i & 7 ) == 7 )
+                    putchar( '\n' );
+                i++;
+            }
+            if ( i & 7 ) 
+                putchar( '\n' );
 
-				c = (unsigned char)next( f, &addr );
+            mode = clist->mode;
+            if ( mode == CODE || mode == PROCS )
+                putchar( '\n' );
+            name  = clist->name; 
+            bpl   = clist->bpl;
+            clist = clist->n;
+        }
+        else if ( mode == VECTORS )
+        {
+            /*****************************************************************
+            *            v - VECTOR DATA
+            *****************************************************************/
 
-				c = c | ((unsigned char)next( f, &addr ) << 8 );
+            int c, i = 0;
+            
+            putchar( '\n' );
+            printcomment( blockcmt, addr, 0 );
 
-				printf( "%04X ", c );
-				xref_addxref( X_TABLE, addr - 2, c );
+            while ( addr < clist->addr )
+            {
+                emitaddr( addr );
+                printf( "DW      " );
 
-				if ( ( i & 7 ) == 7 )
-					putchar( '\n' );
-				i++;
-			}
-			if ( i & 7 ) 
-				putchar( '\n' );
+                c = (unsigned char)next( f, &addr );
 
-			mode = clist->mode;
-			if ( mode == CODE || mode == PROCS )
-				putchar( '\n' );
-			name  = clist->name; 
-			bpl   = clist->bpl;
-			clist = clist->n;
-		}
-		else if ( mode == VECTORS )
-		{
-			/*****************************************************************
-			*            v - VECTOR DATA
-			*****************************************************************/
+                c = c | ((unsigned char)next( f, &addr ) << 8 );
 
-			int c, i = 0;
-			
-			putchar( '\n' );
-			printcomment( blockcmt, addr, 0 );
+                printf( "%s\n", xref_genwordaddr( NULL, "%04X", c ) );
+                xref_addxref( X_TABLE, addr - 2, c );
 
-			while ( addr < clist->addr )
-			{
-				emitaddr( addr );
-				printf( "DW      " );
+                i++;
+            }
 
-				c = (unsigned char)next( f, &addr );
+            mode = clist->mode;
+            if ( mode == CODE || mode == PROCS )
+                putchar( '\n' );
+            name  = clist->name; 
+            bpl   = clist->bpl;
+            clist = clist->n;
+        }
+        else if ( mode == CHARS )
+        {
+            /*****************************************************************
+            *            a - CHARS (alphanums)
+            *****************************************************************/
 
-				c = c | ((unsigned char)next( f, &addr ) << 8 );
+            int c, i = 0;
+            
+            putchar( '\n' );
+            printcomment( blockcmt, addr, 0 );
 
-				printf( "%s\n", xref_genwordaddr( NULL, "%04X", c ) );
-				xref_addxref( X_TABLE, addr - 2, c );
+            while ( addr < clist->addr )
+            {
+                if ( ( i & 7 ) == 0 )
+                {
+                    emitaddr( addr );
+                    printf( "DB      " );
+                }
 
-				i++;
-			}
+                c = next( f, &addr );
 
-			mode = clist->mode;
-			if ( mode == CODE || mode == PROCS )
-				putchar( '\n' );
-			name  = clist->name; 
-			bpl   = clist->bpl;
-			clist = clist->n;
-		}
-		else if ( mode == CHARS )
-		{
-			/*****************************************************************
-			*            a - CHARS (alphanums)
-			*****************************************************************/
+                if ( isprint( c ) )
+                    printf( "'%c',", c );
+                else
+                    printf( "%02X,", (unsigned char)c );
 
-			int c, i = 0;
-			
-			putchar( '\n' );
-			printcomment( blockcmt, addr, 0 );
+                if ( ( i & 7 ) == 7 ) 
+                    putchar( '\n' );
+                i++;
+            }
+            if ( i & 7 ) 
+                putchar( '\n' );
 
-			while ( addr < clist->addr )
-			{
-				if ( ( i & 7 ) == 0 )
-				{
-					emitaddr( addr );
-					printf( "DB      " );
-				}
+            mode = clist->mode;
+            if ( mode == CODE || mode == PROCS )
+                putchar( '\n' );
+            name  = clist->name; 
+            bpl   = clist->bpl;
+            clist = clist->n;
+        }
+        else if ( mode == END )
+        {
+            /*****************************************************************
+            *            e - END
+            *****************************************************************/
 
-				c = next( f, &addr );
+            clist = NULL;
+        }
+        else if ( mode == PROCS )
+        {
+            /*****************************************************************
+            *            p - PROCS
+            *****************************************************************/
 
-				if ( isprint( c ) )
-					printf( "'%c',", c );
-				else
-					printf( "%02X,", (unsigned char)c );
+            if ( !commentexists( blockcmt, addr ) )
+            {
+                printf( "----------------------------------------------------------------\n"
+                          "        Function: %s\n\n", ( name ) ? name : "" );
+            }
 
-				if ( ( i & 7 ) == 7 ) 
-					putchar( '\n' );
-				i++;
-			}
-			if ( i & 7 ) 
-				putchar( '\n' );
+            mode = CODE;
+        }
+        else if ( mode == BITMAPS )
+        {
+            /*****************************************************************
+            *            m - BITMAPS
+            *****************************************************************/
+            
+            putchar( '\n' );
+            printcomment( blockcmt, addr, 0 );
 
-			mode = clist->mode;
-			if ( mode == CODE || mode == PROCS )
-				putchar( '\n' );
-			name  = clist->name; 
-			bpl   = clist->bpl;
-			clist = clist->n;
-		}
-		else if ( mode == END )
-		{
-			/*****************************************************************
-			*            e - END
-			*****************************************************************/
+            while ( addr < clist->addr )
+            {
+                UBYTE bitmap;
+                UBYTE mask = 0x80;
+                
+                emitaddr( addr );
+                printf( "DB      " );
 
-			clist = NULL;
-		}
-		else if ( mode == PROCS )
-		{
-			/*****************************************************************
-			*            p - PROCS
-			*****************************************************************/
+                bitmap = (UBYTE)next( f, &addr );
+                printf( "%02X      [", bitmap );
 
-			if ( !commentexists( blockcmt, addr ) )
-			{
-				printf( "----------------------------------------------------------------\n"
-						  "        Function: %s\n\n", ( name ) ? name : "" );
-			}
+                for ( ; mask; mask >>= 1 )
+                    putchar( bitmap & mask ? '#' : ' ' );
+                    
+                printf( "]\n" );
+            }
 
-			mode = CODE;
-		}
-		else if ( mode == BITMAPS )
-		{
-			/*****************************************************************
-			*            m - BITMAPS
-			*****************************************************************/
-			
-			putchar( '\n' );
-			printcomment( blockcmt, addr, 0 );
-
-			while ( addr < clist->addr )
-			{
-				UBYTE bitmap;
-				UBYTE mask = 0x80;
-				
-				emitaddr( addr );
-				printf( "DB      " );
-
-				bitmap = (UBYTE)next( f, &addr );
-				printf( "%02X      [", bitmap );
-
-				for ( ; mask; mask >>= 1 )
-					putchar( bitmap & mask ? '#' : ' ' );
-					
-				printf( "]\n" );
-			}
-
-			mode = clist->mode;
-			if ( mode == CODE || mode == PROCS )
-				putchar( '\n' );
-			name  = clist->name; 
-			bpl   = clist->bpl;
-			clist = clist->n;
-		}
-	} /* while() */
-	 
-	fclose( f );
+            mode = clist->mode;
+            if ( mode == CODE || mode == PROCS )
+                putchar( '\n' );
+            name  = clist->name; 
+            bpl   = clist->bpl;
+            clist = clist->n;
+        }
+    } /* while() */
+     
+    fclose( f );
 }
 
 /***********************************************************
@@ -996,39 +996,39 @@ static void run_disasm( struct params params )
  *
  ************************************************************/
 
-#define OPTSTRING		"xho:"
+#define OPTSTRING        "xho:"
 
 static struct params process_args( int argc, char **argv )
 {
-	struct params params;
-	int opt;
-	
-	memset( &params, 0, sizeof(params) );
-	
-	while ((opt = getopt(argc, argv, OPTSTRING)) != -1)
-	{
-		switch (opt)
-		{
-		case 'x':
-			params.want_xref = 1;
-			break;
+    struct params params;
+    int opt;
+    
+    memset( &params, 0, sizeof(params) );
+    
+    while ((opt = getopt(argc, argv, OPTSTRING)) != -1)
+    {
+        switch (opt)
+        {
+        case 'x':
+            params.want_xref = 1;
+            break;
          
-		case 'o':
-			params.outputfile = (const char*)dupstr(optarg);
-			break;
+        case 'o':
+            params.outputfile = (const char*)dupstr(optarg);
+            break;
          
-      case 'h':
-         usage();
-         break;
-		
-		default: /* '?' */
-         error( "Uknown command line option `-%c'.  Use `-h' for help", opt );
-		}
-	}
-	
-	params.listfile = argv[optind];
+        case 'h':
+            usage();
+            break;
+        
+        default: /* '?' */
+            error( "Uknown command line option `-%c'.  Use `-h' for help", opt );
+        }
+    }
+    
+    params.listfile = argv[optind];
 
-	return params;
+    return params;
 }
 
 /***********************************************************
@@ -1048,19 +1048,19 @@ static struct params process_args( int argc, char **argv )
 
 static void display_banner( struct params params )
 {
-	char *prefix = params.outputfile ? ";" : "";
-	
-	printf( "%s   %s -- %s Disassembler --\n"
-			  "%s" SPACER "\n"
-			  "%s   Input file       : %s\n",
-			prefix, dasm_name, dasm_description,
-			prefix,
-			prefix, params.inputfile );
-				
-	if ( params.outputfile )
-		printf( ";   Output file      : %s\n", params.outputfile );
-		
-	printf( "%s" SPACER "\n\n", prefix );
+    char *prefix = params.outputfile ? ";" : "";
+    
+    printf( "%s   %s -- %s Disassembler --\n"
+            "%s" SPACER "\n"
+            "%s   Input file       : %s\n",
+            prefix, dasm_name, dasm_description,
+            prefix,
+            prefix, params.inputfile );
+                
+    if ( params.outputfile )
+        printf( ";   Output file      : %s\n", params.outputfile );
+        
+    printf( "%s" SPACER "\n\n", prefix );
 }
 
 /*****************************************************************************
@@ -1082,17 +1082,17 @@ static void display_banner( struct params params )
 
 void error( char *fmt, ... )
 {
-	va_list ap;
+    va_list ap;
 
-	va_start( ap, fmt );
-	
-	fprintf ( stderr, "%s :: Error :: ", dasm_name );
-   vfprintf( stderr, fmt, ap );
-	fprintf ( stderr, "\n" );
+    va_start( ap, fmt );
+    
+    fprintf ( stderr, "%s :: Error :: ", dasm_name );
+    vfprintf( stderr, fmt, ap );
+    fprintf ( stderr, "\n" );
 
-	va_end( ap );
+    va_end( ap );
 
-	exit(EXIT_FAILURE);
+    exit(EXIT_FAILURE);
 }
 
 /***********************************************************
@@ -1110,15 +1110,15 @@ void error( char *fmt, ... )
 
 void warning( char *fmt, ... )
 {
-	va_list ap;
+    va_list ap;
 
-	va_start( ap, fmt );
-	
-	fprintf ( stderr, "%s :: Warning :: ", dasm_name );
-   vfprintf( stderr, fmt, ap );
-	fprintf ( stderr, "\n" );
+    va_start( ap, fmt );
+    
+    fprintf ( stderr, "%s :: Warning :: ", dasm_name );
+    vfprintf( stderr, fmt, ap );
+    fprintf ( stderr, "\n" );
 
-	va_end( ap );
+    va_end( ap );
 }
 
 /***********************************************************
@@ -1136,12 +1136,12 @@ void warning( char *fmt, ... )
 
 void *zalloc( size_t n )
 {
-	void *p = calloc( 1, n );
-	
-	if ( !p )
-		error( "Out of memory" );
-		
-	return p;
+    void *p = calloc( 1, n );
+    
+    if ( !p )
+        error( "Out of memory" );
+        
+    return p;
 }
 
 /***********************************************************
@@ -1159,11 +1159,11 @@ void *zalloc( size_t n )
 
 char * dupstr( const char *s )
 {
-	char *p = strdup( s );
-	if ( !p )
-		error( "Out of memory" );
-		
-	return p;
+    char *p = strdup( s );
+    if ( !p )
+        error( "Out of memory" );
+        
+    return p;
 }
 
 /***********************************************************
@@ -1181,17 +1181,17 @@ char * dupstr( const char *s )
 
 UBYTE next( FILE* fp, ADDR *addr )
 {
-	int c;
-	
-	c = fgetc( fp );
-	if ( c == EOF )
-		error( "Ran past end of input file" );
-		
-	if ( insn_byte_idx < dasm_max_insn_length )
-		insn_byte_buffer[insn_byte_idx++] = (UBYTE)c;
-	
-	(*addr)++;
-	return (UBYTE)c;
+    int c;
+    
+    c = fgetc( fp );
+    if ( c == EOF )
+        error( "Ran past end of input file" );
+        
+    if ( insn_byte_idx < dasm_max_insn_length )
+        insn_byte_buffer[insn_byte_idx++] = (UBYTE)c;
+    
+    (*addr)++;
+    return (UBYTE)c;
 }
 
 /***********************************************************
@@ -1213,29 +1213,29 @@ UBYTE next( FILE* fp, ADDR *addr )
 
 UWORD nextw( FILE* fp, ADDR *addr )
 {
-	int lo, hi;
-	UWORD w = 0;
-	
-	lo = fgetc( fp );
-	if ( lo == EOF )
-		error( "Ran past end of input file" );
-		
-	hi = fgetc( fp );
-	if ( hi == EOF )
-		error( "Ran past end of input file" );	
-		
-	if ( insn_byte_idx < dasm_max_insn_length )
-		insn_byte_buffer[insn_byte_idx++] = (UBYTE)hi;
-		
-	if ( insn_byte_idx < dasm_max_insn_length )
-		insn_byte_buffer[insn_byte_idx++] = (UBYTE)lo;
-	
-	(*addr)++;
-	(*addr)++;
-	
-	w = ( ( hi & 0xFF ) << 8 ) | ( lo & 0xFF );
-	
-	return w;
+    int lo, hi;
+    UWORD w = 0;
+    
+    lo = fgetc( fp );
+    if ( lo == EOF )
+        error( "Ran past end of input file" );
+        
+    hi = fgetc( fp );
+    if ( hi == EOF )
+        error( "Ran past end of input file" );    
+        
+    if ( insn_byte_idx < dasm_max_insn_length )
+        insn_byte_buffer[insn_byte_idx++] = (UBYTE)hi;
+        
+    if ( insn_byte_idx < dasm_max_insn_length )
+        insn_byte_buffer[insn_byte_idx++] = (UBYTE)lo;
+    
+    (*addr)++;
+    (*addr)++;
+    
+    w = ( ( hi & 0xFF ) << 8 ) | ( lo & 0xFF );
+    
+    return w;
 }
 
 /***********************************************************
@@ -1254,17 +1254,17 @@ UWORD nextw( FILE* fp, ADDR *addr )
 
 UBYTE peek( FILE *fp )
 {
-	int c;
-	
-	c = fgetc( fp );
-	if ( c == EOF )
-		error( "Ran past end of input file" );
-		
-	c = ungetc( c, fp );
-	if ( c == EOF )
-		error( "Unable to peek at input file" );
-	
-	return (UBYTE)c;
+    int c;
+    
+    c = fgetc( fp );
+    if ( c == EOF )
+        error( "Ran past end of input file" );
+        
+    c = ungetc( c, fp );
+    if ( c == EOF )
+        error( "Unable to peek at input file" );
+    
+    return (UBYTE)c;
 }
 
 /***********************************************************
@@ -1282,35 +1282,35 @@ UBYTE peek( FILE *fp )
 
 int main(int argc, char **argv)
 {
-	struct params params;
-	
-	params = process_args( argc, argv );
+    struct params params;
+    
+    params = process_args( argc, argv );
 
-	/* Process first arg: listfile */
-	readlist( params.listfile, &params );
+    /* Process first arg: listfile */
+    readlist( params.listfile, &params );
 
-	/* Check things are set up ready to run */
-	if ( !params.cmdlist )
-		error( "Empty list file" );
+    /* Check things are set up ready to run */
+    if ( !params.cmdlist )
+        error( "Empty list file" );
 
-	if ( !params.inputfile )
-		error( "No input file specified" );
-		
-	/* Prepare then instruction byte buffer */
-	insn_byte_buffer = zalloc( dasm_max_insn_length );
-	insn_byte_idx = 0;
-	
-	if ( params.outputfile )
-		stdout = freopen( params.outputfile, "w", stdout );
+    if ( !params.inputfile )
+        error( "No input file specified" );
+        
+    /* Prepare then instruction byte buffer */
+    insn_byte_buffer = zalloc( dasm_max_insn_length );
+    insn_byte_idx = 0;
+    
+    if ( params.outputfile )
+        stdout = freopen( params.outputfile, "w", stdout );
 
-	display_banner( params );
+    display_banner( params );
 
-	run_disasm( params );
+    run_disasm( params );
 
-	if ( params.want_xref )
-		xref_dump();
+    if ( params.want_xref )
+        xref_dump();
 
-	return EXIT_SUCCESS;
+    return EXIT_SUCCESS;
 }
 
 /******************************************************************************/

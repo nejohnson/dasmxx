@@ -1,6 +1,6 @@
 /*****************************************************************************
  *
- * Copyright (C) 2014, Neil Johnson
+ * Copyright (C) 2014-2015, Neil Johnson
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms,
@@ -49,9 +49,9 @@ struct addrlist {
 
 struct xref {
 	struct xref     *n;
-   ADDR            ref;
-   char            *label;
-   struct addrlist *list;
+    ADDR            ref;
+    char            *label;
+    struct addrlist *list;
 };
 
 /*****************************************************************************
@@ -233,7 +233,7 @@ char * xref_genwordaddr( char * buf, const char * format, ADDR addr )
 	if ( label )
 		return label;
     
-   /* Either xref not found or not labelled */
+    /* Either xref not found or not labelled */
 	 
 	if ( buf )
 		sprintf( buf, format, addr );
