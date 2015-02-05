@@ -1,4 +1,5 @@
 ftest.bin
+i8051regs.inc
 
 c0000
 
