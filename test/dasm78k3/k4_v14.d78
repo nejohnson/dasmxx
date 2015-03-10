@@ -55,7 +55,7 @@ n0000
 #      11 - ROM (C000-FFFF)
 #
 #    Note that in this system the top 8k of the 32k SRAM is not
-#    accessible to the CPU (it is hidden the external hardware and
+#    accessible to the CPU (it is hidden by the external hardware and
 #    internal memory/registers).
 #
 #    The System RAM is organised as follows:
@@ -92,9 +92,29 @@ p0040 System_Start
 k0042 Turn off interrupts while things get set up
 k0043 mute on while setting things up
 k0045 Set stack to top of RAM
+n006a
+
+Looks like initialising an array of 9 or 10 objects each of size
+$DB bytes starting at $C7EF, with the first byte set to $7F.
+
+.
 l0071 Init_Loop_1
+n007a
+
+Wait for about 2 seconds, then call InitG, and keep going until
+the bottom 4 bits of FE3B are 0000.
+.
 l007f Wait_Loop_1
+n0088
+
+Spin round while something to do with P2...?
+.
 l008a Wait_Loop_2
+n0094
+
+This looks like the code that tests the buttons to see if we should
+show the firmware version number for 10 seconds?
+.
 l00a5
 #
 n00d5
@@ -152,7 +172,7 @@ n020c
 #       RB2, AX
 #
 # Notes:
-#		  !! Executes with interrupts turned off !!
+#	  !! Executes with interrupts turned off !!
 #       Called directly by interupt handler, so needs to be
 #       quick and non-blocking.
 #
@@ -488,6 +508,14 @@ b93e3
 b9573 SINGLE_DATA_????
 b95F6 MULTI_DATA_????
 
+b97FC Table_97FC_???
+b983C Table_983C_???
+b987C Table_987C_???
+b98BC Table_98BC_???
+b98FC Table_98FC_???
+b993C Table_993C_???
+b997C Table_997C_???
+
 
 
 
@@ -562,15 +590,15 @@ p690a Main_P
 # Suspected dead code
 ###############################################
 
-p406e
-p407c
-p4abc
-p4b0f
-p4b87
-p4c9b
-b4cce
-p4cd1
-p4CB4
+p406e Dead1
+p407c Dead2
+p4abc Dead3
+p4b0f Dead4
+p4b87 Dead5
+p4c9b Dead6
+b4cce Dead7
+p4cd1 Dead8
+p4CB4 Dead9
 
 
 
