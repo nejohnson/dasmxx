@@ -1,0 +1,2907 @@
+###############################################################################
+#
+# Kawai K4 v1.4 ROM disassembly command file
+#
+# Neil Johnson
+#
+###############################################################################
+
+# Load boot ROM version 1.4
+fk4_v14.bin
+
+# Pull in CPU definitions
+i78310_regs.d78
+
+# Strings in the string table @ $8000 seem to be terminated
+# by $C0.
+tC0
+
+###############################################################################
+##
+##  SYSTEM MODULES
+##
+###############################################################################
+
+# MIDI
+ik4_v14_midi.d78
+ik4_v14_lcd.d78
+ik4_v14_controls.d78
+
+
+
+###############################################################################
+
+n0000
+#----------------------------------------------------------
+#
+#    Memory Map:
+#
+#    FFFF  +---------------------------------+
+#          | Internal memory/registers       |  0.5k
+#    FE00  +---------------------------------+
+#          | DEC - hardware blocks           |  7.5k
+#    E000  +---------------------------------+
+#          | System RAM                      |  8k
+#    C000  +---------------------------------+
+#          | RAM/CARD/ROM (bank select)      |  16k
+#    8000  +---------------------------------+
+#          | ROM                             |  32k
+#    0000  +---------------------------------+
+#
+#    Banked memory block (8000-BFFF) is controlled by {P3.5,P3.4}:
+#      00 - RAM
+#      01 - Card
+#      10 - ROM (8000-BFFF)
+#      11 - ROM (C000-FFFF)
+#
+#    Note that in this system the top 8k of the 32k SRAM is not
+#    accessible to the CPU (it is hidden by the external hardware and
+#    internal memory/registers).
+#
+#    The System RAM is organised as follows:
+#
+#          +---------------------------------+
+#    DFFF  | STACK_TOP                       |
+#          |                                 |
+#    C000  | RAM_START                       |
+#          +---------------------------------+
+#
+#----------------------------------------------------------
+.
+
+#==========================================================
+n0040
+#----------------------------------------------------------
+# Function:
+#       System_Start
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Start of day from reset, brings up system.
+#----------------------------------------------------------
+.
+p0040 System_Start
+k0042 Turn off interrupts while things get set up
+k0043 mute on while setting things up
+k0045 Set stack to top of RAM
+n006a
+
+Looks like initialising an array of 9 or 10 objects each of size
+$DB bytes starting at $C7EF, with the first byte set to $7F.
+
+.
+l0071 Init_Loop_1
+n007a
+
+Wait for about 2 seconds, then call InitG, and keep going until
+the bottom 4 bits of FE3B are 0000.
+.
+l007f Wait_Loop_1
+n0088
+
+Spin round while something to do with P2...?
+.
+l008a Wait_Loop_2
+n0094
+
+This looks like the code that tests the buttons to see if we should
+show the firmware version number for 10 seconds?
+.
+l00a5
+#
+n00d5
+
+Initialise 8 things (could be submix channels??)
+.
+l00da Init_Loop_3
+#
+n00fd
+
+Initialise 16 things (could be voices??)
+.
+l0108 Init_Loop_4
+k0123 Now turn on interrupts
+l0124 main_loop
+k0136 mute off
+
+
+
+
+
+#==========================================================
+n0181
+#----------------------------------------------------------
+#
+# Empty interrupt handler, does nothing just re-enable
+# interrupts and return.
+#
+#----------------------------------------------------------
+.
+p0181 Dummy_Int_Handler
+#----------------------------------------------------------
+
+
+
+
+
+p022d EXIF0_Handler
+
+p01b9 TMR0_Handler
+
+#==========================================================
+n020c
+#----------------------------------------------------------
+# Function:
+#       CRF01_Handler - Up/down counter 0 Interrupt handler
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       RB2, AX
+#
+# Notes:
+#	  !! Executes with interrupts turned off !!
+#       Called directly by interupt handler, so needs to be
+#       quick and non-blocking.
+#
+#       @3C1E we find Counter0 set to generate system ticks
+#       period of 32ms (31.25 Hz).
+#
+#       It looks like DE22 is being used as a prescalar,
+#       making this handler do stuff every ~200ms.
+#       Which is about right for Active Sense messages
+#       (MIDI spec says within 300ms).
+#----------------------------------------------------------
+.
+p020c CRF01_Handler
+k020e Check if MIDI byte has been transmitted since last tick
+k0219 Reset running status
+k021c ???
+n0220
+
+!!!!!  Note that trying to send a MIDI byte from within an
+       interrupt handler with interrupts disabled could
+       block forever, as there is no way for the transmit
+       interrupt to empty the Tx FIFO.
+       BIG OOPSIE!!!!
+.
+k0220 Send Active Sense byte
+bde22 Active_Sense_Counter
+k0225 Reset counter
+k0227 Update counter
+k022b Enable interrupts and exit handler
+
+#==========================================================
+n0183
+#----------------------------------------------------------
+# Function:
+#       SEF_Handler - called on serial error interrupt
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       RB2, AX
+#
+# Notes:
+#----------------------------------------------------------
+.
+p0183 SEF_Handler
+k0185 Save current P3
+k0189 Switch to RAM bank
+k018c Go and do something about the error
+k018f Restore RAM bank
+k0193 Enable interrupts and return
+
+
+
+#==========================================================
+n0195
+#----------------------------------------------------------
+# Function:
+#       SRF_Handler - called on serial reception interrupt
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       RB2, AX
+#
+# Notes:
+#----------------------------------------------------------
+.
+p0195 SRF_Handler
+k0197 Save current P3
+k019B Switch to RAM bank
+k019e Consume received data
+k01a1 Restore RAM bank
+k01a5 Enable interrupts and return
+
+
+#==========================================================
+n01a7
+#----------------------------------------------------------
+# Function:
+#       STF_Handler - called on serial transmit interrupt
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       RB2, AX
+#
+# Notes:
+#----------------------------------------------------------
+.
+p01a7 STF_Handler
+k01a9 Save current P3
+k01ad Switch to RAM bank
+k01b0 Load up next byte to send
+k01b3 Restore RAM bank
+k01b7 Enable interrupts and return
+
+
+
+#==========================================================
+n0170
+#----------------------------------------------------------
+# Function:
+#       Delay_Timer
+#
+# Args:
+#       C = number of delays (n x 0.98s)
+#
+# Returns:
+#       none
+#
+# Uses:
+#       Timer 0
+#
+# Notes:
+#     Assumes 12MHz input clock, fCLK = 6MHz
+#----------------------------------------------------------
+.
+p0170 Delay_Timer
+k0170 Set count to 45875
+k0174 Start count, clk=fCLK/128
+l0177 l_delay_loop
+k0177 Spin until counted down
+k017b Clear count-end flag
+k017e Loop for C cycles
+
+
+
+
+
+
+
+
+
+
+
+#==========================================================
+n1375
+#----------------------------------------------------------
+# Function:
+#       memzero - set a block of memory to zero.
+#
+# Args:
+#       HL = Pointer to memory to clear
+#       C  = Number of bytes to clear (0x01 .. 0xFF)
+#
+# Returns:
+#       none
+#
+# Uses:
+#       A
+#
+# Notes:
+#----------------------------------------------------------
+.
+p1375 memzero
+l1377 mz_1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#==========================================================
+
+
+
+
+
+
+
+
+
+#==========================================================
+n3BBC
+#----------------------------------------------------------
+# Function:
+#       Setup_IO_Ports
+#
+#       Sets up Ports 0-5 at start of day.
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       none
+#
+# Notes:
+#----------------------------------------------------------
+.
+p3BBC Setup_IO_Ports
+
+#==========================================================
+n4326
+# Switch RAM into Banked region
+.
+p4326 Bank_Select_RAM
+
+n432A
+# Switch Memory Card into Banked region
+.
+p432A Bank_Select_Card
+
+n4331
+# Switch ROM region 8000-BFFF into Banked region
+.
+p4331 Bank_Select_ROM_8000_BFFF
+
+n4338
+# Switch ROM region C000-FFFF into Banked region
+.
+p4338 Bank_Select_ROM_C000_FFFF
+
+#==========================================================
+n3BD8
+#----------------------------------------------------------
+# Function:
+#       Setup_Peripherals
+#
+#       Sets up internal peripherals into initial state.
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       none
+#
+# Notes:
+#----------------------------------------------------------
+.
+p3BD8 Setup_Peripherals
+
+#==========================================================
+n3BA6
+#----------------------------------------------------------
+# Function:
+#       Clear_Working_Memory
+#
+#       Clears all of RAM to zero (except top 16 bytes).
+#       Clears all internal RAM (upto and including RB1).
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       A, B, C, DE
+#
+# Notes:
+#----------------------------------------------------------
+.
+p3BA6 Clear_Working_Memory
+k3BA6 Clear external RAM C000-DFEF
+l3BAF cwm_ram_loop
+k3BB4 Clear internal RAM FE00-FEEF
+
+
+
+
+
+
+###############################################################################
+## Global Data
+###############################################################################
+
+nc000
+
+For ROM this is the start of the block that can be mapped into 8000-BFFF
+.
+bc000 RAM_START
+bDFFF STACK_TOP
+
+
+
+
+
+###############################################
+# Data not yet named
+###############################################
+
+b4549
+
+w3d45 Data6
+b3d4d Data7
+b44b5 table
+b6b9b Data1
+b6b9f Data2
+b6d07 table
+b60d5 Bit_Table4
+b499C Data9
+b4A19 
+b4A30
+b4A28
+b4A20
+b4A24
+w6327 Data3
+b7e0f Data4
+b02AF Bit_Table
+b0727 Bit_Table2
+b1368 Bit_Table3
+
+
+b93e3
+
+
+b9573 SINGLE_DATA_????
+b95F6 MULTI_DATA_????
+
+b97FC Table_97FC_???
+b983C Table_983C_???
+b987C Table_987C_???
+b98BC Table_98BC_???
+b98FC Table_98FC_???
+b993C Table_993C_???
+b997C Table_997C_???
+
+
+
+
+
+###############################################
+# Functions called during init
+###############################################
+
+
+p3c3d Init_A
+p3c81 Init_B
+p3cac Init_C
+p05ba Init_D
+
+
+p42cc Init_E
+k42cf Select splash screen string
+
+
+
+p3cdb Init_F
+p0529 Init_G
+p47c9 Init_H
+
+
+p45d9 Init_I
+bBF32 Translation_Table
+vBEB2 Call_Table_Mode_1
+vBEF2 Call_Table_Mode_2
+
+
+
+
+p3bfb Init_J
+p3f6b Init_K
+p0418 Init_L
+
+
+
+
+###############################################
+# Functions called from main loop
+###############################################
+
+
+p7f9a Main_A
+p3ce1 Main_B
+
+
+
+
+
+p2bf6 Main_F
+p2f2c Main_G
+p4626 Main_H
+p4295 Main_I
+p16ad Main_J
+p17a5 Main_K
+p0556 Main_L
+p047a Main_M
+p0384 Main_N
+p1fec Main_O
+p690a Main_P
+
+
+
+
+
+
+
+###############################################
+# Suspected dead code
+###############################################
+
+p406e Dead1
+p407c Dead2
+p4abc Dead3
+p4b0f Dead4
+p4b87 Dead5
+p4c9b Dead6
+b4cce Dead7
+p4cd1 Dead8
+p4CB4 Dead9
+
+
+
+
+
+
+
+
+
+
+
+###############################################
+# Functions not yet named
+###############################################
+
+
+
+
+
+
+p3c28
+
+
+
+
+p7E4A
+v7E55 Branch_Table
+c7e61
+c7e62
+c7e78
+c7e8c
+c7eaf
+
+
+
+
+p2EE4
+p2E0A
+p04F8
+p04D3
+p141F
+p137B
+p22E2
+
+p0722
+p072f
+p0736
+p022f
+p04c0
+
+p5a12
+p026c
+p09eb
+p3f05
+p0599
+p43ca
+p43e1
+p441a
+p3fb9
+p05c3
+p067a
+p1684
+p06e8
+p0c74
+p1f50
+p6810
+p693a
+p3ced
+p0f89 
+p07c8 
+p0cf0 
+p0856 
+p0898 
+p088a 
+p0920 
+p08cf 
+p08f8 
+p12c0 
+p69f5 
+
+p0aef 
+p0aac 
+p0b20 
+p0b86 
+p0bae 
+p125c 
+p14c3 
+p10fa 
+
+p0d7c FUNC_0D7C
+v0d8d Branch_Table
+
+c0d95 entry1
+c0dd8 entry2
+c0dd3 entry3
+
+
+
+p123b
+
+
+p0c21
+w0C40
+
+
+
+
+
+
+p0c50
+p0182
+p05F9
+p0788
+p0A6A
+p0BEC
+p0D34
+p0D64
+p0D70
+p0E01
+p0E22
+p0E31
+p0E73
+p0EC9
+p0F13
+p0F48
+p0F6B
+p0F9C
+p0FF2
+p0FFB
+p1015
+p1041
+p10CF
+p11E0
+p11E9
+p11FD
+p1214
+p12A3
+p1311
+p132A
+p134A
+p14DB
+p14E9
+p1521
+p1544
+p1567
+p1581
+p1598
+
+
+p1708 FUNC_1708
+v171e Jump_Table
+c1753 entry1
+c1726 entry2
+c1736 entry3
+c176d entry4
+
+
+
+p179F 
+
+
+p1811 FUNC_1811
+v1825 Branch_Table
+c185A entry1
+c182d entry2
+c183d entry3
+c1874 entry4
+
+
+
+
+p18A6
+p18CB
+p195C
+p1976
+p1990
+p19D0
+p19F4
+p1A4D
+p1A7B
+p1A9D
+p1AED
+p1B9A
+p1BC5
+p1C28
+p1C54
+p1C9F
+p1CB9
+p1D1A
+p1D42
+p1D49
+p1F12
+p218F
+p219D
+p21AF
+p21BC
+p21D2
+p21E7
+p21F5
+p2203
+p22D9
+p235C
+p23B6
+p2402
+p2429
+p2455
+p2482
+p24BE
+p24C7
+p24F8
+p24FE
+p2550
+p2561
+p2582
+p25C2
+p260A
+p265B
+p26BE
+p278D
+p27D7
+p285F
+p2871
+p288C
+p28C4
+p28DE
+p290B
+p291C
+p2947
+p296E
+p2982
+p299A
+p29B5
+p29E0
+p2A68
+p2A7A
+p2A7E
+p2AD1
+p2AEF
+p2B0E
+p2B12
+p2B42
+p2BCF
+p2BD8
+p2C2A
+p2C78
+p2C95
+p2D3F
+p2D5E
+p2D74
+p2D80
+p2E02
+p2EC3
+
+p30C8
+p30D5
+p30DE
+
+
+
+
+
+v3212 Branch_Table
+c3228 entry1
+c3237 entry2
+c3299 entry3
+c3257 entry4
+c3253 entry5
+c324f entry6
+c32df entry7
+c32f4 entry8
+c3309 entry9
+c331e entry10
+
+
+
+
+p33A4
+p33C2
+p33CC
+p33D8
+p346D
+
+p34B0
+p34F8
+p353B
+
+
+
+
+
+
+p368F
+p3890
+p38A7
+p3920
+p39D3
+
+
+
+p3a40 FUNC_3A40
+v3a55 Branch_Table
+c3a5b entry1
+c3a87 entry2
+c3aa7 entry3
+
+
+p3B23
+
+
+p3CB6
+p3CD3
+p3D51
+p3DB7
+p3DDF
+p3E46
+p3EA1
+p3F87
+p3FA0
+p400D
+p4039
+p4046
+p4088
+p40C6
+p4119
+p4152
+p418F
+p41B1
+p41C8
+p41CE
+p41E9
+p41FA
+p426E
+p4301
+p433F
+p4353
+p4366
+p4394
+p4430
+p447E
+p4490
+p44AC
+p44B9
+p44E5
+p44FD
+p4559
+p457B
+p459F
+p45B5
+p46A0
+
+v46B1 Jump_Table
+
+p702e
+p711e
+p71e4
+p720d
+p7251
+p727d
+
+
+
+
+
+p6100 FUNC_6100
+v6112 Branch_Table
+c6122 entry1
+c6130 entry2
+c6138 entry3
+c6145 entry4
+c615f entry5
+c616b entry6
+c6176 entry7
+
+
+
+
+
+p46C1
+p46D8
+p46E4
+p470D
+p4741
+p4757
+p479B
+
+
+p4809 FUNC_4809
+v4821 Jump_Table
+c485a entry1
+c48b1 entry3
+c4901 entry4
+c4920 entry5
+c4831 entry6
+c492f entry7
+
+
+
+
+p485B
+p493E
+p4969
+p49A0
+p49CD
+p49D8
+p49FC
+p4A06
+p4A0D
+p4A12
+p4A78
+p4BF1
+p4C2A
+p4C32
+p4C69
+p501B
+p506A
+p5093
+p5611
+p56D6
+p5701
+p5719
+p572C
+p5744
+
+p5B54 FUNC_5B54
+v5b6b Jump_Table
+c5b8b entry1
+c5bf5 entry2
+c5c05 entry3
+c5caa entry4
+c5c59 entry5
+c5c22 entry6
+c5c39 entry7
+c5c35 entry8
+c5bf4 entry9
+
+
+
+p5D05 FUNC_5D05
+
+
+
+p5D20 FUNC_5D20
+v5D38 Jump_Table
+c5d83 entry1
+c5d58 entry2
+c5dfd entry3
+c5f29 entry4
+c5ed1 entry5
+c5e58 entry6
+c5e7a entry7
+c5e78 entry8
+c5ea9 entry9
+
+
+
+
+p5FB4
+p5FC9
+p60DD
+p60F5
+p6181
+p6217
+p6269
+
+
+p62C0 FUNC_62C0
+v6317 Branch_Table
+c636b entry1
+c632f entry2
+c6349 entry3
+c6351 entry4
+c635a entry5
+c6368 entry6
+
+
+
+
+p636E
+p6378
+p63FF
+p640D
+p6425
+p6430
+p6437
+p643E
+p645B
+p6474
+p6496
+p64A3
+
+
+
+p67A3
+p67AD
+p67C6
+p6869
+p68B9
+p68DE
+p691B
+p6983
+p69D9
+p69FD
+
+
+p6A64
+b6ae7
+
+
+
+
+
+p6AF7
+p6B0A
+p6B47
+p6B69
+p6BB0
+p6BBA
+p6D0F
+p6D84
+p6D8F
+p6D9C
+p6DA9
+p6DB4
+p6DBF
+p6DC8
+p6DD3
+p6DDE
+p6DE9
+p6DF4
+p6DFF
+p6E0C
+p6E24
+p6E3C
+p6E60
+p6E68
+
+p6E76
+p1d97
+
+p6E7F
+p1dcf
+
+p6E88
+p1e1a
+
+p6E91
+p2ab2
+
+
+p6E9A
+p1e52
+
+
+p6EA3
+p2b8f
+
+
+p6EAC
+p1b7b
+
+
+p6EB5
+p1c80
+
+
+p6EBE
+p1be9
+
+
+p6EC7
+
+p6EF2
+p193F
+
+
+p6EFC
+p18ac
+
+p1b26
+
+
+p6F05
+p19AF
+
+
+
+p6F0E
+p18F5
+
+
+
+p6F17
+p1b08
+
+
+
+p6F20
+p1ad8
+
+
+
+p6F29
+p1e5d
+
+p6F32
+p1e92
+
+
+p6F3B
+p1EDB
+
+
+p6F44
+p233d
+
+
+p6F4D
+p23e3
+
+
+p6F56
+p2379
+
+p6F5F FUNC_6F5F
+v6f7e Call_Table
+
+p707e
+p707f
+p709f
+p751e
+p7525
+p7531
+p70BE
+p70F2
+p72A4
+p72DC
+p7310
+p7344
+p7374
+p7392
+p739D
+p73A8
+p73B8
+p73C6
+p73DB
+p73F1
+p740F
+p7438
+p7461
+p7464
+p747B
+p747E
+p7495
+p74A0
+p74AB
+p74B9
+p74D1
+p74F7
+p770B
+p7719
+p7735
+p7751
+p775F
+p776D
+p79EF
+p7A11
+p7A24
+p7A28
+p7A74
+p7A8F
+p7AAA
+p7AC5
+p7AE0
+p7AF7
+p7B0E
+p7B25
+p7B51
+p7B52
+p7B5D
+p7B6E
+p7B82
+p7B8C
+p7BB4
+p7BBE
+p7BD8
+p765B
+p7673
+p7727
+p7743
+p7B78
+p7544
+p7554
+p7558
+p756D
+p7576
+p7589
+p75A1
+p75AD
+p75B9
+p75C5
+p75D1
+p75DD
+p75E4
+p75F0
+p75FC
+p7603
+p760A
+p7616
+p7622
+p7631
+p763D
+p7667
+p767F
+p768B
+p7697
+p76A3
+p76AF
+p76BB
+p76C7
+p76D5
+p76E0
+p76EE
+p76FC
+p764A
+p777B
+p778D
+p7791
+p77A9
+p77B6
+p77C1
+p77D3
+p77E5
+p77F7
+p7805
+p781A
+p7836
+p7866
+p7884
+p78B2
+p78CC
+p78FB
+p7924
+p795E
+p796E
+p79C0
+p7B40
+p7B5E
+p7BA0
+p7BF9
+p7C28
+p7C78
+p7CCB
+p7D44
+p7DBF
+p7DE1
+p7E17
+
+
+p7EC1 FUNC_7EC1
+v7ecc Branch_Table
+c7ed8 entry1
+c7ef2 entry2
+c7efa entry3
+c7f00 entry4
+c7ede entry5
+
+
+
+
+p7F0E
+v7f19 Branch_Table
+p7f47
+
+
+
+p7F25
+p7F2C
+p7F55
+p7F7C
+
+
+
+
+
+n1370
+# -------------------------------------------------------------------
+# Not entirely sure what this little fragment is but it looks vaguely
+# plausible.
+.
+c1370
+
+
+
+
+
+
+k535e  <-- Here is a MIDI parser
+k57e5  <-- Here is a MIDI parser
+k59a3  <-- Here is a MIDI parser
+k5a99  <-- Here is a MIDI parser
+
+n7fdc
+# END OF CODE
+.
+b7fdc THE END
+
+n7ff4
+# WTF is this????
+.
+p7ff4 FUNC_WEIRD
+l7FF7
+k7ff8 This points to a RETI, which does "EOS <- 0". But why 8 times???
+
+#########################################
+##
+## Auto labels (not yet worked out)
+##
+#########################################
+
+l01CA
+l01E6
+l01F1
+l0201
+l0207
+l0225
+l0227
+l0254
+l0262
+l0268
+l026A
+l0294
+l02A7
+l02AB
+l02EA
+l02EB
+l02FE
+l0317
+l032E
+l033A
+l033D
+l0349
+l0351
+l0368
+l0372
+l0375
+l0390
+l0399
+l03AD
+l03B9
+l03BB
+l03CC
+l03E3
+l03F4
+l0405
+l0409
+l040E
+l0417
+l0424
+l042E
+l0499
+l04A1
+l04AC
+l04B3
+l04CF
+l04DE
+l04EA
+l04F7
+l0500
+l050C
+l0517
+l051F
+l0545
+l0555
+l056A
+l0574
+l0584
+l0586
+l058A
+l0598
+l05A7
+l05B9
+l05D4
+l05D5
+l05DD
+l05E7
+l060F
+l0634
+l063B
+l064F
+l0655
+l066B
+l066D
+l06A0
+l06BD
+l06DB
+l06E5
+l06EE
+l06FB
+l06FE
+l0742
+l077A
+l0787
+l079D
+l07D7
+l07E4
+l07F7
+l084E
+l0851
+l0860
+l0875
+l087A
+l087B
+l0882
+l0885
+l08CE
+l08ED
+l08F7
+l0912
+l0913
+l091B
+l095E
+l09B6
+l09CB
+l09E6
+l09E7
+l09F7
+l0A24
+l0A29
+l0A42
+l0A53
+l0A65
+l0A66
+l0A7F
+l0AA4
+l0AA8
+l0AEE
+l0AFA
+l0B04
+l0B11
+l0B2B
+l0B3A
+l0B3C
+l0B48
+l0B7B
+l0B81
+l0B84
+l0BA9
+l0BB6
+l0BC9
+l0BDC
+l0BEA
+l0C20
+l0C2B
+l0C2D
+l0C5F
+l0C6A
+l0C9F
+l0CC0
+l0CCC
+l0CDC
+l0CEE
+l0D01
+l0D21
+l0D2C
+l0D30
+l0D4C
+l0D57
+l0D6B
+l0D77
+l0D97
+l0DC6
+l0DD0
+l0DEA
+l0DF1
+l0DF9
+l0E00
+l0E18
+l0E20
+l0E21
+l0E30
+l0E3D
+l0E5C
+l0E62
+l0E75
+l0E8B
+l0E8D
+l0E99
+l0EB7
+l0EBF
+l0EDB
+l0EE3
+l0EE9
+l0EED
+l0EFC
+l0F0F
+l0F18
+l0F40
+l0F46
+l0F4A
+l0F63
+l0F69
+l0F7F
+l0F84
+l0FB5
+l0FBD
+l0FBF
+l0FEE
+l1035
+l103E
+l104F
+l1058
+l1072
+l108A
+l108B
+l1093
+l109C
+l10B6
+l10CE
+l10E2
+l10F0
+l10F9
+l1113
+l1119
+l1148
+l115A
+l1164
+l118B
+l11AE
+l11B8
+l11C8
+l11DA
+l1213
+l1237
+l124C
+l125B
+l1265
+l1283
+l1299
+l1303
+l1310
+l1337
+l1357
+l1383
+l139B
+l13B2
+l13CD
+l13E9
+l1400
+l1412
+l141E
+l1424
+l142A
+l1430
+l1439
+l147F
+l14D8
+l14E5
+l1515
+l15AB
+l15C2
+l15DB
+l15DD
+l1626
+l1656
+l167E
+l168B
+l1692
+l16A1
+l16B5
+l16E8
+l16ED
+l16F3
+l16F8
+l16FD
+l1702
+l1730
+l173F
+l1751
+l176B
+l1772
+l179D
+l17AD
+l17E0
+l17E5
+l17EB
+l1801
+l1806
+l180B
+l1837
+l1846
+l1858
+l1872
+l1879
+l18A4
+l18BB
+l18EA
+l1904
+l1914
+l1933
+l1966
+l1980
+l19A1
+l19AA
+l19C0
+l19EC
+l1A06
+l1A08
+l1A15
+l1A1A
+l1A20
+l1A2E
+l1A34
+l1A45
+l1A6A
+l1A8C
+l1ABB
+l1ABE
+l1AD0
+l1AE7
+l1AFC
+l1B1C
+l1B22
+l1B29
+l1B37
+l1B39
+l1B43
+l1B5F
+l1B67
+l1B71
+l1B73
+l1B8A
+l1BAE
+l1BD5
+l1BDB
+l1BF8
+l1C08
+l1C1E
+l1C2F
+l1C40
+l1C46
+l1C5E
+l1C6C
+l1C72
+l1C8F
+l1CB3
+l1CC4
+l1CD1
+l1CD5
+l1CF4
+l1D0C
+l1D16
+l1D24
+l1D6D
+l1D93
+l1DAC
+l1DCB
+l1DCE
+l1DEE
+l1E16
+l1E19
+l1E2F
+l1E4E
+l1E51
+l1E72
+l1E8E
+l1E91
+l1EA2
+l1ED0
+l1ED2
+l1ED6
+l1EF0
+l1F0E
+l1F11
+l1F16
+l1F7C
+l1FA6
+l1FB9
+l1FC4
+l1FDF
+l1FE2
+l1FE5
+l1FF4
+l2000
+l2019
+l2042
+l2050
+l2061
+l2064
+l2072
+l2078
+l2085
+l2088
+l20D6
+l20DF
+l20EC
+l20F1
+l20F8
+l2103
+l2112
+l2134
+l215A
+l216F
+l2178
+l217E
+l2186
+l2189
+l219A
+l21AB
+l21AE
+l21C6
+l21DB
+l21EE
+l21FC
+l2224
+l2236
+l223A
+l2250
+l2256
+l225F
+l2294
+l22A9
+l22D4
+l22E7
+l2311
+l2314
+l2316
+l231D
+l2334
+l234C
+l2372
+l2388
+l2398
+l23AE
+l23C7
+l23CD
+l23F2
+l2418
+l2437
+l243D
+l2458
+l2466
+l246C
+l2492
+l24B4
+l24CA
+l24D9
+l24DF
+l24F0
+l2509
+l251D
+l2520
+l252F
+l2546
+l2548
+l255A
+l2564
+l2570
+l257D
+l2585
+l2599
+l259E
+l25A4
+l25DB
+l25E1
+l25F6
+l2600
+l2605
+l262E
+l263E
+l264B
+l2651
+l2688
+l268D
+l26B7
+l26FD
+l270E
+l2718
+l271C
+l271F
+l274A
+l275D
+l2769
+l2776
+l2788
+l27A4
+l27C6
+l27CF
+l27ED
+l27F3
+l2825
+l2830
+l2837
+l2854
+l2857
+l285A
+l2869
+l287C
+l289C
+l28A4
+l28BA
+l28CE
+l2903
+l290A
+l293F
+l2946
+l2977
+l2981
+l2993
+l2999
+l29A5
+l29C5
+l29D8
+l29E9
+l2A0E
+l2A1F
+l2A37
+l2A47
+l2A59
+l2A67
+l2AAE
+l2AC1
+l2ADF
+l2AFE
+l2B20
+l2B49
+l2B9E
+l2BAE
+l2BBF
+l2C00
+l2C04
+l2C08
+l2C0C
+l2C10
+l2C11
+l2C16
+l2C1B
+l2C20
+l2C26
+l2C2F
+l2C44
+l2C4D
+l2C58
+l2C5D
+l2C61
+l2C80
+l2C87
+l2C8F
+l2C91
+l2C9A
+l2CBD
+l2CCE
+l2CE1
+l2CE9
+l2CEB
+l2CEE
+l2CFF
+l2D06
+l2D0F
+l2D1D
+l2D22
+l2D26
+l2D3C
+l2D47
+l2D4D
+l2D60
+l2D70
+l2D97
+l2DA6
+l2DB0
+l2DB1
+l2DC9
+l2DDB
+l2DE1
+l2DF0
+l2E01
+l2E09
+l2E12
+l2E15
+l2E3D
+l2E56
+l2E63
+l2E8E
+l2E95
+l2EB2
+l2EB9
+l2EBF
+l2EC2
+l2ED6
+l2EF1
+l2F0E
+l2F10
+l2F14
+l2F21
+l2F24
+l2F25
+l2F35
+l2F3A
+l2F51
+l2F56
+l2F5E
+l2F61
+l2FA9
+l2FAC
+l2FAF
+l2FBB
+l2FD3
+l2FD8
+l2FF1
+l3001
+l3026
+l3027
+l305E
+l3060
+l30D2
+l30DD
+l3115
+#l3123
+#l312A
+l3139
+l313D
+#l314A
+l314B
+l3159
+l3160
+l3183
+l318A
+l318C
+l31BD
+l31CA
+l3206
+l3236
+l324E
+l3273
+l328F
+l3298
+l32BF
+l32CA
+l32CF
+l32D0
+l32D9
+l3308
+l331D
+l3339
+l3356
+l3357
+l336D
+l336E
+l3382
+l3398
+l33A3
+l33B8
+l33D3
+l3404
+l3406
+l340B
+l341A
+l3431
+l343A
+l343C
+l343F
+l3454
+l3488
+l34A5
+l34AC
+l34CF
+l34EB
+l34F4
+l3510
+l352C
+l3537
+l3544
+l354B
+l35AD
+l35B1
+l35E0
+l35E4
+l35EC
+l35EF
+l3626
+l362A
+l364D
+l3667
+l366D
+l3677
+l3679
+l368B
+l36CC
+l36D2
+l36E0
+l3704
+l3717
+l3725
+l3747
+l3783
+l3799
+l379D
+l37A4
+l37B4
+l37C6
+l37CB
+l37D4
+l37D9
+l37E8
+l37EA
+l37F0
+l380D
+l3811
+l3835
+l3850
+l3860
+l3875
+l389A
+l38A4
+l38B1
+l38C0
+l38E3
+l393A
+l3940
+l3950
+l395B
+l3968
+l3979
+l398A
+l399B
+l39AA
+l39F2
+l3A15
+l3A1F
+l3A35
+l3A3F
+l3A51
+l3A73
+l3A83
+l3A9F
+l3AA3
+l3ABF
+l3AC8
+l3AEB
+l3AF4
+l3B18
+l3B22
+l3B6A
+l3B72
+l3B7B
+l3B8B
+l3C13
+l3C61
+l3C66
+l3C89
+l3C8E
+l3CAE
+l3CD6
+l3D1E
+l3D2A
+l3D40
+l3D8C
+l3D91
+l3DA6
+l3DB2
+l3E2B
+l3E42
+l3E43
+l3E4B
+l3E6A
+l3E83
+l3E94
+l3EAF
+l3ECE
+l3EE7
+l3F13
+l3F35
+l3F4E
+l3F5E
+l3F70
+l3F7E
+l3FA4
+l3FC4
+l3FD6
+l3FF5
+l4004
+l401A
+l4027
+l402B
+l407E
+l40A6
+l40BD
+l40F3
+l4101
+l4109
+l414C
+l4183
+l4189
+l41C3
+l41C5
+l41D3
+l4219
+l423D
+l425A
+l429A
+l42C3
+l42CB
+l42DA
+l42F6
+l4310
+l4316
+l4320
+l434F
+l4360
+l4370
+l438D
+l439E
+l43C3
+l43DD
+l43FE
+l440C
+l4428
+l442C
+l4442
+l4451
+l4460
+l446F
+l4480
+l448D
+l44A6
+l44CB
+l44CF
+l44D3
+l44E0
+l44E1
+l44EC
+l44FC
+l4531
+l4533
+l456B
+l4577
+l458D
+l459B
+l45CB
+l45CF
+l45D3
+l4606
+l4618
+l4625
+l4645
+l464D
+l464E
+l4674
+l4675
+l467D
+l4694
+l46AA
+l46E0
+l46F8
+l46FD
+l4702
+l4705
+l471E
+l473D
+l4760
+l4764
+l4768
+l478F
+l47A0
+l47B3
+l47BE
+l47C0
+l47E0
+l47EF
+l47F7
+l47FA
+l4845
+l484D
+l4853
+l4870
+l4885
+l4887
+l489C
+l48A8
+l48D5
+l48DE
+l48E5
+l48F6
+l48F8
+l493C
+l4979
+l497B
+l4992
+l499A
+l49B1
+l49B7
+l49C7
+l49F4
+l4A3A
+l4A5A
+l4AAA
+l4AC5
+l4AF7
+l4B04
+l4B1F
+l4B32
+l4B46
+l4B80
+l4BC5
+l4BCE
+l4BD4
+l4BDB
+l4BFF
+l4C00
+l4C0F
+l4C40
+l4C41
+l4C60
+l4C97
+
+l4CF1
+l4D11
+l4D4E
+l4D58
+l4D6D
+l4D7C
+l4DB6
+l4DBA
+l4DD4
+l4DE6
+l4DE7
+l4E11
+l4E1C
+l4E24
+l4E45
+l4E55
+l4E6B
+l4E80
+l4E9B
+l4EA4
+l4EB6
+l4ECC
+l4EE2
+l4EE8
+l4F02
+l4F1C
+l4F1F
+l4F45
+l4F63
+l4F73
+l4F89
+l4FA2
+l4FAE
+l4FC1
+l4FC5
+l5000
+l500A
+l5042
+l5050
+l505D
+l507F
+l5085
+l5089
+l50A8
+l50B0
+l5103
+l5118
+l512D
+l512E
+l5149
+l515B
+l5172
+l5175
+l5194
+l51AE
+l51D3
+l51DB
+l51DE
+l51FA
+l51FE
+l5214
+l5216
+l5239
+l5249
+l524F
+l5281
+l528B
+l5292
+l52AC
+l52CE
+l52DD
+l52E0
+l5304
+l5320
+l5323
+l533D
+l5352
+l5368
+l536B
+l5376
+l537E
+l5381
+l5385
+l5388
+l53A0
+l53B6
+l53BA
+l53D0
+l53D4
+l53F1
+l53FB
+l5406
+l5411
+l541E
+l5432
+l543B
+l5450
+l545E
+l5467
+l546B
+l5475
+l5482
+l5489
+l549C
+l54A0
+l54A5
+l54D1
+l54D8
+l54DF
+l54E9
+l54F0
+l54FD
+l5506
+l5527
+l5533
+l555E
+l5565
+l5569
+l5581
+l5599
+l559B
+l55B2
+l55B6
+l55C2
+l55DC
+l55E0
+l55F1
+l55F4
+l55F5
+l562D
+l5631
+l563A
+l5649
+l5667
+l5678
+l5685
+l5689
+l56AD
+l56B6
+l56C1
+l56D5
+l56ED
+l56F2
+l56F6
+l56FE
+l570A
+l570E
+l5722
+l5769
+l5773
+l577C
+l5783
+l5791
+l57AE
+l57B7
+l57C9
+l57CA
+l57DC
+l57F2
+l57FA
+l57FD
+l5805
+l5808
+l580C
+l580F
+l5818
+l581B
+l582B
+l5836
+l5838
+l583B
+l586A
+l586D
+l5877
+l587C
+l5893
+l5897
+l589E
+l58A3
+l58CA
+l58CF
+l58E3
+l58EF
+l58FA
+l5908
+l590C
+l5913
+l5927
+l5933
+l5938
+l5948
+l594F
+l596C
+l5975
+l5987
+l5988
+l599A
+l59B0
+l59B8
+l59BB
+l59C3
+l59C6
+l59CA
+l59CD
+l59D9
+l59DC
+l59E4
+l59EC
+l59F4
+l59FC
+l5A09
+l5A2F
+l5A38
+l5A43
+l5A52
+l5A53
+l5A68
+l5A6D
+l5A7B
+l5A90
+l5AA6
+l5AAE
+l5AB1
+l5AB9
+l5ABC
+l5AC0
+l5AC3
+l5ADC
+l5ADF
+l5AEA
+l5AEB
+l5AF2
+l5B04
+l5B16
+l5B3B
+l5B46
+l5B4D
+l5BAD
+l5BCC
+l5BDF
+l5BEE
+l5BF0
+l5C1D
+l5C51
+l5C58
+l5C84
+l5C92
+l5CA8
+l5CD5
+l5CE3
+l5CFC
+l5CFF
+l5D03
+l5D1A
+l5D1F
+l5D7E
+l5D84
+l5DB5
+l5DD6
+l5DE1
+l5E34
+l5E98
+l5EA4
+l5EB3
+l5EB6
+l5EC8
+l5ECE
+l5EFF
+l5F0D
+l5F58
+l5F67
+l5F8A
+l5F98
+l5FA0
+l5FC3
+l5FC8
+l5FD4
+l6001
+l6003
+l6006
+l6007
+l6012
+l601A
+l602B
+l6037
+l6040
+l6053
+l6056
+l6074
+l6083
+l6086
+l6087
+l6093
+l609C
+l60A9
+l60AA
+l60B7
+l60C4
+l60CB
+l60CD
+l60D1
+l60E7
+l60F3
+l6129
+l6140
+l6151
+l617F
+l61A6
+l61AD
+l61B7
+l61CA
+l61CC
+l61D6
+l61E7
+l61EF
+l620D
+l6231
+l624B
+l6265
+l6290
+l6298
+l62A5
+l62A6
+l62B9
+l62ED
+l62F0
+l62F9
+l6305
+l6354
+l6355
+l6382
+l6395
+l63A3
+l63AC
+l63CE
+l63D7
+l63F4
+l6448
+l6464
+l6487
+l64A1
+l64AA
+l64B1
+l64B8
+l64C2
+l6548
+l65D5
+l65F7
+l65FA
+l6603
+l6604
+l668C
+l669C
+l66A1
+l66A4
+l66B6
+l66C8
+l66D2
+l66F8
+l6709
+l6755
+l6762
+l67B4
+l67BD
+l67D3
+l67DF
+l681D
+l6829
+l6855
+l6862
+l6879
+l6885
+l68C8
+l68E5
+l690F
+l6922
+l6931
+l6943
+l6978
+l697A
+l698C
+l69C3
+l69C7
+l69C9
+l69D4
+l69E0
+l69EC
+l6A2F
+l6A54
+l6A55
+l6A87
+l6A93
+l6AA5
+l6AA6
+l6AAB
+l6AC3
+l6ACF
+l6AE2
+l6B09
+l6B34
+l6B89
+l6BF5
+l6C10
+l6C20
+l6C32
+l6C42
+l6C5F
+l6C88
+l6CB9
+l6CC8
+l6CDA
+l6CE9
+l6D34
+l6D57
+l6D60
+l6D7E
+l6E42
+l6E49
+l6E66
+l6EE4
+l7042
+l7058
+l705D
+l705E
+l706F
+l7074
+l7088
+l708B
+l70A8
+l70AB
+l70D4
+l70D7
+l70DC
+l70E9
+l70F1
+l7108
+l710B
+l711D
+l7135
+l7142
+l7147
+l714A
+l7167
+l716C
+l716F
+l7182
+l7187
+l7192
+l7197
+l719C
+l71A1
+l71A4
+l71BE
+l71C3
+l71C8
+l71CD
+l71D2
+l71DB
+l7209
+l7221
+l7233
+l7250
+l7262
+l726B
+l7279
+l7297
+l72A0
+l72BB
+l72D3
+l72DB
+l72F5
+l72FE
+l7301
+l730F
+l7329
+l7332
+l7335
+l7343
+l7357
+l7360
+l7363
+l737F
+l738E
+l73D1
+l73E7
+l7402
+l740B
+l7427
+l7450
+l74C5
+l74D6
+l74E8
+l74EC
+l74F3
+l74F6
+l75A0
+l7627
+l764F
+l7823
+l784B
+l7854
+l7857
+l7865
+l787B
+l7899
+l7907
+l7916
+l793D
+l7946
+l7949
+l795D
+l797D
+l79E6
+l79E9
+l79F7
+l7A84
+l7A9F
+l7ABA
+l7AD5
+l7B35
+l7B4A
+l7B9F
+l7BCD
+l7BD7
+l7BF8
+l7C48
+l7C4A
+l7C52
+l7C64
+l7C99
+l7CA2
+l7CB0
+l7CC1
+l7CC4
+l7D0B
+l7D13
+l7D19
+l7D22
+l7D2C
+l7D3D
+l7D40
+l7D78
+l7D8C
+l7D97
+l7DBB
+l7DC1
+l7DCF
+l7DD2
+l7DF2
+l7DFB
+l7E1A
+l7E3C
+l7E74
+l7E86
+l7EA0
+l7EBD
+l7EE5
+l7EF6
+l7F07
+l7F41
+l7F4C
+l7F6B
+l7F76
+l7F8C
+l7F8F
+l7F9F
+l7FD6
+
+
+l4d48
+l4d4d
+l4d0a
+
+
+n8000
+#########################################
+##   Data Pages
+##
+##  These are mapped into physical space
+##
+#########################################
+.
+
+
+ba000
+
+be000 DEC_START
+
+
+## END ##
+e10000
+#########

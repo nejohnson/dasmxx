@@ -1,0 +1,14 @@
+# Bit-addressable Special Function Registers
+d00F0 B
+d00E0 ACC
+d00D0 PSW
+d00C8 T2CON
+d00B8 IP
+d00B0 P3
+d00A8 IE
+d00A0 P2
+d0098 SCON
+d0090 P1
+d0088 TCON
+d0080 P0
+

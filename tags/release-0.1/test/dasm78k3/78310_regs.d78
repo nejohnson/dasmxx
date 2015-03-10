@@ -1,0 +1,216 @@
+##################################################
+#
+# NEC uPD78310 global definitions
+#
+# Neil Johnson
+#
+##################################################
+
+# Vector Table ###################################
+
+v0000    RESET_VECTOR
+v0002    NMI_VECTOR
+v0004    EXIF0_VECTOR
+v0006    EXIF1_VECTOR
+v0008    EXIF2_VECTOR
+v000a    WDT_VECTOR
+v000c    TBF_VECTOR
+v000e    TMF0_VECTOR
+v0010    TMF1_VECTOR
+v0012    TMF2_VECTOR
+w0014    UNUSED_VECTOR_0014
+w0016    UNUSED_VECTOR_0016
+w0018    UNUSED_VECTOR_0018
+v001a    CRF00_VECTOR
+v001c    CRF01_VECTOR
+v001e    CRF10_VECTOR
+v0020    CRF11_VECTOR
+v0022    SEF_VECTOR
+v0024    SRF_VECTOR
+v0026    STF_VECTOR
+v0028    ADF_VECTOR
+w002a    UNUSED_VECTOR_002A
+w002c    UNUSED_VECTOR_002C
+w002e    UNUSED_VECTOR_002E
+w0030    UNUSED_VECTOR_0030
+w0032    UNUSED_VECTOR_0032
+w0034    UNUSED_VECTOR_0034
+w0036    UNUSED_VECTOR_0036
+w0038    UNUSED_VECTOR_0038
+w003a    UNUSED_VECTOR_003A
+w003c    INVALID_OPCODE_VECTOR
+v003e    BRK_VECTOR
+
+# Executable memory ends at FE00H
+efe00
+
+
+# Macroservice Registers
+
+lfee0    MSP4
+lfee2    MSC4
+lfee3    SFRP4
+
+lfee4    MSP5
+lfee6    MSC5
+lfee7    SFRP5
+
+lfee8    MSP6
+lfeea    MSC6
+lfeeb    SFRP6
+
+lfeec    MSP7
+lfeee    MSC7
+lfeef    SFRP7
+
+lfef0    MSP0
+lfef2    MSC0
+lfef3    SFRP0
+
+lfef4    MSP1
+lfef6    MSC1
+lfef7    SFRP1
+
+lfef8    MSP2
+lfefa    MSC2
+lfefb    SFRP2
+
+lfefc    MSP3
+lfefe    MSC3
+lfeff    SFRP3
+
+# Special Function Registers #####################
+
+lff00    P0
+lff01    P1
+lff02    P2
+lff03    P3
+lff04    P4
+lff05    P5
+
+lff08    CR00L
+lff09    CR00H
+lff0a    CR01L
+lff0b    CR01H
+lff0c    CR10L
+lff0d    CR10H
+lff0e    CR11L
+lff0f    CR11H
+
+lff10    CPT0L
+lff11    CPT0H
+lff12    CPT1L
+lff13    CPT1H
+
+lff14    PWM0L
+lff15    PWM0H
+lff16    PWM1L
+lff17    PWM1H
+
+lff1c    UDC0L
+lff1d    UDC0H
+lff1e    UDC1L
+lff1f    UDC1H
+
+lff20    PM0
+lff21    PM1
+lff22    PM2
+lff23    PM3
+lff25    PM5
+
+lff32    PMC2
+lff33    PMC3
+lff38    RTPC
+
+lff3a    P0L
+lff3b    P0H
+
+lff40    MM
+lff41    RFM
+lff42    WDM
+lff44    STBC
+lff48    INTM
+lff4a    ISPR
+lff4e    CCW
+
+lff50    SCM
+lff52    SCC
+lff53    BRG
+lff56    RXB
+lff57    TXB
+
+lff60    FRCC
+lff64    CPTM
+lff66    PWMM
+
+lff68    ADM
+lff6a    ADCR
+
+lff70    CUIM
+lff72    UDCC0
+lff74    CRC
+lff7a    UDCC1
+
+lff80    TMC0
+lff82    TMC1
+
+lff88    TM0L
+lff89    TM0H
+lff8a    MD0L
+lff8b    MD0H
+
+lff8c    TM1L
+lff8d    TM1H
+lff8e    MD1L
+lff8f    MD1H
+
+lffb0    EXTREG_0
+lffb1    EXTREG_1
+lffb2    EXTREG_2
+lffb3    EXTREG_3
+lffb4    EXTREG_4
+lffb5    EXTREG_5
+lffb6    EXTREG_6
+lffb7    EXTREG_7
+lffb8    EXTREG_8
+lffb9    EXTREG_9
+lffba    EXTREG_A
+lffbb    EXTREG_B
+lffbc    EXTREG_C
+lffbd    EXTREG_D
+lffbe    EXTREG_E
+lffbf    EXTREG_F
+
+lffc0    CRIC00
+lffc1    CRMS00
+lffc2    CRIC01
+lffc4    CRIC10
+lffc5    CRMS10
+lffc6    CRIC11
+
+lffc8    EXIC0
+lffc9    EXMS0
+lffca    EXIC1
+lffcb    EXMS1
+lffcc    EXIC2
+lffcd    EXMS2
+
+lffce    TMIC0
+lffcf    TMMS0
+lffd0    TMIC1
+lffd1    TMMS1
+lffd2    TMIC2
+lffd3    RMMS2
+
+lffda    SEIC
+lffdc    SRIC
+lffdd    SRMS
+lffde    STIC
+lffdf    STMS
+
+lffe0    ADIC
+lffe1    ADMS
+
+lffe2    TBIC
+
+##################################################
