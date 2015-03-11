@@ -485,7 +485,7 @@ static void readlist( const char *listfile, struct params *params )
                         };
 
                         if ( tbl[cmd_idx].pfx )
-                            sprintf( pbuf, "%s_%04d", tbl[cmd_idx].pfx, tbl[cmd_idx].num++ );
+                            sprintf( pbuf, GEN_LABEL_PREFIX "%s_%04d", tbl[cmd_idx].pfx, tbl[cmd_idx].num++ );
                     }
                     
                     /* Add a cross-ref entry for everything except an end entry */
@@ -571,7 +571,10 @@ static void readlist( const char *listfile, struct params *params )
 
             default: /* Unknown command */
                 {
-                    error( "%s(%u) :: Unknown command code '%d'\n", listfile, lineno, cmd );
+                    if ( isprint( cmd ) )
+                        error( "%s(%u) :: Unknown command code '%d'\n", listfile, lineno, cmd );
+                    else
+                        error( "%s :: Illegal character in command file - is this a binary file?\n", listfile );
                 }
                 break;
             }   /* switch */

@@ -57,6 +57,9 @@ typedef UWORD              OPC;
 /* Universal address format */
 #define FORMAT_ADDR		"%04X"
 
+/* Prefix for generated labels */
+#define GEN_LABEL_PREFIX    "___"
+
 /*****************************************************************************/
 /*                              System / Utility                             */
 /*****************************************************************************/
