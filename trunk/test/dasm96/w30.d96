@@ -1,0 +1,4822 @@
+##################################################
+#
+# Roland W-30 boot ROM disassembly commands
+#
+# Neil Johnson
+#
+##################################################
+
+# Load boot ROM version 1.03
+f103.bin
+
+# String terminator 
+tfe
+
+# Start processing at 0x0000
+# ---------------------------------------------------------
+b0000   Non_Executable_Segment_0000
+# ---------------------------------------------------------
+
+n0100
+###########################################################
+###########################################################
+#
+#
+#             BIOS Jump Table
+#
+#
+###########################################################
+###########################################################
+.
+c0100   BIOS_JumpTable
+
+###########################################################
+###########################################################
+#
+#
+#             BIOS
+#
+#
+###########################################################
+###########################################################
+
+n0190
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_04 -- Initialise display
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Sets up the LCD.  Mode = 9C (text + graphics, no cursor)
+#----------------------------------------------------------
+.
+p0190   BIOS_Function_04_Init_Display
+
+n0194
+#----------------------------------------------------------
+# Function:
+#       BIOS_Function_05 -- Init Display with User Mode
+#
+# Args:
+#       R48 = display mode
+#
+# Returns:
+#       none
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       As for 04, but allows caller to specify display mode
+#----------------------------------------------------------
+.
+p0194   BIOS_Function_05_Init_Display_User_Mode
+
+n01cd
+#----------------------------------------------------------
+# Function:
+#       LCD_ClearScreen
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       R28, R46,R47,R49
+#
+# Notes:
+#       Clears the entire LCD memory array.
+#----------------------------------------------------------
+.
+p01cd   LCD_ClearScreen
+
+n01e0
+#----------------------------------------------------------
+# Function:
+#       BIOS_Function_06 -- Clear text RAM
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Clears the text memory on the LCD controller.
+#----------------------------------------------------------
+.
+p01e0   BIOS_Function_06_Clear_LCD_Text
+
+n020a
+#----------------------------------------------------------
+# Function:
+#       BIOS_Function_07 -- Clear graphics except menu line
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Clears the LCD graphics memory, except the bottom
+#        five rows.
+#----------------------------------------------------------
+.
+p020a   BIOS_Function_07_Clear_LCD_Graphics_NotMenu
+
+n0210
+#----------------------------------------------------------
+# Function:
+#       BIOS_Function_08 -- Clear graphics RAM
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Clears the graphics RAM from 0000 to 0A00
+#----------------------------------------------------------
+.
+p0210   BIOS_Function_08_Clear_LCD_Graphics
+
+n0233
+#----------------------------------------------------------
+# Function:
+#       BIOS_Function_09 -- LCD glass peek
+#
+# Args:
+#       R47:46 = LCD memory address
+#
+# Returns:
+#       R49 = byte read
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Reads the actual bit-pattern appearing on screen (the 
+#        logical combination of text and graphics).
+#----------------------------------------------------------
+.
+p0233   BIOS_Function_09_LCD_Glass_Peek
+
+n0251
+#----------------------------------------------------------
+# Function:
+#       BIOS_Function_0A -- Print menu separator bars
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Draws menu separator bars on bottom line of screen.
+#----------------------------------------------------------
+.
+p0251   BIOS_Function_0A_Print_Menu_Separators
+k0251   Draw line at row 55
+k0264   Draw menu separators "XX__XX" every
+k0267   eight characters
+
+n0282
+#----------------------------------------------------------
+# Function:
+#       BIOS_Function_0B -- Draw DropShsdow TextBox
+#
+# Args:
+#       R4A = width
+#       R4B = height
+#       R4C = column
+#       R4D = row
+#
+# Returns:
+#       none
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Draws dropshadow textbox using special Roland 
+#        characters:
+#
+#        01  02  03
+#        04  00  07
+#        05  08  06
+#
+#       Code 00 is standard (space) but the others are
+#        made to create a bottom-right dropshadow border.
+#----------------------------------------------------------
+.
+p0282   BIOS_Function_0B_Draw_DropShadow_TextBox
+
+b02f0   DropShadow_TopLine
+b02f3   DropShadow_MidLine
+b02f6   DropShadow_BtmLine
+
+n02f9
+#----------------------------------------------------------
+# Function:
+#       BIOS_Function_0C -- Display Synth Name
+#
+# Args:
+#       R53 = button pressed at startup
+#
+# Returns:
+#       none
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Displays one of two startup messages depending
+#        on what buttons were pressed at startup.
+#       Either:
+#           "Roland W-30"
+#        or
+#           "W-30 ROM Ver 1.03 [01/21]"
+#----------------------------------------------------------
+.
+p02f9   BIOS_Function_0C_Display_Synth_Name
+
+b0314
+b0323
+
+n0340
+#----------------------------------------------------------
+# Function:
+#       BIOS_Function_0D -- Plot Point
+#
+# Args:
+#       R4C = column
+#       R4D = row
+#       R4E = 0 = set, 1 = clear
+#
+# Returns:
+#       none
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Sets or clears the pixel at the given coordinates.
+#       Coord (0,0) is top-left of the screen.
+#----------------------------------------------------------
+.
+p0340   BIOS_Function_0D_Plot_Point
+
+n0375
+#----------------------------------------------------------
+# Function:
+#       BIOS_Function_0E -- Plot Vertical Line
+#
+# Args:
+#       R4B = start Y
+#       R4D = end Y
+#       R4C = X
+#       R4E = draw mode: 0=clear, 1=set
+#
+# Returns:
+#       none
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Draws single-width vertical line
+#----------------------------------------------------------
+.
+p0375   BIOS_Function_0E_Plot_Vert_Line
+
+n03d0
+#----------------------------------------------------------
+# Function:
+#       BIOS_Function_0F -- Plot Horizontal Line
+#
+# Args:
+#       R4A = start X
+#       R4C = end X
+#       R4D = Y
+#       R4E = draw mode: 0=clear, 1=set
+#
+# Returns:
+#       none
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Draws a single-width horizontal line
+#----------------------------------------------------------
+.
+p03d0   BIOS_Function_0F_Plot_Horz_Line
+
+n0459
+#----------------------------------------------------------
+# Function:
+#       BIOS_Function_10 -- Draw Box
+#
+# Args:
+#       R4A = bottom Y
+#       R4B = left X
+#       R4C = top Y
+#       R4D = right X
+#       R4E = line draw mode: 0=clear, 1=set
+#
+# Returns:
+#       none
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Draws a single-width box between the given coord pairs.
+#----------------------------------------------------------
+.
+p0459   BIOS_Function_10_Draw_Box
+
+n0471
+#----------------------------------------------------------
+# Function:
+#       BIOS_Function_11 -- Draw Solid Box
+#
+# Args:
+#       R4A = bottom Y
+#       R4B = left X
+#       R4C = top Y
+#       R4D = right X
+#       R4E = line draw mode: 0=clear, 1=set
+#
+# Returns:
+#       none
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Draws a solid-filled box, which will either be solid
+#        black or white, depending on the line draw mode.
+#----------------------------------------------------------
+.
+p0471   BIOS_Function_11_Draw_Solid_Box
+
+n048a
+#----------------------------------------------------------
+# Function:
+#       BIOS_Function_12 -- Plot Line
+#
+# Args:
+#       R4A = x1
+#       R4B = y1
+#       R4C = x2
+#       R4D = y2
+#
+# Returns:
+#       none
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Plots a line between (x1,y1) and (x2,y2).  While it
+#        spot the special cases of horizontal and vertical lines
+#        it doesn't use Bresenham's algorithm effectively so
+#        it actually has four line plotting routines instead of
+#        just two.  Oh well, just slightly bigger code :-(
+#----------------------------------------------------------
+.
+p048a   BIOS_Function_12_Plot_Line
+p0562
+
+
+p0575   BIOS_Function_13
+
+p05ef   BIOS_Function_14
+
+p0664
+b0686
+
+p0692   BIOS_Function_16
+
+p069c   BIOS_Function_15
+
+# A couple of data tables
+b06da
+b06e6
+
+n06f2
+#----------------------------------------------------------
+# Function:
+#       BIOS_Function_03 - Scan Buttons
+#
+# Args:
+#       none
+#
+# Returns:
+#       R51 = button pressed (FF = no button)
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Scans the front panel keys looking for a pressed
+#        button.
+#       Scan codes:
+#       Code    Key
+#       ----    ------------
+#       1E      EXIT
+#       1F      ENTER
+#       20      PERFORMANCE
+#       21      SEQUENCER
+#       22      PATCH
+#       23      USER
+#       24      START/STOP
+#       25      REC
+#       26      TEMPO
+#       27      <
+#       28      >
+#       29      |<
+#       2A      >|
+#       2B      F1
+#       2C      F2
+#       2D      F3
+#       2E      F4
+#       2F      F5
+#       30-39   0-9
+#
+#----------------------------------------------------------
+.
+p06f2   BIOS_Function_03_Scan_Buttons
+b073b   ButtonScanCodeTable
+b0743
+b074b
+b0753
+
+#----------------------------------------------------------
+# Function:
+#       BIOS Function 00
+#
+# Args:
+#       .
+#
+# Returns:
+#       .
+#
+# Uses:
+#       .
+#
+# Notes:
+#       .
+#----------------------------------------------------------
+
+p075b   BIOS_Function_00
+
+#----------------------------------------------------------
+# Function:
+#       BIOS Function 02
+#
+# Args:
+#       .
+#
+# Returns:
+#       .
+#
+# Uses:
+#       .
+#
+# Notes:
+#       .
+#----------------------------------------------------------
+
+p07b4   BIOS_Function_02
+
+b0812
+b0852
+
+#----------------------------------------------------------
+# Function:
+#       BIOS Function 01
+#
+# Args:
+#       .
+#
+# Returns:
+#       .
+#
+# Uses:
+#       .
+#
+# Notes:
+#       .
+#----------------------------------------------------------
+
+p0952   BIOS_Function_01
+
+p0965
+
+p0a76
+
+p0aa2   20CycleDelay
+
+p0aa9
+
+p0b59
+
+p0b10
+
+p0b1c
+
+p0b4a
+
+p0b66
+
+p0b85
+
+p0ba4
+
+p0bd1   Read_ADC_Ch7
+
+b0be5
+
+p0bf0
+
+p0c08
+
+p0c31
+
+p0c69
+
+b0c91
+
+n0d51
+#----------------------------------------------------------
+# Function:
+#       SystemInitialize
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Starts initializing the system.
+#----------------------------------------------------------
+.
+p0d51   SystemInitialize
+
+k0d51   Initialise stack pointer
+k0d55   Clear R22-R52
+k0d62   Leave R53 (bootup mode)
+k0d64   Clear R54-RFF
+k0d73   Clear E820, E822 ... E82E
+
+k0d98   Move the disk head the full
+k0d9b   travel from track 79->0.
+k0daa   Try 8 times to read disk
+k0db7   If errors, try again
+k0db9   Jump to system start vector
+
+b0dc5   Str_DiskLoadError
+
+c0ddd
+k0ddd   Print error num and try again
+
+n0df6
+#----------------------------------------------------------
+# Function:
+#       LoadDiskOS
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Loads the first 8k of code into 4000 from track 1
+#        side 0, sector 1.
+#----------------------------------------------------------
+.
+p0df6   LoadDiskOS
+
+k0df6   Read from track 1
+k0df9   ..side 0
+k0dfb   ..sector 1
+k0dfe   Write to TPA
+k0e05   Keep going until read in 8k
+
+n0e0c
+#----------------------------------------------------------
+# Function:
+#       CheckDiskIsSystemDisk
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Checks that the disk in the drive is a valid W-30
+#        system disk.  Condition is:
+#
+#       side 0, track 0, sector 1:
+#           byte[04..07] = 'W-30'
+#           byte[0C] = b'xxxxxxx1
+#
+#       Then prints two strings, of 31 chars length, at
+#           byte[20]
+#           byte[40]
+#       In each case the 32nd byte is set to the standard
+#        string terminator, byte FE.
+#----------------------------------------------------------
+.
+p0e0c   CheckDiskIsSystemDisk
+
+k0e18   If no disk in drive, try SCSI option
+k0e1d   If we get here, SCSI load failed
+
+k0e22   Wait for disk to be ready
+k0e2f   Clear disk sector buffer
+k0e3c   Read in sector at track 0,
+k0e3e   .. side 0
+k0e40   .. sector 1
+k0e50   If no errors, check data
+k0e52   else try again...
+
+k0e56   If not special mode, check sector
+
+k0e5b   Check for 'W-30' chars in sector
+k0e5f   at offset 4 in sector
+k0e6d   If not, try SCSI
+
+k0e79   Is magic bit set?
+k0e7e   If not, try SCSI
+
+k0e90   Print startup string 1
+k0e96   Print startup string 2
+
+b0eb8   Str_BlankLine
+c0ed5
+
+p0ed7   TerminateDiskStringAndPrint
+
+p0ee1   Seek00SelectHeadGetStatus
+
+p0eed   TryBootFromSCSI
+k0ef2   Is SCSI chip fitted?
+
+b0f03   Str_PleaseInsertSystemDisk
+b0f20   Str_PleaseInsertW30Disk
+
+#----------------------------------------------------------
+# Function:
+#       BIOS_Function_17
+#
+# Args:
+#       .
+#
+# Returns:
+#       .
+#
+# Uses:
+#       .
+#
+# Notes:
+#       .
+#----------------------------------------------------------
+
+p0f3d   BIOS_Function_17
+
+#----------------------------------------------------------
+# Function:
+#       BIOS_Function_18
+#
+# Args:
+#       .
+#
+# Returns:
+#       .
+#
+# Uses:
+#       .
+#
+# Notes:
+#       .
+#----------------------------------------------------------
+
+p0f52   BIOS_Function_18
+
+#----------------------------------------------------------
+# Function:
+#       BIOS_Function_19
+#
+# Args:
+#       .
+#
+# Returns:
+#       .
+#
+# Uses:
+#       .
+#
+# Notes:
+#       .
+#----------------------------------------------------------
+
+p1074   BIOS_Function_19
+
+#----------------------------------------------------------
+# Function:
+#       BIOS_Function_1A
+#
+# Args:
+#       .
+#
+# Returns:
+#       .
+#
+# Uses:
+#       .
+#
+# Notes:
+#       .
+#----------------------------------------------------------
+
+p1099   BIOS_Function_1A
+
+#----------------------------------------------------------
+# Function:
+#       .
+#
+# Args:
+#       .
+#
+# Returns:
+#       .
+#
+# Uses:
+#       .
+#
+# Notes:
+#       .
+#----------------------------------------------------------
+
+p10a7   BIOS_Function_1B
+
+#----------------------------------------------------------
+# Function:
+#       .
+#
+# Args:
+#       .
+#
+# Returns:
+#       .
+#
+# Uses:
+#       .
+#
+# Notes:
+#       .
+#----------------------------------------------------------
+
+p10c4   BIOS_Function_1C
+
+#----------------------------------------------------------
+# Function:
+#       .
+#
+# Args:
+#       .
+#
+# Returns:
+#       .
+#
+# Uses:
+#       .
+#
+# Notes:
+#       .
+#----------------------------------------------------------
+
+p10e5   BIOS_Function_1D
+
+#----------------------------------------------------------
+# Function:
+#       .
+#
+# Args:
+#       .
+#
+# Returns:
+#       .
+#
+# Uses:
+#       .
+#
+# Notes:
+#       .
+#----------------------------------------------------------
+
+p1107   BIOS_Function_1E
+
+#----------------------------------------------------------
+# Function:
+#       .
+#
+# Args:
+#       .
+#
+# Returns:
+#       .
+#
+# Uses:
+#       .
+#
+# Notes:
+#       .
+#----------------------------------------------------------
+
+p11d4   BIOS_Function_1F
+
+#----------------------------------------------------------
+# Function:
+#       .
+#
+# Args:
+#       .
+#
+# Returns:
+#       .
+#
+# Uses:
+#       .
+#
+# Notes:
+#       .
+#----------------------------------------------------------
+
+p11e5   BIOS_Function_20
+
+#----------------------------------------------------------
+# Function:
+#       .
+#
+# Args:
+#       .
+#
+# Returns:
+#       .
+#
+# Uses:
+#       .
+#
+# Notes:
+#       .
+#----------------------------------------------------------
+
+p11eb   BIOS_Function_21
+
+#----------------------------------------------------------
+# Function:
+#       .
+#
+# Args:
+#       .
+#
+# Returns:
+#       .
+#
+# Uses:
+#       .
+#
+# Notes:
+#       .
+#----------------------------------------------------------
+
+p11f1   BIOS_Function_22
+
+#----------------------------------------------------------
+# Function:
+#       .
+#
+# Args:
+#       .
+#
+# Returns:
+#       .
+#
+# Uses:
+#       .
+#
+# Notes:
+#       .
+#----------------------------------------------------------
+
+p11f7   BIOS_Function_23
+
+p120c
+
+#----------------------------------------------------------
+# Function:
+#       .
+#
+# Args:
+#       .
+#
+# Returns:
+#       .
+#
+# Uses:
+#       .
+#
+# Notes:
+#       .
+#----------------------------------------------------------
+
+p1235   BIOS_Function_24
+
+#----------------------------------------------------------
+# Function:
+#       .
+#
+# Args:
+#       .
+#
+# Returns:
+#       .
+#
+# Uses:
+#       .
+#
+# Notes:
+#       .
+#----------------------------------------------------------
+
+p1264   BIOS_Function_25
+
+#----------------------------------------------------------
+# Function:
+#       .
+#
+# Args:
+#       .
+#
+# Returns:
+#       .
+#
+# Uses:
+#       .
+#
+# Notes:
+#       .
+#----------------------------------------------------------
+
+p1287   BIOS_Function_26
+
+p12c2
+
+#----------------------------------------------------------
+# Function:
+#       .
+#
+# Args:
+#       .
+#
+# Returns:
+#       .
+#
+# Uses:
+#       .
+#
+# Notes:
+#       .
+#----------------------------------------------------------
+
+p12c5   BIOS_Function_27
+
+p1325
+
+n132d
+#----------------------------------------------------------
+# Function:
+#       BIOS_Function_28 -- Get Sample Plot Data
+#
+# Args:
+#       R34   = ptr to buffer 
+#       R4C   = samples to skip over each cycle
+#       R4D   = scale value (see BIOS_Function_29)
+#       R4E   = number of samples to read
+#       R54   = Wave RAM base address
+#       R56   = Wave RAM block
+#
+# Returns:
+#       Sample data ready to plot on the LCD in *R34
+#
+# Uses:
+#       R5A, R56, R24. R28, R29, and clobbers most args.
+#
+# Notes:
+#       Reads samples from the given wave data, with both
+#        horizontal (sample skipping) and vertical (value scaling)
+#        zoom.
+#----------------------------------------------------------
+.
+p132d   BIOS_Function_28_Get_Sample_Plot_Points
+
+n136f
+#----------------------------------------------------------
+# Function:
+#       BIOS_Function_29 -- Zoom Sample Data
+#
+# Args:
+#       R29:R28 = 12-bit sample value from wave RAM (right-aligned)
+#       R4D     = scale value, scale factor = 2^R4D
+#
+# Returns:
+#       R29 = scaled byte value for plotting, 00-46, 4A = out of range
+#
+# Uses:
+#       R28-R2B
+#
+# Notes:
+#       My guess is this function takes a sample in R29:R28 read
+#         from the wave RAM, then scales it according to R4D by 
+#         a left-shift by R4D places (hence 2^R4D), then does a 
+#         range check and noodle to get the value between 00-46.
+#       Other values produce a result of 4A ("overrange"?)
+#----------------------------------------------------------
+.
+p136f   BIOS_Function_29_Zoom_Sample_Data
+
+#----------------------------------------------------------
+# Function:
+#       .
+#
+# Args:
+#       .
+#
+# Returns:
+#       .
+#
+# Uses:
+#       .
+#
+# Notes:
+#       .
+#----------------------------------------------------------
+
+p13a1   BIOS_Function_2A
+
+n13c0
+#----------------------------------------------------------
+# Function:
+#       BIOS_Function_2B -- Load OS from SCSI
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Attempts to load the OS from a SCSI disk
+#----------------------------------------------------------
+.
+p13c0   BIOS_Function_2B_Load_OS_From_SCSI
+
+n13d8
+#----------------------------------------------------------
+# Function:
+#       BIOS_Function_2C -- Initialize SCSI data
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       R34, R24
+#
+# Notes:
+#       Initialises the SCSI data blocks:
+#        603E-606A = 00
+#        606B-60A1 = FF
+#----------------------------------------------------------
+.
+p13d8   BIOS_Function_2C_Init_SCSI_Data
+
+n13f2
+#----------------------------------------------------------
+# Function:
+#       BIOS_Function_2D -- Scan SCSI chain
+#
+# Args:
+#       none
+#
+# Returns:
+#       Carry: set = no disks found
+#              clear = disk found (ID in R24)
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Scans the SCSI chain for attached devices, both disk
+#        and CDROM.
+#----------------------------------------------------------
+.
+p13f2   BIOS_Function_2D_Scan_SCSI_Chain
+
+n143f
+#----------------------------------------------------------
+# Function:
+#       ProbeSCSIDevice
+#
+# Args:
+#       none
+#
+# Returns:
+#       R24 = device type (0=disk, 5 = CDROM)
+#       Carry: set = no device found
+#              clear = device found
+#
+# Uses:
+#       several
+#
+# Notes:
+#       Sends an INQUIRY command to the selected SCSI device
+#        and saves the device type in the SCSI device
+#        descriptor block for later use.
+#----------------------------------------------------------
+.
+p143f   ProbeSCSIDevice
+
+n14af
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_2E -- Check SCSI Boot Disk
+#
+# Args:
+#       none
+#
+# Returns:
+#       Carry: set = bad disk
+#              clear = good disk
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Checks of the current SCSI disk is:
+#       (a) 512-byte sectors
+#       (b) has "* ROLAND S-550 *" in first sector
+#----------------------------------------------------------
+.
+p14af   BIOS_Function_2E_SCSI_Check_Valid_Boot_Disk
+
+b150d   String_Roland_S-550
+
+n151d
+#----------------------------------------------------------
+# Function:
+#       BIOS_Function_2F -- Read SCSI Unit Capacity
+#
+# Args:
+#       none
+#
+# Returns:
+#       Carry:  set - failed
+#               clear - OK
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Reads the current SCSI device capacity, storing the
+#        result in the sector buffer:
+#
+#       7A00 (MSB)  \
+#        ..         > Number of Logical Blocks
+#       7A03 (LSB)  /
+#       7A04 (MSB)  \
+#        ..         > Block length (bytes)
+#       7A07 (LSB)  /
+#----------------------------------------------------------
+.
+p151d   BIOS_Function_2F_Get_SCSI_Disk_Capacity
+
+n155a
+# Delay_49ms
+#
+# Works out from 4000h iterations of the loop.
+# Loop states = 12 (dec = 4, jne = 8), so a maximum
+#  of 196,608 machine states, roughly.
+# At 12MHz clock, proc uses THREE clock cycles per
+#  state, so that gives:
+#       196,608 * 3 / 12e6 = approx 49ms
+.
+p155a   Delay_49ms
+
+n1565
+#----------------------------------------------------------
+# Function:
+#       SystemCheckProgram
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Allows system checks to be performed on various
+#        parts of the system.
+#----------------------------------------------------------
+.
+p1565   SystemCheckProgram
+l156c   SysCheckMainLoop
+
+k1573   Select UMP1, LMP0
+k157b   Turn off LEDs
+
+b1595
+b15b8
+b15ca
+b15dc
+b15f0
+b1600
+b160c
+b1617
+b1622
+b162d
+b1638
+
+c1639
+
+b1663
+w1664   CheckJumpTable
+
+n166c
+#
+# Check: Controllers
+#
+.
+c166c   Check_Controllers
+b166f
+b1682
+b1690
+b169e
+b16ac
+b16be
+b16cf
+b16de
+b16ed
+b16fd
+b170c
+
+c170d
+
+n1761
+#----------------------------------------------------------
+# Function:
+#       ReadPitchBender
+#
+# Args:
+#       R24 = 00 - read +ve
+#       R24 = FF - read -ve
+#
+# Returns:
+#       Stores current value in global data structure.
+#
+# Uses:
+#       R2E, R34
+#
+# Notes:
+#       Sets the bender polarity then reads the appropriate
+#        ADC channel (ch.0)
+#----------------------------------------------------------
+.
+p1761   ReadPitchBender
+
+n176e
+#----------------------------------------------------------
+# Function:
+#       ReadADCControllerChannel
+#
+# Args:
+#       R34 - channel to read
+#
+# Returns:
+#       Stores result in global control structure.
+#
+# Uses:
+#       R02, R34, R28, R29
+#
+# Notes:
+#       Reads one of ADC channel 0, 1, 2 or 3 and stores
+#        the result in the appropriate entry in the 
+#        global control array.
+#----------------------------------------------------------
+.
+p176e   ReadADCControllerChannel
+b1784
+
+n1789
+#----------------------------------------------------------
+# Function:
+#       ReadControlSwitches
+#
+# Args:
+#       R24 - bitfield specifying which switch to test
+#               (see notes.txt)
+#
+# Returns:
+#       none
+#
+# Uses:
+#       R50
+#
+# Notes:
+#       Reads specified switch and displays 00 or FF on LCD
+#----------------------------------------------------------
+.
+p1789   ReadControlSwitches
+
+n1797
+#----------------------------------------------------------
+# Function:
+#       ReadControlDials
+#
+# Args:
+#       none
+#
+# Returns:
+#       results in global control array
+#
+# Uses:
+#       R34, R4C
+#
+# Notes:
+#       Reads both cursor and value dials and displays current
+#        value on LCD.
+#----------------------------------------------------------
+.
+p1797   ReadControlDials
+
+n17aa
+#----------------------------------------------------------
+# Function:
+#       ReadRotaryEncoder
+#
+# Args:
+#       R34 = encoder to read (0=cursor, 1=value)
+#
+# Returns:
+#       stores new value in global control array
+#       R50 = new value
+#
+# Uses:
+#       several
+#
+# Notes:
+#       Checks the given encoder to see if it has changed
+#        position, and increments or decrements the current
+#        value by 1.  **** Therefore we may miss steps!!!!
+#----------------------------------------------------------
+.
+p17aa   ReadRotaryEncoder
+
+b17eb   EncoderChangeBit
+b17ed   EncoderDirectionBit
+
+n17ef
+#----------------------------------------------------------
+# Character generator data is loaded into the LCD at boot time.
+# Each character needs 8 bytes to define each row of pixels for
+#  that character, where each character cell is 6 pixels wide 
+#  by 8 pixels deep.
+# This table is for the full 256 character set, for characters
+#  00 to FF.
+#----------------------------------------------------------
+.
+b17ef   LCD_CharacterGeneratorData
+b17f7
+b17ff
+b1807
+b180f
+b1817
+b181f
+b1827
+b182f
+b1837
+b183f
+b1847
+b184f
+b1857
+b185f
+b1867
+b186f
+b1877
+b187f
+b1887
+b188f
+b1897
+b189f
+b18a7
+b18af
+b18b7
+b18bf
+b18c7
+b18cf
+b18d7
+b18df
+b18e7
+b18ef
+b18f7
+b18ff
+b1907
+b190f
+b1917
+b191f
+b1927
+b192f
+b1937
+b193f
+b1947
+b194f
+b1957
+b195f
+b1967
+b196f
+b1977
+b197f
+b1987
+b198f
+b1997
+b199f
+b19a7
+b19af
+b19b7
+b19bf
+b19c7
+b19cf
+b19d7
+b19df
+b19e7
+b19ef
+b19f7
+b19ff
+b1a07
+b1a0f
+b1a17
+b1a1f
+b1a27
+b1a2f
+b1a37
+b1a3f
+b1a47
+b1a4f
+b1a57
+b1a5f
+b1a67
+b1a6f
+b1a77
+b1a7f
+b1a87
+b1a8f
+b1a97
+b1a9f
+b1aa7
+b1aaf
+b1ab7
+b1abf
+b1ac7
+b1acf
+b1ad7
+b1adf
+b1ae7
+b1aef
+b1af7
+b1aff
+b1b07
+b1b0f
+b1b17
+b1b1f
+b1b27
+b1b2f
+b1b37
+b1b3f
+b1b47
+b1b4f
+b1b57
+b1b5f
+b1b67
+b1b6f
+b1b77
+b1b7f
+b1b87
+b1b8f
+b1b97
+b1b9f
+b1ba7
+b1baf
+b1bb7
+b1bbf
+b1bc7
+b1bcf
+b1bd7
+b1bdf
+b1be7
+b1bef
+b1bf7
+b1bff
+b1c07
+b1c0f
+b1c17
+b1c1f
+b1c27
+b1c2f
+b1c37
+b1c3f
+b1c47
+b1c4f
+b1c57
+b1c5f
+b1c67
+b1c6f
+b1c77
+b1c7f
+b1c87
+b1c8f
+b1c97
+b1c9f
+b1ca7
+b1caf
+b1cb7
+b1cbf
+b1cc7
+b1ccf
+b1cd7
+b1cdf
+b1ce7
+b1cef
+b1cf7
+b1cff
+b1d07
+b1d0f
+b1d17
+b1d1f
+b1d27
+b1d2f
+b1d37
+b1d3f
+b1d47
+b1d4f
+b1d57
+b1d5f
+b1d67
+b1d6f
+b1d77
+b1d7f
+b1d87
+b1d8f
+b1d97
+b1d9f
+b1da7
+b1daf
+b1db7
+b1dbf
+b1dc7
+b1dcf
+b1dd7
+b1ddf
+b1de7
+b1def
+b1df7
+b1dff
+b1e07
+b1e0f
+b1e17
+b1e1f
+b1e27
+b1e2f
+b1e37
+b1e3f
+b1e47
+b1e4f
+b1e57
+b1e5f
+b1e67
+b1e6f
+b1e77
+b1e7f
+b1e87
+b1e8f
+b1e97
+b1e9f
+b1ea7
+b1eaf
+b1eb7
+b1ebf
+b1ec7
+b1ecf
+b1ed7
+b1edf
+b1ee7
+b1eef
+b1ef7
+b1eff
+b1f07
+b1f0f
+b1f17
+b1f1f
+b1f27
+b1f2f
+b1f37
+b1f3f
+b1f47
+b1f4f
+b1f57
+b1f5f
+b1f67
+b1f6f
+b1f77
+b1f7f
+b1f87
+b1f8f
+b1f97
+b1f9f
+b1fa7
+b1faf
+b1fb7
+b1fbf
+b1fc7
+b1fcf
+b1fd7
+b1fdf
+b1fe7
+
+n1fef
+###########################################################
+.
+b1fef
+
+n1ffe
+###########################################################
+#
+# Special Memory Locations
+#
+###########################################################
+.
+b1ffe   Port_3
+
+b1fff   Port_4
+
+n2000
+#----------------------------------------------------------
+# Interrupt Vector Table
+#----------------------------------------------------------
+.
+w2000   Timer_Overflow_IntVect_2000
+
+w2002   AD_Conversion_IntVect_2002
+
+w2004   HSI_Data_Available_IntVect_2004
+
+w2006   High_Speed_Outputs_IntVect_2006
+
+w2008   HSI.0_IntVect_2008
+
+w200A   Software_Timers_IntVect_200A
+
+w200C   Serial_Port_IntVect_200C
+
+w200E   External_Int_IntVect_200E
+
+w2010   Software_Trap_Vector_2010
+
+# ------------------------------------------------
+
+b2012   Reserved
+
+b2018   Chip_Configuration_Byte
+
+b2019   Reserved
+
+b201a   Self_Jump_Opcode
+
+b201c   Reserved
+
+b2020   Security_Key
+
+b2030   Reserved
+
+w2070   Signature_Word
+
+b2072   Reserved
+
+n2080
+#----------------------------------------------------------
+# Reset Location - start execution here
+#----------------------------------------------------------
+.
+c2080   Reset
+
+##################################################
+#
+# Begin Main User Code
+#
+##################################################
+
+b2083
+
+n2102
+#----------------------------------------------------------
+# Start of BIOS boot code
+#----------------------------------------------------------
+.
+c2102   BOOTStart
+
+k2103   Select UMP1, LMP0
+k210f   Turn off LEDs
+
+
+
+
+
+
+#----------------------------------------------------------
+# ???
+#----------------------------------------------------------
+b21aa
+
+
+###########################################################
+###########################################################
+#
+#
+#             Monitor
+#
+#
+###########################################################
+###########################################################
+
+n21ba
+#----------------------------------------------------------
+# Function:
+#       MonitorMain
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       This is the built-in monitor program.  I *believe*
+#        you get here by holding down '0' at power-up.
+#----------------------------------------------------------
+.
+p21ba   MonitorMain
+
+#----------------------------------------------------------
+# Table to monitor commands
+#----------------------------------------------------------
+b21f8   MonCmds
+
+#----------------------------------------------------------
+# Monitor command jump table
+#----------------------------------------------------------
+w2200   MonHandlerTable
+
+c220e
+n220e
+#----------------------------------------------------------
+# '\' -- Prints a slash prompt and returns to main loop
+#----------------------------------------------------------
+.
+l220e   Cmd_Slash
+
+n2213
+#----------------------------------------------------------
+# 'R' -- Read memory
+#
+#   R addr count
+#----------------------------------------------------------
+.
+l2213   Cmd_R
+
+n2225
+#----------------------------------------------------------
+# 'W' -- Write memory
+#
+#   W addr count b0 b1 b2 ...
+#----------------------------------------------------------
+.
+l2225   Cmd_W
+
+n2236
+#----------------------------------------------------------
+# 'G' -- Go (execute) at address
+#
+#       G addr w_arg (placed in R1C)
+#----------------------------------------------------------
+.
+l2236   Cmd_G
+
+#----------------------------------------------------------
+s2250   MonitorVersionString
+#----------------------------------------------------------
+
+c2286
+n2286
+#----------------------------------------------------------
+# 'M' -- Prints out monitor version string
+#----------------------------------------------------------
+.
+l2286   Cmd_M
+
+n223f
+#----------------------------------------------------------
+# 'I' -- Fills memory with byte
+#
+#       I addr count byte
+#----------------------------------------------------------
+.
+l223f   Cmd_I
+
+n2296
+#----------------------------------------------------------
+# 'S' -- Select Memory Page
+#
+#       SL0..7      select low page 0..7
+#       SHB         select high base page   (page 1)
+#       SH0|1       select high page 0 or 1 (page 2 or 3)
+#----------------------------------------------------------
+.
+l2296   Cmd_S
+
+n22da
+#----------------------------------------------------------
+# Function:
+#       ReadHexWord
+#
+# Args:
+#       none
+#
+# Returns:
+#       R1C = (word) read in
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Reads in two bytes (see below) and returns them as
+#        a word value.
+#----------------------------------------------------------
+.
+p22da   ReadHexWord
+
+n22e5
+#----------------------------------------------------------
+# Function:
+#       ReadHexByte
+#
+# Args:
+#       none
+#
+# Returns:
+#       R1A = byte read in
+#
+# Uses:
+#       several
+#
+# Notes:
+#       Reads a two-character hex string 0-9, A-F and returns
+#        byte value.
+#----------------------------------------------------------
+.
+p22e5   ReadHexByte
+
+n2306
+#----------------------------------------------------------
+# Function:
+#       Serial_putchar
+#
+# Args:
+#       R1A = byte to transmit
+#
+# Returns:
+#       nothing
+#
+# Uses:
+#       R11, R07
+#
+# Notes:
+#       This function blocks while the character is being
+#        trasmitted.
+#----------------------------------------------------------
+.
+p2306   Serial_putchar
+
+n230d
+#----------------------------------------------------------
+# Function:
+#       PrintHexNum
+#
+# Args:
+#       R1A = byte to print
+#
+# Returns:
+#       nothing
+#
+# Uses:
+#       R1A, R1B, R20
+#
+# Notes:
+#       Prints out the given number as a two-digit hex 
+#        number.  Uses Serial_putchar to transmit to the
+#        serial port.
+#----------------------------------------------------------
+.
+p230d   PrintHexNum
+
+
+
+
+
+#----------------------------------------------------------
+
+b2328   BitMaskTable
+
+b2330   InvBitMaskTable
+
+#----------------------------------------------------------
+
+b2338   Padding
+
+n2400
+###########################################################
+###########################################################
+#
+#
+#             Second BIOS Jump Table
+#
+#
+###########################################################
+###########################################################
+.
+c2400   BIOS_SynthEngineFunctionTable
+
+###########################################################
+###########################################################
+#
+#
+#             BIOS pt.II
+#
+#
+###########################################################
+###########################################################
+
+###########################################################
+###########################################################
+#
+#
+#             Memory Management Functions
+#
+#
+###########################################################
+###########################################################
+
+n251a
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_00 -- Select UMP 1
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       R3E
+#
+# Notes:
+#       Selects upper memory page 1.
+#----------------------------------------------------------
+.
+p251a   BIOS_Synth_Function_00_Mem_UMP_1
+
+n252d
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_01 -- Select UMP 2
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       R3E
+#
+# Notes:
+#       Selects upper memory page 2.
+#----------------------------------------------------------
+.
+p252d   BIOS_Synth_Function_01_Mem_UMP_2
+
+n2540
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_02 -- Select UMP 3
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       R3E
+#
+# Notes:
+#       Selects upper memory page 3.
+#----------------------------------------------------------
+.
+p2540   BIOS_Synth_Function_02_Mem_UMP_3
+
+n2553
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_03 -- Set Lower Memory Page
+#
+# Args:
+#       R24 = lower memory page number (0..7)
+#
+# Returns:
+#       none
+#
+# Uses:
+#       R3E
+#
+# Notes:
+#       Selects which lower memory page to make visible to
+#        the range 0100-2000.
+#----------------------------------------------------------
+.
+p2553   BIOS_Synth_Function_03_Mem_Select_LMP
+
+n2569
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_04 -- Select LMP 0 and call func
+#
+# Args:
+#       R58 = ptr to function
+#
+# Returns:
+#       none
+#
+# Uses:
+#       R3E
+#
+# Notes:
+#       Selects LMP 0 and calls the given function.
+#----------------------------------------------------------
+.
+p2569   BIOS_Synth_Function_04_Mem_LMP0_And_Call
+
+n2586
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_05 -- Select LMP 1 and call func
+#
+# Args:
+#       R58 = ptr to function
+#
+# Returns:
+#       none
+#
+# Uses:
+#       R3E
+#
+# Notes:
+#       Selects LMP 1 and calls the given function.
+#----------------------------------------------------------
+.
+p2586   BIOS_Synth_Function_05_Mem_LMP1_And_Call
+
+n2598
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_06 -- Select LMP 2 and call func
+#
+# Args:
+#       R58 = ptr to function
+#
+# Returns:
+#       none
+#
+# Uses:
+#       R3E
+#
+# Notes:
+#       Selects LMP 2 and calls the given function.
+#----------------------------------------------------------
+.
+p2598   BIOS_Synth_Function_06_Mem_LMP2_And_Call
+
+n25aa
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_07 -- Select LMP 3 and call func
+#
+# Args:
+#       R58 = ptr to function
+#
+# Returns:
+#       none
+#
+# Uses:
+#       R3E
+#
+# Notes:
+#       Selects LMP 3 and calls the given function.
+#----------------------------------------------------------
+.
+p25aa   BIOS_Synth_Function_07_Mem_LMP3_And_Call
+
+n25bc
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_08 -- Select LMP 4 and call func
+#
+# Args:
+#       R58 = ptr to function
+#
+# Returns:
+#       none
+#
+# Uses:
+#       R3E
+#
+# Notes:
+#       Selects LMP 4 and calls the given function.
+#----------------------------------------------------------
+.
+p25bc   BIOS_Synth_Function_08_Mem_LMP4_And_Call
+
+n25ce
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_09 -- Select LMP 5 and call func
+#
+# Args:
+#       R58 = ptr to function
+#
+# Returns:
+#       none
+#
+# Uses:
+#       R3E
+#
+# Notes:
+#       Selects LMP 5 and calls the given function.
+#----------------------------------------------------------
+.
+p25ce   BIOS_Synth_Function_09_Mem_LMP5_And_Call
+
+n25e0
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_0A -- Select LMP 6 and call func
+#
+# Args:
+#       R58 = ptr to function
+#
+# Returns:
+#       none
+#
+# Uses:
+#       R3E
+#
+# Notes:
+#       Selects LMP 6 and calls the given function.
+#----------------------------------------------------------
+.
+p25e0   BIOS_Synth_Function_0A_Mem_LMP6_And_Call
+
+n25f2
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_0B -- Select LMP 7 and call func
+#
+# Args:
+#       R58 = ptr to function
+#
+# Returns:
+#       none
+#
+# Uses:
+#       R3E
+#
+# Notes:
+#       Selects LMP 7 and calls the given function.
+#----------------------------------------------------------
+.
+p25f2   BIOS_Synth_Function_0B_Mem_LMP7_And_Call
+
+n2604
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_0C -- Select LMP and call func
+#
+# Args:
+#       R24 = LMP selector
+#       R58 = ptr to function to call
+#
+# Returns:
+#       none
+#
+# Uses:
+#       R3E
+#
+# Notes:
+#       Selects the given LMP then calls the given function.
+#----------------------------------------------------------
+.
+p2604   BIOS_Synth_Function_0C_Mem_Select_LMP_And_Call
+
+n261f
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_0D -- Set PSR and call func
+#
+# Args:
+#       R24 = new PSR value
+#       R58 = ptr to function
+#
+# Returns:
+#       none
+#
+# Uses:
+#       none
+#
+# Notes:
+#       Writes the new value directly into the PSr then
+#        calls the given function.
+#----------------------------------------------------------
+.
+p261f   BIOS_Synth_Function_0D_Mem_Load_PSR_And_Call
+
+###########################################################
+###########################################################
+
+n262a
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_0E -- Load LCD CharGen
+#
+# Args:
+#       R28 = start character
+#       R29 = num chars to load
+#       R34 = ptr to CG data table
+#
+# Returns:
+#       none
+#
+# Uses:
+#       R46, R49
+#
+# Notes:
+#       Loads the LCD CG user RAM from the given data
+#        table. Each character needs 8 bytes of data.
+#----------------------------------------------------------
+.
+p262a   BIOS_Synth_Function_0E_Load_LCD_CharGen
+
+#----------------------------------------------------------
+# Function:
+#       .
+#
+# Args:
+#       .
+#
+# Returns:
+#       .
+#
+# Uses:
+#       .
+#
+# Notes:
+#       .
+#----------------------------------------------------------
+p2647   BIOS_Synth_Function_0F
+
+#----------------------------------------------------------
+# Function:
+#       .
+#
+# Args:
+#       .
+#
+# Returns:
+#       .
+#
+# Uses:
+#       .
+#
+# Notes:
+#       .
+#----------------------------------------------------------
+p2683   BIOS_Synth_Function_10
+
+n26a1
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_11 -- PutChar
+#
+# Args:
+#       R4C = column
+#       R4D = row
+#       R4E = mode (0 = normal, 1 = inverse)
+#       R50 = character code
+#
+# Returns:
+#       none
+#
+# Uses:
+#       R49, LCD_PutChar
+#
+# Notes:
+#       none
+#----------------------------------------------------------
+.
+p26a1   BIOS_Synth_Function_11_PutChar
+
+n26b1
+#----------------------------------------------------------
+# Function:
+#       CalcCursorPosition
+#
+# Args:
+#       R4C = column
+#       R4D = row
+#
+# Returns:
+#       R46 = LCD memory address
+#
+# Uses:
+#       R48, R46
+#
+# Notes:
+#       Position = (40*row)+column.
+#       Also stores value in 6008.
+#----------------------------------------------------------
+.
+p26b1   CalcCursorPosition
+
+n26c8
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_13 -- Print String Array
+#
+# Args:
+#       R54 = ptr to start of string array
+#
+# Returns:
+#       none
+#
+# Uses:
+#       lots, jumps into BSF_14 at PrintStringAtRow
+#
+# Notes:
+#       .
+#----------------------------------------------------------
+.
+p26c8   BIOS_Synth_Function_13_Print_String_Array
+
+n26d5
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_14 -- PrintString
+#
+# Args:
+#       R54 = ptr to string data:
+#           [0] = column
+#           [1] = row
+#           [2] = mode
+#           [3...] = string, terminated by FEh
+#
+# Returns:
+#       none
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Displays given string on LCD.
+#----------------------------------------------------------
+.
+p26d5   BIOS_Synth_Function_14_Print_String
+
+p26d8   PrintStringAtRow
+
+n26de
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_15 -- Print String At (Row,Col)
+#
+# Args:
+#       R4C = column
+#       R4D = row
+#       R4E = mode (0 = normal, 1 = inverse)
+#
+# Returns:
+#       none
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Displays 
+#----------------------------------------------------------
+.
+p26de   BIOS_Synth_Function_15_Print_String_At
+
+l26e0   BSF15_Loop
+l270b   BSF15_SkipToEndOfString
+l2713   BSF15_End
+
+n2714
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_12_PutChar After Call
+#
+# Args:
+#       <ret addr> == char to print
+#
+# Returns:
+#       none
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       .
+#----------------------------------------------------------
+.
+p2714   BIOS_Synth_Function_12_PutChar_After_Call
+
+n271d
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_18 -- Wrapper around BSF_15
+#
+# Args:
+#       R4C = column
+#       R4D = row
+#       R4E = mode (0 = normal, 1 = inverse)
+#       R54 = ptr to string characters
+#
+# Returns:
+#       .
+#
+# Uses:
+#       .
+#
+# Notes:
+#       Simple wrapper around BSF_15
+#----------------------------------------------------------
+.
+p271d   BIOS_Synth_Function_18_Print_RawString_After_Call
+
+n2723
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_17 -- Print String After Callsite
+#
+# Args:
+#       <ret addr> is pointer to string, followed by continuation
+#
+# Returns:
+#       none
+#
+# Uses:
+#       R54, etc
+#
+# Notes:
+#       Uuggghh!  Ok, this function pops the return address
+#        as the address of the string to pass to BSF_15 (see
+#        above).  Then, BSF_15 changes R54 to point to the 
+#        next location _after_ the string, which is where
+#        we "return" to.  So, the call site should look
+#        something like:
+#
+#       lcall BIOS_Synth_Function_17
+#       db string...
+#       more code
+#
+#       Is it neat?  Is it art?  Or a nasty, nasty hack???
+#----------------------------------------------------------
+.
+p2723   BIOS_Synth_Function_17_Print_String_After_Call
+
+n2729
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_16 -- Print String Array After Call
+#
+# Args:
+#       <ret addr> points to string array, ends with FF
+#
+# Returns:
+#       none
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       See also BSF_17.  The arrar is an array of strings, 
+#        terminated by a single FF byte.
+#----------------------------------------------------------
+.
+p2729   BIOS_Synth_Function_16_Print_String_Array_After_Call
+
+n272f
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_19 -- Print Hex Word
+#
+# Args:
+#       R28:29 = word to print in hex format
+#       R4C = column
+#       R4D = row
+#       R4E = mode (0 = normal, 1 = inverse)
+#       
+# Returns:
+#       none
+#
+# Uses:
+#       R50
+#
+# Notes:
+#       none
+#----------------------------------------------------------
+.
+p272f   BIOS_Synth_Function_19_Print_Hex_Word
+
+n2737
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_1A -- Print Hex Byte
+#
+# Args:
+#       R50 = hex byte to print
+#       R4C = column
+#       R4D = row
+#       R4E = mode (0 = normal, 1 = inverse)
+#
+# Returns:
+#       none
+#
+# Uses:
+#       .
+#
+# Notes:
+#       Prints 2-digit hex number at current text position
+#----------------------------------------------------------
+.
+p2737   BIOS_Synth_Function_1A_Print_Hex_Num
+b2753   HexCharTable
+
+n2763
+#----------------------------------------------------------
+# Function:
+#       .
+#
+# Args:
+#       .
+#
+# Returns:
+#       .
+#
+# Uses:
+#       .
+#
+# Notes:
+#       .
+#----------------------------------------------------------
+.
+p2763   BIOS_Synth_Function_1B
+
+p277d   BIOS_Synth_Function_1C
+
+p27e2
+
+b27f2
+b27f5
+
+n27f8
+#----------------------------------------------------------
+# Function:
+#       LCD_SetTextPage_0
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Sets the text home address to 0A00, and clears R20.2
+#----------------------------------------------------------
+.
+p27f8   LCD_SetTextPage_0
+
+n2807
+#----------------------------------------------------------
+# Function:
+#       LCD_SetTextPage_1
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Sets text home page to 0C00, and sets R20.2
+#----------------------------------------------------------
+.
+p2807   LCD_SetTextPage_1
+
+n2816
+#----------------------------------------------------------
+# Function:
+#       .
+#
+# Args:
+#       .
+#
+# Returns:
+#       .
+#
+# Uses:
+#       .
+#
+# Notes:
+#       .
+#----------------------------------------------------------
+.
+p2816   BIOS_Synth_Function_1D
+
+n2842
+#----------------------------------------------------------
+# Function:
+#       .
+#
+# Args:
+#       .
+#
+# Returns:
+#       .
+#
+# Uses:
+#       .
+#
+# Notes:
+#       .
+#----------------------------------------------------------
+.
+p2842   BIOS_Synth_Function_1E
+
+
+###########################################################
+###########################################################
+#
+#
+#             LCD Driver
+#
+#
+###########################################################
+###########################################################
+
+n285d
+#----------------------------------------------------------
+# Function:
+#       LCD_SetTextHomeAddress
+#
+# Args:
+#       R47:46 = (word) text home address
+#
+# Returns:
+#       none
+#
+# Uses:
+#       R48
+#
+# Notes:
+#       Sets the text home address to the given word.
+#----------------------------------------------------------
+.
+p285d   LCD_SetTextHomeAddress
+
+n2867
+#----------------------------------------------------------
+# Function:
+#       LCD_ResetTextArea
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       R46-48
+#
+# Notes:
+#       Sets the text area to 40 columns
+#----------------------------------------------------------
+.
+p2867   LCD_ResetTextArea
+
+n2870
+#----------------------------------------------------------
+# Function:
+#       LCD_SetGfxHomeAddress
+#
+# Args:
+#       R47:46 = (word) gfx home address
+#
+# Returns:
+#       none
+#
+# Uses:
+#       R48
+#
+# Notes:
+#       Sets the graphics home address to the given word.
+#----------------------------------------------------------
+.
+p2870   LCD_SetGfxHomeAddress
+
+n287a
+#----------------------------------------------------------
+# Function:
+#       LCD_ResetGfxArea
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       R46-48
+#
+# Notes:
+#       Sets the graphics area to 40.
+#----------------------------------------------------------
+.
+p287a   LCD_ResetGfxArea
+
+n2883
+#----------------------------------------------------------
+# Function:
+#       LCD_SetOffsetReg
+#
+# Args:
+#       R47:46 = (word) offset
+#
+# Returns:
+#       none
+#
+# Uses:
+#       R48
+#
+# Notes:
+#       Sets the LCD controller offset register.
+#----------------------------------------------------------
+.
+p2883   LCD_SetOffsetReg
+
+n2888
+#----------------------------------------------------------
+# Function:
+#       LCD_SetCursorPos
+#
+# Args:
+#       R4C = column
+#       R4D = row
+#
+# Returns:
+#       none
+#
+# Uses:
+#       R46-48
+#
+# Notes:
+#       Sets the cursor position to the given coordinate.
+#----------------------------------------------------------
+.
+p2888   LCD_SetCursorPos
+
+n2899
+#----------------------------------------------------------
+# Function:
+#       LCD_UpdateDisplayMode
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       R48
+#
+# Notes:
+#       Copies the memory display mode value to the LCD
+#----------------------------------------------------------
+.
+p2899   LCD_UpdateDisplayMode
+
+n28a3
+#----------------------------------------------------------
+# Function:
+#       LCD_SetCursorSize
+#
+# Args:
+#       R48 = num.cursor lines (1..8)
+#
+# Returns:
+#       none
+#
+# Uses:
+#       .
+#
+# Notes:
+#       Sets the number of lines for the display cursor
+#----------------------------------------------------------
+.
+p28a3   LCD_SetCursorSize
+
+n28a8
+#----------------------------------------------------------
+# Function:
+#       LCD_PutChar
+#
+# Args:
+#       R49 = character
+#       R47:46 = (word) address
+#
+# Returns:
+#       none
+#
+# Uses:
+#       R48
+#
+# Notes:
+#       Sets the LCD address register, then writes
+#        data byte to LCD.
+#----------------------------------------------------------
+.
+p28a8   LCD_PutChar
+
+n28af
+#----------------------------------------------------------
+# Function:
+#       LCD_WriteByteAutoInc
+#
+# Args:
+#       R49 = byte
+#
+# Returns:
+#       none
+#
+# Uses:
+#       R48
+#
+# Notes:
+#       Writes given byte into display memory and 
+#        increments auto data pointer.
+#----------------------------------------------------------
+.
+p28af   LCD_WriteByteAutoInc
+
+n28b4
+#----------------------------------------------------------
+# Function:
+#       LCD_Peek
+#
+# Args:
+#       R47:46 = (word) address
+#
+# Returns:
+#       R49 = byte from LCD memory
+#
+# Uses:
+#       R48
+#
+# Notes:
+#       Reads a byte from the LCD display memory.
+#----------------------------------------------------------
+.
+p28b4   LCD_Peek
+
+n28bb
+#----------------------------------------------------------
+# Function:
+#       LCD_ModeSet
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       R48
+#
+# Notes:
+#       Reads byte from 600A, makes it a mode-set command
+#        and writes it to LCD.
+#----------------------------------------------------------
+.
+p28bb   LCD_ModeSet
+
+n28c5
+#----------------------------------------------------------
+# Function:
+#       LCD_WaitReady
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       R44
+#
+# Notes:
+#       Blocks until the LCD is ready for more data/cmds.
+#----------------------------------------------------------
+.
+p28c5   LCD_WaitReady
+
+n28d3
+#----------------------------------------------------------
+# Function:
+#       LCD_PokeADP
+#
+# Args:
+#       R49 = byte to write
+#       R48 = write command (C0, C2 or C4)
+#
+# Returns:
+#       none
+#
+# Uses:
+#       .
+#
+# Notes:
+#       Waits for LCD, then writes byte to LCD with
+#        given write mode:
+#       C0 = write, ADP++
+#       C2 = write, ADP--
+#       C4 = write, no change to ADP
+#        at address given in data pointer.
+#----------------------------------------------------------
+.
+p28d3   LCD_PokeADP
+
+n28dc
+#----------------------------------------------------------
+# Function:
+#       LCD_SetAddrReg
+#
+# Args:
+#       R47:46 = 16-bit address
+#
+# Returns:
+#       none
+#
+# Uses:
+#       .
+#
+# Notes:
+#       Sets the LCD address register
+#----------------------------------------------------------
+.
+p28dc   LCD_SetAddrReg
+
+n28df
+#----------------------------------------------------------
+# Function:
+#       LCD_WriteWord
+#
+# Args:
+#       R47:46 - word to write to LCD
+#       R48 - LCD command to write
+#
+# Returns:
+#       none
+#
+# Uses:
+#       .
+#
+# Notes:
+#       Writes the given words and command to the LCD.
+#----------------------------------------------------------
+.
+p28df   LCD_WriteWord
+
+n28ed
+#----------------------------------------------------------
+# Function:
+#       LCD_WriteCommandReg
+#
+# Args:
+#       R48 = command to write
+#
+# Returns:
+#       none
+#
+# Uses:
+#       .
+#
+# Notes:
+#       Waits for LCD to become ready then writes
+#        given command into command register.
+#----------------------------------------------------------
+.
+p28ed   LCD_WriteCommandReg
+
+n28f5
+#----------------------------------------------------------
+# Function:
+#       LCD_ReadDataReg
+#
+# Args:
+#       R48 = write mode
+#
+# Returns:
+#       R49 = byte from display memory
+#
+# Uses:
+#       .
+#
+# Notes:
+#       Clears carry flag on return.
+#----------------------------------------------------------
+.
+p28f5   LCD_ReadDataReg
+
+
+###########################################################
+###########################################################
+#
+#
+#             Floppy Disk Driver
+#
+#
+###########################################################
+###########################################################
+
+n2900
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_1F -- Block On FDC Busy
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       R24
+#
+# Notes:
+#       Waits for FDC Status.Busy flag to clear
+#----------------------------------------------------------
+.
+p2900   BIOS_Synth_Function_1F_Block_On_FDC_Busy
+
+n2909
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_20 -- Block On FDC Write Gate
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       R24
+#
+# Notes:
+#       Waits until bit 0 of C200 goes high, marking the
+#        end of a sector write.
+#----------------------------------------------------------
+.
+p2909   BIOS_Synth_Function_20_Block_On_FDC_WriteGate
+
+n2912
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_21 -- Block on FDC INTRQ, Ret Status
+#
+# Args:
+#       none
+#
+# Returns:
+#       R24 = FDC status register
+#
+# Uses:
+#       R24
+#
+# Notes:
+#       Waits until FDC INTRQ goes high, then reads and
+#        returns FDC status register.
+#----------------------------------------------------------
+.
+p2912   BIOS_Synth_Function_21_Block_On_FDC_INTRQ
+
+n2920
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_22 -- Seek Track 00
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Moves disk head to track 00.
+#----------------------------------------------------------
+.
+p2920   BIOS_Synth_Function_22_Seek_Track_00
+
+n292f
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_23 -- Terminate Disk Command
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Terminates current disk action.
+#----------------------------------------------------------
+.
+p292f   BIOS_Synth_Function_23_Terminate_Disk_Command
+
+k294f   Wait for INTRQ from FDC
+
+n295c
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_25 -- Select Head
+#
+# Args:
+#       R60 = drive (0 = A, 1 = B) *** WILD_ASSED GUESS ***
+#       R61 = side (0,1)
+#
+# Returns:
+#       none
+#
+# Uses:
+#       R24, R60, R61
+#
+# Notes:
+#       
+#----------------------------------------------------------
+.
+p295c   BIOS_Synth_Function_25_Select_Head
+b295a   BIOS_Synth_Function_24_Drive_Select_Table
+
+n2973
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_26 -- Seek Track
+#
+# Args:
+#       R62 = track # (0..79)
+#
+# Returns:
+#       none
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Seeks to given disk track.
+#----------------------------------------------------------
+.
+p2973   BIOS_Synth_Function_26_Seek_Track
+k2976   Write track into FDC
+k297e   Track Seek command
+k298c   15ms delay
+
+n2995
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_27 -- Disk Vector Limit
+#
+# Args:
+#       R62 = track
+#       R63 = sector
+#
+# Returns:
+#       R62 = track
+#       R63 = sector
+#
+# Uses:
+#       R62, R63
+#
+# Notes:
+#       Range limits both args:
+#        sector = 1..9
+#        track  = 0..79
+#----------------------------------------------------------
+.
+p2995   BIOS_Synth_Function_27_Disk_Vector_Limit
+
+n29b6
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_28 -- Read Sector
+#
+# Args:
+#       R62 = track
+#       R63 = sector
+#       R34 = ptr to buffer
+#
+# Returns:
+#       none
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Reads an entire sector (512 bytes) into the buffer
+#        pointed by R34.
+#----------------------------------------------------------
+.
+p29b6   BIOS_Synth_Function_28_Read_Sector
+k29bc   Set target sector, then wait for it
+k29ce   Read sector into buffer
+
+n29f5
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_29 -- Write Sector
+#
+# Args:
+#       R62 = track
+#       R63 = sector
+#       R34 = ptr to buffer
+#
+# Returns:
+#       none
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Writes the 512-byte buffer at [R34] to the given
+#        location on the disk.
+#----------------------------------------------------------
+.
+p29f5   BIOS_Synth_Function_29_Write_Sector
+
+n2a37
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_2A -- Read SectorInc
+#
+# Args:
+#       R60 = drive (0 = A, 1 = B)  *** WILD_ASSED GUESS ***
+#       R61 = side (0/1)
+#       R62 = track
+#       R63 = sector
+#       R34 = ptr to buffer
+#
+# Returns:
+#       none
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Reads 512 bytes from the disk, increments the sector
+#        index, moving to the other side, or next track.
+#----------------------------------------------------------
+.
+p2a37   BIOS_Synth_Function_2A_Read_SectorInc
+
+n2a5a
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_2B -- Write SectorInc
+#
+# Args:
+#       R60 = drive (0 = A, 1 = B)  *** WILD_ASSED GUESS ***
+#       R61 = side (0/1)
+#       R62 = track
+#       R63 = sector
+#       R34 = ptr to buffer
+#
+# Returns:
+#       none
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Writes 512 bytes to the disk, increments the sector
+#        index, moving to the other side, or next track.
+#----------------------------------------------------------
+.
+p2a5a   BIOS_Synth_Function_2B_Write_SectorInc
+
+n2a62
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_2C -- FD Load Sample Data
+#
+# Args:
+#       R5C = data block no. (3 x sample block no.)
+#       R5D = number of data blocks to save (1..18)
+#       R5E = data position (0..17)
+#       R5F = 0 - bank A
+#             1 - bank B  
+#
+# Returns:
+#       none
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Reads the specified block of sample data from the
+#        floppy disk into sample memory.
+#
+#       **** This function calls user function at 4030
+#           after every double-sided (full) track done,
+#           i.e. every time the head is stepped on, with
+#           R62 = current track.
+#----------------------------------------------------------
+.
+p2a62   BIOS_Synth_Function_2C_Read_Sample_Data
+
+n2b52
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_2D -- FD Save Sample Data
+#
+# Args:
+#       R5C = data block no. (3 x sample block no.)
+#       R5D = number of data blocks to save (1..18)
+#       R5E = data position (0..17)
+#       R5F = 0 - bank A
+#             1 - bank B  
+#
+# Returns:
+#       none
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Writes the specified block of sample data to the 
+#        floppy disk.
+#
+#       **** This function calls user function at 4030
+#           after every double-sided (full) track done,
+#           i.e. every time the head is stepped on, with
+#           R62 = current track.
+#----------------------------------------------------------
+.
+p2b52   BIOS_Synth_Function_2D_Write_Sample_Data
+
+n2c56
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_2E -- Format Disk
+#
+# Args:
+#       R4F = interleave: 0 = 2:1 interleave
+#                        !0 = track<8 then 2:1 interleave
+#                                     else no interleave
+#
+# Returns:
+#       none
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Formats a disk at double-density:
+#        512 bytes per sector
+#        9 sectors per track
+#        80 tracks
+#        2 sides
+#
+#       **** Note: this function calls user function at 4033
+#           at every new track, ie. when the head steps, with
+#           R62 = current track
+#----------------------------------------------------------
+.
+p2c56   BIOS_Synth_Function_2E_Format_Disk
+
+b2dbc   Sector_2_1_Interleave_Table
+b2dc5   Sector_No_Interleave_Table
+
+k2c76   Write track start
+k2c80   Write sector data
+k2d15   512-byte sector
+k2d35   9 sectors per track
+k2d3d   Write end of track
+k2d57   Do all 80 tracks the same
+
+n26d0
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_2F -- Write Duplicate Bytes
+#
+# Args:
+#       R25 = byte
+#       R34 = number of times to write byte to disk
+#
+# Returns:
+#       R65 = error bits
+#
+# Uses:
+#       R24
+#
+# Notes:
+#       Writes the given byte to the disk multiple times.
+#----------------------------------------------------------
+.
+p2d60   BIOS_Synth_Function_2F_Write_Dup_Byte
+
+n2d74
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_30 -- Write and Dec Counter
+#
+# Args:
+#       R25 = byte to write
+#       R34 = counter to decrement
+#
+# Returns:
+#       none
+#
+# Uses:
+#       calls BSF_2F
+#
+# Notes:
+#       This is the counter half of BSF_2F (which checks
+#        FDC status before calling BSF_30).
+#----------------------------------------------------------
+.
+p2d74   BIOS_Synth_Function_30_Write_Dec_Ctr
+
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_31 -- 
+#
+# Args:
+#       .
+#
+# Returns:
+#       .
+#
+# Uses:
+#       .
+#
+# Notes:
+#       .
+#----------------------------------------------------------
+p2d82   BIOS_Synth_Function_31
+
+n2dce
+#----------------------------------------------------------
+# Function:
+#       SystemCheck_RAMCheck
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Checks System Ram
+#----------------------------------------------------------
+.
+p2dce   SystemCheck_RAMCheck
+
+b2ddb
+b2def
+b2e17
+b2e35
+b2e4c
+c2e4d
+b2e81
+c2e8d
+
+p2e98   PrintOkOrErrorCode
+
+b2e9d
+c2ea2
+b2eb4
+
+n2efc
+#----------------------------------------------------------
+# Function:
+#       CheckRAMBlock
+#
+# Args:
+#       R34 = ptr to block
+#       R36 = end address of block
+#
+# Returns:
+#       Carry: 0 = Ok, 1 = fail
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Does AA/55 test on RAM.
+#----------------------------------------------------------
+.
+p2efc   CheckRAMBlock
+
+n2f3c
+#----------------------------------------------------------
+# Function:
+#       CheckRAMBlock_0100_2000
+#
+# Args:
+#       R24 = LMP to test
+#
+# Returns:
+#       Carry:  0 = Pass
+#               1 = Fail
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Sets required lower memory page then tests it.
+#----------------------------------------------------------
+.
+p2f3c   CheckRAMBlock_0100_2000
+
+n2f57
+#----------------------------------------------------------
+# Function:
+#       CheckRAMBlock_4000_8000
+#
+# Args:
+#       none
+#
+# Returns:
+#       Carry:  0 = Pass
+#               1 = Fail
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Checks RAM block 4000-8000
+#----------------------------------------------------------
+.
+p2f57   CheckRAMBlock_4000_8000
+
+n2f62
+#----------------------------------------------------------
+# Function:
+#       CheckRAMBlock_8000_C000
+#
+# Args:
+#       R24 = UMP to test
+#
+# Returns:
+#       Carry:  0 = Pass
+#               1 = Fail
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Selects the desired upper memory page then tests it.
+#----------------------------------------------------------
+.
+p2f62   CheckRAMBlock_8000_C000
+
+n2f7f
+#----------------------------------------------------------
+# Function:
+#       CheckWaveRAM
+#
+# Args:
+#       none
+#
+# Returns:
+#       Carry:  0 = Pass
+#               1 = Fail
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Checks the Wave RAM.
+#       Wave RAM consists of 128 blocks of 4kwords (12-bit).
+#       The block select is at C011.
+#
+#       To write to the wave RAM, write 4 into FFFF, then
+#        write data sequentially LSB,MSB,... into
+#           C809 (LSB)
+#           C80B (MSB)
+#
+#       To read the wave RAM, select the desired block, then
+#        select the word to read by reading from (this sounds
+#        crazy) an ODD address in the range E001 onwards:
+#           RDaddr = (addr) << 1 | E001
+#        e.g. to read sample 123, we must read from address
+#         (123) << 1 | E001 = E247.
+#       Then the data is available in C809 (LSB) and C80B (MSB)
+#        and the address counter is incremented.
+#----------------------------------------------------------
+.
+p2f7f   CheckWaveRAM
+
+b300d
+c3013
+
+b301d
+c3027
+b3031
+c3032
+b3042
+c3045
+b304e
+c304f
+b3058
+c305b
+
+n305c
+#----------------------------------------------------------
+# Function:
+#       SystemCheck_KeyPanel
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Runs check on front panel
+#----------------------------------------------------------
+.
+p305c   SystemCheck_KeyPanel
+
+p30b3
+
+b30da
+b30dd
+b30e0
+b30e3
+b30e6
+b30e9
+b30ec
+b30ef
+b30f2
+b30f5
+b30f8
+b30fb
+b30fe
+b3101
+b3104
+b3107
+b310a
+b310d
+b3110
+b3113
+b3116
+b3119
+b311c
+b311f
+b3122
+b3125
+b3128
+b312b
+b312e
+b3131
+b3134
+b3137
+b313a
+b313d
+b314c
+b3153
+b3154
+
+############################################################
+
+b3158   Str_W_30
+
+n315c
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_40 -- Int to ASCII
+#
+# Args:
+#       R24 = integer to convert
+#
+# Returns:
+#       R24 = ten's
+#       R25 = units
+#
+# Uses:
+#       R24, R25
+#
+# Notes:
+#       Converts the given integer value (0-99) into
+#        two characters suitable for display.
+#----------------------------------------------------------
+.
+p315c   BIOS_Synth_Function_40_Int_To_ASCII
+
+n3168
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_41 -- Print decimal number
+#
+# Args:
+#       R24 = int number to print
+#       R4C = column
+#       R4D = row
+#       R4E = mode (0 = normal, 1 = inverse)
+#
+# Returns:
+#       none
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Prints the integer number (0-99) on the LCD
+#----------------------------------------------------------
+.
+p3168   BIOS_Synth_Function_41
+
+n3176
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_44 -- 2.62s Delay
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       R5A, R30
+#
+# Notes:
+#       Executes the BSF_42 delay 10 times.
+#----------------------------------------------------------
+.
+p3176   BIOS_Synth_Function_44_Delay_2_62s
+
+n317b
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_43 -- 1.57s Delay
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       R5A, R50
+#
+# Notes:
+#       Executes BSF_42 delay 6 times.
+#----------------------------------------------------------
+.
+p317b   BIOS_Synth_Function_43_Delay_1_57s
+
+n317e
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_42 -- 0.262s Delay
+#
+# Args:
+#       R5A = no. of times to run delay
+#
+# Returns:
+#       none
+#
+# Uses:
+#       R30
+#
+# Notes:
+#       Executes its inner loop 65,536 times.  The inner
+#        loop takes 16 state cycles to execute, so the
+#        overall delay is approx 1,048,576 state cycles.
+#       At 12MHZ input, and 3 clock cycles per state cycle,
+#        the unit of delay is thus 0.262s
+#----------------------------------------------------------
+.
+p317e   BIOS_Synth_Function_42_Long_Delay_Counter
+
+###########################################################
+###########################################################
+#
+#
+#             SCSI Driver
+#
+#
+###########################################################
+###########################################################
+
+n318b
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_32 -- SCSI Load DiskOS
+#
+# Args:
+#       .
+#
+# Returns:
+#       .
+#
+# Uses:
+#       .
+#
+# Notes:
+#       Reads the System from SCSI disk and jumps to its
+#        entry point at 4004.
+#       Note: exactly the same validity checks are done
+#        here as for the floppy disk loader.
+#----------------------------------------------------------
+.
+p318b   BIOS_Synth_Function_32_SCSI_Load_DiskOS
+
+n321f
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_33 -- SCSI Detect and Reset
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       R24, R25
+#
+# Notes:
+#       Sets up SPC then sees if it is fitted.
+#----------------------------------------------------------
+.
+p321f   BIOS_Synth_Function_33_SCSI_Reset_Detect
+
+
+
+p327f   BIOS_Synth_Function_34
+
+p3297   BIOS_Synth_Function_35
+
+n32a6
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_36 -- SCSI Select Boot Disk
+#
+# Args:
+#       none
+#
+# Returns:
+#       Carry: set = no SCSI boot disk found
+#              clear = SCSI boot disk now selected
+# Uses:
+#       several
+#
+# Notes:
+#       Uses the SCSI_LastDiskID to find the last found
+#        disk.
+#----------------------------------------------------------
+.
+p32a6   BIOS_Synth_Function_36_SCSI_Select_Boot_Disk
+
+n32cd
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_37 -- SCSI Select Device
+#
+# Args:
+#       none
+#
+# Returns:
+#       Carry: clear = OK, set = failed
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Selects the SCSI device to communicate with
+#----------------------------------------------------------
+.
+p32cd   BIOS_Synth_Function_37_SCSI_SelectDevice
+l3343   SCSISelectFailed
+
+n3347
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_45 -- End SCSI Sequence
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Terminates the SCSI sequence and logs any errors.
+#----------------------------------------------------------
+.
+p3347   BIOS_Synth_Function_45_End_SCSI_Sequence
+
+p3356   BIOS_Synth_Function_38
+
+n33f7
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_39 -- Terminate SCSI Sequence
+#
+# Args:
+#       none
+#
+# Returns:
+#       Carry:  set = failed
+#               clear = OK
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Terminates the SCSI sequence.
+#----------------------------------------------------------
+.
+p33f7   BIOS_Synth_Function_39_Terminate_SCSI_Sequence
+
+n344f
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_3A -- SCSI Transfer Block
+#
+# Args:
+#       R34 = ptr to data block
+#       R38 = block size (bytes)
+#
+# Returns:
+#       Carry: 0 = ok, 1 = fail
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       This is the heart of the SCSI system, transferring
+#        data blocks between the W-30 and whatever SCSI
+#        device is currently active.
+#       This function automatically determines whether
+#        this is a send or receive operation.
+#       Maximum block size is 64k (65,535 bytes)
+#----------------------------------------------------------
+.
+p344f   BIOS_Synth_Function_3A_SCSI_Transfer_Block
+p349d   SCSISendBlock
+
+n34d0
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_3B -- SCSI Transfer Initialize
+#
+# Args:
+#       R24 = SPC_TCH
+#       R25 = SPC_TCM
+#       R26 = SPC_TCL
+#       R27 = SPC_PCTL
+#
+# Returns:
+#       none
+#
+# Uses:
+#       R24
+#
+# Notes:
+#       Sets up the SPC for a transfer (command/data)
+#----------------------------------------------------------
+.
+p34d0   BIOS_Synth_Function_3B_SCSI_Transfer_Init
+
+n34ed
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_3C_SCSI_Reset_Ints
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       R28
+#
+# Notes:
+#       Clears all SPC interrupt flags
+#----------------------------------------------------------
+.
+p34ed   BIOS_Synth_Function_3C_SCSI_Reset_Ints
+
+n34f8
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_3D_SCSI_Emit_Command
+#
+# Args:
+#       R34 = ptr to SCSI CDB
+#       R38 = size of CDB
+#
+# Returns:
+#       Carry: 0 = ok, 1 = failed
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Emits the CDB to the SCSI bus.
+#----------------------------------------------------------
+.
+p34f8   BIOS_Synth_Function_3D_SCSI_Emit_Command
+
+n3527
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_3E -- Read
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Reads from the SCSI device described by the SCSI
+#        command structure
+#----------------------------------------------------------
+.
+p3527   BIOS_Synth_Function_3E_SCSI_Read
+
+n3539
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_3F -- Write
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Writes to the SCSI block described by the SCSI
+#        command structure.
+#
+#----------------------------------------------------------
+.
+p3539   BIOS_Synth_Function_3F_SCSI_Write
+
+k355c   Mode: Logical Unit = 0, DPO=0, FUA=0, Abs Addr
+k355f   Set 32-bit logical block address
+k3582   Set number of blocks to transfer
+
+k35a7   Turn 0 blocks into 256 blocks
+k35ad   Converts blocks to bytes (512-byte blocks)
+
+n35d6
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_48 -- Get Command Response
+#
+# Args:
+#       R34 = ptr to buffer
+#       R38:37:36 = 24-bit byte count
+#
+# Returns:
+#       Carry:  set = failed
+#               clear = OK
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Gets the response back from a command, upto 4GB!
+#----------------------------------------------------------
+.
+p35d6   BIOS_Synth_Function_48_SCSI_Get_Command_Response
+
+p363f   BIOS_Synth_Function_49
+
+n36a8
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_4A -- Clear SCSI CDB
+#
+# Args:
+#       none
+#
+# Returns:
+#       none
+#
+# Uses:
+#       R34,R5A (preserved)
+#
+# Notes:
+#       Clears the 16-byte SCSI CDB
+#----------------------------------------------------------
+.
+p36a8   BIOS_Synth_Function_4A_SCSI_Clear_CDB
+
+p36be
+
+n36f8
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_5C -- Read sample from SCSI disk
+#
+# Args:
+#       R5C = data block no. (3 x sample block no.)
+#       R35 = num. datablocks to read - 1 (always read atleast 1 blk)
+#       R5F = 0 - bank A
+#             1 - bank B  
+#
+# Returns:
+#       none
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Reads one sample data block from the SCSI disk and 
+#        stores it in the sample memory.
+#       *** Assumes the disk start block has been setup.
+#----------------------------------------------------------
+.
+p36f8   BIOS_Synth_Function_5C_SCSI_Read_Sample_Block
+
+n37df
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_5D -- Write sample to SCSI disk
+#
+# Args:
+#       R5C = data block no. (3 x sample block no.)
+#       R35 = num. datablocks to write - 1 (always write atleast 1 blk)
+#       R5F = 0 - bank A
+#             1 - bank B  
+#
+# Returns:
+#       none
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Writes one sample data block to the SCSI disk from
+#        the sample memory.
+#       *** Assumes the disk start block has been setup.
+#----------------------------------------------------------
+.
+p37df   BIOS_Synth_Function_5D_SCSI_Write_Sample_Block
+
+n38a8
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_4C -- Send SCSI Command
+#
+# Args:
+#       R24 = CDB length (in bytes)
+#
+# Returns:
+#       Carry: set = error
+#              clear = no error
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Selects a SCSI device, sends a command to it (in CDB)
+#        and then ends the SCSI sequence, with no reponse.
+#----------------------------------------------------------
+.
+p38a8   BIOS_Synth_Function_4C_SCSI_Send_Out_Command
+
+n38cc
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_4B -- SCSI test unit ready
+#
+# Args:
+#       none
+#
+# Returns:
+#       Carry: set if unit in trouble
+#              clear if unit ready
+#
+# Uses:
+#       .
+#
+# Notes:
+#       Tests if the current SCSI device is ready
+#----------------------------------------------------------
+.
+p38cc   BIOS_Synth_Function_4B_SCSI_Test_Unit_Ready
+
+p38d3   BIOS_Synth_Function_5B
+
+n3928
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_47 -- Get 4-byte Sense
+#
+# Args:
+#       none
+#
+# Returns:
+#       Carry: set = error
+#              clear = no error
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Gets a 4-byte sense request result from the current
+#        SCSI device.
+#----------------------------------------------------------
+.
+p3928   BIOS_Synth_Function_47_SCSI_Request_Sense_4
+
+n392b
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_46 -- Request Sense
+#
+# Args:
+#       R24 - request sense response length
+#
+# Returns:
+#       Carry: set = error
+#              clear = no error
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Gets a request sense reponse back from the current
+#        SCSI device.
+#----------------------------------------------------------
+.
+p392b   BIOS_Synth_Function_46_SCSI_Request_Sense
+
+n3976
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_56 -- SCSI Prevent Medium Removal
+#
+# Args:
+#       none
+#
+# Returns:
+#       Carry: set = error
+#              clear = no error
+#
+# Uses:
+#       several
+#
+# Notes:
+#       Prevents removable media from being ejected from
+#        the current SCSI device.
+#----------------------------------------------------------
+.
+p3976   BIOS_Synth_Function_56_SCSI_Prevent_Medium_Removal
+
+n397b
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_57 -- Allow Medium Removal
+#
+# Args:
+#       none
+#
+# Returns:
+#       Carry: set = error
+#              clear = no error
+#
+# Uses:
+#       lots
+#
+# Notes:
+#       Allows media removal on current SCSI device
+#----------------------------------------------------------
+.
+p397b   BIOS_Synth_Function_57_SCSI_Allow_Medium_Removal
+
+n3991
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_58 -- Park heads
+#
+# Args:
+#       none
+#
+# Returns:
+#       Carry: set = error
+#              clear = no error
+#
+# Uses:
+#       several
+#
+# Notes:
+#       Parks the SCSI drive's heads using the LOAD UNLOAD cmd.
+#----------------------------------------------------------
+.
+p3991   BIOS_Synth_Function_58_SCSI_Park_Drive_Head
+
+p39a8   BIOS_Synth_Function_59
+
+p39ad   BIOS_Synth_Function_5A
+
+n39c3
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_4D -- Clear SCSI Error
+#
+# Args:
+#       none
+#
+# Returns:
+#       Carry: set = SPC error
+#              clear  = SPC ok
+#
+# Uses:
+#       R24
+#
+# Notes:
+#       Clears SCSI_ErrorCode, then tests SPC reponse.  If
+#        00 clears Carry, else sets it.
+#----------------------------------------------------------
+.
+p39c3   BIOS_Synth_Function_4D_SCSI_Clear_Error_Code
+
+n39d3
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_4E -- SCSI Error FF
+#
+# Args:
+#       none
+#
+# Returns:
+#       Carry = 1
+#
+# Uses:
+#       R24
+#
+# Notes:
+#       Sets error code to FF
+#----------------------------------------------------------
+.
+p39d3   BIOS_Synth_Function_4E_SCSI_Error_FF
+
+n39d8
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_4F -- SCSI Error FE
+#
+# Args:
+#       none
+#
+# Returns:
+#       Carry = 1
+#
+# Uses:
+#       R24
+#
+# Notes:
+#       Sets error code to FE
+#----------------------------------------------------------
+.
+p39d8   BIOS_Synth_Function_4F_SCSI_Error_FE
+
+n39dd
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_50 -- SCSI Error FD
+#
+# Args:
+#       none
+#
+# Returns:
+#       Carry = 1
+#
+# Uses:
+#       R24
+#
+# Notes:
+#       Sets error code to FD
+#----------------------------------------------------------
+.
+p39dd   BIOS_Synth_Function_50_SCSI_Error_FD
+
+n39e2
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_51 -- SCSI Error FC
+#
+# Args:
+#       none
+#
+# Returns:
+#       Carry = 1
+#
+# Uses:
+#       R24
+#
+# Notes:
+#       Sets error code to FC
+#----------------------------------------------------------
+.
+p39e2   BIOS_Synth_Function_51_SCSI_Error_FC
+
+n39e7
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_52 -- SCSI Error FB
+#
+# Args:
+#       none
+#
+# Returns:
+#       Carry = 1
+#
+# Uses:
+#       R24
+#
+# Notes:
+#       Sets error code to FB
+#----------------------------------------------------------
+.
+p39e7   BIOS_Synth_Function_52_SCSI_Error_FB
+
+n39ec
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_53 -- SCSI Error FA
+#
+# Args:
+#       none
+#
+# Returns:
+#       Carry = 1
+#
+# Uses:
+#       R24
+#
+# Notes:
+#       Sets error code to FA
+#----------------------------------------------------------
+.
+p39ec   BIOS_Synth_Function_53_SCSI_Error_FA
+
+n39f1
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_54 -- SCSI Error F9
+#
+# Args:
+#       none
+#
+# Returns:
+#       Carry = 1
+#
+# Uses:
+#       R24
+#
+# Notes:
+#       Sets error code to F9
+#----------------------------------------------------------
+.
+p39f1   BIOS_Synth_Function_54_SCSI_Error_F9
+
+n39f9
+#----------------------------------------------------------
+# Function:
+#       BIOS_Synth_Function_55 -- Set Carry
+#
+# Args:
+#       none
+#
+# Returns:
+#       Carry = 1
+#
+# Uses:
+#       none
+#
+# Notes:
+#       sets carry flag
+#----------------------------------------------------------
+.
+p39f9   BIOS_Synth_Function_55_Set_Carry
+
+##############################################
+
+b39fb
+
+##############################################
+
+# End at 16k (end of BOOT rom)
+e4000
+
+l4000   OS_TransientProgramArea
+l4004   OS_System_EntryPoint
+l4030   OS_SampleTrackCallback
+l4033   OS_FormatTrackCallback
+
+#----------------------------------------------------------
+# This structure stores the current LCD control registers,
+#  which are write-only.
+#----------------------------------------------------------
+l6000   LCDShadow.TextHomeAddress
+l6002   LCDShadow.GfxHomeAddress
+#l6004
+#l6006
+l6008   LCDShadow.LastCursorPosition
+l600a   LCDShadow.ModeSet
+l600b   LCDShadow.DisplayMode
+
+#----------------------------------------------------------
+# SCSI Vars
+#----------------------------------------------------------
+
+l603e   SCSI_BufferPtr
+
+# 0 = SCSI, 1 = no SCSI
+l6045   SCSI_Present
+
+l6040   SCSI_BlockAddr
+l6041   SCSI_BlockAddr+1
+l6042   SCSI_BlockAddr+2
+l6043   SCSI_BlockAddr+3
+# Maximum we can tansfer is 255 blocks.
+l6044   SCSI_TransferLength
+
+l6048   SCSI_ErrorCode
+l6049   SCSI_Command
+l604a   SCSI_Phase
+
+# SCSI Command Descriptor Block: 604B - 605A
+l604b   SCSI_CDB.0
+l604c   SCSI_CDB.1
+l604d   SCSI_CDB.2
+l604e   SCSI_CDB.3
+l604f   SCSI_CDB.4
+l6050   SCSI_CDB.5
+l6051   SCSI_CDB.6
+l6052   SCSI_CDB.7
+l6053   SCSI_CDB.8
+l6054   SCSI_CDB.9
+l6055   SCSI_CDB.A
+l6056   SCSI_CDB.B
+l6057   SCSI_CDB.C
+l6058   SCSI_CDB.D
+l6059   SCSI_CDB.E
+l605a   SCSI_CDB.F
+
+l6086   SCSI_SynthID
+l606a   SCSI_CDBLength
+l606c   SCSI_TargetID
+l606d   SCSI_LastDiskID
+l606f   SCSI_LastCDROMID
+
+#---------------------------------------------------------
+# SCSI device descriptors
+# -----------------------
+# [0] = device type (0 = disk, 5 = CDROM)
+# [1] = ?
+# [2] = ?
+#---------------------------------------------------------
+l6071   SCSI_DeviceDescriptor.0
+l6074   SCSI_DeviceDescriptor.1
+l6077   SCSI_DeviceDescriptor.2
+l607A   SCSI_DeviceDescriptor.3
+l607D   SCSI_DeviceDescriptor.4
+l6080   SCSI_DeviceDescriptor.5
+l6083   SCSI_DeviceDescriptor.6
+
+# Don't know how big this is.
+l6088   SCSI_SenseBuffer
+
+#----------------------------------------------------------
+# Interface status
+#----------------------------------------------------------
+l6010   Control.BenderPositive
+l6011   Control.BenderNegative
+l6012   Control.MasterVolume
+l6013   Control.AfterTouch
+l6014   Control.PedalInput
+l6015   Control.CursorDial
+l6016   Control.ValueDial
+
+#----------------------------------------------------------
+# Disk Sector Buffer
+#----------------------------------------------------------
+l7a00   SectorBuffer
+l7c00   SectorBuffer_End
+
+#----------------------------------------------------------
+# Floppy Disk Control/Status Register
+#
+# Bit   Read         Write
+# ===   ==========   =============
+#  0    /FDC_WrGate  Side Select
+#  1    DriveReady   -
+#  2    FDC INTRQ    DriveSelect0
+#  3    FDC DRQ      DriveSelect1
+#  4    -            -
+#  5    -            -
+#  6    -            -
+#  7    -            -
+#----------------------------------------------------------
+lc200   FDC_ControlStatusReg
+
+#----------------------------------------------------------
+# Page Select Register
+#   [0] -\
+#   [1]  | Upper Memory Page (UMP) Select
+#   [2] -/
+#   [3] -\
+#   [4]  | Lower Memory Page (LMP) Select
+#   [5] -/
+#   [6] - ???
+#   [7] - ???
+#----------------------------------------------------------
+lc600   Mem_PageSelectRegister
+
+#----------------------------------------------------------
+# FDC Registers
+#----------------------------------------------------------
+lc800   FDC_CmdStatusReg
+lc804   FDC_SectorReg
+lc806   FDC_DataReg
+
+#----------------------------------------------------------
+# Wave RAM Registers
+#----------------------------------------------------------
+lc809   WaveRAM_LSB_PostInc
+lc80b   WaveRAM_MSB_PostInc
+
+lc009   WaveRAM_LSB
+lc00b   WaveRAM_MSB
+
+lc011   WaveRAM_BlockSelect
+le001   WaveRAM_ReadAddrBase
+
+#----------------------------------------------------------
+# Front Panel Scanning Register
+#----------------------------------------------------------
+ld800   PanelLEDReg
+ld806   PanelButtonReg
+l6018   PreviousButtonReg
+
+#----------------------------------------------------------
+# SCSI Protocol Controller
+#----------------------------------------------------------
+le000   SPC_BDID
+le002   SPC_SCTL
+le004   SPC_SCMD
+le008   SPC_INTS
+le00a   SPC_PSNS
+le00c   SPC_SSTS
+le010   SPC_PCTL
+le014   SPC_DREG
+le016   SPC_TEMP
+le018   SPC_TCH
+le01a   SPC_TCM
+le01c   SPC_TCL
+
+#----------------------------------------------------------
+# LCD Hardware Registers
+#----------------------------------------------------------
+le400   LCD_Data_Reg
+le402   LCD_Status_Command_Reg
+
