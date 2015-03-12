@@ -818,7 +818,7 @@ static void run_disasm( struct params params )
             *            w - WORD DATA
             *****************************************************************/
 
-            int c, i = 0;
+            int w, b_1st, b_2nd, i = 0;
             
             putchar( '\n' );
             printcomment( blockcmt, addr, 0 );
@@ -831,12 +831,20 @@ static void run_disasm( struct params params )
                     printf( "DW      " );
                 }
 
-                c = (unsigned char)next( f, &addr );
+                b_1st = (unsigned char)next( f, &addr );
+                b_2nd = (unsigned char)next( f, &addr );
 
-                c = c | ((unsigned char)next( f, &addr ) << 8 );
+                if ( dasm_word_msb_first )
+                {
+                    int t = b_1st;
+                    b_1st = b_2nd;
+                    b_2nd = t;
+                }
 
-                printf( "%04X ", c );
-                xref_addxref( X_TABLE, addr - 2, c );
+                w = b_1st | ( b_2nd << 8 );
+
+                printf( "%04X ", w );
+                xref_addxref( X_TABLE, addr - 2, w );
 
                 if ( ( i & 7 ) == 7 )
                     putchar( '\n' );
@@ -858,7 +866,7 @@ static void run_disasm( struct params params )
             *            v - VECTOR DATA
             *****************************************************************/
 
-            int c, i = 0;
+            int v, b_1st, b_2nd, i = 0;
             
             putchar( '\n' );
             printcomment( blockcmt, addr, 0 );
@@ -868,12 +876,20 @@ static void run_disasm( struct params params )
                 emitaddr( addr );
                 printf( "DW      " );
 
-                c = (unsigned char)next( f, &addr );
+                b_1st = (unsigned char)next( f, &addr );
+                b_2nd = (unsigned char)next( f, &addr );
 
-                c = c | ((unsigned char)next( f, &addr ) << 8 );
+                if ( dasm_word_msb_first )
+                {
+                    int t = b_1st;
+                    b_1st = b_2nd;
+                    b_2nd = t;
+                }
 
-                printf( "%s\n", xref_genwordaddr( NULL, "%04X", c ) );
-                xref_addxref( X_TABLE, addr - 2, c );
+                v = b_1st | ( b_2nd << 8 );
+
+                printf( "%s\n", xref_genwordaddr( NULL, "%04X", v ) );
+                xref_addxref( X_TABLE, addr - 2, v );
 
                 i++;
             }

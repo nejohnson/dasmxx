@@ -54,6 +54,9 @@ const int    dasm_max_insn_length = 4;
 /* Decoder maximum opcode field width */
 const int    dasm_max_opcode_width = 9;
 
+/* MSB at lowest address */
+const int    dasm_word_msb_first   = 1;
+
 /*****************************************************************************
  * Private data types, macros, constants.
  *****************************************************************************/
