@@ -103,6 +103,7 @@ extern const char * dasm_name;
 extern const char * dasm_description;
 extern const int    dasm_max_insn_length;
 extern const int    dasm_max_opcode_width;
+extern const int    dasm_word_msb_first;
 
 /******************************************************************************/
 
