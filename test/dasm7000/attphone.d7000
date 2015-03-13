@@ -1,0 +1,16 @@
+ffirmware.bin
+q,30
+c8000
+
+p804d Reset
+p91a1 INT1_Handler
+p91c3 INT2_Handler
+p922e INT3_Handler
+p9279 INT4_Handler
+p9282 INT5_Handler
+
+bf2d2
+
+vfff4 Vector_Table
+effff
+
