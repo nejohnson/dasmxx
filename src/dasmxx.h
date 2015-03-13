@@ -105,6 +105,14 @@ extern const int    dasm_max_insn_length;
 extern const int    dasm_max_opcode_width;
 extern const int    dasm_word_msb_first;
 
+#define DASM_PROFILE(name,desc,insnlen,opwid,msb) \
+    const char * dasm_name = name;                \
+    const char * dasm_description = desc;         \
+    const int    dasm_max_insn_length = insnlen;  \
+    const int    dasm_max_opcode_width = opwid;   \
+    const int    dasm_word_msb_first = msb;
+
+
 /******************************************************************************/
 
 #endif

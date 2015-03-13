@@ -38,12 +38,7 @@
 #include "dasmxx.h"
 
 
-
-const char * dasm_name            = "dasm96";
-const char * dasm_description     = "Intel 8096";
-const int    dasm_max_insn_length = 8;
-const int    dasm_max_opcode_width = 9;
-const int    dasm_word_msb_first   = 0;
+DASM_PROFILE( "dasm96", "Intel 8096", 8, 9, 0 )
 
 
 static char * output_buffer = NULL;
