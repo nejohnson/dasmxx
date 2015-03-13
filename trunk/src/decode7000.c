@@ -42,20 +42,12 @@
  * Globally-visible decoder properties
  *****************************************************************************/
 
-/* Decoder short name */
-const char * dasm_name            = "dasm7000";
-
-/* Decoder description */
-const char * dasm_description     = "TI TMS7000";
-
-/* Decoder maximum instruction length in bytes */
-const int    dasm_max_insn_length = 4;
-
-/* Decoder maximum opcode field width */
-const int    dasm_max_opcode_width = 9;
-
-/* MSB at lowest address */
-const int    dasm_word_msb_first   = 1;
+DASM_PROFILE(   "dasm7000",
+                "TI TMS7000",
+                4,
+                9,
+                1
+)
 
 /*****************************************************************************
  * Private data types, macros, constants.

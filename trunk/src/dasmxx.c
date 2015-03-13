@@ -64,6 +64,7 @@
  * Configuration commands:
  *      tXX         string terminator byte (default = 00)
  *      eXXXX       end of disassembly
+ *      q[,N]["title"]  pagination, N lines (default=60), optional title
  *
  * Dump commands:
  *      aXXXX       alphanumeric dump
@@ -149,6 +150,8 @@ struct params {
 
 #define COMMENT_DELIM        ";"
 
+#define SWAP(a,b)   do { int t = a; a = b; b = t; } while(0)
+
 /*****************************************************************************
  *        Global Data
  *****************************************************************************/
@@ -173,6 +176,13 @@ static char datchars[] = "cbsewapvm";
 /* Global instruction byte buffer */
 static UBYTE *insn_byte_buffer = NULL;
 static UBYTE  insn_byte_idx    = 0;
+
+/* Pagination Formatting */
+static int pagination   = 0;
+#define PAGINATION_ALLOWANCE        ( 2 )
+#define DEFAULT_LINES_PER_PAGE      ( 60 )
+#define MIN_LINES_PER_PAGE          ( 10 )
+static const char *page_title = NULL;
 
 /*****************************************************************************
  *        Private Functions
@@ -231,6 +241,50 @@ static void addcomment( struct comment **list, ADDR ref, char *text )
 /***********************************************************
  *
  * FUNCTION
+ *      emit_page_header
+ *
+ * DESCRIPTION
+ *      Output page header, comprising a page number and an
+ *      optional title.
+ */
+static void emit_page_header( void )
+{
+    static int page_no = 1;
+
+    if ( pagination )
+    {
+        printf( "Page %d", page_no++ );
+        if ( page_title )
+            printf( " -- %s", page_title ); 
+        printf( "\n\n" );
+    }
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      newline
+ *
+ * DESCRIPTION
+ *      Output a newline.  Also do pagination if required.
+ */
+static void newline( void )
+{
+    static int n = 0;
+
+    putchar( '\n' ); n++;
+
+    if ( pagination && n >= pagination )
+    {
+        n = 0;
+        printf( "\f" );
+        emit_page_header();
+    }
+}
+
+/***********************************************************
+ *
+ * FUNCTION
  *      printcomment
  *
  * DESCRIPTION
@@ -255,13 +309,17 @@ static int printcomment( struct comment *list, ADDR ref, unsigned int padding )
             printf( "%*s ", padding, COMMENT_DELIM );
             for ( p = plist->text; *p; p++ )
             {
-                putchar( *p );
                 if ( *p == '\n' )
+                {
+                    newline();
                     printf( "%*s ", padding, COMMENT_DELIM );
+                }
+                else
+                    putchar( *p );
             }
             
             if ( list == blockcmt )
-                putchar( '\n' );
+                newline();
 
             return 1;
         }
@@ -312,7 +370,10 @@ static int emitaddr( ADDR addr )
     char * label = xref_findaddrlabel( addr );
 
     if ( label )
-        printf( "%s:\n", label );
+    {
+        printf( "%s:", label );
+        newline();
+    }
 
     return printf( "    " FORMAT_ADDR ":    ", addr);
 }
@@ -569,6 +630,39 @@ static void readlist( const char *listfile, struct params *params )
                 }
                 break;
 
+            case 'q':   /* Pagination */
+                {
+                    pagination = DEFAULT_LINES_PER_PAGE;
+
+                    SKIP_SPACE(pbuf);
+                    if ( *pbuf == ',' )
+                    {
+                        pbuf++;
+                        sscanf( pbuf, "%d%n", &pagination, &n );
+                        pbuf += n;
+                    }
+
+                    if ( pagination < MIN_LINES_PER_PAGE )
+                        error( "%s(%u) :: Must be at least %d lines per page\n", 
+                                listfile, lineno, MIN_LINES_PER_PAGE );
+
+                    pagination -= PAGINATION_ALLOWANCE;
+
+                    SKIP_SPACE(pbuf);
+                    if ( *pbuf == '"' )
+                    {
+                        char title[LINE_BUF_LEN];
+                        strcpy( title, pbuf+1 );
+                        title[strlen(title)-1] = '\0';
+                        page_title = strdup( title );
+                    }
+                    else if ( params->inputfile )
+                    {
+                        page_title = params->inputfile;
+                    }
+                }
+                break;
+
             default: /* Unknown command */
                 {
                     if ( isprint( cmd ) )
@@ -663,16 +757,17 @@ static void run_disasm( struct params params )
     bpl   = clist->bpl;
     clist = clist->n;
     
-    printf( ";   Processing \"%s\" (%ld bytes)\n", inputfile, filelength );
-    printf( ";   Disassembly start address: 0x%04X\n", addr );
-    printf( ";   String terminator: 0x%02x\n", string_terminator );
+    printf( ";   Processing \"%s\" (%ld bytes)", inputfile, filelength ); newline();
+    printf( ";   Disassembly start address: 0x%04X", addr );              newline();
+    printf( ";   String terminator: 0x%02x", string_terminator );         newline();
+    newline();
 
     while ( !feof( f ) && clist )
     {
         if ( addr >= clist->addr )
         {
             if ( mode != clist->mode )
-                putchar ( '\n' );
+                newline();
             mode  = clist->mode;
             name  = clist->name;
             bpl   = clist->bpl;
@@ -711,7 +806,7 @@ static void run_disasm( struct params params )
             column += i;
 
             printcomment( linecmt, lineaddr, COL_LINECOMMENT - column );
-            putchar( '\n' );
+            newline();
         }
         else if ( mode == BYTES )
         {
@@ -722,7 +817,7 @@ static void run_disasm( struct params params )
             unsigned char buf[BYTES_PER_LINE];
             int p, i = 0;
 
-            putchar( '\n' );
+            newline();
             printcomment( blockcmt, addr, 0 );
 
             while ( addr < clist->addr )
@@ -747,7 +842,7 @@ static void run_disasm( struct params params )
                         else
                             putchar( '.' );
 
-                    putchar( '\n' );
+                    newline();
                     i = 0;
                 }
             }
@@ -766,12 +861,12 @@ static void run_disasm( struct params params )
                     else
                         putchar( '.' );
 
-                putchar( '\n' );
+                newline();
             }
 
             mode = clist->mode;
             if ( mode == CODE || mode == PROCS )
-                putchar( '\n' );
+                newline();
             name  = clist->name;
             bpl   = clist->bpl;
             clist = clist->n;
@@ -784,7 +879,7 @@ static void run_disasm( struct params params )
 
             int c;
             
-            putchar( '\n' );            
+            newline();            
             printcomment( blockcmt, addr, 0 );
 
             while ( addr < clist->addr )
@@ -802,12 +897,13 @@ static void run_disasm( struct params params )
                     else
                         printf ("\\%02X", (unsigned char) c );
                 }
-                printf( "'\n" );
+                printf( "'" );
+                newline();
             }
 
             mode = clist->mode;
             if ( mode == CODE || mode == PROCS )
-                putchar( '\n' );
+                newline();
             name  = clist->name; 
             bpl   = clist->bpl;
             clist = clist->n;
@@ -820,7 +916,7 @@ static void run_disasm( struct params params )
 
             int w, b_1st, b_2nd, i = 0;
             
-            putchar( '\n' );
+            newline();
             printcomment( blockcmt, addr, 0 );
 
             while ( addr < clist->addr )
@@ -835,11 +931,7 @@ static void run_disasm( struct params params )
                 b_2nd = (unsigned char)next( f, &addr );
 
                 if ( dasm_word_msb_first )
-                {
-                    int t = b_1st;
-                    b_1st = b_2nd;
-                    b_2nd = t;
-                }
+                    SWAP( b_1st, b_2nd );
 
                 w = b_1st | ( b_2nd << 8 );
 
@@ -847,15 +939,15 @@ static void run_disasm( struct params params )
                 xref_addxref( X_TABLE, addr - 2, w );
 
                 if ( ( i & 7 ) == 7 )
-                    putchar( '\n' );
+                    newline();
                 i++;
             }
             if ( i & 7 ) 
-                putchar( '\n' );
+                newline();
 
             mode = clist->mode;
             if ( mode == CODE || mode == PROCS )
-                putchar( '\n' );
+                newline();
             name  = clist->name; 
             bpl   = clist->bpl;
             clist = clist->n;
@@ -868,7 +960,7 @@ static void run_disasm( struct params params )
 
             int v, b_1st, b_2nd, i = 0;
             
-            putchar( '\n' );
+            newline();
             printcomment( blockcmt, addr, 0 );
 
             while ( addr < clist->addr )
@@ -880,15 +972,11 @@ static void run_disasm( struct params params )
                 b_2nd = (unsigned char)next( f, &addr );
 
                 if ( dasm_word_msb_first )
-                {
-                    int t = b_1st;
-                    b_1st = b_2nd;
-                    b_2nd = t;
-                }
+                    SWAP( b_1st, b_2nd );
 
                 v = b_1st | ( b_2nd << 8 );
 
-                printf( "%s\n", xref_genwordaddr( NULL, "%04X", v ) );
+                printf( "%s", xref_genwordaddr( NULL, "%04X", v ) ); newline();
                 xref_addxref( X_TABLE, addr - 2, v );
 
                 i++;
@@ -896,7 +984,7 @@ static void run_disasm( struct params params )
 
             mode = clist->mode;
             if ( mode == CODE || mode == PROCS )
-                putchar( '\n' );
+                newline();
             name  = clist->name; 
             bpl   = clist->bpl;
             clist = clist->n;
@@ -909,7 +997,7 @@ static void run_disasm( struct params params )
 
             int c, i = 0;
             
-            putchar( '\n' );
+            newline();
             printcomment( blockcmt, addr, 0 );
 
             while ( addr < clist->addr )
@@ -928,15 +1016,15 @@ static void run_disasm( struct params params )
                     printf( "%02X,", (unsigned char)c );
 
                 if ( ( i & 7 ) == 7 ) 
-                    putchar( '\n' );
+                    newline();
                 i++;
             }
             if ( i & 7 ) 
-                putchar( '\n' );
+                newline();
 
             mode = clist->mode;
             if ( mode == CODE || mode == PROCS )
-                putchar( '\n' );
+                newline();
             name  = clist->name; 
             bpl   = clist->bpl;
             clist = clist->n;
@@ -957,8 +1045,10 @@ static void run_disasm( struct params params )
 
             if ( !commentexists( blockcmt, addr ) )
             {
-                printf( "----------------------------------------------------------------\n"
-                          "        Function: %s\n\n", ( name ) ? name : "" );
+                printf( "----------------------------------------------------------------" );
+                newline();
+                printf( "        Function: %s", ( name ) ? name : "" );
+                newline(); newline();
             }
 
             mode = CODE;
@@ -969,7 +1059,7 @@ static void run_disasm( struct params params )
             *            m - BITMAPS
             *****************************************************************/
             
-            putchar( '\n' );
+            newline();
             printcomment( blockcmt, addr, 0 );
 
             while ( addr < clist->addr )
@@ -986,12 +1076,12 @@ static void run_disasm( struct params params )
                 for ( ; mask; mask >>= 1 )
                     putchar( bitmap & mask ? '#' : ' ' );
                     
-                printf( "]\n" );
+                printf( "]" ); newline();
             }
 
             mode = clist->mode;
             if ( mode == CODE || mode == PROCS )
-                putchar( '\n' );
+                newline();
             name  = clist->name; 
             bpl   = clist->bpl;
             clist = clist->n;
@@ -1069,17 +1159,10 @@ static void display_banner( struct params params )
 {
     char *prefix = params.outputfile ? ";" : "";
     
-    printf( "%s   %s -- %s Disassembler --\n"
-            "%s" SPACER "\n"
-            "%s   Input file       : %s\n",
-            prefix, dasm_name, dasm_description,
-            prefix,
-            prefix, params.inputfile );
-                
-    if ( params.outputfile )
-        printf( ";   Output file      : %s\n", params.outputfile );
-        
-    printf( "%s" SPACER "\n\n", prefix );
+    printf( "%s   %s -- %s Disassembler --", prefix, dasm_name, dasm_description ); newline();
+    printf( "%s" SPACER, prefix ); 
+    newline();
+    newline();
 }
 
 /*****************************************************************************
@@ -1322,6 +1405,7 @@ int main(int argc, char **argv)
     if ( params.outputfile )
         stdout = freopen( params.outputfile, "w", stdout );
 
+    emit_page_header();
     display_banner( params );
 
     run_disasm( params );

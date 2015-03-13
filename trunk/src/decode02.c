@@ -42,20 +42,12 @@
  * Globally-visible decoder properties
  *****************************************************************************/
 
-/* Decoder short name */
-const char * dasm_name            = "dasm02";
-
-/* Decoder description */
-const char * dasm_description     = "MOS Technology 6502";
-
-/* Decoder maximum instruction length in bytes */
-const int    dasm_max_insn_length = 3;
-
-/* Decoder maximum opcode field width */
-const int    dasm_max_opcode_width = 9;
-
-/* LSB at lowest address */
-const int    dasm_word_msb_first   = 0;
+DASM_PROFILE(   "dasm02",
+                "MOS Technology 6502",
+                3,
+                9,
+                0
+)
 
 /*****************************************************************************
  * Private data types, macros, constants.

@@ -42,20 +42,12 @@
  * Globally-visible decoder properties
  *****************************************************************************/
 
-/* Decoder short name */
-const char * dasm_name            = "dasm09";
-
-/* Decoder description */
-const char * dasm_description     = "Motorola 6809";
-
-/* Decoder maximum instruction length in bytes */
-const int    dasm_max_insn_length = 4;
-
-/* Decoder maximum opcode field width */
-const int    dasm_max_opcode_width = 9;
-
-/* LSB at lowest address */
-const int    dasm_word_msb_first   = 0;
+DASM_PROFILE(   "dasm09",
+                "Motorola 6809",
+                4,
+                9,
+                0
+)
 
 /*****************************************************************************
  * Private data types, macros, constants.
