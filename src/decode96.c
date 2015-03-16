@@ -38,7 +38,7 @@
 #include "dasmxx.h"
 
 
-DASM_PROFILE( "dasm96", "Intel 8096", 8, 9, 0 )
+DASM_PROFILE( "dasm96", "Intel 8096", 8, 9, 0, 1 )
 
 
 static char * output_buffer = NULL;

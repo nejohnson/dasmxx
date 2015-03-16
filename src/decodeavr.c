@@ -49,20 +49,7 @@
  * Globally-visible decoder properties
  *****************************************************************************/
 
-/* Decoder short name */
-const char * dasm_name            = "dasmavr";
-
-/* Decoder description */
-const char * dasm_description     = "Atmel AVR";
-
-/* Decoder maximum instruction length in bytes */
-const int    dasm_max_insn_length = 4;
-
-/* Decoder maximum opcode field width */
-const int    dasm_max_opcode_width = 9;
-
-/* LSB at lowest address */
-const int    dasm_word_msb_first   = 0;
+DASM_PROFILE( "dasmavr", "Atmel AVR", 4, 9, 0, 2 )
 
 /*****************************************************************************
  * Private data types, macros, constants.
@@ -618,7 +605,7 @@ optab_t base_optab[] = {
     MASK ( "MULS",   rhigh_rhigh,   0xFF00, 0x0200, X_NONE )
 
     MASK ( "MULSU",  rhigh3_rhigh3, 0xFF88, 0x0300, X_NONE )
-   MASK ( "FMUL",   rhigh3_rhigh3, 0xFF88, 0x0308, X_NONE )
+    MASK ( "FMUL",   rhigh3_rhigh3, 0xFF88, 0x0308, X_NONE )
     MASK ( "FMULS",  rhigh3_rhigh3, 0xFF88, 0x0380, X_NONE )
     MASK ( "FMULSU", rhigh3_rhigh3, 0xFF88, 0x0388, X_NONE )
     
@@ -638,7 +625,7 @@ optab_t base_optab[] = {
     ALT_RR ( "TST", 0x2000 )
     MASK ( "AND",    r_r,           0xFC00, 0X2000, X_NONE )
 
-   ALT_RR ( "CLR", 0x2400 )    
+    ALT_RR ( "CLR", 0x2400 )    
     MASK ( "EOR",    r_r,           0xFC00, 0X2400, X_NONE )
     
     MASK ( "OR",     r_r,           0xFC00, 0X2800, X_NONE )    

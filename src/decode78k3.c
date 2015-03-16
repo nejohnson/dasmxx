@@ -42,12 +42,7 @@
  * Gloabally-visible decoder properties
  *****************************************************************************/
 
-DASM_PROFILE(   "dasm78k3",
-                "NEC 78K/III",
-                5,
-                9,
-                0
-)
+DASM_PROFILE( "dasm78k3", "NEC 78K/III", 5, 9, 0, 1 )
 
 /*****************************************************************************
  * Private data types, macros, constants.

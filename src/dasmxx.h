@@ -104,19 +104,20 @@ extern const char * dasm_description;
 extern const int    dasm_max_insn_length;
 extern const int    dasm_max_opcode_width;
 extern const int    dasm_word_msb_first;
+extern const int    dasm_insn_width_bytes;
 
-#define DASM_PROFILE(name,desc,insnlen,opwid,msb) \
-    const char * dasm_name = name;                \
-    const char * dasm_description = desc;         \
-    const int    dasm_max_insn_length = insnlen;  \
-    const int    dasm_max_opcode_width = opwid;   \
-    const int    dasm_word_msb_first = msb;
+#define DASM_PROFILE(name,desc,insnlen,opwid,msb,iwid) \
+    const char * dasm_name = name;                /* Name of assembler     */ \
+    const char * dasm_description = desc;         /* Target description    */ \
+    const int    dasm_max_insn_length = insnlen;  /* Max bytes per insn    */ \
+    const int    dasm_max_opcode_width = opwid;   /* Max chars insn name   */ \
+    const int    dasm_word_msb_first = msb;       /* 1 if word is MSB first*/ \
+    const int    dasm_insn_width_bytes = iwid;    /* Num bytes per opcode  */
 
-
-/******************************************************************************/
+/*****************************************************************************/
 
 #endif
 
-/******************************************************************************/
-/******************************************************************************/
-/******************************************************************************/
+/*****************************************************************************/
+/*****************************************************************************/
+/*****************************************************************************/

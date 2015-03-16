@@ -42,12 +42,7 @@
  * Globally-visible decoder properties
  *****************************************************************************/
 
-DASM_PROFILE(   "dasm7000",
-                "TI TMS7000",
-                4,
-                9,
-                1
-)
+DASM_PROFILE( "dasm7000", "TI TMS7000", 4, 9, 1, 1 )
 
 /*****************************************************************************
  * Private data types, macros, constants.

@@ -92,6 +92,30 @@ static void opcode( const char *opcode )
 /***********************************************************
  *
  * FUNCTION
+ *      next_insn
+ *
+ * DESCRIPTION
+ *      Gets the next instruction data.  Size is target-
+ *      dependent.
+ *
+ * RETURNS
+ *      next instruction opcode.
+ *
+ ************************************************************/
+
+static OPC next_insn( FILE* fp, ADDR *addr  )
+{
+    if ( dasm_insn_width_bytes == 1 )
+        return (OPC)next( fp, addr );
+    else if ( dasm_insn_width_bytes == 2 )
+        return (OPC)nextw( fp, addr );
+    else
+        error( "INTERNAL ERROR: unsupported instruction size.\n" );
+}
+
+/***********************************************************
+ *
+ * FUNCTION
  *      walk_table
  *
  * DESCRIPTION
@@ -106,7 +130,7 @@ static void opcode( const char *opcode )
  *
  ************************************************************/
 
-static int walk_table( FILE * f, ADDR * addr, optab_t * optab, UBYTE opc )
+static int walk_table( FILE * f, ADDR * addr, optab_t * optab, OPC opc )
 {
     UBYTE peek_byte;
     int have_peeked = 0;
@@ -119,7 +143,7 @@ static int walk_table( FILE * f, ADDR * addr, optab_t * optab, UBYTE opc )
         /* printf("type:%d  ", optab->type); */
         if ( optab->type == OPTAB_TABLE && optab->opc == opc )
         {
-            opc = next( f, addr );
+            opc = next_insn( f, addr );
             return walk_table( f, addr, optab->u.table, opc );
         }
         else if ( ( optab->type == OPTAB_INSN && opc == optab->opc )
@@ -222,7 +246,7 @@ void operand( const char *operand, ... )
  
 ADDR dasm_insn( FILE *f, char *outbuf, ADDR addr )
 {
-    int opc;
+    OPC opc;
     int found = 0;
 
     /* Store start address in a global for use in xref calls */    
@@ -232,7 +256,7 @@ ADDR dasm_insn( FILE *f, char *outbuf, ADDR addr )
     output_buffer = outbuf;
 
     /* Get first opcode byte */
-    opc = next( f, &addr );
+    opc = next_insn( f, &addr );
 
     /* Now walk table(s) looking for an instruction match */
     found = walk_table( f, &addr, base_optab, opc );
