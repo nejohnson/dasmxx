@@ -529,7 +529,7 @@ OPERAND_FUNC(ind_addr5)
 }
 
 /***********************************************************
- * Process "addr11" operand.
+ * Process "!addr11" operand.
  ************************************************************/
 
 OPERAND_FUNC(addr11)
@@ -537,12 +537,12 @@ OPERAND_FUNC(addr11)
     UBYTE low_addr = next( f, addr );
     ADDR addr11 = MK_WORD( low_addr, opc & 0x07 );
     
-    operand( xref_genwordaddr( NULL, FORMAT_NUM_16BIT, addr11 ) );
+    operand( "!%s", xref_genwordaddr( NULL, FORMAT_NUM_16BIT, addr11 ) );
     xref_addxref( xtype, g_insn_addr, addr11 );
 }
 
 /***********************************************************
- * Process "addr16" operand.
+ * Process "!addr16" operand.
  ************************************************************/
 
 OPERAND_FUNC(addr16)
@@ -551,7 +551,7 @@ OPERAND_FUNC(addr16)
     UBYTE high_addr = next( f, addr );
     UWORD addr16    = MK_WORD( low_addr, high_addr );
 
-    operand( xref_genwordaddr( NULL, FORMAT_NUM_16BIT, addr16 ) );
+    operand( "!%s", xref_genwordaddr( NULL, FORMAT_NUM_16BIT, addr16 ) );
     xref_addxref( xtype, g_insn_addr, addr16 );
 }
 
@@ -564,7 +564,7 @@ OPERAND_FUNC(addr16_rel)
     BYTE jdisp = (BYTE)next( f, addr );
     ADDR addr16 = *addr + jdisp;
     
-    operand( xref_genwordaddr( NULL, FORMAT_NUM_16BIT, addr16 ) );
+    operand( "$%s", xref_genwordaddr( NULL, FORMAT_NUM_16BIT, addr16 ) );
     xref_addxref( xtype, g_insn_addr, addr16 );
 }
 
