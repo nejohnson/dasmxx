@@ -56,8 +56,8 @@ DASM_PROFILE( "dasm78k3", "NEC 78K/III", 5, 9, 0, 1 )
 #define SFR_OFFSET              ( 0xFF00 )
 
 /* Common output formats */
-#define FORMAT_NUM_8BIT         "$%02X"
-#define FORMAT_NUM_16BIT        "$%04X"
+#define FORMAT_NUM_8BIT         "0%02XH"
+#define FORMAT_NUM_16BIT        "0%04XH"
 #define FORMAT_REG              "R%d"
 
 /* Construct a 16-bit word out of low and high bytes */
@@ -532,7 +532,7 @@ OPERAND_FUNC(ind_addr5)
  * Process "!addr11" operand.
  ************************************************************/
 
-OPERAND_FUNC(addr11)
+OPERAND_FUNC(addr11_abs)
 {
     UBYTE low_addr = next( f, addr );
     ADDR addr11 = MK_WORD( low_addr, opc & 0x07 );
@@ -545,7 +545,7 @@ OPERAND_FUNC(addr11)
  * Process "!addr16" operand.
  ************************************************************/
 
-OPERAND_FUNC(addr16)
+OPERAND_FUNC(addr16_abs)
 {
     UBYTE low_addr  = next( f, addr );
     UBYTE high_addr = next( f, addr );
@@ -912,7 +912,7 @@ OPERAND_FUNC(A_addr16)
 {
     operand_A( f, addr, opc, xtype );
     COMMA;
-    operand_addr16( f, addr, opc, xtype );
+    operand_addr16_abs( f, addr, opc, xtype );
 }
  
 /***********************************************************
@@ -921,7 +921,7 @@ OPERAND_FUNC(A_addr16)
 
 OPERAND_FUNC(addr16_A)
 {
-    operand_addr16( f, addr, opc, xtype );
+    operand_addr16_abs( f, addr, opc, xtype );
     COMMA;
     operand_A( f, addr, opc, xtype );
 }
@@ -1029,7 +1029,7 @@ OPERAND_FUNC(rp1_addr16)
 {
     operand_rp1( f, addr, opc, xtype );
     COMMA;
-    operand_addr16( f, addr, opc, xtype );
+    operand_addr16_abs( f, addr, opc, xtype );
 }
 
 /***********************************************************
@@ -1038,7 +1038,7 @@ OPERAND_FUNC(rp1_addr16)
 
 OPERAND_FUNC(addr16_rp1)
 {
-    operand_addr16( f, addr, opc, xtype );
+    operand_addr16_abs( f, addr, opc, xtype );
     COMMA;
     operand_rp1( f, addr, opc, xtype );
 }
@@ -1955,8 +1955,8 @@ optab_t base_optab[] = {
   Call/Return
   ----------------------------------------------------------------------------*/
   
-    INSN  ( "call",   addr16,      0x28, X_CALL )
-    RANGE ( "callf",  addr11,      0x90, 0x97, X_CALL )
+    INSN  ( "call",   addr16_abs,  0x28, X_CALL )
+    RANGE ( "callf",  addr11_abs,  0x90, 0x97, X_CALL )
     RANGE ( "callt",  ind_addr5,   0xE0, 0xFF, X_TABLE )
     INSN  ( "brk",    none,        0x5E, X_NONE )
     INSN  ( "ret",    none,        0x56, X_NONE )
@@ -1977,7 +1977,7 @@ optab_t base_optab[] = {
   Unconditional Branch
   ----------------------------------------------------------------------------*/    
     
-    INSN  ( "br",     addr16,     0x2C, X_JMP )
+    INSN  ( "br",     addr16_abs, 0x2C, X_JMP )
     INSN  ( "br",     addr16_rel, 0x14, X_JMP )
     
 /*----------------------------------------------------------------------------
@@ -2004,7 +2004,7 @@ optab_t base_optab[] = {
   ----------------------------------------------------------------------------*/    
     
     /* BRKCS in optab_05 */
-    INSN  ( "retcs",  addr16,  0x29, X_NONE )
+    INSN  ( "retcs",  addr16_abs,  0x29, X_NONE )
     
 /*----------------------------------------------------------------------------
   String
