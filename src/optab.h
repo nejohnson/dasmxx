@@ -49,7 +49,8 @@ typedef struct optab_s {
         OPTAB_MASK,
         OPTAB_MASK2,
         OPTAB_MEMMOD,
-        OPTAB_TABLE
+        OPTAB_TABLE,
+        OPTAB_PUSHTBL
     } type;
     union {
         struct {
@@ -59,6 +60,10 @@ typedef struct optab_s {
             OPC mask, val;
         } mask;
         struct optab_s * table;
+        struct {
+            struct optab_s * table;
+            int n;
+	} pushtbl;
     } u;
 } optab_t;
 
@@ -76,6 +81,18 @@ typedef struct optab_s {
       .u.table = M_tablename         \
     },
 
+/**
+    The given instruction byte pushes M_count opcode bytes onto
+    a stack ans then jumps to another decode table.
+**/
+#define PUSHTBL(M_tablename, M_opc, M_count)    \
+    { .type    = OPTAB_PUSHTBL,      \
+      .opc     = M_opc,              \
+      .opcode  = "PUSHTBL",          \
+      .u.pushtbl.table = M_tablename,\
+      .u.pushtbl.n     = M_count     \
+    },
+    
 /**
     A single insruction matches against one op byte.
 **/    
@@ -152,11 +169,39 @@ typedef struct optab_s {
 /* Neaten up emitting a comma "," within an operand. */
 #define COMMA                   operand( ", " )
 
+/**
+    Short-cut macro to generate simple two-operand functions.
+**/
+#define TWO_OPERAND(M_a,M_b) \
+OPERAND_FUNC(M_a ## _ ## M_b) \
+{ \
+      operand_ ## M_a (f, addr, opc, xtype); \
+      COMMA; \
+      operand_ ## M_b (f, addr, opc, xtype); \
+}
+
+/**
+    Short-cut macro to generate simple three-operand functions.
+**/
+#define THREE_OPERAND(M_a,M_b,M_c) \
+OPERAND_FUNC(M_a ## _ ## M_b ## _ ## M_c) \
+{ \
+      operand_ ## M_a (f, addr, opc, xtype); \
+      COMMA; \
+      operand_ ## M_b (f, addr, opc, xtype); \
+      COMMA; \
+      operand_ ## M_c (f, addr, opc, xtype); \
+}
+
 /* Create a single-bit mask */
 #define BIT(n)                  ( 1 << (n) )
 
 /* General function for outputting an operand */
 extern void operand( const char * operand, ... );
+
+/* Push and pop opcodes to an internal stack */
+extern void stack_push( OPC );
+extern OPC  stack_pop( void );
 
 /* Start address of each instruction as it is decoded. */
 extern ADDR g_insn_addr;

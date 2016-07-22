@@ -85,7 +85,8 @@ typedef enum {
    X_DIRECT = 4,
    X_DATA   = 5,
    X_PTR    = 6,
-   X_REG    = 7
+   X_REG    = 7,
+   X_IO     = 8
 } XREF_TYPE;
 
 extern void xref_addxref( XREF_TYPE type, ADDR addr, ADDR ref );

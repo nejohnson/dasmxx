@@ -1,6 +1,6 @@
 /*****************************************************************************
  *
- * Copyright (C) 2014-2015, Neil Johnson
+ * Copyright (C) 2014-2016, Neil Johnson
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms,
@@ -48,7 +48,7 @@ struct addrlist {
 };
 
 struct xref {
-	struct xref     *n;
+    struct xref     *n;
     ADDR            ref;
     char            *label;
     struct addrlist *list;
@@ -83,8 +83,8 @@ struct xref *xref = NULL;
     struct xref     *q;
     struct addrlist *new;
     
-	 if ( type == X_NONE )
-	     return;
+    if ( type == X_NONE )
+        return;
     
     /* Create new address reference entry */
     new = zalloc( sizeof( struct addrlist ) );
@@ -206,13 +206,13 @@ void xref_addxreflabel( ADDR ref, char *label )
 
 char * xref_findaddrlabel( ADDR addr )
 {
-   struct xref *p;
+    struct xref *p;
     
-   for ( p = xref; p != NULL; p = p->n )
-      if ( p->ref == addr && p->label != NULL )
-         return p->label;
+    for ( p = xref; p != NULL; p = p->n )
+        if ( p->ref == addr && p->label != NULL )
+            return p->label;
 
-   return NULL;
+    return NULL;
 }
 
 /***********************************************************
@@ -231,23 +231,23 @@ char * xref_findaddrlabel( ADDR addr )
 
 char * xref_genwordaddr( char * buf, const char * format, ADDR addr )
 {
-	char * label = xref_findaddrlabel( addr );
+    char * label = xref_findaddrlabel( addr );
 	 
-	if ( label )
-		return label;
+    if ( label )
+        return label;
     
     /* Either xref not found or not labelled */
-	 
-	if ( buf )
-		sprintf( buf, format, addr );
-	else
-	{
-		char local[256];
-		sprintf( local, format, addr );
-		buf = dupstr(local);	
-	}
+ 
+    if ( buf )
+        sprintf( buf, format, addr );
+    else
+    {
+        char local[256];
+        sprintf( local, format, addr );
+        buf = dupstr(local);	
+    }
     
-   return buf;
+    return buf;
 }
 
 /***********************************************************
@@ -265,47 +265,48 @@ char * xref_genwordaddr( char * buf, const char * format, ADDR addr )
 
 void xref_dump( void )
 {
-	struct xref *p;
-	struct addrlist *q;
+    struct xref *p;
+    struct addrlist *q;
 
-	printf( "\n\nXREFS :\n\n---------------------------\n" );
-	for ( p = xref; p != NULL; p = p->n )
+    printf( "\n\nXREFS :\n\n---------------------------\n" );
+    for ( p = xref; p != NULL; p = p->n )
+    {
+	int i = 0;
+
+	if ( !p->list )
+	    continue;
+
+	for (q = p->list; q != NULL; q = q->n )
 	{
-		int i = 0;
+	    if ( i++ == 0 )
+	        printf( FORMAT_ADDR ": ", p->ref );
+	    else
+	        printf( "      " );
 
-		if ( !p->list )
-			continue;
-
-		for (q = p->list; q != NULL; q = q->n )
-		{
-			if ( i++ == 0 )
-				printf( FORMAT_ADDR ": ", p->ref );
-			else
-				printf( "      " );
-
-			switch( q->type )
-			{
-				case X_JMP    : printf( "Jump   @ " ); break;
-				case X_CALL   : printf( "Call   @ " ); break;
-				case X_IMM    : printf( "Imm    @ " ); break;
-				case X_TABLE  : printf( "Table  @ " ); break;
-				case X_DIRECT : printf( "Direct @ " ); break;
-				case X_DATA   : printf( "Data   @ " ); break;
-				case X_PTR    : printf( "Ptr    @ " ); break;
-				case X_REG    : printf( "Reg    @ " ); break;
-				default:
-					printf( "\nILLEGAL XREF TYPE %d, addr=" FORMAT_ADDR ". Aborting..\n",
-					q->type, q->addr );
-					return;
-			}
-			printf( FORMAT_ADDR, q->addr );
-			if ( p->label && i == 1 )
-				printf( "   (%s)", p->label );
-			putchar( '\n' );
-		}
-		putchar( '\n' );
+	    switch( q->type )
+	    {
+		case X_JMP    : printf( "Jump   @ " ); break;
+		case X_CALL   : printf( "Call   @ " ); break;
+		case X_IMM    : printf( "Imm    @ " ); break;
+		case X_TABLE  : printf( "Table  @ " ); break;
+		case X_DIRECT : printf( "Direct @ " ); break;
+		case X_DATA   : printf( "Data   @ " ); break;
+		case X_PTR    : printf( "Ptr    @ " ); break;
+		case X_REG    : printf( "Reg    @ " ); break;
+		case X_IO     : printf( "IO     @ " ); break;
+		default:
+		    printf( "\nILLEGAL XREF TYPE %d, addr=" FORMAT_ADDR ". Aborting..\n",
+		    q->type, q->addr );
+		    return;
+	    }
+	    printf( FORMAT_ADDR, q->addr );
+	    if ( p->label && i == 1 )
+	        printf( "   (%s)", p->label );
+	    putchar( '\n' );
 	}
-	puts( "---------------------------\n" );
+	putchar( '\n' );
+    }
+    puts( "---------------------------\n" );
 }
  
 /******************************************************************************/

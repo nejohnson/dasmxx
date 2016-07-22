@@ -64,7 +64,12 @@ ADDR g_insn_addr = 0;
  *****************************************************************************/
 
 /* Global output buffer into which the decoded output is written. */
-static char * output_buffer = NULL; 
+static char * output_buffer = NULL;
+
+/* Stack for PUSHTBL */
+#define STACK_DEPTH	( 16 )
+static OPC opcstack[STACK_DEPTH];
+static int tos = -1;
 
 /*****************************************************************************
  *        Private Functions
@@ -190,6 +195,14 @@ static int walk_table( FILE * f, ADDR * addr, optab_t * optab, OPC opc )
                 return INSN_FOUND;
             }        
         }
+        else if ( optab->type == OPTAB_PUSHTBL && optab->opc == opc )
+        {
+            int n = optab->u.pushtbl.n;
+            while (n--)
+                stack_push( next_insn( f, addr ) );
+            opc = next_insn( f, addr );
+            return walk_table( f, addr, optab->u.pushtbl.table, opc );
+        }
         
         optab++;    
     }
@@ -200,6 +213,51 @@ static int walk_table( FILE * f, ADDR * addr, optab_t * optab, OPC opc )
 /*****************************************************************************
  *        Public Functions
  *****************************************************************************/
+ 
+/***********************************************************
+ *
+ * FUNCTION
+ *      stack_push
+ *
+ * DESCRIPTION
+ *      Push a single opcode onto an internal stack
+ *
+ * RETURNS
+ *      none
+ *
+ ************************************************************/
+ 
+void stack_push( OPC opc )
+{
+    if ( tos >= STACK_DEPTH )
+        error( "Internal disassembler error" );
+	
+    opcstack[++tos] = opc;
+}
+
+/***********************************************************
+ *
+ * FUNCTION
+ *      stack_pop
+ *
+ * DESCRIPTION
+ *      Pop a single opcode off an internal stack
+ *
+ * RETURNS
+ *      The opcode byte from the top of stack.
+ *
+ ************************************************************/
+ 
+OPC stack_pop( void )
+{
+    if ( tos < 0 )
+    {
+        error( "Internal disassembler error" );
+        return 0;
+    }
+        
+    return opcstack[tos--];
+}
 
 /***********************************************************
  *
