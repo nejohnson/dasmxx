@@ -29,6 +29,10 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  *****************************************************************************/
+ 
+/*****************************************************************************
+ *   Z80 INSTRUCTION SET (as described in Zilog document UM008008-0116)
+ *****************************************************************************/
 
 #include <stdio.h>
 #include <string.h>
@@ -89,6 +93,11 @@ OPERAND_FUNC(b)
 OPERAND_FUNC(c)
 {
     operand( "C" );
+}
+
+OPERAND_FUNC(ind_c)
+{
+    operand( "(C)" );
 }
 
 OPERAND_FUNC(d)
@@ -245,11 +254,11 @@ OPERAND_FUNC(imm8)
 
 OPERAND_FUNC(imm16)
 {
-    UBYTE msb   = next( f, addr );
     UBYTE lsb   = next( f, addr );
+    UBYTE msb   = next( f, addr );
     UWORD imm16 = MK_WORD( lsb, msb );
 
-    operand( xref_genwordaddr( NULL, FORMAT_NUM_16BIT, imm16 ) );
+    operand( xref_genwordaddr( NULL, "#" FORMAT_NUM_16BIT, imm16 ) );
     xref_addxref( xtype, g_insn_addr, imm16 );
 }
 
@@ -321,8 +330,8 @@ OPERAND_FUNC(rel8)
 
 OPERAND_FUNC(addr16)
 {
-    UBYTE msb = next( f, addr );
     UBYTE lsb = next( f, addr );
+    UBYTE msb = next( f, addr );
     ADDR dest = MK_WORD( lsb, msb );
     
     operand( xref_genwordaddr( NULL, FORMAT_NUM_16BIT, dest ) );
@@ -335,8 +344,8 @@ OPERAND_FUNC(addr16)
 
 OPERAND_FUNC(mem16)
 {
-    UBYTE msb = next( f, addr );
     UBYTE lsb = next( f, addr );
+    UBYTE msb = next( f, addr );
     ADDR dest = MK_WORD( lsb, msb );
     
     operand( "(%s)", xref_genwordaddr( NULL, FORMAT_NUM_16BIT, dest ) );
@@ -358,7 +367,7 @@ OPERAND_FUNC(mem8)
 /* xxCC_Cxxx */
 OPERAND_FUNC(cond)
 {
-    UBYTE cond = ( opc >> 3 ) & 0x03;
+    UBYTE cond = ( opc >> 3 ) & 0x07;
     static char *ctab[] = { "NZ", "Z", "NC", "C", "PO", "PE", "P", "M" };
 
     operand( "%s", ctab[cond] );
@@ -370,27 +379,35 @@ OPERAND_FUNC(cond)
 
 OPERAND_FUNC(rst)
 {
-    UBYTE rst = ( opc & 0x30 ) | ( opc & 0x0F == 0x0F ? 0x08 : 0x00 );
+    UBYTE rst = ( opc & 0x30 ) | ( ( opc & 0x0F ) == 0x0F ? 0x08 : 0x00 );
     
-    operand( "%2.2Xh", rst );
+    operand( FORMAT_NUM_8BIT, rst );
 }
 
 /***********************************************************
  * Process IX/IY plus offset operands (IX + DISP)
  ************************************************************/
+ 
+static void z80_emit_signed_index_offset( const char *idx, BYTE disp )
+{
+    if ( disp < 0 )
+    	operand( "(%s-" FORMAT_NUM_8BIT ")", idx, -disp );
+    else
+    	operand( "(%s+" FORMAT_NUM_8BIT ")", idx, disp );
+}
 
 OPERAND_FUNC(ixoff)
 {
     BYTE disp = (BYTE)next( f, addr );
     
-    operand( "(IX+" FORMAT_NUM_8BIT ")", disp );
+    z80_emit_signed_index_offset( "IX", disp );
 }
 
 OPERAND_FUNC(iyoff)
 {
     BYTE disp = (BYTE)next( f, addr );
     
-    operand( "(IY+" FORMAT_NUM_8BIT ")", disp );
+    z80_emit_signed_index_offset( "IY", disp );
 }
 
 /***********************************************************
@@ -401,15 +418,15 @@ OPERAND_FUNC(iyoff)
 OPERAND_FUNC(ixoffS)
 {
     BYTE disp = (BYTE)stack_pop();
-    
-    operand( "(IX+" FORMAT_NUM_8BIT ")", disp );
+
+    z80_emit_signed_index_offset( "IX", disp );    
 }
 
 OPERAND_FUNC(iyoffS)
 {
     BYTE disp = (BYTE)stack_pop();
-    
-    operand( "(IY+" FORMAT_NUM_8BIT ")", disp );
+
+    z80_emit_signed_index_offset( "IY", disp );    
 }
 
 /******************************************************************************/
@@ -419,6 +436,7 @@ OPERAND_FUNC(iyoffS)
 /*** ACC ***/
 
 TWO_OPERAND(af, afp)
+TWO_OPERAND(a, reg)
 TWO_OPERAND(a, imm8)
 TWO_OPERAND(indrpair, a)
 TWO_OPERAND(a, indrpair)
@@ -437,6 +455,8 @@ TWO_OPERAND(reg2, imm8)
 TWO_OPERAND(bit, reg)
 TWO_OPERAND(mem8, reg2)
 TWO_OPERAND(reg2, mem8)
+TWO_OPERAND(ind_c, reg2)
+TWO_OPERAND(reg2, ind_c)
 
 /*** 16-bit REG */
 
@@ -510,7 +530,7 @@ OPERAND_FUNC(rD_rS)
 
 OPERAND_FUNC(condalt_rel8)
 {
-   operand_cond( f, addr, opc | 0x20, xtype );
+   operand_cond( f, addr, opc & ~0x20, xtype );
    COMMA;
    operand_rel8( f, addr, opc, xtype );
 }
@@ -540,7 +560,6 @@ optab_t pageBITS[] = {
     
     MASK ( "SLA", reg, 0xF8, 0x20, X_REG )
     MASK ( "SRA", reg, 0xF8, 0x28, X_REG )
-    MASK ( "SLL", reg, 0xF8, 0x30, X_REG )
     MASK ( "SRL", reg, 0xF8, 0x38, X_REG )
     
     MASK ( "BIT", bit_reg, 0xC0, 0x40, X_REG )
@@ -558,7 +577,7 @@ optab_t pageEXTD[] = {
 
     MASK ( "ADC", hl_rpair, 0xCF, 0x4A, X_NONE )
     MASK ( "SBC", hl_rpair, 0xCF, 0x42, X_NONE )
-    MASK ( "NEG", none,     0xC7, 0x44, X_NONE )
+    INSN ( "NEG", none,     0x44, X_NONE )
     
     INSN ( "LDI", none, 0xA0, X_NONE )
     INSN ( "CPI", none, 0xA1, X_NONE )
@@ -584,14 +603,20 @@ optab_t pageEXTD[] = {
     
     /* Order is important! */
     INSN ( "RETI", none, 0x4D, X_NONE )
-    MASK ( "RETN", none, 0xC7, 0x45, X_NONE )
+    INSN ( "RETN", none, 0x45, X_NONE )
     
     MASK ( "LD",   mem16_rpair, 0xCF, 0x43, X_PTR )
     MASK ( "LD",   rpair_mem16, 0xCF, 0x4B, X_PTR )
     
-    INSN ( "IN",   mem8, 0x70, X_IO )
-    MASK ( "IN",   reg2_mem8, 0xC7, 0x40, X_IO )
-    MASK ( "OUT",  mem8_reg2, 0xC7, 0x41, X_IO )
+    INSN ( "IN",   reg2_ind_c, 0x40, X_IO )
+    INSN ( "IN",   reg2_ind_c, 0x50, X_IO )
+    INSN ( "IN",   reg2_ind_c, 0x60, X_IO )
+    MASK ( "IN",   reg2_ind_c, 0xCF, 0x48, X_IO )
+    
+    INSN ( "OUT",  ind_c_reg2, 0x41, X_IO )
+    INSN ( "OUT",  ind_c_reg2, 0x51, X_IO )
+    INSN ( "OUT",  ind_c_reg2, 0x61, X_IO )
+    MASK ( "OUT",  ind_c_reg2, 0xCF, 0x49, X_IO )
     
     INSN ( "LD",   i_a, 0x47, X_NONE )
     INSN ( "LD",   a_i, 0x57, X_NONE )
@@ -599,14 +624,9 @@ optab_t pageEXTD[] = {
     INSN ( "LD",   a_r, 0x5F, X_NONE )
     
     INSN ( "IM",   0, 0x46, X_NONE )
-    INSN ( "IM",   0, 0x66, X_NONE )
-    
     INSN ( "IM",   1, 0x56, X_NONE )
-    INSN ( "IM",   1, 0x76, X_NONE )
-    
     INSN ( "IM",   2, 0x5E, X_NONE )
-    INSN ( "IM",   2, 0x7E, X_NONE )
-
+ 
     END
 };
 
@@ -730,28 +750,12 @@ optab_t pageIX[] = {
 optab_t pageIYBITS[] = {
 
     INSN ( "RLC", iyoffS,   0x06, X_REG )
-    MASK ( "RLC", iyoffS_reg, 0xF8, 0x00, X_REG )
-    
     INSN ( "RRC", iyoffS,   0x0E, X_REG )
-    MASK ( "RRC", iyoffS_reg, 0xF8, 0x08, X_REG )
-    
     INSN ( "RL",  iyoffS,   0x16, X_REG )
-    MASK ( "RL",  iyoffS_reg, 0xF8, 0x10, X_REG )
-    
     INSN ( "RR",  iyoffS,   0x1E, X_REG )
-    MASK ( "RR",  iyoffS_reg, 0xF8, 0x18, X_REG )
-    
     INSN ( "SLA", iyoffS,   0x26, X_REG )
-    MASK ( "SLA", iyoffS_reg, 0xF8, 0x20, X_REG )
-    
     INSN ( "SRA", iyoffS,   0x2E, X_REG )
-    MASK ( "SRA", iyoffS_reg, 0xF8, 0x28, X_REG )
-    
-    INSN ( "SLL", iyoffS,   0x36, X_REG )
-    MASK ( "SLL", iyoffS_reg, 0xF8, 0x30, X_REG )
-    
     INSN ( "SRL", iyoffS,   0x3E, X_REG )
-    MASK ( "SRL", iyoffS_reg, 0xF8, 0x38, X_REG )
     
     MASK ( "BIT", bit_iyoffS,     0xC0, 0x40, X_REG )
     
@@ -842,6 +846,8 @@ optab_t pageIY[] = {
 
 optab_t base_optab[] = {
     
+    INSN ( "HALT", none, 0x76, X_NONE )
+    
 /*----------------------------------------------------------------------------
   Load/Store/Push/Pop
   ----------------------------------------------------------------------------*/
@@ -876,14 +882,14 @@ optab_t base_optab[] = {
   8-bit Accumulator and Memory
   ----------------------------------------------------------------------------*/
   
-    MASK ( "ADD", rD_rS, 0xF8, 0x80, X_NONE )
-    MASK ( "ADC", rD_rS, 0xF8, 0x88, X_NONE )
-    MASK ( "SUB", rD_rS, 0xF8, 0x90, X_NONE )
-    MASK ( "SBC", rD_rS, 0xF8, 0x98, X_NONE )
-    MASK ( "AND", rD_rS, 0xF8, 0xA0, X_NONE )
-    MASK ( "XOR", rD_rS, 0xF8, 0xA8, X_NONE )
-    MASK ( "OR",  rD_rS, 0xF8, 0xB0, X_NONE )
-    MASK ( "CP",  rD_rS, 0xF8, 0xB8, X_NONE )
+    MASK ( "ADD", a_reg, 0xF8, 0x80, X_NONE )
+    MASK ( "ADC", a_reg, 0xF8, 0x88, X_NONE )
+    MASK ( "SUB", a_reg, 0xF8, 0x90, X_NONE )
+    MASK ( "SBC", a_reg, 0xF8, 0x98, X_NONE )
+    MASK ( "AND", a_reg, 0xF8, 0xA0, X_NONE )
+    MASK ( "XOR", a_reg, 0xF8, 0xA8, X_NONE )
+    MASK ( "OR",  a_reg, 0xF8, 0xB0, X_NONE )
+    MASK ( "CP",  a_reg, 0xF8, 0xB8, X_NONE )
     
     INSN ( "ADD", a_imm8,  0xC6, X_IMM )
     INSN ( "ADC", a_imm8,  0xCE, X_IMM )
@@ -899,7 +905,7 @@ optab_t base_optab[] = {
     
     INSN ( "DAA",  none, 0x27, X_NONE )
     INSN ( "CPL",  none, 0x2F, X_NONE )
-    INSN ( "SCF",  none, 0x03, X_NONE )
+    INSN ( "SCF",  none, 0x37, X_NONE )
     INSN ( "CCF",  none, 0x3F, X_NONE )
     
     INSN ( "XOR",  imm8, 0xEE, X_IMM )
@@ -933,7 +939,7 @@ optab_t base_optab[] = {
     MASK ( "CALL", cond_addr16, 0xC7, 0xC4, X_CALL )
 
     INSN ( "JR",   rel8,        0x18,       X_JMP )
-    MASK ( "JR",   condalt_rel8, 0xE7, 0x20, X_JMP )    
+    MASK ( "JR",   condalt_rel8, 0xE7, 0x20, X_JMP )
     
 /*----------------------------------------------------------------------------
   Miscellaneous

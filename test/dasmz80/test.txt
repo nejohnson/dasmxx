@@ -1,8 +1,1915 @@
 # Z80 disassembler test harness
+#
+# Test all instructions described in Zilog document UM008008-0116
+#
 
-# NOP
+###### 8-Bit Load Group ##############################################
+
+###### LD r,r' (page 69)
+#
+# 01_rrr_r'r'r'
+
+# LD B
+40      # B
+41      # C
+42      # D
+43      # E
+44      # H
+45      # L
+47      # A
+
+# LD C
+48      # B
+49      # C
+4A      # D
+4B      # E
+4C      # H
+4D      # L
+4F      # A
+
+# LD D
+50      # B
+51      # C
+52      # D
+53      # E
+54      # H
+55      # L
+57      # A
+
+# LD E
+58      # B
+59      # C
+5A      # D
+5B      # E
+5C      # H
+5D      # L
+5F      # A
+
+# LD H
+60      # B
+61      # C
+62      # D
+63      # E
+64      # H
+65      # L
+67      # A
+
+# LD H
+68      # B
+69      # C
+6A      # D
+6B      # E
+6C      # H
+6D      # L
+6F      # A
+
+# LD A
+78      # B
+79      # C
+7A      # D
+7B      # E
+7C      # H
+7D      # L
+7F      # A
+
+###### LD r,n (page 70)
+#
+# 00_rrr_110
+# nnnnnnnn
+
+06 BB   # B, #BB
+0E CC   # C, #CC
+16 DD   # D, #DD
+1E EE   # E, #EE
+26 10   # H, #10
+2E 01   # L, #01
+3E AA   # A, #AA
+
+###### LD r, (HL) (page 71)
+#
+# 01_rrr_110
+
+46      # B
+4E      # C
+56      # D
+5E      # E
+66      # H
+6E      # L
+7E      # A
+
+
+###### LD r, (IX+d)
+#
+# 1101_1101
+# 01_rrr_110
+# dddddddd
+
+DD 46 0B    # LD B, (IX+$0B)
+DD 4E 0C    # LD C, (IX+$0C)
+DD 56 0D    # LD D,
+DD 5E 0E    # LD E,
+DD 66 10    # LD H, 
+DD 6E 01    # LD L,
+DD 7E 0A    # LD A,
+
+
+###### LD r, (IY+d)
+#
+# 1111_1101
+# 01_rrr_110
+# dddddddd
+
+FD 46 0B    # LD B, (IY+$0B)
+FD 4E 0C    # LD C, (IY+$0C)
+FD 56 0D    # LD D,
+FD 5E 0E    # LD E,
+FD 66 10    # LD H, 
+FD 6E 01    # LD L,
+FD 7E 0A    # LD A,
+
+
+###### LD (HL), r
+#
+# 01110_rrr
+
+70          # LD (HL), B
+71          #        , C
+72          #        , D
+73          #        , E
+74          #        , H
+75          #        , L
+77          #        , A
+
+
+###### LD (IX+d), r
+#
+# 1101_1101
+# 0111_0_rrr
+# dddddddd
+
+DD 70 0B    # LD (IX+$0B), B
+DD 71 F4    # LD (IX-$0C), C
+DD 72 0D    # ,D
+DD 73 0E    # ,E
+DD 74 10    # ,H
+DD 75 01    # ,L
+DD 77 0A    # ,A
+
+
+###### LD (IY+d), r
+#
+# 1111_1101
+# 0111_0_rrr
+# dddddddd
+
+FD 70 0B    # LD (IY+$0B), B
+FD 71 0C    # LD (IY+$0C), C
+FD 72 0D    # ,D
+FD 73 0E    # ,E
+FD 74 10    # ,H
+FD 75 01    # ,L
+FD 77 0A    # ,A
+
+
+###### LD (HL), n
+#
+# 0011_0110
+# nnnnnnnn
+
+36 00
+36 7F
+36 80
+36 FF
+
+
+###### LD (IX+d), n   (page 84)
+#
+# 1101_1101
+# 0011_0110
+# dddddddd
+# nnnnnnnn
+
+DD 36 00 FF
+DD 36 7F 80
+DD 36 80 7F
+DD 36 FF 00
+
+
+###### LD (IY+d), n   (page 85)
+#
+# 1111_1101
+# 0011_0110
+# dddddddd
+# nnnnnnnn
+
+FD 36 00 FF
+FD 36 7F 80
+FD 36 80 7F
+FD 36 FF 00
+
+
+###### LD A, (BC)
+#
+# 0000_1010
+
+0A
+
+
+###### LD A, (DE)
+#
+# 0001_1010
+
+1A
+
+
+###### LD A, (nn)
+#
+# 0011_1010
+# llllllll
+# hhhhhhhh
+
+3A 34 12
+
+
+###### LD (BC), A
+#
+# 0000_0010
+
+02
+
+
+###### LD (DE), A
+#
+# 0001_0010
+
+12
+
+
+
+###### LD (nn), A       (page 91)
+#
+# 0011_0010
+# llllllll
+# hhhhhhhh
+
+32 34 12
+
+
+###### LD A, I
+#
+# 1110_1101
+# 0101_0111
+
+ED 57
+
+
+###### LD A, R
+#
+# 1110_1101
+# 0101_1111
+
+ED 5F
+
+
+###### LD I, A
+#
+# 1110_1101
+# 0100_0111
+
+ED 47
+
+
+###### LD R, A
+#
+# 1110_1101
+# 0100_1111
+
+ED 4F
+
+
+###### 16-Bit Load Group #############################################
+
+
+###### LD dd, nn    (page 97)
+#
+# 00dd_0001
+# llllllll
+# hhhhhhhh
+
+01 34 12    # BC
+11 34 12    # DE
+21 34 12    # HL
+31 34 12    # SP
+
+
+###### LD IX, nn
+#
+# 1101_1101
+# 0010_0001
+# llllllll
+# hhhhhhhh
+
+DD 21 34 12
+
+
+###### LD IY, nn
+#
+# 1111_1101
+# 0010_0001
+# llllllll
+# hhhhhhhh
+
+FD 21 34 12
+
+
+###### LD HL, (nn)      (page 100)
+#
+# 0010_1010
+# llllllll
+# hhhhhhhh
+
+2A 34 12
+
+
+###### LD dd, (nn)
+#
+# 1110_1101
+# 01_DD_1011
+# llllllll
+# hhhhhhhh
+
+ED 4B 34 12     # BC
+ED 5B 34 12     # DE
+ED 6B 34 12     # HL
+ED 7B 34 12     # SP
+
+
+###### LD IX, (nn)
+#
+# 1101_1101
+# 0010_1010
+# llllllll
+# hhhhhhhh
+
+DD 2A 34 12
+
+
+###### LD IY, (nn)
+#
+# 1111_1101
+# 0010_1010
+# llllllll
+# hhhhhhhh
+
+FD 2A 34 12
+
+
+###### LD (nn), HL      (page 105)
+#
+# 0010_0010
+# llllllll
+# hhhhhhhh
+
+22 34 12
+
+
+###### LD (nn), dd
+#
+# 1110_1101
+# 01_DD_0011
+# llllllll
+# hhhhhhhh
+
+ED 43 34 12     # BC
+ED 53 34 12     # DE
+ED 63 34 12     # HL
+ED 73 34 12     # SP
+
+
+###### LD (nn), IX
+#
+# 1101_1101
+# 0010_0010
+# llllllll
+# hhhhhhhh
+
+DD 22 34 12
+
+
+###### LD (nn), IY
+#
+# 1111_1101
+# 0010_0010
+# llllllll
+# hhhhhhhh
+
+FD 22 34 12
+
+
+###### LD SP, HL
+#
+# 1111_1001
+
+F9
+
+
+###### LD SP, IX
+#
+# 1101_1101
+# 1111_1001
+
+DD F9
+
+
+###### LD SP, IY
+#
+# 1111_1101
+# 1111_1001
+
+FD F9
+
+
+###### PUSH qq
+#
+# 11_qq_0101
+
+C5      # BC
+D5      # DE
+E5      # HL
+F5      # AF
+
+
+###### PUSH IX
+#
+# 1101_1101
+# 1110_0101
+
+DD E5
+
+
+###### PUSH IY      (page 116)
+#
+# 1111_1101
+# 1110_0101
+
+FD E5
+
+
+###### POP qq
+#
+# 11_qq_0001
+
+C1      # BC
+D1      # DE
+E1      # HL
+F1      # AF
+
+
+###### POP IX
+#
+# 1101_1101
+# 1110_0001
+
+DD E1
+
+
+###### POP IY
+#
+# 1111_1101
+# 1110_0101
+
+FD E1
+
+
+###### Exchange, Block Transfer, and Search Group ####################
+
+###### EX DE, HL        (page 122)
+#
+# 1110_1011
+
+EB
+
+
+###### EX AF, AF'
+#
+# 0000_1000
+
+08
+
+
+###### EXX
+#
+# 1101_1001
+
+D9
+
+
+###### EX (SP), HL
+#
+# 1110_0011
+
+E3
+
+
+###### EX (SP), IX
+#
+# 1101_1101
+# 1110_0011
+
+DD E3
+
+
+
+###### EX (SP), IY
+#
+# 1111_1101
+# 1110_0011
+
+FD E3
+
+
+###### LDI
+#
+# 1110_1101
+# 1010_0000
+
+ED A0
+
+
+###### LDIR
+#
+# 1110_1101
+# 1011_0000
+
+ED B0
+
+
+###### LDD
+#
+# 1110_1101
+# 1010_1000
+
+ED A8
+
+
+###### LDDR
+#
+# 1110_1101
+# 1011_1000
+
+ED B8
+
+
+###### CPI
+#
+# 1110_1101
+# 1010_0001
+
+ED A1
+
+###### CPIR
+#
+# 1110_1101
+# 1011_0001
+
+ED B1
+
+###### CPD
+#
+# 1110_1101
+# 1010_1001
+
+ED A9
+
+###### CPDR
+#
+# 1110_1101
+# 1011_1001
+
+ED B9
+
+
+###### 8-Bit Arithmetic Group #######################################
+
+###### ADD A, r        (page 143)
+80      # B
+81      # C
+82      # D
+83      # E
+84      # H
+85      # L
+86      # (HL)
+87      # A
+
+###### ADD A, n
+#
+# 1100_0110
+# nnnnnn
+
+C6 00
+C6 AA
+C6 FF
+
+
+###### ADD A, (HL)
+
+86
+
+###### ADD A, (IX+d)
+#
+# 1101_1101
+# 10000110
+# dddddddd
+
+DD 86 00
+DD 86 7F
+DD 86 80
+DD 86 FF
+
+
+###### ADD A, (IY+d)
+#
+# 1111_1101
+# 10000110
+# dddddddd
+
+FD 86 00
+FD 86 7F
+FD 86 80
+FD 86 FF
+
+
+###### ADC A, R
+88      # B
+89      # C
+8A      # D
+8B      # E
+8C      # H
+8D      # L
+8F      # A
+
+
+###### ADC A, n
+#
+# 1100_1110
+# nnnnnn
+
+CE 00
+CE AA
+CE FF
+
+
+###### ADC A, (HL)
+
+8E
+
+###### ADC A, (IX+d)
+#
+# 1101_1101
+# 1000_1110
+# dddddddd
+
+DD 8E 00
+DD 8E 7F
+DD 8E 80
+DD 8E FF
+
+
+###### ADD A, (IY+d)
+#
+# 1111_1101
+# 1000_1110
+# dddddddd
+
+FD 8E 00
+FD 8E 7F
+FD 8E 80
+FD 8E FF
+
+
+###### SUB A, R
+90      # B
+91      # C
+92      # D
+93      # E
+94      # H
+95      # L
+97      # A
+
+
+###### SUB A, n
+#
+# 1101_0110
+# nnnnnn
+
+D6 00
+D6 AA
+D6 FF
+
+
+###### SUB A, (HL)
+
+96
+
+###### SUB A, (IX+d)
+#
+# 1101_1101
+# 1001_0110
+# dddddddd
+
+DD 96 00
+DD 96 7F
+DD 96 80
+DD 96 FF
+
+
+###### SUB A, (IY+d)
+#
+# 1111_1101
+# 1001_0110
+# dddddddd
+
+FD 96 00
+FD 96 7F
+FD 96 80
+FD 96 FF
+
+
+###### SBC A, R
+98      # B
+99      # C
+9A      # D
+9B      # E
+9C      # H
+9D      # L
+9F      # A
+
+
+###### SBC A, n
+#
+# 1101_1110
+# nnnnnn
+
+DE 00
+DE AA
+DE FF
+
+
+###### SBC A, (HL)
+
+9E
+
+###### SBC A, (IX+d)
+#
+# 1101_1101
+# 1001_1110
+# dddddddd
+
+DD 9E 00
+DD 9E 7F
+DD 9E 80
+DD 9E FF
+
+
+###### SBC A, (IY+d)
+#
+# 1111_1101
+# 1001_1110
+# dddddddd
+
+FD 9E 00
+FD 9E 7F
+FD 9E 80
+FD 9E FF
+
+
+###### AND A, R
+A0      # B
+A1      # C
+A2      # D
+A3      # E
+A4      # H
+A5      # L
+A7      # A
+
+
+###### AND A, n
+#
+# 1110_0110
+# nnnnnn
+
+E6 00
+E6 AA
+E6 FF
+
+
+###### AND A, (HL)
+
+A6
+
+###### AND A, (IX+d)
+#
+# 1101_1101
+# 1010_0110
+# dddddddd
+
+DD A6 00
+DD A6 7F
+DD A6 80
+DD A6 FF
+
+
+###### AND A, (IY+d)
+#
+# 1111_1101
+# 1010_0110
+# dddddddd
+
+FD A6 00
+FD A6 7F
+FD A6 80
+FD A6 FF
+
+
+###### OR A, R
+B0      # B
+B1      # C
+B2      # D
+B3      # E
+B4      # H
+B5      # L
+B7      # A
+
+
+###### OR A, n
+#
+# 1111_0110
+# nnnnnn
+
+F6 00
+F6 AA
+F6 FF
+
+
+###### OR A, (HL)
+
+B6
+
+###### OR A, (IX+d)
+#
+# 1101_1101
+# 1011_0110
+# dddddddd
+
+DD B6 00
+DD B6 7F
+DD B6 80
+DD B6 FF
+
+
+###### OR A, (IY+d)
+#
+# 1111_1101
+# 1011_0110
+# dddddddd
+
+FD B6 00
+FD B6 7F
+FD B6 80
+FD B6 FF
+
+
+###### XOR A, R
+A8      # B
+A9      # C
+AA      # D
+AB      # E
+AC      # H
+AD      # L
+AF      # A
+
+
+###### XOR A, n
+#
+# 1110_1110
+# nnnnnn
+
+EE 00
+EE AA
+EE FF
+
+
+###### XOR A, (HL)
+
+AE
+
+###### XOR A, (IX+d)
+#
+# 1101_1101
+# 1010_1110
+# dddddddd
+
+DD AE 00
+DD AE 7F
+DD AE 80
+DD AE FF
+
+
+###### OR A, (IY+d)
+#
+# 1111_1101
+# 1010_1110
+# dddddddd
+
+FD AE 00
+FD AE 7F
+FD AE 80
+FD AE FF
+
+
+###### CP A, R
+B8      # B
+B9      # C
+BA      # D
+BB      # E
+BC      # H
+BD      # L
+BF      # A
+
+
+###### CP, n
+#
+# 1111_1110
+# nnnnnn
+
+FE 00
+FE AA
+FE FF
+
+
+###### CP, (HL)
+
+BE
+
+###### CP A, (IX+d)
+#
+# 1101_1101
+# 1011_1110
+# dddddddd
+
+DD BE 00
+DD BE 7F
+DD BE 80
+DD BE FF
+
+
+###### CP A, (IY+d)
+#
+# 1111_1101
+# 1011_1110
+# dddddddd
+
+FD BE 00
+FD BE 7F
+FD BE 80
+FD BE FF
+
+
+######## INC R
+#
+# 00_rrr_100
+
+04      # B
+0C      # C
+14      # D
+1C      # E
+24      # H
+2C      # L
+3C      # A
+
+
+###### INC (HL)     (page 165)
+#
+# 0011_0100
+
+34
+
+
+###### INC (IX+d)
+#
+# 1101_1101
+# 0011_0100
+# dddddddd
+
+DD 34 00
+DD 34 7F
+DD 34 80
+DD 34 FF
+
+
+###### INC (IY+d)
+#
+# 1111_1101
+# 0011_0100
+# dddddddd
+
+FD 34 00
+FD 34 7F
+FD 34 80
+FD 34 FF
+
+
+######## DEC R
+#
+# 00_rrr_101
+
+05      # B
+0D      # C
+15      # D
+1D      # E
+25      # H
+2D      # L
+3D      # A
+
+
+###### DEC (HL)     (page 168)
+#
+# 0011_0101
+
+35
+
+
+###### DEC (IX+d)
+#
+# 1101_1101
+# 0011_0101
+# dddddddd
+
+DD 35 00
+DD 35 7F
+DD 35 80
+DD 35 FF
+
+
+###### DEC (IY+d)
+#
+# 1111_1101
+# 0011_0101
+# dddddddd
+
+FD 35 00
+FD 35 7F
+FD 35 80
+FD 35 FF
+
+
+###### General-Purpose Arith and CPU Control Group ###################
+
+###### DAA      (page 171)
+
+27
+
+###### CPL
+
+2F
+
+###### NEG
+
+ED 44
+
+###### CCF
+
+3F
+
+###### SCF
+
+37
+
+###### NOP
+
 00
 
+###### HALT
+
+76
+
+###### DI
+
+F3
+
+###### EI
+
+FB
+
+###### IM 0
+
+ED 46
+
+###### IM 1
+
+ED 56
+
+###### IM 2
+
+ED 5E
+
+
+###### 16-Bit Arithmetic Group ######################################
+
+###### ADD HL, ss       (page 186)
+#
+# 00_ss_1001
+
+09      # BC
+19      # DE
+29      # HL
+39      # SP
+
+
+###### ADC HL, ss
+#
+# 1110_1101
+# 01_ss_1010
+
+ED 4A   # BC
+ED 5A   # DE
+ED 6A   # HL
+ED 7A   # SP
+
+
+###### SBC HL, ss
+#
+# 1110_1101
+# 01_ss_0010
+
+ED 42   # BC
+ED 52   # DE
+ED 62   # HL
+ED 72   # SP
+
+
+###### ADD IX, pp
+#
+# 1101_1101
+# 00_pp_1001
+
+DD 09       # BC
+DD 19       # DE
+DD 29       # IX
+DD 39       # SP
+
+
+###### ADD IY, pp
+#
+# 1111_1101
+# 00_pp_1001
+
+FD 09       # BC
+FD 19       # DE
+FD 29       # IX
+FD 39       # SP
+
+
+###### INC ss
+03      # BC
+13      # DE
+23      # HL
+33      # SP
+
+
+###### INX IX
+
+DD 23
+
+###### INC IY
+
+FD 23
+
+
+###### DEC ss
+
+0B      # BC
+1B      # DE
+2B      # HL
+3B      # SP
+
+
+###### DEC IX
+
+DD 2B
+
+###### DEC IY
+
+FD 2B
+
+
+###### Rotate and Shift Group ########################################
+
+###### RLCA     (page 203)
+
+07
+
+###### RLA
+
+17
+
+###### RRCA
+
+0F
+
+###### RRA
+
+1F
+
+###### RLC r
+#
+# 1100_1011
+# 00000_rrr
+
+CB 00   # B
+CB 01   # C
+CB 02   # D
+CB 03   # E
+CB 04   # H
+CB 05   # L
+CB 07   # A
+
+###### RLC (HL)
+
+CB 06
+
+###### RLC (IX+d)
+#
+# 1101_1101
+# 1100_1011
+# dddddddd
+# 0000_0110
+
+DD CB 00 06
+DD CB 7F 06
+DD CB 80 06
+DD CB FF 06
+
+
+###### RLC (IY+d)
+#
+# 1111_1101
+# 1100_1011
+# dddddddd
+# 0000_0110
+
+FD CB 00 06
+FD CB 7F 06
+FD CB 80 06
+FD CB FF 06
+
+
+###### RL r
+
+CB 10
+CB 11
+CB 12
+CB 13
+CB 14
+CB 15
+CB 17
+
+###### RL (HL)
+
+CB 16
+
+###### RL (IX+d)
+#
+# 1101_1101
+# 1100_1011
+# dddddddd
+# 0001_0110
+
+DD CB 00 16
+DD CB 7F 16
+DD CB 80 16
+DD CB FF 16
+
+
+###### RL (IY+d)
+#
+# 1111_1101
+# 1100_1011
+# dddddddd
+# 0001_0110
+
+FD CB 00 16
+FD CB 7F 16
+FD CB 80 16
+FD CB FF 16
+
+
+###### RRC r
+
+CB 08
+CB 09
+CB 0A
+CB 0B
+CB 0C
+CB 0D
+CB 0F
+
+###### RRC (HL)
+
+CB 0E
+
+###### RRC (IX+d)
+#
+# 1101_1101
+# 1100_1011
+# dddddddd
+# 0000_1110
+
+DD CB 00 0E
+DD CB 7F 0E
+DD CB 80 0E
+DD CB FF 0E
+
+
+###### RRC (IY+d)
+#
+# 1111_1101
+# 1100_1011
+# dddddddd
+# 0000_1110
+
+FD CB 00 0E
+FD CB 7F 0E
+FD CB 80 0E
+FD CB FF 0E
+
+
+###### RR r    (page 225)
+#
+# Note: there is an error in the Zilog document
+#       for the encoding of the RR r in bit 4
+#       which should be a "1" and not "0".
+
+CB 18
+CB 19
+CB 1A
+CB 1B
+CB 1C
+CB 1D
+CB 1F
+
+###### RR (HL)
+
+CB 1E
+
+###### RR (IX+d)
+#
+# 1101_1101
+# 1100_1011
+# dddddddd
+# 0001_1110
+
+DD CB 00 1E
+DD CB 7F 1E
+DD CB 80 1E
+DD CB FF 1E
+
+
+###### RR (IY+d)
+#
+# 1111_1101
+# 1100_1011
+# dddddddd
+# 0001_1110
+
+FD CB 00 1E
+FD CB 7F 1E
+FD CB 80 1E
+FD CB FF 1E
+
+
+###### SLA m
+
+CB 20
+CB 21
+CB 22
+CB 23
+CB 24
+CB 25
+CB 27
+
+###### SLA (HL)
+
+CB 26
+
+###### SLA (IX+d)
+#
+# 1101_1101
+# 1100_1011
+# dddddddd
+# 0010_0110
+
+DD CB 00 26
+DD CB 7F 26
+DD CB 80 26
+DD CB FF 26
+
+
+###### SLA (IY+d)
+#
+# 1111_1101
+# 1100_1011
+# dddddddd
+# 0010_0110
+
+FD CB 00 26
+FD CB 7F 26
+FD CB 80 26
+FD CB FF 26
+
+
+###### SRA m
+
+CB 28
+CB 29
+CB 2A
+CB 2B
+CB 2C
+CB 2D
+CB 2F
+
+###### SRA (HL)
+
+CB 2E
+
+###### SRA (IX+d)
+#
+# 1101_1101
+# 1100_1011
+# dddddddd
+# 0010_1110
+
+DD CB 00 2E
+DD CB 7F 2E
+DD CB 80 2E
+DD CB FF 2E
+
+
+###### SRA (IY+d)
+#
+# 1111_1101
+# 1100_1011
+# dddddddd
+# 0010_1110
+
+FD CB 00 2E
+FD CB 7F 2E
+FD CB 80 2E
+FD CB FF 2E
+
+
+###### SRL m
+
+CB 38
+CB 39
+CB 3A
+CB 3B
+CB 3C
+CB 3D
+CB 3F
+
+###### SR; (HL)
+
+CB 3E
+
+###### SRL (IX+d)
+#
+# 1101_1101
+# 1100_1011
+# dddddddd
+# 0011_1110
+
+DD CB 00 3E
+DD CB 7F 3E
+DD CB 80 3E
+DD CB FF 3E
+
+
+###### SRL (IY+d)
+#
+# 1111_1101
+# 1100_1011
+# dddddddd
+# 0011_1110
+
+FD CB 00 3E
+FD CB 7F 3E
+FD CB 80 3E
+FD CB FF 3E
+
+
+###### RLD      (page 236)
+
+ED 6F
+
+###### RRD
+
+ED 67
+
+
+###### Bit Set and Test Group ########################################
+
+###### BIT b, r
+#
+# 1100_1011
+# 01_bbb_rrr
+
+# registers
+CB 40
+CB 41
+CB 42
+CB 43
+CB 44
+CB 45
+CB 47
+
+# bits
+CB 40
+CB 48
+CB 50
+CB 58
+CB 60
+CB 68
+CB 70
+CB 78
+
+
+###### BIT b, (HL)
+#
+# 1100_1011
+# 01_bbb_110
+
+CB 46
+CB 4E
+CB 56
+CB 5E
+CB 66
+CB 6E
+CB 76
+CB 7E
+
+
+###### BIT b, (IX+d)
+#
+# 1101_1101
+# 1100_1011
+# dddddddd
+# 01_bbb_110
+
+DD CB 00 46
+DD CB 7F 4E
+DD CB 80 56
+DD CB FF 5E
+
+
+###### BIT b, (IY+d)
+#
+# 1111_1101
+# 1100_1011
+# dddddddd
+# 01_bbb_110
+
+FD CB 00 66
+FD CB 7F 6E
+FD CB 80 76
+FD CB FF 7E
+
+
+###### SET b, r
+#
+# 1100_1011
+# 11_bbb_rrr
+
+# registers
+CB C0
+CB C1
+CB C2
+CB C3
+CB C4
+CB C5
+CB C7
+
+# bits
+CB C0
+CB C8
+CB D0
+CB D8
+CB E0
+CB E8
+CB F0
+CB F8
+
+
+###### SET b, (HL)
+#
+# 1100_1011
+# 11_bbb_110
+
+CB C6
+CB CE
+CB D6
+CB DE
+CB E6
+CB EE
+CB F6
+CB FE
+
+
+###### SET b, (IX+d)
+#
+# 1101_1101
+# 1100_1011
+# dddddddd
+# 11_bbb_110
+
+DD CB 00 C6
+DD CB 7F CE
+DD CB 80 D6
+DD CB FF DE
+
+
+###### SET b, (IY+d)
+#
+# 1111_1101
+# 1100_1011
+# dddddddd
+# 11_bbb_110
+
+FD CB 00 E6
+FD CB 7F EE
+FD CB 80 F6
+FD CB FF FE
+
+
+###### RES b, r
+#
+# 1100_1011
+# 10_bbb_rrr
+
+# registers
+CB 80
+CB 81
+CB 82
+CB 83
+CB 84
+CB 85
+CB 87
+
+# bits
+CB 80
+CB 88
+CB 90
+CB 98
+CB A0
+CB A8
+CB B0
+CB B8
+
+
+###### RES b, (HL)
+#
+# 1100_1011
+# 10_bbb_110
+
+CB 86
+CB 8E
+CB 96
+CB 9E
+CB A6
+CB AE
+CB B6
+CB BE
+
+
+###### RES b, (IX+d)
+#
+# 1101_1101
+# 1100_1011
+# dddddddd
+# 10_bbb_110
+
+DD CB 00 86
+DD CB 7F 8E
+DD CB 80 96
+DD CB FF 9E
+
+
+###### RES b, (IY+d)
+#
+# 1111_1101
+# 1100_1011
+# dddddddd
+# 10_bbb_110
+
+FD CB 00 A6
+FD CB 7F AE
+FD CB 80 B6
+FD CB FF BE
+
+
+###### Jump Group ####################################################
+
+
+###### JP addr
+#
+# 1100_0011
+# llllllll
+# hhhhhhhh
+
+C3 78 56
+
+
+###### JP cc, nn
+#
+# 11_ccc_010
+# llllllll
+# hhhhhhhh
+
+C2 78 66
+CA 78 66
+D2 78 66
+DA 78 66
+E2 78 66
+EA 78 66
+F2 78 66
+FA 78 66
+
+
+###### JR e
+
+18 FE
+
+###### JR C, e
+
+38 FE
+
+###### JR NC, e
+
+30 FE
+
+###### JR Z, e
+
+28 FE
+
+###### JR NV, e
+
+20 FE
+
+###### JP (HL)
+
+E9
+
+###### JP (IX)
+
+DD E9
+
+###### JP (IY)
+
+FD E9
+
+###### DJNZ e
+
+10 FE
+
+
+###### Call and Return Group #########################################
+
+
+###### CALL addr
+
+CD 78 56
+
+###### CALL cc, addr
+
+C4 78 66
+CC 78 66
+D4 78 66
+DC 78 66
+E4 78 66
+EC 78 66
+F4 78 66
+FC 78 66
+
+###### RET
+
+C9
+
+###### RET cc
+
+C0
+C8
+D0
+D8
+E0
+E8
+F0
+F8
+
+###### RETI
+
+ED 4D
+
+###### RETN
+
+ED 45
+
+###### RST p
+
+C7
+CF
+D7
+DF
+E7
+EF
+F7
+FF
+
+
+###### Input and Output Group ########################################
+
+###### IN A, (n)
+#
+# 1101_1011
+# nnnnnnnn
+
+DB 00
+DB 7F
+DB 80
+DB FF
+
+###### IN r, (C)
+
+ED 40
+ED 48
+ED 50
+ED 58
+ED 60
+ED 68
+ED 78
+
+###### INI
+
+ED A2
+
+###### INIR
+
+ED B2
+
+###### IND
+
+ED AA
+
+######INDR
+
+ED BA
+
+###### OUT (n), A
+
+D3 00
+D3 7F
+D3 80
+D3 FF
+
+###### OUT (C), r
+
+ED 41
+ED 49
+ED 51
+ED 59
+ED 61
+ED 69
+ED 79
+
+###### OUTI
+
+ED A3
+
+###### OTIR
+
+ED B3
+
+###### OUTD
+
+ED AB
+
+###### OTDR
+
+ED BB
+
+
+
+######################################################################
+######################################################################
+######################################################################
 
 ## END ##
-
