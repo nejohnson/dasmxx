@@ -44,6 +44,7 @@ typedef struct optab_s {
     void (*operands)( FILE *, ADDR *, UBYTE, XREF_TYPE); /* operand function */
     XREF_TYPE xtype;
     enum {
+        OPTAB_UNDEF,
         OPTAB_INSN,
         OPTAB_RANGE,
         OPTAB_MASK,
@@ -79,6 +80,16 @@ typedef struct optab_s {
       .opc     = M_opc,              \
       .opcode  = "TABLE",            \
       .u.table = M_tablename         \
+    },
+
+/**
+    Undefined opcode, handy for exceptions in otherwise masks
+    or ranges.
+**/
+#define UNDEF(M_opc)                 \
+    { .type    = OPTAB_UNDEF,        \
+      .opc     = M_opc,              \
+      .opcode  = "UNDEF",            \
     },
 
 /**

@@ -151,6 +151,10 @@ static int walk_table( FILE * f, ADDR * addr, optab_t * optab, OPC opc )
             opc = next_insn( f, addr );
             return walk_table( f, addr, optab->u.table, opc );
         }
+        else if ( optab->type == OPTAB_UNDEF && opc == optab->opc )
+        {
+            return INSN_NOT_FOUND;
+        }
         else if ( ( optab->type == OPTAB_INSN && opc == optab->opc )
                     ||
                     ( optab->type == OPTAB_RANGE 
