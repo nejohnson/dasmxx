@@ -676,24 +676,14 @@ optab_t pageIX[] = {
     INSN ( "LD", ix_imm16,   0x21, X_IMM )
     INSN ( "LD", mem16_ix,   0x22, X_DIRECT )
     INSN ( "LD", ix_mem16,   0x2A, X_DIRECT )
-    INSN ( "LD", ixh_imm8,   0x26, X_IMM )
-    INSN ( "LD", ixl_imm8,   0x2E, X_IMM )
     INSN ( "LD", sp_ix,      0xF9, X_REG )
     
     RANGE( "LD", ixoff_reg,  0x70, 0x75, X_REG )
     INSN ( "LD", ixoff_reg,  0x77, X_REG )
     INSN ( "LD", ixoff_imm8, 0x36, X_IMM )
     
-    RANGE( "LD", ixh_reg,    0x60, 0x63, X_REG )
-    MASK ( "LD", ixh_ixX,    0xF7, 0x64, X_REG )
-    INSN ( "LD", ixh_reg,    0x67, X_REG )
-    
-    RANGE( "LD", ixl_reg,    0x68, 0x6B, X_REG )
-    MASK ( "LD", ixl_ixX,    0xF7, 0x6C, X_REG )
-    INSN ( "LD", ixl_reg,    0x6F, X_REG )
-        
+    UNDEF( 0x76 )
     MASK ( "LD", reg2_ixoff, 0xC7, 0x46, X_REG )    
-    MASK ( "LD", reg2_ixX,   0xC7, 0x44, X_REG )
 
     INSN ( "POP",  ix,       0xE1, X_REG )
     INSN ( "PUSH", ix,       0xE5, X_REG )
@@ -701,39 +691,20 @@ optab_t pageIX[] = {
     INSN ( "EX",   indsp_ix, 0xE3, X_REG )
     
     INSN ( "INC",  ix,       0x23, X_REG )
-    INSN ( "INC",  ixh,      0x24, X_REG )
-    INSN ( "INC",  ixl,      0x2C, X_REG )
     INSN ( "INC",  ixoff,    0x34, X_REG )
     
     INSN ( "DEC",  ix,       0x2B, X_REG )
-    INSN ( "DEC",  ixh,      0x25, X_REG )
-    INSN ( "DEC",  ixl,      0x2D, X_REG )
     INSN ( "DEC",  ixoff,    0x35, X_REG )
     
-    MASK ( "ADD",  a_ixX,    0xF7, 0x84, X_REG )
     INSN ( "ADD",  ix_ix,    0x29, X_REG )
     MASK ( "ADD",  ix_rpair, 0xCF, 0x09, X_REG )
     INSN ( "ADD",  a_ixoff,  0x86, X_REG )
-    
-    MASK ( "ADC",  a_ixX,    0xF7, 0x8C, X_REG )
     INSN ( "ADC",  a_ixoff,  0x8E, X_REG )
-
-    MASK ( "SUB",  a_ixX,    0xF7, 0x94, X_REG )
     INSN ( "SUB",  a_ixoff,  0x96, X_REG )
-    
-    MASK ( "SBC",  a_ixX,    0xF7, 0x9C, X_REG )
     INSN ( "SBC",  a_ixoff,  0x9E, X_REG )
-    
-    MASK ( "AND",  a_ixX,    0xF7, 0xA4, X_REG )
     INSN ( "AND",  a_ixoff,  0xA6, X_REG )
-    
-    MASK ( "XOR",  a_ixX,    0xF7, 0xAC, X_REG )
     INSN ( "XOR",  a_ixoff,  0xAE, X_REG )
-    
-    MASK ( "OR",   a_ixX,    0xF7, 0xB4, X_REG )
     INSN ( "OR",   a_ixoff,  0xB6, X_REG )
-    
-    MASK ( "CP",   a_ixX,    0xF7, 0xBC, X_REG )
     INSN ( "CP",   a_ixoff,  0xBE, X_REG )
     
     INSN ( "JP",   indix,    0xE9, X_REG )    
@@ -773,24 +744,14 @@ optab_t pageIY[] = {
     INSN ( "LD", iy_imm16,   0x21, X_IMM )
     INSN ( "LD", mem16_iy,   0x22, X_DIRECT )
     INSN ( "LD", iy_mem16,   0x2A, X_DIRECT )
-    INSN ( "LD", iyh_imm8,   0x26, X_IMM )
-    INSN ( "LD", iyl_imm8,   0x2E, X_IMM )
     INSN ( "LD", sp_iy,      0xF9, X_REG )
     
     RANGE( "LD", iyoff_reg,  0x70, 0x75, X_REG )
     INSN ( "LD", iyoff_reg,  0x77, X_REG )
     INSN ( "LD", iyoff_imm8, 0x36, X_IMM )
     
-    RANGE( "LD", iyh_reg,    0x60, 0x63, X_REG )
-    MASK ( "LD", iyh_iyX,    0xF7, 0x64, X_REG )
-    INSN ( "LD", iyh_reg,    0x67, X_REG )
-    
-    RANGE( "LD", iyl_reg,    0x68, 0x6B, X_REG )
-    MASK ( "LD", iyl_iyX,    0xF7, 0x6C, X_REG )
-    INSN ( "LD", iyl_reg,    0x6F, X_REG )
-        
+    UNDEF( 0x76 )
     MASK ( "LD", reg2_iyoff, 0xC7, 0x46, X_REG )    
-    MASK ( "LD", reg2_iyX,   0xC7, 0x44, X_REG )
 
     INSN ( "POP",  iy,       0xE1, X_REG )
     INSN ( "PUSH", iy,       0xE5, X_REG )
@@ -798,39 +759,20 @@ optab_t pageIY[] = {
     INSN ( "EX",   indsp_iy, 0xE3, X_REG )
     
     INSN ( "INC",  iy,       0x23, X_REG )
-    INSN ( "INC",  iyh,      0x24, X_REG )
-    INSN ( "INC",  iyl,      0x2C, X_REG )
     INSN ( "INC",  iyoff,    0x34, X_REG )
     
     INSN ( "DEC",  iy,       0x2B, X_REG )
-    INSN ( "DEC",  iyh,      0x25, X_REG )
-    INSN ( "DEC",  iyl,      0x2D, X_REG )
     INSN ( "DEC",  iyoff,    0x35, X_REG )
     
-    MASK ( "ADD",  a_iyX,    0xF7, 0x84, X_REG )
     INSN ( "ADD",  iy_iy,    0x29, X_REG )
     MASK ( "ADD",  iy_rpair, 0xCF, 0x09, X_REG )
     INSN ( "ADD",  a_iyoff,  0x86, X_REG )
-    
-    MASK ( "ADC",  a_iyX,    0xF7, 0x8C, X_REG )
     INSN ( "ADC",  a_iyoff,  0x8E, X_REG )
-
-    MASK ( "SUB",  a_iyX,    0xF7, 0x94, X_REG )
     INSN ( "SUB",  a_iyoff,  0x96, X_REG )
-    
-    MASK ( "SBC",  a_iyX,    0xF7, 0x9C, X_REG )
     INSN ( "SBC",  a_iyoff,  0x9E, X_REG )
-    
-    MASK ( "AND",  a_iyX,    0xF7, 0xA4, X_REG )
     INSN ( "AND",  a_iyoff,  0xA6, X_REG )
-    
-    MASK ( "XOR",  a_iyX,    0xF7, 0xAC, X_REG )
     INSN ( "XOR",  a_iyoff,  0xAE, X_REG )
-    
-    MASK ( "OR",   a_iyX,    0xF7, 0xB4, X_REG )
     INSN ( "OR",   a_iyoff,  0xB6, X_REG )
-    
-    MASK ( "CP",   a_iyX,    0xF7, 0xBC, X_REG )
     INSN ( "CP",   a_iyoff,  0xBE, X_REG )
     
     INSN ( "JP",   indiy,    0xE9, X_REG ) 
