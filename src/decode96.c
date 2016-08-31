@@ -320,7 +320,7 @@ static void do_f0( int addr, unsigned char *buf, int n )
  *
  ************************************************************/
 
-static do_middle( int addr, unsigned char *buf, int n, int isSigned )
+static void do_middle( int addr, unsigned char *buf, int n, int isSigned )
 {
     char *opcodes[] = { "and",      "add",      "sub",      "mul",
                         "and",      "add",      "sub",      "mul",
