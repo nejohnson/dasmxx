@@ -240,225 +240,42 @@ OPERAND_FUNC(ofst)
 /**                            Double Operands                               **/
 /******************************************************************************/
 
-OPERAND_FUNC(A_B)
-{
-    operand_A( f, addr, opc, xtype );
-    COMMA;
-    operand_B( f, addr, opc, xtype );
-}
-
-OPERAND_FUNC(B_A)
-{
-    operand_B( f, addr, opc, xtype );
-    COMMA;
-    operand_A( f, addr, opc, xtype );
-}
-
-OPERAND_FUNC(reg_A)
-{
-    operand_reg( f, addr, opc, xtype );
-    COMMA;
-    operand_A( f, addr, opc, xtype );
-}
-
-OPERAND_FUNC(reg_B)
-{
-    operand_reg( f, addr, opc, xtype );
-    COMMA;
-    operand_B( f, addr, opc, xtype );
-}
-
-OPERAND_FUNC(A_reg)
-{
-    operand_A( f, addr, opc, xtype );
-    COMMA;
-    operand_reg( f, addr, opc, xtype );
-}
-
-OPERAND_FUNC(B_reg)
-{
-    operand_B( f, addr, opc, xtype );
-    COMMA;
-    operand_reg( f, addr, opc, xtype );
-}
-
-OPERAND_FUNC(reg_reg)
-{
-    operand_reg( f, addr, opc, xtype );
-    COMMA;
-    operand_reg( f, addr, opc, xtype );
-}
-
-OPERAND_FUNC(iop_A)
-{
-    operand_iop( f, addr, opc, xtype );
-    COMMA;
-    operand_A( f, addr, opc, xtype );
-}
-
-OPERAND_FUNC(iop_B)
-{
-    operand_iop( f, addr, opc, xtype );
-    COMMA;
-    operand_B( f, addr, opc, xtype );
-}
-
-OPERAND_FUNC(iop_reg)
-{
-    operand_iop( f, addr, opc, xtype );
-    COMMA;
-    operand_reg( f, addr, opc, xtype );
-}
-
-OPERAND_FUNC(A_Pn)
-{
-    operand_A( f, addr, opc, xtype );
-    COMMA;
-    operand_Pn( f, addr, opc, xtype );
-}
-
-OPERAND_FUNC(B_Pn)
-{
-    operand_B( f, addr, opc, xtype );
-    COMMA;
-    operand_Pn( f, addr, opc, xtype );
-}
-
-OPERAND_FUNC(Pn_A)
-{
-    operand_Pn( f, addr, opc, xtype );
-    COMMA;
-    operand_A( f, addr, opc, xtype );
-}
-
-OPERAND_FUNC(Pn_B)
-{
-    operand_Pn( f, addr, opc, xtype );
-    COMMA;
-    operand_B( f, addr, opc, xtype );
-}
-
-OPERAND_FUNC(iop_Pn)
-{
-    operand_iop( f, addr, opc, xtype );
-    COMMA;
-    operand_Pn( f, addr, opc, xtype );
-}
-
-OPERAND_FUNC(iop16_reg)
-{
-    operand_iop16( f, addr, opc, xtype );
-    COMMA;
-    operand_reg( f, addr, opc, xtype );
-}
-
-OPERAND_FUNC(iop16_B_reg)
-{
-    operand_iop16_B( f, addr, opc, xtype );
-    COMMA;
-    operand_reg( f, addr, opc, xtype );
-}
-
-OPERAND_FUNC(A_ofst)
-{
-    operand_A( f, addr, opc, xtype );
-    COMMA;
-    operand_ofst( f, addr, opc, xtype );
-}
-
-OPERAND_FUNC(B_ofst)
-{
-    operand_B( f, addr, opc, xtype );
-    COMMA;
-    operand_ofst( f, addr, opc, xtype );
-}
-
-OPERAND_FUNC(reg_ofst)
-{
-    operand_reg( f, addr, opc, xtype );
-    COMMA;
-    operand_ofst( f, addr, opc, xtype );
-}
+TWO_OPERAND(A, B)
+TWO_OPERAND(B, A)
+TWO_OPERAND(reg, A)
+TWO_OPERAND(reg, B)
+TWO_OPERAND(A, reg)
+TWO_OPERAND(B, reg)
+TWO_OPERAND(reg, reg)
+TWO_OPERAND(iop, A)
+TWO_OPERAND(iop, B)
+TWO_OPERAND(iop, reg)
+TWO_OPERAND(A, Pn)
+TWO_OPERAND(B, Pn)
+TWO_OPERAND(Pn, A)
+TWO_OPERAND(Pn, B)
+TWO_OPERAND(iop, Pn)
+TWO_OPERAND(iop16, reg)
+TWO_OPERAND(iop16_B, reg)
+TWO_OPERAND(A, ofst)
+TWO_OPERAND(B, ofst)
+TWO_OPERAND(reg, ofst)
 
 /******************************************************************************/
 /**                            Triple Operands                               **/
 /******************************************************************************/
 
-OPERAND_FUNC(B_A_ofst)
-{
-    operand_B( f, addr, opc, xtype );
-    COMMA;
-    operand_A_ofst( f, addr, opc, xtype );
-}
+TWO_OPERAND(B, A_ofst)
+TWO_OPERAND(reg, A_ofst)
+TWO_OPERAND(reg, B_ofst)
+TWO_OPERAND(reg, reg_ofst)
+TWO_OPERAND(iop, A_ofst)
+TWO_OPERAND(iop, B_ofst)
+TWO_OPERAND(iop, reg_ofst)
 
-OPERAND_FUNC(reg_A_ofst)
-{
-    operand_reg( f, addr, opc, xtype );
-    COMMA;
-    operand_A_ofst( f, addr, opc, xtype );
-}
-
-OPERAND_FUNC(reg_B_ofst)
-{
-    operand_reg( f, addr, opc, xtype );
-    COMMA;
-    operand_B_ofst( f, addr, opc, xtype );
-}
-
-OPERAND_FUNC(reg_reg_ofst)
-{
-    operand_reg( f, addr, opc, xtype );
-    COMMA;
-    operand_reg_ofst( f, addr, opc, xtype );
-}
-
-OPERAND_FUNC(iop_A_ofst)
-{
-    operand_iop( f, addr, opc, xtype );
-    COMMA;
-    operand_A_ofst( f, addr, opc, xtype );
-}
-
-OPERAND_FUNC(iop_B_ofst)
-{
-    operand_iop( f, addr, opc, xtype );
-    COMMA;
-    operand_B_ofst( f, addr, opc, xtype );
-}
-
-OPERAND_FUNC(iop_reg_ofst)
-{
-    operand_iop( f, addr, opc, xtype );
-    COMMA;
-    operand_reg_ofst( f, addr, opc, xtype );
-}
-
-OPERAND_FUNC(A_Pn_ofst)
-{
-    operand_A( f, addr, opc, xtype );
-    COMMA;
-    operand_Pn( f, addr, opc, xtype );
-    COMMA;
-    operand_ofst( f, addr, opc, xtype );
-}
-
-OPERAND_FUNC(B_Pn_ofst)
-{
-    operand_B( f, addr, opc, xtype );
-    COMMA;
-    operand_Pn( f, addr, opc, xtype );
-    COMMA;
-    operand_ofst( f, addr, opc, xtype );
-}
-
-OPERAND_FUNC(reg_Pn_ofst)
-{
-    operand_reg( f, addr, opc, xtype );
-    COMMA;
-    operand_Pn( f, addr, opc, xtype );
-    COMMA;
-    operand_ofst( f, addr, opc, xtype );
-}
+THREE_OPERAND(A, Pn, ofst)
+THREE_OPERAND(B, Pn, ofst)
+THREE_OPERAND(reg, Pn, ofst)
 
 /******************************************************************************/
 /** Instruction Decoding Tables                                              **/

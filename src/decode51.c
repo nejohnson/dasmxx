@@ -246,138 +246,26 @@ OPERAND_FUNC(rel8)
 /**                            Double Operands                               **/
 /******************************************************************************/
 
-OPERAND_FUNC(A_imm8)
-{
-    operand_A( f, addr, opc, xtype  );
-    COMMA;
-    operand_imm8( f, addr, opc, xtype );
-}
-
-OPERAND_FUNC(A_iram)
-{
-    operand_A( f, addr, opc, xtype  );
-    COMMA;
-    operand_iram( f, addr, opc, xtype );
-}
-
-OPERAND_FUNC(iram_A)
-{
-    operand_iram( f, addr, opc, xtype );
-    COMMA;
-    operand_A( f, addr, opc, xtype  );
-}
-
-OPERAND_FUNC(iram_imm8)
-{
-    operand_iram( f, addr, opc, xtype );
-    COMMA;
-    operand_imm8( f, addr, opc, xtype  );
-}
-
-OPERAND_FUNC(A_indreg)
-{
-    operand_A( f, addr, opc, xtype  );
-    COMMA;
-    operand_indreg( f, addr, opc, xtype );
-}
-
-OPERAND_FUNC(indreg_A)
-{
-    operand_indreg( f, addr, opc, xtype  );
-    COMMA;
-    operand_A( f, addr, opc, xtype );
-}
-
-OPERAND_FUNC(indreg_imm8)
-{
-    operand_indreg( f, addr, opc, xtype  );
-    COMMA;
-    operand_imm8( f, addr, opc, xtype );
-}
-
-OPERAND_FUNC(indreg_iram)
-{
-    operand_indreg( f, addr, opc, xtype  );
-    COMMA;
-    operand_iram( f, addr, opc, xtype );
-}
-
-OPERAND_FUNC(iram_indreg)
-{
-    operand_iram( f, addr, opc, xtype  );
-    COMMA;
-    operand_indreg( f, addr, opc, xtype );
-}
-
-OPERAND_FUNC(A_reg)
-{
-    operand_A( f, addr, opc, xtype  );
-    COMMA;
-    operand_reg( f, addr, opc, xtype );
-}
-
-OPERAND_FUNC(reg_A)
-{
-    operand_reg( f, addr, opc, xtype  );
-    COMMA;
-    operand_A( f, addr, opc, xtype );
-}
-
-OPERAND_FUNC(iram_rel8)
-{
-    operand_iram( f, addr, opc, xtype );
-    COMMA;
-    operand_rel8( f, addr, opc, xtype  );
-}
-
-OPERAND_FUNC(reg_rel8)
-{
-    operand_reg( f, addr, opc, xtype );
-    COMMA;
-    operand_rel8( f, addr, opc, xtype  );
-}
-
-OPERAND_FUNC(reg_imm8)
-{
-    operand_reg( f, addr, opc, xtype );
-    COMMA;
-    operand_imm8( f, addr, opc, xtype  );
-}
-
-OPERAND_FUNC(reg_iram)
-{
-    operand_reg( f, addr, opc, xtype  );
-    COMMA;
-    operand_iram( f, addr, opc, xtype );
-}
-
-OPERAND_FUNC(iram_reg)
-{
-    operand_iram( f, addr, opc, xtype  );
-    COMMA;
-    operand_reg( f, addr, opc, xtype );
-}
-
-OPERAND_FUNC(iram_iram)
-{
-    operand_iram( f, addr, opc, xtype  );
-    COMMA;
-    operand_iram( f, addr, opc, xtype );
-}
-
-OPERAND_FUNC(C_addrbit)
-{
-    operand_C( f, addr, opc, xtype );
-    COMMA;
-    operand_addrbit( f, addr, opc, xtype );
-}
-
-OPERAND_FUNC(addrbit_C)
-{
-    operand_addrbit( f, addr, opc, xtype );
-    COMMA;
-    operand_C( f, addr, opc, xtype );
-}
+TWO_OPERAND(A, imm8)
+TWO_OPERAND(A, iram)
+TWO_OPERAND(iram, A)
+TWO_OPERAND(iram, imm8)
+TWO_OPERAND(A, indreg)
+TWO_OPERAND(indreg, A)
+TWO_OPERAND(indreg, imm8)
+TWO_OPERAND(indreg, iram)
+TWO_OPERAND(iram, indreg)
+TWO_OPERAND(A, reg)
+TWO_OPERAND(reg, A)
+TWO_OPERAND(iram, rel8)
+TWO_OPERAND(reg, rel8)
+TWO_OPERAND(reg, imm8)
+TWO_OPERAND(reg, iram)
+TWO_OPERAND(iram, reg)
+TWO_OPERAND(iram, iram)
+TWO_OPERAND(C, addrbit)
+TWO_OPERAND(addrbit, C)
+TWO_OPERAND(dptr, imm16)
 
 OPERAND_FUNC(C_n_addrbit)
 {
@@ -411,52 +299,14 @@ OPERAND_FUNC(dptr_A)
     operand_A( f, addr, opc, xtype );
 }
 
-OPERAND_FUNC(dptr_imm16)
-{
-    operand_dptr( f, addr, opc, xtype );
-    COMMA;
-    operand_imm16( f, addr, opc, xtype );
-}
-
 /******************************************************************************/
 /**                            Triple Operands                               **/
 /******************************************************************************/
 
-OPERAND_FUNC(A_imm8_rel8)
-{
-    operand_A( f, addr, opc, xtype );
-    COMMA;
-    operand_imm8( f, addr, opc, xtype );
-    COMMA;
-    operand_rel8( f, addr, opc, xtype );
-}
-
-OPERAND_FUNC(A_iram_rel8)
-{
-    operand_A( f, addr, opc, xtype );
-    COMMA;
-    operand_iram( f, addr, opc, xtype );
-    COMMA;
-    operand_rel8( f, addr, opc, xtype );
-}
-
-OPERAND_FUNC(indreg_imm8_rel8)
-{
-    operand_indreg( f, addr, opc, xtype );
-    COMMA;
-    operand_imm8( f, addr, opc, xtype );
-    COMMA;
-    operand_rel8( f, addr, opc, xtype );
-}
-
-OPERAND_FUNC(reg_imm8_rel8)
-{
-    operand_reg( f, addr, opc, xtype );
-    COMMA;
-    operand_imm8( f, addr, opc, xtype );
-    COMMA;
-    operand_rel8( f, addr, opc, xtype );
-}
+THREE_OPERAND(A, imm8, rel8)
+THREE_OPERAND(A, iram, rel8)
+THREE_OPERAND(indreg, imm8, rel8)
+THREE_OPERAND(reg, imm8, rel8)
 
 OPERAND_FUNC(A_A_dptr)
 {

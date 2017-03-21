@@ -683,54 +683,6 @@ OPERAND_FUNC(HL_dec)
 /******************************************************************************/
 
 /***********************************************************
- * Process "r1,#byte" operands.
- *    r1 comes from opc byte, byte comes from next byte.
- ************************************************************/
- 
-OPERAND_FUNC(r1_byte)
-{
-    operand_r1( f, addr, opc, xtype );
-    COMMA;
-    operand_byte( f, addr, opc, xtype );
-}
-
-/***********************************************************
- * Process "A,#byte" operands.
- *    byte comes from next byte.
- ************************************************************/
- 
-OPERAND_FUNC(A_byte)
-{
-    operand_A( f, addr, opc, xtype );
-    COMMA;
-    operand_byte( f, addr, opc, xtype );
-}
-
-/***********************************************************
- * Process "saddr,#byte" operands.
- *    saddr comes from next byte, byte comes from next byte.
- ************************************************************/
- 
-OPERAND_FUNC(saddr_byte)
-{
-    operand_saddr( f, addr, opc, xtype );
-    COMMA;
-    operand_byte( f, addr, opc, xtype );
-}
-
-/***********************************************************
- * Process "sfr,#byte" operands.
- *    sfr comes from next byte, byte comes from next byte.
- ************************************************************/
-
-OPERAND_FUNC(sfr_byte)
-{
-    operand_sfr( f, addr, opc, xtype );
-    COMMA;
-    operand_byte( f, addr, opc, xtype );
-}
-
-/***********************************************************
  * Process "r,r1" operands.
  *    both registers come from next byte.
  ************************************************************/
@@ -759,40 +711,6 @@ OPERAND_FUNC(rp_rp1)
 }
 
 /***********************************************************
- * Process "A,r1" operands.
- *    r1 come from opc byte.
- ************************************************************/
- 
-OPERAND_FUNC(A_r1)
-{
-    operand_A( f, addr, opc, xtype );
-    COMMA;
-    operand_r1( f, addr, opc, xtype );
-}
-
-/***********************************************************
- * Process "A,saddr" operands.
- ************************************************************/
- 
-OPERAND_FUNC(A_saddr)
-{
-    operand_A( f, addr, opc, xtype );
-    COMMA;
-    operand_saddr( f, addr, opc, xtype );
-}
-
-/***********************************************************
- * Process "saddr,A" operands.
- ************************************************************/
- 
-OPERAND_FUNC(saddr_A)
-{
-    operand_saddr( f, addr, opc, xtype );
-    COMMA;
-    operand_A( f, addr, opc, xtype );
-}
-
-/***********************************************************
  * Process "saddr,saddr" operands.
  *
  * Nasty: the instruction encodes the source offset followed
@@ -808,74 +726,6 @@ OPERAND_FUNC(saddr_saddr)
     emit_saddr( saddr_dst_offset );
     COMMA;
     emit_saddr( saddr_src_offset );
-}
-
-/***********************************************************
- * Process "A,sfr" operands.
- ************************************************************/
-
-OPERAND_FUNC(A_sfr)
-{
-    operand_A( f, addr, opc, xtype );
-    COMMA;
-    operand_sfr( f, addr, opc, xtype );
-}
-
-/***********************************************************
- * Process "sfr,A" operands.
- ************************************************************/
-
-OPERAND_FUNC(sfr_A)
-{
-    operand_sfr( f, addr, opc, xtype );
-    COMMA;
-    operand_A( f, addr, opc, xtype );
-}
-
-/***********************************************************
- * Process "A,mem" operands.
- *    mem comes from opc byte translated.
- ************************************************************/
-
-OPERAND_FUNC(A_mem)
-{
-    operand_A( f, addr, opc, xtype );
-    COMMA;
-    operand_mem( f, addr, opc, xtype );
-}
-
-/***********************************************************
- * Process "mem,A" operands.
- *    mem comes from opc byte translated.
- ************************************************************/
- 
-OPERAND_FUNC(mem_A)
-{
-    operand_mem( f, addr, opc, xtype );
-    COMMA;
-    operand_A( f, addr, opc, xtype );
-}
-
-/***********************************************************
- * Process larger "A,mem" operands.
- ************************************************************/
- 
-OPERAND_FUNC(A_memmod)
-{
-    operand_A( f, addr, opc, xtype );
-    COMMA;
-    operand_memmod( f, addr, opc, xtype );
-}
-
-/***********************************************************
- * Process larger "mem,A" operands.
- ************************************************************/
- 
-OPERAND_FUNC(memmod_A)
-{
-    operand_memmod( f, addr, opc, xtype );
-    COMMA;
-    operand_A( f, addr, opc, xtype );
 }
 
 /***********************************************************
@@ -924,39 +774,6 @@ OPERAND_FUNC(addr16_A)
     operand_addr16_abs( f, addr, opc, xtype );
     COMMA;
     operand_A( f, addr, opc, xtype );
-}
-
-/***********************************************************
- * Process "rp1,#word" operands.
- ************************************************************/
- 
-OPERAND_FUNC(rp1_word)
-{
-    operand_rp1( f, addr, opc, xtype );
-    COMMA;
-    operand_word( f, addr, opc, xtype );
-}
-
-/***********************************************************
- * Process "saddrp,#word" operands.
- ************************************************************/
- 
-OPERAND_FUNC(saddrp_word)
-{
-    operand_saddrp( f, addr, opc, xtype );
-    COMMA;
-    operand_word( f, addr, opc, xtype );
-}
-
-/***********************************************************
- * Process "sfrp,#word" operands.
- ************************************************************/
- 
-OPERAND_FUNC(sfrp_word)
-{
-    operand_sfrp( f, addr, opc, xtype );
-    COMMA;
-    operand_word( f, addr, opc, xtype );
 }
 
 /***********************************************************
@@ -1154,72 +971,6 @@ OPERAND_FUNC(PSWH_bit)
 }
 
 /***********************************************************
- * Process "CY,saddr.bit" operands.
- ************************************************************/
- 
-OPERAND_FUNC(CY_saddr_bit)
-{
-    operand_CY( f, addr, opc, xtype );
-    COMMA;
-    operand_saddr_bit( f, addr, opc, xtype );
-}
-
-/***********************************************************
- * Process "CY,sfr.bit" operands.
- ************************************************************/
- 
-OPERAND_FUNC(CY_sfr_bit)
-{
-    operand_CY( f, addr, opc, xtype );
-    COMMA;
-    operand_sfr_bit( f, addr, opc, xtype );
-}
-
-/***********************************************************
- * Process "CY,A.bit" operands.
- ************************************************************/
- 
-OPERAND_FUNC(CY_A_bit)
-{
-    operand_CY( f, addr, opc, xtype );
-    COMMA;
-    operand_A_bit( f, addr, opc, xtype );
-}
-
-/***********************************************************
- * Process "CY,X.bit" operands.
- ************************************************************/
- 
-OPERAND_FUNC(CY_X_bit)
-{
-    operand_CY( f, addr, opc, xtype );
-    COMMA;
-    operand_X_bit( f, addr, opc, xtype );
-}
-
-/***********************************************************
- * Process "CY,PSWL.bit" operands.
- ************************************************************/
- 
-OPERAND_FUNC(CY_PSWL_bit)
-{
-    operand_CY( f, addr, opc, xtype );
-    COMMA;
-    operand_PSWL_bit( f, addr, opc, xtype );
-}
-
-/***********************************************************
- * Process "CY,PSWH.bit" operands.
- ************************************************************/
- 
-OPERAND_FUNC(CY_PSWH_bit)
-{
-    operand_CY( f, addr, opc, xtype );
-    COMMA;
-    operand_PSWH_bit( f, addr, opc, xtype );
-}
-
-/***********************************************************
  * Process "CY,/saddr.bit" operands.
  ************************************************************/
  
@@ -1292,204 +1043,6 @@ OPERAND_FUNC(CY_n_PSWH_bit)
 }
 
 /***********************************************************
- * Process "saddr.bit,CY" operands.
- ************************************************************/
- 
-OPERAND_FUNC(saddr_bit_CY)
-{
-    operand_saddr_bit( f, addr, opc, xtype );
-    COMMA;
-    operand_CY( f, addr, opc, xtype );
-}
-
-/***********************************************************
- * Process "sfr.bit,CY" operands.
- ************************************************************/
- 
-OPERAND_FUNC(sfr_bit_CY)
-{
-    operand_sfr_bit( f, addr, opc, xtype );
-    COMMA;
-    operand_CY( f, addr, opc, xtype );
-}
-
-/***********************************************************
- * Process "A.bit,CY" operands.
- ************************************************************/
- 
-OPERAND_FUNC(A_bit_CY)
-{
-    operand_A_bit( f, addr, opc, xtype );
-    COMMA;
-    operand_CY( f, addr, opc, xtype );
-}
-
-/***********************************************************
- * Process "X.bit,CY" operands.
- ************************************************************/
- 
-OPERAND_FUNC(X_bit_CY)
-{
-    operand_X_bit( f, addr, opc, xtype );
-    COMMA;
-    operand_CY( f, addr, opc, xtype );
-}
-
-/***********************************************************
- * Process "PSWL.bit,CY" operands.
- ************************************************************/
- 
-OPERAND_FUNC(PSWL_bit_CY)
-{
-    operand_PSWL_bit( f, addr, opc, xtype );
-    COMMA;
-    operand_CY( f, addr, opc, xtype );
-}
-
-/***********************************************************
- * Process "PSWH.bit,CY" operands.
- ************************************************************/
- 
-OPERAND_FUNC(PSWH_bit_CY)
-{
-    operand_PSWH_bit( f, addr, opc, xtype );
-    COMMA;
-    operand_CY( f, addr, opc, xtype );
-}
-
-/***********************************************************
- * Process "saddr.bit,$addr16" operands.
- ************************************************************/
-
-OPERAND_FUNC(saddr_bit_addr16_rel)
-{
-    operand_saddr_bit( f, addr, opc, xtype );
-    COMMA;
-    operand_addr16_rel( f, addr, opc, xtype );
-}
-
-/***********************************************************
- * Process "sfr.bit,$addr16" operands.
- ************************************************************/
-
-OPERAND_FUNC(sfr_bit_addr16_rel)
-{
-    operand_sfr_bit( f, addr, opc, xtype );
-    COMMA;
-    operand_addr16_rel( f, addr, opc, xtype );
-}
-
-/***********************************************************
- * Process "A.bit,$addr16" operands.
- ************************************************************/
-
-OPERAND_FUNC(A_bit_addr16_rel)
-{
-    operand_A_bit( f, addr, opc, xtype );
-    COMMA;
-    operand_addr16_rel( f, addr, opc, xtype );
-}
-
-/***********************************************************
- * Process "X.bit,$addr16" operands.
- ************************************************************/
-
-OPERAND_FUNC(X_bit_addr16_rel)
-{
-    operand_X_bit( f, addr, opc, xtype );
-    COMMA;
-    operand_addr16_rel( f, addr, opc, xtype );
-}
-
-/***********************************************************
- * Process "PSWH.bit,$addr16" operands.
- ************************************************************/
-
-OPERAND_FUNC(PSWH_bit_addr16_rel)
-{
-    operand_PSWH_bit( f, addr, opc, xtype );
-    COMMA;
-    operand_addr16_rel( f, addr, opc, xtype );
-}
-
-/***********************************************************
- * Process "PSWL.bit,$addr16" operands.
- ************************************************************/
-
-OPERAND_FUNC(PSWL_bit_addr16_rel)
-{
-    operand_PSWL_bit( f, addr, opc, xtype );
-    COMMA;
-    operand_addr16_rel( f, addr, opc, xtype );
-}
-
-/***********************************************************
- * Process "r2,$addr16" operands.
- ************************************************************/
-
-OPERAND_FUNC(r2_addr16_rel)
-{
-    operand_r2( f, addr, opc, xtype );
-    COMMA;
-    operand_addr16_rel( f, addr, opc, xtype );
-}
-
-/***********************************************************
- * Process "saddr,$addr16" operands.
- ************************************************************/
-
-OPERAND_FUNC(saddr_addr16_rel)
-{
-    operand_saddr( f, addr, opc, xtype );
-    COMMA;
-    operand_addr16_rel( f, addr, opc, xtype );
-}
-
-/***********************************************************
- * Process "[DE+],A" operands.
- ************************************************************/
-
-OPERAND_FUNC(DE_inc_A)
-{
-    operand_DE_inc( f, addr, opc, xtype );
-    COMMA;
-    operand_A( f, addr, opc, xtype );
-}
-
-/***********************************************************
- * Process "[DE-],A" operands.
- ************************************************************/
-
-OPERAND_FUNC(DE_dec_A)
-{
-    operand_DE_dec( f, addr, opc, xtype );
-    COMMA;
-    operand_A( f, addr, opc, xtype );
-}
-
-/***********************************************************
- * Process "[DE+],[HL+]" operands.
- ************************************************************/
-
-OPERAND_FUNC(DE_inc_HL_inc)
-{
-    operand_DE_inc( f, addr, opc, xtype );
-    COMMA;
-    operand_HL_inc( f, addr, opc, xtype );
-}
-
-/***********************************************************
- * Process "[DE-],[HL-]" operands.
- ************************************************************/
-
-OPERAND_FUNC(DE_dec_HL_dec)
-{
-    operand_DE_dec( f, addr, opc, xtype );
-    COMMA;
-    operand_HL_dec( f, addr, opc, xtype );
-}
-
-/***********************************************************
  * Process "STBC,#byte" operands.
  * This is a weird one, as the byte is actually stored first as the 
  * inverted value followed by the normal value.
@@ -1522,6 +1075,49 @@ OPERAND_FUNC(WDM_byte)
     COMMA;
     operand_byte( f, addr, opc, xtype );
 }
+
+/* Simple cases */
+
+TWO_OPERAND(r1, byte) 
+TWO_OPERAND(A, byte) 
+TWO_OPERAND(saddr, byte)
+TWO_OPERAND(sfr, byte)
+TWO_OPERAND(A, r1)
+TWO_OPERAND(A, saddr) 
+TWO_OPERAND(saddr, A)
+TWO_OPERAND(A, sfr)
+TWO_OPERAND(sfr, A)
+TWO_OPERAND(A, mem)
+TWO_OPERAND(mem, A)
+TWO_OPERAND(A, memmod)
+TWO_OPERAND(memmod, A)
+TWO_OPERAND(rp1, word)
+TWO_OPERAND(saddrp, word)
+TWO_OPERAND(sfrp, word)
+TWO_OPERAND(CY, saddr_bit)
+TWO_OPERAND(CY, sfr_bit)
+TWO_OPERAND(CY, A_bit)
+TWO_OPERAND(CY, X_bit)
+TWO_OPERAND(CY, PSWL_bit)
+TWO_OPERAND(CY, PSWH_bit)
+TWO_OPERAND(saddr_bit, CY)
+TWO_OPERAND(sfr_bit, CY)
+TWO_OPERAND(A_bit, CY)
+TWO_OPERAND(X_bit, CY)
+TWO_OPERAND(PSWL_bit, CY)
+TWO_OPERAND(PSWH_bit, CY)
+TWO_OPERAND(saddr_bit, addr16_rel)
+TWO_OPERAND(sfr_bit, addr16_rel)
+TWO_OPERAND(A_bit, addr16_rel)
+TWO_OPERAND(X_bit, addr16_rel)
+TWO_OPERAND(PSWH_bit, addr16_rel)
+TWO_OPERAND(PSWL_bit, addr16_rel)
+TWO_OPERAND(r2, addr16_rel)
+TWO_OPERAND(saddr, addr16_rel)
+TWO_OPERAND(DE_inc, A)
+TWO_OPERAND(DE_dec, A)
+TWO_OPERAND(DE_inc, HL_inc)
+TWO_OPERAND(DE_dec, HL_dec)
 
 /******************************************************************************/
 /** Instruction Decoding Tables                                              **/
