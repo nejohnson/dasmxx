@@ -1078,22 +1078,21 @@ OPERAND_FUNC(WDM_byte)
 
 /* Simple cases */
 
+TWO_OPERAND(A, r1)
+TWO_OPERAND_PAIR(A, saddr) 
+TWO_OPERAND_PAIR(A, sfr)
+TWO_OPERAND_PAIR(A, mem)
+TWO_OPERAND_PAIR(A, memmod)
+
 TWO_OPERAND(r1, byte) 
 TWO_OPERAND(A, byte) 
 TWO_OPERAND(saddr, byte)
 TWO_OPERAND(sfr, byte)
-TWO_OPERAND(A, r1)
-TWO_OPERAND(A, saddr) 
-TWO_OPERAND(saddr, A)
-TWO_OPERAND(A, sfr)
-TWO_OPERAND(sfr, A)
-TWO_OPERAND(A, mem)
-TWO_OPERAND(mem, A)
-TWO_OPERAND(A, memmod)
-TWO_OPERAND(memmod, A)
+
 TWO_OPERAND(rp1, word)
 TWO_OPERAND(saddrp, word)
 TWO_OPERAND(sfrp, word)
+
 TWO_OPERAND(CY, saddr_bit)
 TWO_OPERAND(CY, sfr_bit)
 TWO_OPERAND(CY, A_bit)
