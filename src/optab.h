@@ -192,6 +192,13 @@ OPERAND_FUNC(M_a ## _ ## M_b) \
 }
 
 /**
+    Generate a pair of two-operand functions: "A,B" and "B,A"
+**/
+#define TWO_OPERAND_PAIR(P_a, P_b) \
+TWO_OPERAND(P_a, P_b) \
+TWO_OPERAND(P_b, P_a)
+
+/**
     Short-cut macro to generate simple three-operand functions.
 **/
 #define THREE_OPERAND(M_a,M_b,M_c) \
