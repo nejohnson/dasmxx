@@ -188,7 +188,7 @@ OPERAND_FUNC(port)
 {
    UBYTE port = opc & 0x03;
    
-   operand( FORMAT_REG, port );
+   operand( FORMAT_PORT, port );
 }
 
 /***********************************************************
@@ -200,7 +200,7 @@ OPERAND_FUNC(portH)
 {
    UBYTE port = ( opc & 0x03 ) + 4;
    
-   operand( FORMAT_REG, port );
+   operand( FORMAT_PORT, port );
 }
 
 /***********************************************************
@@ -246,7 +246,7 @@ OPERAND_FUNC(addrbit)
 
 OPERAND_FUNC(addr8)
 {
-   BYTE addr8 = (BYTE)next( f, addr );
+   UBYTE addr8 = (UBYTE)next( f, addr );
    
    operand( xref_genwordaddr( NULL, FORMAT_NUM_16BIT, addr8 ) );
    xref_addxref( xtype, g_insn_addr, addr8 );
@@ -327,7 +327,7 @@ optab_t base_optab[] = {
     INSN( "ANL", A_imm8,     0x53, X_NONE )
     INSN( "ANL", BUS_imm8,   0x98, X_NONE )
     MASK( "ANL", port_imm8,  0xFC, 0x98, X_NONE )
-    MASK( "ANLD", port_A,    0xFC, 0x9C, X_NONE )
+    MASK( "ANLD", portH_A,   0xFC, 0x9C, X_NONE )
 
     MASK( "ORL", A_reg,      0xF8, 0x48, X_NONE )
     MASK( "ORL", A_indreg,   0xFE, 0x40, X_NONE )
@@ -340,7 +340,7 @@ optab_t base_optab[] = {
     INSN( "XRL", A_imm8,     0xD3, X_NONE )
 
     INSN( "CPL", A,          0x37, X_NONE )
-    INSN( "CPL", C,          0xA3, X_NONE )
+    INSN( "CPL", C,          0xA7, X_NONE )
     
     INSN( "CLR", A,          0x27, X_NONE )
     INSN( "CLR", C,          0x97, X_NONE )
@@ -368,10 +368,10 @@ optab_t base_optab[] = {
   Jump, Call and Return
   ----------------------------------------------------------------------------*/
 
-    MASK( "JMP",   addr11,   0x1F, 0x14, X_JMP )
+    MASK( "JMP",   addr11,   0x1F, 0x04, X_JMP )
     INSN( "JMPP",  indA,     0xB3, X_NONE )
 
-    MASK( "CALL",  addr11,   0x1F, 0x04, X_CALL )
+    MASK( "CALL",  addr11,   0x1F, 0x14, X_CALL )
 
     INSN( "RET",   none,     0x83, X_NONE )
     INSN( "RETR",  none,     0x93, X_NONE )
@@ -410,13 +410,18 @@ optab_t base_optab[] = {
 
     INSN( "MOV", A_imm8,     0x23, X_NONE )
     MASK( "MOV", reg_imm8,   0xF8, 0xB8, X_NONE )
+
     MASK( "MOV", A_indreg,   0xFE, 0xF0, X_NONE )
+    MASK( "MOV", indreg_A,   0xFE, 0xA0, X_NONE )
+
     MASK( "MOV", indreg_imm8,0xFE, 0xB0, X_NONE )
-    MASK( "MOV", A_reg,      0xF8, 0xF8, X_NONE )
+
     MASK( "MOV", A_reg,      0xF8, 0xF8, X_NONE )
     MASK( "MOV", reg_A,      0xF8, 0xA8, X_NONE )
+
     INSN( "MOV", A_PSW,      0xC7, X_NONE )
     INSN( "MOV", PSW_A,      0xD7, X_NONE )
+
     INSN( "MOV", A_T,        0x42, X_NONE )
     INSN( "MOV", T_A,        0x62, X_NONE )
 

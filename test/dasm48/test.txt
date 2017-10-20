@@ -1,0 +1,260 @@
+# Intel 48 disassembler test harness
+#
+# Test all instructions described in Intel document 
+#     MCS-48 Microcomputer User's Manual, (C) 1978
+#
+
+###### ARITHMETIC Group ##############################################
+
+# ADD A, Rr
+68
+69
+6A
+6B
+6C
+6D
+6E
+6F
+
+# ADD A, @Rr
+60
+61
+
+# ADD A, #data
+03 00
+03 7F
+03 80
+03 FF
+
+# ADDC A, Rr
+78
+79
+7A
+7B
+7C
+7D
+7E
+7F
+
+# ADDC A, @Rr
+70
+71
+
+# ADDC A, #data
+13 00
+13 7F
+13 80
+13 FF
+
+# DA A
+57
+
+# DEC A
+07
+
+# DEC Rr
+C8
+C9
+CA
+CB
+CC
+CD
+CE
+CF
+
+# INC A
+17
+
+# INC Rr
+18
+19
+1A
+1B
+1C
+1D
+1E
+1F
+
+# INC @Rr
+10
+11
+
+
+###### BITWISE Group #################################################
+
+# ANL A, Rr
+58
+59
+5A
+5B
+5C
+5D
+5E
+5F
+
+# ANL A, @Rr
+50
+51
+
+# ANL A, #data
+53 00
+53 7F
+53 80
+53 FF
+
+# ANL BUS, #data
+98 00
+98 7F
+98 80
+98 FF
+
+# ANL Pp, #data
+99 00
+99 FF
+9A 7F
+9A 80
+
+# ANLD Pp, A
+9C
+9D
+9E
+9F
+
+
+###### CALL and RETURN  ##############################################
+
+# CALL addr
+D4 F0
+
+
+###### JUMPS  ########################################################
+
+# DJNZ Rr, addr
+E8 80
+E9 80
+EA 80
+EB 80
+EC 80
+ED 80
+EE 80
+EF 80
+
+# JBb addr
+12 40
+32 40
+52 40
+72 40
+92 40
+B2 40
+D2 40
+F2 40
+
+# Others
+F6 40	# JC
+B6 40	# JF0
+76 40	# JF1
+
+C4 F0	# JMP
+B3	# JMPP @A
+
+E6 40	# JNC
+86 40	# JNI
+26 40	# JNT0
+46 40 	# JNT1
+
+96 40	# JNZ
+16 40   # JTF
+36 40   # JT0
+56 40	# JT1
+
+C6 40	# JZ
+
+###### FLAGS  ########################################################
+
+27	# CLR A
+97	# CLR C
+A5	# CLR F1
+85	# CLR F0
+37	# CPL A
+A7	# CPL C
+95	# CPL F0
+B5	# CPL F1
+15	# DIS I
+35	# DIS TCNTI
+05	# EN I
+25	# EN TCNTI
+75	# ENT0 CLK
+
+
+
+##### INPUT/OUTPUT  ##################################################
+
+# IN A, Pp
+09
+0A
+
+08
+
+
+###### MOVES  ########################################################
+
+# MOV A, #data
+23 00
+23 7F
+23 80
+23 FF
+
+C7	# MOV A, PSW
+
+# MOV A, Rr
+F8
+F9
+FA
+FB
+FC
+FD
+FE
+FF
+
+# MOV A, @Rr
+F0
+F1
+
+42	# MOV A, T
+D7	# MOV PSW, A
+
+# MOV Rr, A
+A8
+A9
+AA
+AB
+AC
+AD
+AE
+AF
+
+# MOV Rr, #data
+B8 00
+B9 11
+BA 22
+BB 33
+BC 40
+BD 05
+BE 66
+BF 77
+
+# MOV @Rr, A
+A0
+A1
+
+# MOV @Rr, #data
+B0 A5
+B1 5A
+
+
+
+######################################################################
+######################################################################
+######################################################################
+
+## END ##
