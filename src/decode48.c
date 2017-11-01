@@ -326,14 +326,15 @@ optab_t base_optab[] = {
     MASK( "ANL", A_indreg,   0xFE, 0x50, X_NONE )
     INSN( "ANL", A_imm8,     0x53, X_NONE )
     INSN( "ANL", BUS_imm8,   0x98, X_NONE )
-    MASK( "ANL", port_imm8,  0xFC, 0x98, X_NONE )
+    RANGE("ANL", port_imm8,  0x99, 0x9A, X_NONE )
     MASK( "ANLD", portH_A,   0xFC, 0x9C, X_NONE )
 
     MASK( "ORL", A_reg,      0xF8, 0x48, X_NONE )
     MASK( "ORL", A_indreg,   0xFE, 0x40, X_NONE )
     INSN( "ORL", A_imm8,     0x43, X_NONE )
     INSN( "ORL", BUS_imm8,   0x88, X_NONE )
-    MASK( "ORL", port_imm8,  0xFC, 0x88, X_NONE )
+    RANGE("ORL", port_imm8,  0x89, 0x8A, X_NONE )
+    MASK( "ORLD", portH_A,   0xFC, 0x8C, X_NONE )
 
     MASK( "XRL", A_reg,      0xF8, 0xD8, X_NONE )
     MASK( "XRL", A_indreg,   0xFE, 0xD0, X_NONE )
