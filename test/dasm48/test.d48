@@ -1,7 +1,7 @@
 
 ftest.bin
-c0000
-e0EE1
+c0000 Start
+e017A
 
 # LABELS
 l0080  JumpDest1
