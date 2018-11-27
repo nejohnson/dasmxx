@@ -42,7 +42,7 @@
  * Globally-visible decoder properties
  *****************************************************************************/
 
-DASM_PROFILE( "dasm8048", "Intel MCS-48 (8048, 8049)", 4, 9, 0, 1 )
+DASM_PROFILE( "dasm48", "Intel MCS-48 (8048, 8049)", 4, 9, 0, 1 )
 
 /*****************************************************************************
  * Private data types, macros, constants.
