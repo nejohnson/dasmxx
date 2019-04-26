@@ -9,7 +9,7 @@
 #################################################
 
 TARGETS = dasm78k3 dasm96 dasm02 dasm7000 dasm09 \
-          dasmavr dasm51 dasmz80 dasm48          \
+          dasmavr dasm51 dasmz80 dasm48 dasmx86  \
           txt2bin
 
 CORE_OBJS = dasmxx.o xref.o optab.o
@@ -83,6 +83,13 @@ D48_OBJS = ${CORE_OBJS} decode48.o
 
 dasm48: ${D48_OBJS}
 	$(CC) ${D48_OBJS} -o ${@}
+
+#################################################
+
+DX86_OBJS = ${CORE_OBJS} decodex86.o
+
+dasmx86: ${DX86_OBJS}
+	$(CC) ${DX86_OBJS} -o ${@}
 
 #################################################
 
