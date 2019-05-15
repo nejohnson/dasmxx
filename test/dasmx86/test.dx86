@@ -1,7 +1,14 @@
 
 ftest.bin
-c0000
-e0EE1
+c0000  Code
+b0011,4  Bin
+s00AE  String
+w00B8  Word
+a00BC  Alpha
+m00C0  Bitmap
+e00C8
+
+k0000 This is a comment
 
 # LABELS
 l5678  JumpDest1
