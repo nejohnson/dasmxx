@@ -18,6 +18,7 @@ Supported Processors:
   * NEC 78K/III (uPD78310 family)
   * Texas Instruments TMS7000
   * Zilog Z80
+  * RCA CDP1802 (dinosaur!)
 
 Planned Features:
   * More processors (in no specific order):
