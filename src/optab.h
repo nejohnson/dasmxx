@@ -41,7 +41,7 @@
 typedef struct optab_s {
     OPC opc;
     const char * opcode;
-    void (*operands)( FILE *, ADDR *, UBYTE, XREF_TYPE); /* operand function */
+    void (*operands)( FILE *, ADDR *, OPC, XREF_TYPE); /* operand function */
     XREF_TYPE xtype;
     enum {
         OPTAB_UNDEF,
@@ -183,13 +183,13 @@ typedef struct optab_s {
     Create operand function definition given a name.
 **/
 #define OPERAND_FUNC(M_name) \
-    static void operand_ ## M_name (FILE *f, ADDR * addr, UBYTE opc, XREF_TYPE xtype )
+    static void operand_ ## M_name (FILE *f, ADDR * addr, OPC opc, XREF_TYPE xtype )
     
 /**
     Create prefix function definition given a name.
 **/
 #define PREFIX_FUNC(M_name) \
-    static void prefix_ ## M_name (FILE *f, ADDR * addr, UBYTE opc, XREF_TYPE xtype )
+    static void prefix_ ## M_name (FILE *f, ADDR * addr, OPC opc, XREF_TYPE xtype )
 
 /* Neaten up emitting a comma "," within an operand. */
 #define COMMA                   operand( ", " )
