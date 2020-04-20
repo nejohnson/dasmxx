@@ -1403,8 +1403,8 @@ int main(int argc, char **argv)
     insn_byte_buffer = zalloc( dasm_max_insn_length );
     insn_byte_idx = 0;
     
-    if ( params.outputfile )
-        stdout = freopen( params.outputfile, "w", stdout );
+    if ( params.outputfile && !freopen( params.outputfile, "w", stdout ) )
+        error( "Failed to open output file \"%s\"", params.outputfile );
 
     emit_page_header();
     display_banner( params );
