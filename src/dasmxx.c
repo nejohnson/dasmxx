@@ -49,6 +49,8 @@
  * Supported command line options are:
  *      -h         - print helpful usage information
  *      -x         - generate cross-reference list at end of disassembly
+ *      -a         - generate assembler source output
+ *      -s         - generate stripped assembler output (forces -a)
  *      -o foo     - write output to file "foo" (default is stdout)
  *
  * The command list file contains a list of memory segment definitions, used during
@@ -68,7 +70,7 @@
  *
  * Dump commands:
  *      aXXXX       alphanumeric dump
- *      bXXXX       byte dump
+ *      bXXXX[,N]   byte dump (N bytes, default is 16)
  *      sXXXX       string dump
  *      wXXXX       word dump
  *      vXXXX       vector address dump
@@ -142,6 +144,8 @@ struct params {
     struct fmt * cmdlist;
     
     int want_xref;
+    int want_asm_out;
+    int want_stripped;
 };
 
 /* Set various physical limits */
@@ -366,7 +370,7 @@ static int commentexists( struct comment *list, ADDR ref )
  *
  ************************************************************/
 
-static int emitaddr( ADDR addr )
+static int emitaddr( ADDR addr, struct params *params )
 {
     char * label = xref_findaddrlabel( addr );
 
@@ -376,7 +380,12 @@ static int emitaddr( ADDR addr )
         newline();
     }
 
-    return printf( "    " FORMAT_ADDR ":    ", addr);
+    if ( !params->want_stripped )
+        return printf( "%c   " FORMAT_ADDR ":    ", 
+            params->want_asm_out ? ';' : ' ',
+            addr );
+    else
+        return 0;
 }
 
 /***********************************************************
@@ -715,6 +724,8 @@ static void usage( void )
             "  options:\n"
             "     -h        print helpful usage information\n"
             "     -x        with cross-reference list\n"
+            "     -a        output in assembler format\n"
+            "     -s        stripped assembler output (forces -a)\n"
             "     -o foo    write output to `foo' (stdout is default)\n",
             dasm_name, dasm_description, dasm_name );
     exit(EXIT_FAILURE);
@@ -789,22 +800,26 @@ static void run_disasm( struct params params )
 
             printcomment( blockcmt, addr, 0 );
 
-            column = emitaddr( addr);
+            column = emitaddr( addr, &params );
             lineaddr = addr;
             insn_byte_idx = 0;
 
             addr = dasm_insn( f, insnbuf, addr );
 
-            for ( i = 0; i < dasm_max_insn_length; i++ )
-                if ( i < insn_byte_idx )
-                    printf( "%02X ", insn_byte_buffer[i] );
-                else
-                    printf( "   " );
+            if ( !params.want_stripped )
+            {
+                for ( i = 0; i < dasm_max_insn_length; i++ )
+                    if ( i < insn_byte_idx )
+                        printf( "%02X ", insn_byte_buffer[i] );
+                    else
+                        printf( "   " );
 
-            printf( "   " );
-
-            i = printf("%s", insnbuf );
-            column += i;
+                if ( params.want_asm_out )
+                    printf( "\n" );
+            }
+            
+            i = printf( "   %s", insnbuf );
+            column += i - 3;
 
             printcomment( linecmt, lineaddr, COL_LINECOMMENT - column );
             newline();
@@ -825,17 +840,21 @@ static void run_disasm( struct params params )
             {
                 if ( i == 0 ) 
                 {
-                    emitaddr( addr );
+                    emitaddr( addr, &params );
+                    if ( params.want_asm_out )
+                        printf( params.want_stripped ? "   " : "\n   " );
                     printf( "DB      " );
                 }
 
                 buf[i] = (unsigned char)next( f, &addr );
-                printf( "%02X ", (unsigned char)buf[i] );
+                printf( "%02X", (unsigned char)buf[i] );
                 i++;
                 if ( i == bpl )
                 {
                     /* End of a full line */
                     printf( "      " );
+                    if ( params.want_asm_out )
+                        printf( "; " );
 
                     for ( p = 0; p < bpl; p++ )
                         if ( isprint( buf[p] ) )
@@ -846,15 +865,19 @@ static void run_disasm( struct params params )
                     newline();
                     i = 0;
                 }
+                else
+                    if ( addr < clist->addr ) printf( ", " );
             }
             if ( i < bpl )
             {
                 /* Partial line, tricky */
 
                 for ( p = i; p < bpl; p++ )
-                    printf( "   " );
+                    printf( "    " );
 
                 printf( "      " );
+                if ( params.want_asm_out )
+                    printf( "; " );
 
                 for ( p = 0; p < i; p++ )
                     if ( isprint( buf[p] ) )
@@ -885,7 +908,9 @@ static void run_disasm( struct params params )
 
             while ( addr < clist->addr )
             {
-                emitaddr( addr );
+                emitaddr( addr, &params );
+                if ( params.want_asm_out )
+                    printf( params.want_stripped ? "   " : "\n   " );
                 printf( "DB      '" );
 
                 while ( c = next( f, &addr ) )
@@ -924,7 +949,9 @@ static void run_disasm( struct params params )
             {
                 if ( ( i & 7 ) == 0 ) 
                 {
-                    emitaddr( addr );
+                    emitaddr( addr, &params );
+                    if ( params.want_asm_out )
+                        printf( params.want_stripped ? "   " : "\n   " );
                     printf( "DW      " );
                 }
 
@@ -936,12 +963,14 @@ static void run_disasm( struct params params )
 
                 w = b_1st | ( b_2nd << 8 );
 
-                printf( "%04X ", w );
+                printf( "%04X", w );
                 xref_addxref( X_TABLE, addr - 2, w );
 
                 if ( ( i & 7 ) == 7 )
                     newline();
-                i++;
+                else
+                    if ( addr < clist->addr ) printf( ", " );
+                i++;                
             }
             if ( i & 7 ) 
                 newline();
@@ -966,7 +995,9 @@ static void run_disasm( struct params params )
 
             while ( addr < clist->addr )
             {
-                emitaddr( addr );
+                emitaddr( addr, &params );
+                if ( params.want_asm_out )
+                    printf( params.want_stripped ? "   " : "\n   " );
                 printf( "DW      " );
 
                 b_1st = (unsigned char)next( f, &addr );
@@ -1005,19 +1036,23 @@ static void run_disasm( struct params params )
             {
                 if ( ( i & 7 ) == 0 )
                 {
-                    emitaddr( addr );
+                    emitaddr( addr, &params );
+                    if ( params.want_asm_out )
+                        printf( params.want_stripped ? "   " : "\n   " );
                     printf( "DB      " );
                 }
 
                 c = next( f, &addr );
 
                 if ( isprint( c ) )
-                    printf( "'%c',", c );
+                    printf( "'%c'", c );
                 else
-                    printf( "%02X,", (unsigned char)c );
+                    printf( "%02X", (unsigned char)c );
 
                 if ( ( i & 7 ) == 7 ) 
                     newline();
+                else
+                    if ( addr < clist->addr ) printf( ", " );
                 i++;
             }
             if ( i & 7 ) 
@@ -1046,9 +1081,9 @@ static void run_disasm( struct params params )
 
             if ( !commentexists( blockcmt, addr ) )
             {
-                printf( "----------------------------------------------------------------" );
+                printf( ";----------------------------------------------------------------" );
                 newline();
-                printf( "        Function: %s", ( name ) ? name : "" );
+                printf( ";        Function: %s", ( name ) ? name : "" );
                 newline(); newline();
             }
 
@@ -1068,15 +1103,21 @@ static void run_disasm( struct params params )
                 UBYTE bitmap;
                 UBYTE mask = 0x80;
                 
-                emitaddr( addr );
+                emitaddr( addr, &params );
+                if ( params.want_asm_out )
+                    printf( params.want_stripped ? "   " : "\n   " );
                 printf( "DB      " );
 
                 bitmap = (UBYTE)next( f, &addr );
-                printf( "%02X      [", bitmap );
-
-                for ( ; mask; mask >>= 1 )
-                    putchar( bitmap & mask ? '#' : ' ' );
+                printf( "%02X", bitmap );
+                
+                printf( "    " );
+                if ( params.want_asm_out )
+                    printf( ";" );
                     
+                printf( " [" );
+                for ( ; mask; mask >>= 1 )
+                    putchar( bitmap & mask ? '#' : '.' );
                 printf( "]" ); newline();
             }
 
@@ -1106,7 +1147,7 @@ static void run_disasm( struct params params )
  *
  ************************************************************/
 
-#define OPTSTRING        "xho:"
+#define OPTSTRING        "asxho:"
 
 static struct params process_args( int argc, char **argv )
 {
@@ -1119,6 +1160,13 @@ static struct params process_args( int argc, char **argv )
     {
         switch (opt)
         {
+        case 's':
+            params.want_stripped = 1;
+            /* fall through */
+        case 'a':
+            params.want_asm_out = 1;
+            break;
+            
         case 'x':
             params.want_xref = 1;
             break;

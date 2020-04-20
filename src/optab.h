@@ -1,6 +1,6 @@
 /*****************************************************************************
  *
- * Copyright (C) 2014-2015, Neil Johnson
+ * Copyright (C) 2014-2019, Neil Johnson
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms,
@@ -51,7 +51,8 @@ typedef struct optab_s {
         OPTAB_MASK2,
         OPTAB_MEMMOD,
         OPTAB_TABLE,
-        OPTAB_PUSHTBL
+        OPTAB_PUSHTBL,
+        OPTAB_PREFIX
     } type;
     union {
         struct {
@@ -71,6 +72,13 @@ typedef struct optab_s {
 /**
     Macros to construct entries in op tables.
 **/
+
+#define PREFIX(M_pfx, M_opc)         \
+    { .type     = OPTAB_PREFIX,      \
+      .opc      = M_opc,             \
+      .opcode   = "PREFIX",          \
+      .operands = prefix_ ## M_pfx,  \
+    },
 
 /**
     The given instruction byte jumps to another decode table.
@@ -94,7 +102,7 @@ typedef struct optab_s {
 
 /**
     The given instruction byte pushes M_count opcode bytes onto
-    a stack ans then jumps to another decode table.
+    a stack and then jumps to another decode table.
 **/
 #define PUSHTBL(M_tablename, M_opc, M_count)    \
     { .type    = OPTAB_PUSHTBL,      \
@@ -105,7 +113,7 @@ typedef struct optab_s {
     },
     
 /**
-    A single insruction matches against one op byte.
+    A single instruction matches against one op byte.
 **/    
 #define INSN(M_opcode, M_ops, M_opc, M_xt)  \
     { .type     = OPTAB_INSN,               \
@@ -129,7 +137,7 @@ typedef struct optab_s {
 
 /**
     A MASK matches a set of instruction bytes described by a bit mask and a
-   value to match against applied to the first search byte.
+    value to match against applied to the first search byte.
 **/    
 #define MASK(M_opcode, M_ops, M_mask, M_val, M_xt)  \
     { .type     = OPTAB_MASK,                       \
@@ -142,7 +150,7 @@ typedef struct optab_s {
 
 /**
     A MASK2 matches a set of instruction bytes described by a bit mask and a
-   value to match against applied to the second search byte.
+    value to match against applied to the second search byte.
 **/    
 #define MASK2(M_opcode, M_ops, M_opc, M_mask, M_val, M_xt)  \
     { .type     = OPTAB_MASK2,                              \
@@ -172,10 +180,16 @@ typedef struct optab_s {
 #define END        { .opcode = NULL }
 
 /**
-    Create function definition given a name.
+    Create operand function definition given a name.
 **/
 #define OPERAND_FUNC(M_name) \
     static void operand_ ## M_name (FILE *f, ADDR * addr, UBYTE opc, XREF_TYPE xtype )
+    
+/**
+    Create prefix function definition given a name.
+**/
+#define PREFIX_FUNC(M_name) \
+    static void prefix_ ## M_name (FILE *f, ADDR * addr, UBYTE opc, XREF_TYPE xtype )
 
 /* Neaten up emitting a comma "," within an operand. */
 #define COMMA                   operand( ", " )
@@ -190,6 +204,13 @@ OPERAND_FUNC(M_a ## _ ## M_b) \
       COMMA; \
       operand_ ## M_b (f, addr, opc, xtype); \
 }
+
+/**
+    Generate a pair of two-operand functions: "A,B" and "B,A"
+**/
+#define TWO_OPERAND_PAIR(P_a, P_b) \
+TWO_OPERAND(P_a, P_b) \
+TWO_OPERAND(P_b, P_a)
 
 /**
     Short-cut macro to generate simple three-operand functions.

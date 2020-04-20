@@ -1,0 +1,599 @@
+# 8085 disassembler test harness
+#
+
+###### Data Transfer Group ###################################################
+
+###### MOV rD,rS
+#
+# 01_DDD_SSS
+
+# MOV B
+40      # B
+41      # C
+42      # D
+43      # E
+44      # H
+45      # L
+46      # M
+47      # A
+
+# MOV C
+48      # B
+49      # C
+4A      # D
+4B      # E
+4C      # H
+4D      # L
+4E      # M
+4F      # A
+
+# MOV D
+50      # B
+51      # C
+52      # D
+53      # E
+54      # H
+55      # L
+56      # M
+57      # A
+
+# MOV E
+58      # B
+59      # C
+5A      # D
+5B      # E
+5C      # H
+5D      # L
+5E      # M
+5F      # A
+
+# MOV H
+60      # B
+61      # C
+62      # D
+63      # E
+64      # H
+65      # L
+66      # M
+67      # A
+
+# MOV L
+68      # B
+69      # C
+6A      # D
+6B      # E
+6C      # H
+6D      # L
+6E      # M
+6F      # A
+
+# MOV A
+78      # B
+79      # C
+7A      # D
+7B      # E
+7C      # H
+7D      # L
+7E      # M
+7F      # A
+
+###### MOV M, rS
+#
+# 01110_SSS
+
+70          # MOV M, B
+71          #      , C
+72          #      , D
+73          #      , E
+74          #      , H
+75          #      , L
+77          #      , A
+
+###### MVI rD,n
+#
+# 00_DDD_110
+# nnnnnnnn
+
+06 BB   # B, #BB
+0E CC   # C, #CC
+16 DD   # D, #DD
+1E EE   # E, #EE
+26 10   # H, #10
+2E 01   # L, #01
+3E AA   # A, #AA
+36 11   # M, #11
+
+###### LXI dd, nn    (page 97)
+#
+# 00dd_0001
+# llllllll
+# hhhhhhhh
+
+01 34 12    # BC
+11 34 12    # DE
+21 34 12    # HL
+31 34 12    # SP
+
+###### LDAX (RR)
+
+0A  # BC
+1A  # DE
+
+###### STAX (RR)
+
+02  # BC
+12  # DE
+
+###### LDA  ADDR
+#
+# 0011_1010
+# llllllll
+# hhhhhhhh
+
+3A 34 12
+
+###### STA  ADDR
+#
+# 0011_0010
+# llllllll
+# hhhhhhhh
+
+32 34 12
+
+###### LHLD  ADDR
+#
+# 0010_1010
+# llllllll
+# hhhhhhhh
+
+2A 34 12
+
+###### SHLD ADDR
+#
+# 0010_0010
+# llllllll
+# hhhhhhhh
+
+22 34 12
+
+###### XCHG
+#
+# 1110_1011
+
+EB
+
+###### Data Manipulation Group - Arithmetic ##################################
+
+###### ADD A, r
+80      # B
+81      # C
+82      # D
+83      # E
+84      # H
+85      # L
+86      # M
+87      # A
+
+###### ADC A, r
+88      # B
+89      # C
+8A      # D
+8B      # E
+8C      # H
+8D      # L
+8E      # M
+8F      # A
+
+###### SUB A, r
+90      # B
+91      # C
+92      # D
+93      # E
+94      # H
+95      # L
+96      # M
+97      # A
+
+###### SBB A, r
+98      # B
+99      # C
+9A      # D
+9B      # E
+9C      # H
+9D      # L
+9E      # M
+9F      # A
+
+###### ADI n
+#
+# 1100_0110
+# nnnnnn
+
+C6 00
+C6 AA
+C6 FF
+
+###### ACI n
+#
+# 1100_1110
+# nnnnnn
+
+CE 00
+CE AA
+CE FF
+
+###### SUI n
+#
+# 1101_0110
+# nnnnnn
+
+D6 00
+D6 AA
+D6 FF
+
+###### SBI n
+#
+# 1101_1110
+# nnnnnn
+
+DE 00
+DE AA
+DE FF
+
+###### DAD ss
+#
+# 00_ss_1001
+
+09      # BC
+19      # DE
+29      # HL
+39      # SP
+
+######## INR R
+#
+# 00_rrr_100
+
+04      # B
+0C      # C
+14      # D
+1C      # E
+24      # H
+2C      # L
+34      # M
+3C      # A
+
+######## DCR R
+#
+# 00_rrr_101
+
+05      # B
+0D      # C
+15      # D
+1D      # E
+25      # H
+2D      # L
+35      # M
+3D      # A
+
+###### INX ss
+03      # BC
+13      # DE
+23      # HL
+33      # SP
+
+###### DCX ss
+
+0B      # BC
+1B      # DE
+2B      # HL
+3B      # SP
+
+###### DAA
+
+27
+
+###### CMA
+
+2F
+
+
+###### CMC
+
+3F
+
+###### STC
+
+37
+
+###### Data Manipulation Group - Logical #####################################
+
+###### ANA R
+A0      # B
+A1      # C
+A2      # D
+A3      # E
+A4      # H
+A5      # L
+A6      # M
+A7      # A
+
+###### ORA R
+B0      # B
+B1      # C
+B2      # D
+B3      # E
+B4      # H
+B5      # L
+B6      # M
+B7      # A
+
+###### XRA R
+A8      # B
+A9      # C
+AA      # D
+AB      # E
+AC      # H
+AD      # L
+AE      # M
+AF      # A
+
+###### CMP R
+B8      # B
+B9      # C
+BA      # D
+BB      # E
+BC      # H
+BD      # L
+BE      # M
+BF      # A
+
+###### RLC
+
+07
+
+###### RRC
+
+0F
+
+###### RAL
+
+17
+
+###### RAR
+
+1F
+
+###### ANI n
+#
+# 1110_0110
+# nnnnnn
+
+E6 00
+E6 AA
+E6 FF
+
+###### ORI n
+#
+# 1111_0110
+# nnnnnn
+
+F6 00
+F6 AA
+F6 FF
+
+###### XRI n
+#
+# 1110_1110
+# nnnnnn
+
+EE 00
+EE AA
+EE FF
+
+###### CPI n
+#
+# 1111_1110
+# nnnnnn
+
+FE 00
+FE AA
+FE FF
+
+###### Transfer of Control/Branch Group ######################################
+
+###### JMP addr
+#
+# 1100_0011
+# llllllll
+# hhhhhhhh
+
+C3 78 56
+
+###### Jcc addr
+#
+# 11_ccc_010
+# llllllll
+# hhhhhhhh
+
+C2 78 66
+CA 78 66
+D2 78 66
+DA 78 66
+E2 78 66
+EA 78 66
+F2 78 66
+FA 78 66
+
+###### CALL addr
+
+CD 78 56
+
+###### Ccc addr
+
+C4 78 66
+CC 78 66
+D4 78 66
+DC 78 66
+E4 78 66
+EC 78 66
+F4 78 66
+FC 78 66
+
+###### RET
+
+C9
+
+###### Rcc
+
+C0
+C8
+D0
+D8
+E0
+E8
+F0
+F8
+
+###### PCHL
+
+E9
+
+###### Input/Output Group ####################################################
+
+###### IN port
+#
+# 1101_1011
+# nnnnnnnn
+
+DB 00
+DB 7F
+DB 80
+DB FF
+
+###### OUT port
+
+D3 00
+D3 7F
+D3 80
+D3 FF
+
+###### Stack and Machine Control Group #######################################
+
+###### PUSH qq
+#
+# 11_qq_0101
+
+C5      # BC
+D5      # DE
+E5      # HL
+F5      # PSW
+
+###### POP qq
+#
+# 11_qq_0001
+
+C1      # BC
+D1      # DE
+E1      # HL
+F1      # PSW
+
+###### XTHL
+#
+# 1110_0011
+
+E3
+
+###### SPHL
+#
+# 1111_1001
+
+F9
+
+###### EI
+
+FB
+
+###### DI
+
+F3
+
+###### RIM
+
+20
+
+###### SIM
+
+30
+
+###### NOP
+
+00
+
+###### HLT
+
+76
+
+###### RST p
+
+C7
+CF
+D7
+DF
+E7
+EF
+F7
+FF
+
+###### Undocumented Instruction Group ########################################
+
+###### DSUB
+
+08
+
+###### ARHL
+
+10
+
+###### RDEL
+
+18
+
+###### LDHI n
+
+28 00
+28 7F
+28 80
+28 FF
+
+###### LDSI n
+
+38 00
+38 7F
+38 80
+38 FF
+
+###### RSTV
+
+CB
+
+###### SHLX
+
+D9
+
+###### JNK addr
+
+DD 78 76
+
+###### LHLX
+
+ED
+
+###### JK addr
+
+FD 78 76
+
+##############################################################################
+##############################################################################
+##############################################################################
+
+## END ##

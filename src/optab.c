@@ -125,9 +125,10 @@ static OPC next_insn( FILE* fp, ADDR *addr  )
  *
  * DESCRIPTION
  *      Disassembles the next instruction in the input stream.
- *      f - file stream to read (pass to calls to next() )
- *      outbuf - pointer to output buffer
- *      addr - address of first input byte for this insn
+ *      f     - file stream to read (pass to calls to next() )
+ *      addr  - address of first input byte for this insn
+ *      optab - table to use to decode this instruction
+ *      opc   - opcode to decode
  *
  * RETURNS
  *      INSN_FOUND if a valid instruction found.
@@ -139,6 +140,7 @@ static int walk_table( FILE * f, ADDR * addr, optab_t * optab, OPC opc )
 {
     UBYTE peek_byte;
     int have_peeked = 0;
+    optab_t * origin = optab;
     
     if ( optab == NULL )
         return 0;
@@ -207,8 +209,14 @@ static int walk_table( FILE * f, ADDR * addr, optab_t * optab, OPC opc )
             opc = next_insn( f, addr );
             return walk_table( f, addr, optab->u.pushtbl.table, opc );
         }
+        else if ( optab->type == OPTAB_PREFIX && optab->opc == opc )
+        {
+            optab->operands( f, addr, opc, optab->xtype );
+            opc = next_insn( f, addr );
+            optab = origin - 1;
+        }
         
-        optab++;    
+        optab++;
     }
     
     return INSN_NOT_FOUND;
@@ -297,9 +305,9 @@ void operand( const char *operand, ... )
  *
  * DESCRIPTION
  *      Disassembles the next instruction in the input stream.
- *      f - file stream to read (pass to calls to next() )
+ *      f      - file stream to read (pass to calls to next() )
  *      outbuf - pointer to output buffer
- *      addr - address of first input byte for this insn
+ *      addr   - address of first input byte for this insn
  *
  * RETURNS
  *      address of next input byte

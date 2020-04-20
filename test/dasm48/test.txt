@@ -1,0 +1,431 @@
+# Intel 48 disassembler test harness
+#
+# Test all instructions described in Intel document 
+#     MCS-48 Microcomputer User's Manual, (C) 1978
+#
+
+###### ARITHMETIC Group ##############################################
+
+# ADD A, Rr
+68
+69
+6A
+6B
+6C
+6D
+6E
+6F
+
+# ADD A, @Rr
+60
+61
+
+# ADD A, #data
+03 00
+03 7F
+03 80
+03 FF
+
+# ADDC A, Rr
+78
+79
+7A
+7B
+7C
+7D
+7E
+7F
+
+# ADDC A, @Rr
+70
+71
+
+# ADDC A, #data
+13 00
+13 7F
+13 80
+13 FF
+
+# DA A
+57
+
+# DEC A
+07
+
+# DEC Rr
+C8
+C9
+CA
+CB
+CC
+CD
+CE
+CF
+
+# INC A
+17
+
+# INC Rr
+18
+19
+1A
+1B
+1C
+1D
+1E
+1F
+
+# INC @Rr
+10
+11
+
+47	# SWAP A
+
+###### BITWISE Group #################################################
+
+# ANL A, Rr
+58
+59
+5A
+5B
+5C
+5D
+5E
+5F
+
+# ANL A, @Rr
+50
+51
+
+# ANL A, #data
+53 00
+53 7F
+53 80
+53 FF
+
+# ANL BUS, #data
+98 00
+98 7F
+98 80
+98 FF
+
+# ANL Pp, #data
+99 00
+99 FF
+9A 7F
+9A 80
+
+# ANLD Pp, A
+9C
+9D
+9E
+9F
+
+# ORL A, Rr
+48
+49
+4A
+4B
+4C
+4D
+4E
+4F
+
+# ORL A, @Rr
+40
+41
+
+# ORL A, #data
+43 00
+43 7F
+43 80
+43 FF
+
+# ORL BUS, #data
+88 00
+88 3F
+88 88
+88 FF
+
+# ORL Pp, #data
+89 00
+89 FF
+8A 11
+8A EE
+
+# ORLD Pp, A
+8C
+8D
+8E
+8F
+
+# XRL A, Rr
+D8
+D9
+DA
+DB
+DC
+DD
+DE
+DF
+
+# XRL A, @Rr
+D0
+D1
+
+# XRL A, #data
+D3 00
+D3 7F
+D3 80
+D3 FF
+
+###### ROTATES  ######################################################
+
+E7	# RL A
+F7	# RLC A
+77	# RR A
+67	# RRC A
+
+###### CALL and RETURN  ##############################################
+
+# CALL addr
+14 11
+34 33
+54 55
+74 77
+94 99
+B4 BB
+D4 F0
+F4 FF
+
+83	# RET
+93	# RETR
+
+###### JUMPS  ########################################################
+
+# DJNZ Rr, addr
+E8 80
+E9 80
+EA 80
+EB 80
+EC 80
+ED 80
+EE 80
+EF 80
+
+# JBb addr
+12 40
+32 40
+52 40
+72 40
+92 40
+B2 40
+D2 40
+F2 40
+
+# Others
+F6 40	# JC
+B6 40	# JF0
+76 40	# JF1
+
+# JMP
+04 00
+24 22
+44 44
+64 66
+84 88
+A4 AA
+C4 F0
+E4 EE
+
+
+B3	# JMPP @A
+
+E6 40	# JNC
+86 40	# JNI
+26 40	# JNT0
+46 40 	# JNT1
+
+96 40	# JNZ
+16 40   # JTF
+36 40   # JT0
+56 40	# JT1
+
+C6 40	# JZ
+
+###### FLAGS  ########################################################
+
+27	# CLR A
+97	# CLR C
+A5	# CLR F1
+85	# CLR F0
+37	# CPL A
+A7	# CPL C
+95	# CPL F0
+B5	# CPL F1
+15	# DIS I
+35	# DIS TCNTI
+05	# EN I
+25	# EN TCNTI
+75	# ENT0 CLK
+
+##### INPUT/OUTPUT  ##################################################
+
+# IN A, Pp
+09
+0A
+
+08	# INS A, BUS
+
+02	# OUTL BUS, A
+
+# OUTL Pp, A
+39
+3A
+
+###### MOVES  ########################################################
+
+# MOV A, #data
+23 00
+23 7F
+23 80
+23 FF
+
+C7	# MOV A, PSW
+
+# MOV A, Rr
+F8
+F9
+FA
+FB
+FC
+FD
+FE
+FF
+
+# MOV A, @Rr
+F0
+F1
+
+42	# MOV A, T
+D7	# MOV PSW, A
+
+# MOV Rr, A
+A8
+A9
+AA
+AB
+AC
+AD
+AE
+AF
+
+# MOV Rr, #data
+B8 00
+B9 11
+BA 22
+BB 33
+BC 40
+BD 05
+BE 66
+BF 77
+
+# MOV @Rr, A
+A0
+A1
+
+# MOV @Rr, #data
+B0 A5
+B1 5A
+
+# MOV T,A
+62
+
+# MOVD A, Pp
+0C
+0D
+0E
+0F
+
+# MOVD Pp, A
+3C
+3D
+3E
+3F
+
+A3	# MOVP A, @A
+E3	# MOVP3 A, @A
+
+# MOVX A, @Rr
+80
+81
+
+# MOVX @Rr, A
+90
+91
+
+# XCH A, Rr
+28
+29
+2A
+2B
+2C
+2D
+2E
+2F
+
+# XCH A, @Rr
+20
+21
+
+# XCHD A, @Rr
+30
+31
+
+######### MISCELLANEOUS  #############################################
+
+00	# NOP
+
+E5	# SEL MB0
+F5	# SEL MB1
+C5	# SEL RB0
+D5	# SEL RB1
+
+65	# STOP TCNT
+45	# STRT CNT
+55	# STRT T
+
+######## UNKNOWN INSTRUCTIONS  #######################################
+
+01
+06
+0B
+22
+33
+38
+3B
+63
+66
+73
+82
+87
+8B
+9B
+A2
+A6
+B7
+C0
+C1
+C2
+C3
+D6
+E0
+E1
+E2
+F3
+
+######################################################################
+######################################################################
+######################################################################
+
+## END ##
