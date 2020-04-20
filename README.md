@@ -14,6 +14,7 @@ Supported Processors:
   * Intel 8086/8088
   * Intel 8096 (including 196 variants)
   * Mostek 6502
+  * Motorola 6805 family
   * Motorola 6809
   * NEC 78K/III (uPD78310 family)
   * Texas Instruments TMS7000

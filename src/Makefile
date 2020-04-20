@@ -15,6 +15,7 @@ X=.exe
 TARGETS = dasm78k3$(X) \
           dasm96$(X)   \
           dasm02$(X)   \
+          dasm05$(X)   \
           dasm7000$(X) \
           dasm09$(X)   \
           dasmavr$(X)  \
@@ -97,6 +98,13 @@ D48_OBJS = ${CORE_OBJS} decode48.o
 
 dasm48: ${D48_OBJS}
 	$(CC) ${D48_OBJS} -o ${@}
+
+#################################################
+
+D05_OBJS = ${CORE_OBJS} decode05.o
+
+dasm05: ${D05_OBJS}
+	$(CC) ${D05_OBJS} -o ${@}
 
 #################################################
 
