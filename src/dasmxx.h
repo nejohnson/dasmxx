@@ -50,6 +50,8 @@ typedef signed char        BYTE;
 typedef unsigned short     UWORD;
 typedef signed short       WORD;
 typedef unsigned int       ADDR;
+typedef signed int         LWORD;
+typedef unsigned int       ULWORD;
 
 /* Derived types */
 typedef UWORD              OPC;

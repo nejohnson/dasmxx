@@ -8,9 +8,24 @@
 #
 #################################################
 
-TARGETS = dasm78k3 dasm96 dasm02 dasm7000 dasm09 \
-          dasmavr dasm51 dasmz80 dasm48 dasm05   \
-          txt2bin
+#ifdef _WIN32
+X=.exe
+#endif
+
+TARGETS = dasm78k3$(X) \
+          dasm96$(X)   \
+          dasm02$(X)   \
+          dasm05$(X)   \
+          dasm7000$(X) \
+          dasm09$(X)   \
+          dasmavr$(X)  \
+          dasm51$(X)   \
+          dasmz80$(X)  \
+          dasm48$(X)   \
+          dasmx86$(X)  \
+          dasm85$(X)   \
+          dasm1802$(X) \
+          txt2bin$(X)
 
 CORE_OBJS = dasmxx.o xref.o optab.o
 
@@ -19,7 +34,7 @@ CORE96_OBJS = dasmxx.o xref.o
 
 CFLAGS = -g
 
-all:	${TARGETS}
+all:	$(subst $(X),,${TARGETS})
 
 #################################################
 
@@ -90,6 +105,27 @@ D05_OBJS = ${CORE_OBJS} decode05.o
 
 dasm05: ${D05_OBJS}
 	$(CC) ${D05_OBJS} -o ${@}
+
+#################################################
+
+DX86_OBJS = ${CORE_OBJS} decodex86.o
+
+dasmx86: ${DX86_OBJS}
+	$(CC) ${DX86_OBJS} -o ${@}
+
+#################################################
+
+D85_OBJS = ${CORE_OBJS} decode85.o
+
+dasm85: ${D85_OBJS}
+	$(CC) ${D85_OBJS} -o ${@}
+
+#################################################
+
+D1802_OBJS = ${CORE_OBJS} decode1802.o
+
+dasm1802: ${D1802_OBJS}
+	$(CC) ${D1802_OBJS} -o ${@}
 
 #################################################
 
