@@ -1323,10 +1323,13 @@ char * dupstr( const char *s )
  *      next
  *
  * DESCRIPTION
- *      Gets the next byte from the file stream.  If EOF then abort.
+ *      Reads the next byte from the file stream, stores it in
+ *      the instruction buffer, and returns it.
+ *      If EOF then abort.
  *
  * RETURNS
- *      next byte in fp
+ *      next byte in file stream
+ *      addr incremented
  *
  ************************************************************/
 
@@ -1383,6 +1386,9 @@ UWORD nextw( FILE* fp, ADDR *addr )
     
     (*addr)++;
     (*addr)++;
+    
+    if ( dasm_word_msb_first )
+        SWAP( lo, hi );
     
     w = ( ( hi & 0xFF ) << 8 ) | ( lo & 0xFF );
     
