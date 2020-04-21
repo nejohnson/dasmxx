@@ -8,9 +8,10 @@
 #
 #################################################
 
-#ifdef _WIN32
+# If building on Dos/Windows we need the .exe extension
+ifdef COMSPEC
 X=.exe
-#endif
+endif
 
 TARGETS = dasm78k3$(X) \
           dasm96$(X)   \
