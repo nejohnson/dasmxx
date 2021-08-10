@@ -202,7 +202,7 @@ optab_t base_optab[] = {
         INSN ( M_name,     ix,     (0x70 | M_base),   X_DIRECT )
 
     INSN ( "nega", none, 0x40, X_NONE )
-    INSN ( "mula", none, 0x42, X_NONE )
+    INSN ( "mul",  none, 0x42, X_NONE )
     INSN ( "negx", none, 0x50, X_NONE )
 
     RMW_OP( "neg", 0x00 )
