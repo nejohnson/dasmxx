@@ -75,6 +75,7 @@
 3F 11 # CLR
 # Inherent
 40 # NEG
+42 # MUL
 43 # COMA
 44 # LSRA
 46 # RORA
@@ -248,7 +249,6 @@ FF # STX
 3B
 3E
 41
-42
 45
 4B
 4E
@@ -290,3 +290,4 @@ AC
 AF
 
 # END
+
