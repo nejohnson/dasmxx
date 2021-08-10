@@ -1,1 +1,17 @@
 /.project
+src/*.o
+src/txt2bin
+src/dasm02
+src/dasm05
+src/dasm09
+src/dasm48
+src/dasm51
+src/dasm1802
+src/dasm7000
+src/dasm78k3
+src/dasm85
+src/dasm96
+src/dasmavr
+src/dasmx86
+src/dasmz80
+.*.sw?
