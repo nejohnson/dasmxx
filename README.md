@@ -19,12 +19,12 @@ Supported Processors:
   * NEC 78K/III (uPD78310 family)
   * Texas Instruments TMS7000
   * Zilog Z80
-  * RCA CDP1802 (dinosaur!)
+  * RCA CDP1802
+  * Motorola 68000 (WORK IN PROGRESS!)
 
 Planned Features:
   * More processors (in no specific order):
     * Intel 8087 FPU
-    * Motorola 68000
   * Support for Intel Hex and Motorola SREC input file formats
   * Support for merging multiple ROM files
   * Assembler-compatible output for subsequent re-assembly
