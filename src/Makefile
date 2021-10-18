@@ -8,9 +8,24 @@
 #
 #################################################
 
-TARGETS = dasm78k3 dasm96 dasm02 dasm7000 dasm09 \
-          dasmavr dasm51 dasmz80 dasm48 dasmx86  \
-          dasm85 dasm1802 dasm68k txt2bin
+#ifdef _WIN32
+X=.exe
+#endif
+
+TARGETS = dasm78k3$(X) \
+          dasm96$(X)   \
+          dasm02$(X)   \
+          dasm7000$(X) \
+          dasm09$(X)   \
+          dasmavr$(X)  \
+          dasm51$(X)   \
+          dasmz80$(X)  \
+          dasm48$(X)   \
+          dasmx86$(X)  \
+          dasm85$(X)   \
+          dasm1802$(X) \
+          dasm68k$(X)  \
+          txt2bin$(X)
 
 CORE_OBJS = dasmxx.o xref.o optab.o
 
@@ -19,7 +34,7 @@ CORE96_OBJS = dasmxx.o xref.o
 
 CFLAGS = -g
 
-all:	${TARGETS}
+all:	$(subst $(X),,${TARGETS})
 
 #################################################
 
