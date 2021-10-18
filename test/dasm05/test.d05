@@ -1,0 +1,6 @@
+ftest.bin
+c0000 Start
+e01C2
+
+# LABELS
+l0088 TestAddr1

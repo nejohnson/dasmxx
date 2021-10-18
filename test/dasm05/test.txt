@@ -1,0 +1,293 @@
+# Motorola 6805 disassembler test harness
+#
+# Test all instructions described in Motorola document
+#    MC146805E2 Datasheet (Advance Information), 1982
+#
+#
+
+# Bit manipulation
+# Bit Test and Branch (BTB)
+00 55 FD # BRSET 0
+01 55 FD # BRCLR 0
+02 66 FD # BRSET 1
+03 66 FD # BRCLR 1
+04 77 FD # BRSET 2
+05 77 FD # BRCLR 2
+06 88 FD # BRSET 3
+07 88 FD # BRCLR 3
+08 99 FD # BRSET 4
+09 99 FD # BRCLR 4
+0A 11 FD # BRSET 5
+0B 11 FD # BRCLR 5
+0C 22 FD # BRSET 6
+0D 22 FD # BRCLR 6
+0E 33 FD # BRSET 7
+0F 33 FD # BRCLR 7
+
+# Bit Set and Clear (BSC)
+10 55 # BSET 0
+11 55 # BCLR 0
+12 66 # BSET 1
+13 66 # BCLR 1
+14 77 # BSET 2
+15 77 # BCLR 2
+16 88 # BSET 3
+17 88 # BCLR 3
+18 99 # BSET 4
+19 99 # BCLR 4
+1A 11 # BSET 5
+1B 11 # BCLR 5
+1C 22 # BSET 6
+1D 22 # BCLR 6
+1E 33 # BSET 7
+1F 33 # BCLR 7
+
+# Branches
+20 FE # BRA
+21 FE # BRN
+22 FE # BHI
+23 FE # BLS
+24 FE # BCC
+25 FE # BCS
+26 FE # BNE
+27 FE # BEQ
+28 FE # BHCC
+29 FE # BHCS
+2A FE # BPL
+2B FE # BMI
+2C FE # BMC
+2D FE # BMS
+2E FE # BIL
+2F FE # BIH
+
+# RMW
+# Direct
+30 55 # NEG
+33 66 # COM
+34 77 # LSR
+36 88 # ROR
+37 99 # ASR
+38 AA # LSL
+39 BB # ROL
+3A CC # DEC
+3C DD # INC
+3D EE # TST
+3F 11 # CLR
+# Inherent
+40 # NEG
+42 # MUL
+43 # COMA
+44 # LSRA
+46 # RORA
+47 # ASRA
+48 # LSLA
+49 # ROLA
+4A # DECA
+4C # INCA
+4D # TSTA
+4F # CLRA
+50 # NEG
+53 # COMX
+54 # LSRX
+56 # RORX
+57 # ASRX
+58 # LSLX
+59 # ROLX
+5A # DECX
+5C # INCX
+5D # TSTX
+5F # CLRX
+# Indexed 8 bit  offset
+60 55 # NEG
+63 66 # COM
+64 77 # LSR
+66 88 # ROR
+67 99 # ASR
+68 AA # LSL
+69 BB # ROL
+6A CC # DEC
+6C DD # INC
+6D EE # TST
+6F 11 # CLR
+# indexed no offset
+70 # NEG
+73 # COM
+74 # LSR
+76 # ROR
+77 # ASR
+78 # LSL
+79 # ROL
+7A # DEC
+7C # INC
+7D # TST
+7F # CLR
+
+
+# Control group
+#
+
+9D # NOP
+8E # STOP
+8F # WAIT
+80 # RTI
+81 # RTS
+83 # SWI
+97 # TAX
+98 # CLC
+99 # SEC
+9A # CLI
+9B # SEI
+9C # RSP
+9F # TXA
+
+# Register/Memory
+# Immediate
+A0 01 # SUB
+A1 0F # CMP
+A2 1E # SBC
+A3 2D # CPX
+A4 3C # AND
+A5 4B # BIT
+A6 5A # LDA
+A8 69 # EOR
+A9 78 # ADC
+AA 87 # ORA
+AB 96 # ADD
+AD FE # BSR
+AE A5 # LDX
+# Direct
+B0 01 # SUB
+B1 0F # CMP
+B2 1E # SBC
+B3 2D # CPX
+B4 3C # AND
+B5 4B # BIT
+B6 5A # LDA
+B7 5F # STA
+B8 69 # EOR
+B9 78 # ADC
+BA 87 # ORA
+BB 96 # ADD
+BC 88 # JMP
+BD 88 # JSR
+BE A5 # LDX
+BF A3 # STX
+# Extended
+C0 18 01 # SUB
+C1 18 0F # CMP
+C2 18 1E # SBC
+C3 18 2D # CPX
+C4 18 3C # AND
+C5 18 4B # BIT
+C6 18 5A # LDA
+C7 18 5F # STA
+C8 18 69 # EOR
+C9 18 78 # ADC
+CA 18 87 # ORA
+CB 18 96 # ADD
+CC 18 00 # JMP
+CD 18 88 # JSR
+CE 18 A5 # LDX
+CF 18 A3 # STX
+# Indexed, 16 bit offset
+D0 04 01 # SUB
+D1 04 0F # CMP
+D2 04 1E # SBC
+D3 04 2D # CPX
+D4 04 3C # AND
+D5 04 4B # BIT
+D6 04 5A # LDA
+D7 04 5F # STA
+D8 04 69 # EOR
+D9 04 78 # ADC
+DA 04 87 # ORA
+DB 04 96 # ADD
+DC 04 00 # JMP
+DD 04 88 # JSR
+DE 04 A5 # LDX
+DF 04 A3 # STX
+# Indexed, 8 bit offset
+E0 01 # SUB
+E1 0F # CMP
+E2 1E # SBC
+E3 2D # CPX
+E4 3C # AND
+E5 4B # BIT
+E6 5A # LDA
+E7 5F # STA
+E8 69 # EOR
+E9 78 # ADC
+EA 87 # ORA
+EB 96 # ADD
+EC 00 # JMP
+ED 88 # JSR
+EE A5 # LDX
+EF A3 # STX
+# INdexed, no offset
+F0 # SUB
+F1 # CMP
+F2 # SBC
+F3 # CPX
+F4 # AND
+F5 # BIT
+F6 # LDA
+F7 # STA
+F8 # EOR
+F9 # ADC
+FA # ORA
+FB # ADD
+FC # JMP
+FD # JSR
+FE # LDX
+FF # STX
+
+# Unknown instructions
+
+31
+32
+35
+3B
+3E
+41
+45
+4B
+4E
+51
+52
+55
+5B
+5E
+61
+62
+65
+6B
+6E
+71
+72
+75
+7B
+7E
+82
+84
+85
+86
+87
+88
+89
+8A
+8B
+8C
+8D
+90
+91
+92
+93
+94
+95
+96
+A7
+AC
+AF
+
+# END
+
