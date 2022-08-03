@@ -258,7 +258,7 @@ static void emit_page_header( void )
 
     if ( pagination )
     {
-        printf( "Page %d", page_no++ );
+        printf( "%s Page %d", COMMENT_DELIM, page_no++ );
         if ( page_title )
             printf( " -- %s", page_title ); 
         printf( "\n\n" );
@@ -769,9 +769,9 @@ static void run_disasm( struct params params )
     bpl   = clist->bpl;
     clist = clist->n;
     
-    printf( ";   Processing \"%s\" (%ld bytes)", inputfile, filelength ); newline();
-    printf( ";   Disassembly start address: 0x%04X", addr );              newline();
-    printf( ";   String terminator: 0x%02x", string_terminator );         newline();
+    printf( "%s   Processing \"%s\" (%ld bytes)", COMMENT_DELIM, inputfile, filelength ); newline();
+    printf( "%s   Disassembly start address: 0x%04X", COMMENT_DELIM, addr );              newline();
+    printf( "%s   String terminator: 0x%02x", COMMENT_DELIM, string_terminator );         newline();
     newline();
 
     while ( !feof( f ) && clist )
@@ -1206,7 +1206,7 @@ static struct params process_args( int argc, char **argv )
 
 static void display_banner( struct params params )
 {
-    char *prefix = params.outputfile ? ";" : "";
+    char *prefix = params.outputfile ? COMMENT_DELIM : "";
     
     printf( "%s   %s -- %s Disassembler --", prefix, dasm_name, dasm_description ); newline();
     printf( "%s" SPACER, prefix ); 
