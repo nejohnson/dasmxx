@@ -1,7 +1,6 @@
 
 ftest.bin
 c0000  Code
-b0011,4  Bin
 s00AE  String
 w00B8  Word
 a00BC  Alpha
