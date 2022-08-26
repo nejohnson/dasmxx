@@ -27,6 +27,7 @@ TARGETS = dasm78k3$(X) \
           dasm85$(X)   \
           dasm1802$(X) \
           dasm68k$(X)  \
+          dasmunsp$(X)  \
           txt2bin$(X)
 
 CORE_OBJS = dasmxx.o xref.o optab.o
@@ -135,6 +136,13 @@ D68K_OBJS = ${CORE_OBJS} decode68k.o
 
 dasm68k: ${D68K_OBJS}
 	$(CC) ${D68K_OBJS} -o ${@}
+
+#################################################
+
+DUNSP_OBJS = ${CORE_OBJS} decodeunsp.o
+
+dasmunsp: ${DUNSP_OBJS}
+	$(CC) ${DUNSP_OBJS} -o ${@}
 
 #################################################
 
