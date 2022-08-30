@@ -46,13 +46,21 @@ OPERAND_FUNC(jmp)
 {
 	int dir = OP1;
 	int off = IMM6;
+	char buf[32];
 	if (dir == 1) {
-		operand("%x", *addr / 2 - off);
+		operand("%s", xref_genwordaddr(buf, "%04x", *addr / 2 - off));
 	} else if (dir == 0) {
-		operand("%x", *addr / 2 + off);
+		operand("%s", xref_genwordaddr(buf, "%04x", *addr / 2 + off));
 	} else {
 		operand("?? unknown jump direction %d", dir);
 	}
+}
+
+OPERAND_FUNC(ljmp)
+{
+	char buf[32];
+	int word = nextw(f, addr);
+	operand("%s", xref_genwordaddr(buf, "%08x", word | (*addr / 2 & 0xFFFF0000)));
 }
 
 OPERAND_FUNC(pushset)
@@ -196,6 +204,7 @@ optab_t base_optab[] = {
 	INSN( "RETI", none, 0x9A98, X_NONE)
 	MASK( "POP",  popset_stack, 0xF1C0, 0x9080, X_NONE)
 	MASK( "PUSH", pushset_stack, 0xF1C0, 0xD080, X_NONE)
+	INSN( "LJMP", ljmp, 0x9F0F, X_JMP)
 
 	// ALU ops
 	MASK( "ADD",  op1_op3, 0xF000, 0x0000, X_NONE)
