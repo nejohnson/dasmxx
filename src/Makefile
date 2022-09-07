@@ -27,6 +27,9 @@ TARGETS = dasm78k3$(X) \
           dasm85$(X)   \
           dasm1802$(X) \
           dasm68k$(X)  \
+          dasmpic12$(X)\
+          dasmpic16$(X)\
+          dasmpic18$(X)\
           txt2bin$(X)
 
 CORE_OBJS = dasmxx.o xref.o optab.o
@@ -138,6 +141,27 @@ dasm68k: ${D68K_OBJS}
 
 #################################################
 
+DPIC12_OBJS = ${CORE_OBJS} decodepic12.o
+
+dasmpic12: ${DPIC12_OBJS}
+	$(CC) ${DPIC12_OBJS} -o ${@}
+
+#################################################
+
+DPIC16_OBJS = ${CORE_OBJS} decodepic16.o
+
+dasmpic16: ${DPIC16_OBJS}
+	$(CC) ${DPIC16_OBJS} -o ${@}
+
+#################################################
+
+DPIC18_OBJS = ${CORE_OBJS} decodepic18.o
+
+dasmpic18: ${DPIC18_OBJS}
+	$(CC) ${DPIC18_OBJS} -o ${@}
+
+#################################################
+
 txt2bin: txt2bin.c
 	$(CC) $< -o $@
 
@@ -145,5 +169,36 @@ txt2bin: txt2bin.c
 	
 clean:
 	rm -f ${TARGETS} *.o
+
+#################################################
+
+what:
+	@echo "dasmxx -- Disassembler Suite"
+	@echo "==========================================="
+	@echo "Make targets:"
+	@echo "  all       -- build all targets"
+	@echo "  clean     -- remove all build artifacts"
+	@echo "  txt2bin   -- text-to-binary test tool"
+	@echo "  TARGET    -- build just that disassembler"
+	@echo ""
+	@echo "  disassembler targets:"
+	@echo "     dasm78k3   -- NEC 78K3"
+	@echo "     dasm96     -- Intel 8096"
+	@echo "     dasm02     -- MOS 6502"
+	@echo "     dasm05     -- Motorola 6805"
+	@echo "     dasm7000   -- TI TMS7000"
+	@echo "     dasm09     -- Motorola 6809"
+	@echo "     dasmavr    -- Atmel AVR"
+	@echo "     dasm51     -- Intel 8051"
+	@echo "     dasmz80    -- Zilog Z80"
+	@echo "     dasm48     -- Intel 8048, 8049"
+	@echo "     dasmx86    -- Intel 8086/8088"
+	@echo "     dasm85     -- Intel 8085"
+	@echo "     dasm1802   -- RCA CDP1802"
+	@echo "     dasm68k    -- Motorola 68000"
+	@echo "     dasmpic12  -- Microchip PIC12"
+	@echo "     dasmpic16  -- Microchip PIC16"
+	@echo "     dasmpic18  -- Microchip PIC18"
+	@echo ""
 
 #################################################
