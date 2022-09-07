@@ -13,6 +13,7 @@ Supported Processors:
   * Intel 8080/8085
   * Intel 8086/8088
   * Intel 8096 (including 196 variants)
+  * Microchip PIC10/12/16/18
   * Mostek 6502
   * Motorola 6805 family
   * Motorola 6809
@@ -25,7 +26,7 @@ Supported Processors:
 Planned Features:
   * More processors (in no specific order):
     * Intel 8087 FPU
-    * Microchip PIC10/12/16/18/24/dsPIC33
+    * Microchip PIC24/dsPIC33
   * Support for Intel Hex and Motorola SREC input file formats
   * Support for merging multiple ROM files
   * Assembler-compatible output for subsequent re-assembly
