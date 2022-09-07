@@ -25,6 +25,7 @@ Supported Processors:
 Planned Features:
   * More processors (in no specific order):
     * Intel 8087 FPU
+    * Microchip PIC10/12/16/18/24/dsPIC33
   * Support for Intel Hex and Motorola SREC input file formats
   * Support for merging multiple ROM files
   * Assembler-compatible output for subsequent re-assembly
