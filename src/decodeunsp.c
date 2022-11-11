@@ -41,7 +41,6 @@ OPERAND_FUNC(call)
 	int target = (IMM6 << 16) | nextw(f, addr);
 	char buf[32];
 	operand( "%s", xref_genwordaddr(buf, "%08x", target));
-		;
 }
 
 OPERAND_FUNC(jmp)
@@ -126,7 +125,7 @@ OPERAND_FUNC(op2)
 					operand("[%s++]", regname[rs]);
 					break;
 				default:
-					operand("?? unknown OP3 opn %d", opn);
+					operand("[++%s]", regname[rs]);
 					break;
 			}
 			break;
