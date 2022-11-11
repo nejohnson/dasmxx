@@ -18,6 +18,7 @@ Supported Processors:
   * Motorola 6805 family
   * Motorola 6809
   * NEC 78K/III (uPD78310 family)
+  * SunPlus µNSP
   * Texas Instruments TMS7000
   * Zilog Z80
   * RCA CDP1802

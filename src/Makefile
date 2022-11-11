@@ -30,6 +30,7 @@ TARGETS = dasm78k3$(X) \
           dasmpic12$(X)\
           dasmpic16$(X)\
           dasmpic18$(X)\
+          dasmunsp$(X)  \
           txt2bin$(X)
 
 CORE_OBJS = dasmxx.o xref.o optab.o
@@ -141,6 +142,7 @@ dasm68k: ${D68K_OBJS}
 
 #################################################
 
+<<<<<<< HEAD
 DPIC12_OBJS = ${CORE_OBJS} decodepic12.o
 
 dasmpic12: ${DPIC12_OBJS}
@@ -159,6 +161,13 @@ DPIC18_OBJS = ${CORE_OBJS} decodepic18.o
 
 dasmpic18: ${DPIC18_OBJS}
 	$(CC) ${DPIC18_OBJS} -o ${@}
+
+#################################################
+
+DUNSP_OBJS = ${CORE_OBJS} decodeunsp.o
+
+dasmunsp: ${DUNSP_OBJS}
+	$(CC) ${DUNSP_OBJS} -o ${@}
 
 #################################################
 
@@ -199,6 +208,7 @@ what:
 	@echo "     dasmpic12  -- Microchip PIC12"
 	@echo "     dasmpic16  -- Microchip PIC16"
 	@echo "     dasmpic18  -- Microchip PIC18"
+	@echo "     dasmunsp   -- SunPlus/GeneralPlus µ'nSP"
 	@echo ""
 
 #################################################
