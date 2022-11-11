@@ -9,9 +9,14 @@ src/dasm51
 src/dasm1802
 src/dasm7000
 src/dasm78k3
+src/dasm68k
 src/dasm85
 src/dasm96
 src/dasmavr
+src/dasmpic12
+src/dasmpic16
+src/dasmpic18
+src/dasmunsp
 src/dasmx86
 src/dasmz80
 .*.sw?
