@@ -42,7 +42,7 @@
  * Globally-visible decoder properties
  *****************************************************************************/
 
-DASM_PROFILE( "dasm02", "MOS Technology 6502", 3, 9, 0, 1 )
+DASM_PROFILE( "dasm02", "MOS Technology 6502", 3, 9, 0, 1, 1 )
 
 /*****************************************************************************
  * Private data types, macros, constants.

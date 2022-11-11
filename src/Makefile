@@ -142,7 +142,6 @@ dasm68k: ${D68K_OBJS}
 
 #################################################
 
-<<<<<<< HEAD
 DPIC12_OBJS = ${CORE_OBJS} decodepic12.o
 
 dasmpic12: ${DPIC12_OBJS}

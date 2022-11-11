@@ -383,7 +383,7 @@ static int emitaddr( ADDR addr, struct params *params )
     if ( !params->want_stripped )
         return printf( "%c   " FORMAT_ADDR ":    ", 
             params->want_asm_out ? ';' : ' ',
-            addr / 2);
+            addr / dasm_word_width_bytes);
     else
         return 0;
 }
@@ -514,7 +514,7 @@ static void readlist( const char *listfile, struct params *params )
                     unsigned int cmd_idx = strchr( datchars, cmd ) - datchars;
                     unsigned bytes_per_line = BYTES_PER_LINE;
                     sscanf( pbuf, "%x%n", &addr, &n );
-					addr *= 2;
+                    addr *= dasm_word_width_bytes;
                     pbuf += n;
                     
                     if ( *pbuf == ',' )
@@ -596,7 +596,7 @@ static void readlist( const char *listfile, struct params *params )
            case 'd':   /* Define xref data label */
                 {
                     sscanf( pbuf, "%x%n", &addr, &n );
-					addr *= 2;
+                    addr *= dasm_word_width_bytes;
                     pbuf += n;
                     
                     SKIP_SPACE(pbuf);
@@ -615,7 +615,7 @@ static void readlist( const char *listfile, struct params *params )
             case 'k':   /* Single-line (k)comment */
                 {
                     sscanf( pbuf, "%x%n", &addr, &n );
-					addr *= 2;
+                    addr *= dasm_word_width_bytes;
                     pbuf += n;
                     
                     SKIP_SPACE(pbuf);
@@ -627,7 +627,7 @@ static void readlist( const char *listfile, struct params *params )
             case 'n':   /* Multiple-line note */
                 {
                     sscanf( pbuf, "%x%n", &addr, &n );
-					addr *= 2;
+                    addr *= dasm_word_width_bytes;
                     pbuf += n;
                     
                     /* Initialise the note buffer and switch to LINE_NOTE mode. */

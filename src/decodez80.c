@@ -46,7 +46,7 @@
  * Globally-visible decoder properties
  *****************************************************************************/
 
-DASM_PROFILE( "dasmz80", "Zilog Z80", 4, 9, 0, 1 )
+DASM_PROFILE( "dasmz80", "Zilog Z80", 4, 9, 0, 1, 1 )
 
 /*****************************************************************************
  * Private data types, macros, constants.

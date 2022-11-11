@@ -49,7 +49,7 @@
  * Globally-visible decoder properties
  *****************************************************************************/
 
-DASM_PROFILE( "dasmavr", "Atmel AVR", 4, 9, 0, 2 )
+DASM_PROFILE( "dasmavr", "Atmel AVR", 4, 9, 0, 2, 1 )
 
 /*****************************************************************************
  * Private data types, macros, constants.

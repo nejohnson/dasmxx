@@ -231,8 +231,8 @@ char * xref_findaddrlabel( ADDR addr )
 
 char * xref_genwordaddr( char * buf, const char * format, ADDR addr )
 {
-    char * label = xref_findaddrlabel( addr * 2 );
-	 
+    char * label = xref_findaddrlabel( addr * dasm_word_width_bytes );
+
     if ( label )
         return label;
     

@@ -13,8 +13,10 @@
 #include "dasmxx.h"
 #include "optab.h"
 
-
-DASM_PROFILE( "dasmunsp", "SunPlus µnSP", 4, 5, 0, 2 )
+/* Note: u'nSP is not able to address individual bytes at all.
+ * So dasm_word_width_bytes is set to 2, and only 16-bit words can be addressed.
+ */
+DASM_PROFILE( "dasmunsp", "SunPlus µnSP", 4, 5, 0, 2, 2 )
 
 const char* const regname[] = { "SP", "R1", "R2", "R3", "R4", "BP", "SR", "PC" };
 
