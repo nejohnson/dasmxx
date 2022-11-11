@@ -47,7 +47,7 @@
  * Globally-visible decoder properties
  *****************************************************************************/
 
-DASM_PROFILE( "dasmpic16", "Microchip PIC16", 4, 9, 0, 2 )
+DASM_PROFILE( "dasmpic16", "Microchip PIC16", 4, 9, 0, 2, 1 )
 
 /*****************************************************************************
  * Private data types, macros, constants.

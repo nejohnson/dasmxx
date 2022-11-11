@@ -50,7 +50,7 @@
  * Globally-visible decoder properties
  *****************************************************************************/
 
-DASM_PROFILE( "dasm85", "Intel 8085", 4, 9, 0, 1 )
+DASM_PROFILE( "dasm85", "Intel 8085", 4, 9, 0, 1, 1 )
 
 /*****************************************************************************
  * Private data types, macros, constants.
