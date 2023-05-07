@@ -71,9 +71,10 @@
  * Dump commands:
  *      aXXXX       alphanumeric dump
  *      bXXXX[,N]   byte dump (N bytes, default is 16)
+ *      mXXXX       bitmap
  *      sXXXX       string dump
- *      wXXXX       word dump
  *      vXXXX       vector address dump
+ *      wXXXX       word dump
  *
  * Code disassembly commands:
  *      cXXXX       code disassembly starts at XXXX
