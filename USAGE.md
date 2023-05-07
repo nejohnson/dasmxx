@@ -53,6 +53,7 @@ Dump commands:
      sXXXX       string dump
      vXXXX       vector address dump
      wXXXX       word dump
+     zXXXX       skip (emits a SKIP with the number of bytes). Source must already be 0-filled.
 
 Code disassembly commands:
 

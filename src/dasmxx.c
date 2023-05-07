@@ -75,6 +75,7 @@
  *      sXXXX       string dump
  *      vXXXX       vector address dump
  *      wXXXX       word dump
+ *      zXXXX       skip (emits a SKIP with the number of bytes). Source must already be 0-filled.
  *
  * Code disassembly commands:
  *      cXXXX       code disassembly starts at XXXX
@@ -168,7 +169,7 @@ struct comment  *blockcmt   = NULL;
 int             string_terminator = '\0';
 
 /* List of display modes.  Defines must match entry position. */
-static char datchars[] = "cbsewapvm";
+static char datchars[] = "cbsewapvmz";
 #define CODE            0
 #define BYTES           1
 #define STRINGS         2
@@ -178,6 +179,7 @@ static char datchars[] = "cbsewapvm";
 #define PROCS           6
 #define VECTORS         7
 #define BITMAPS         8
+#define SKIP            9
 
 /* Global instruction byte buffer */
 static UBYTE *insn_byte_buffer = NULL;
@@ -554,7 +556,8 @@ static void readlist( const char *listfile, struct params *params )
                             { "CDATA",  1 },
                             { "PROC",   1 },
                             { "VCTR",   1 },
-                            { "BMAP",   1 }
+                            { "BMAP",   1 },
+                            { "SKIP",   1 }
                         };
 
                         if ( tbl[cmd_idx].pfx )
@@ -984,6 +987,41 @@ static void run_disasm( struct params params )
             if ( mode == CODE || mode == PROCS )
                 newline();
             name  = clist->name; 
+            bpl   = clist->bpl;
+            clist = clist->n;
+        }
+        else if ( mode == SKIP )
+        {
+            /*****************************************************************
+            *            z - SKIP
+            *****************************************************************/
+
+            int b, i = 0;
+
+            newline();
+            printcomment( blockcmt, addr, 0 );
+
+            {
+                emitaddr( addr, &params );
+                if ( params.want_asm_out )
+                    printf( params.want_stripped ? "   " : "\n   " );
+            }
+
+            while ( addr < clist->addr )
+            {
+                b = (unsigned char)next( f, &addr );
+                if (b != 0)
+                    error("Non-zero byte in skipped section %04x at %04x", addr, clist->addr);
+                i++;
+            }
+
+            printf( "SKIP    %04x", i );
+            newline();
+
+            mode = clist->mode;
+            if ( mode == CODE || mode == PROCS )
+                newline();
+            name  = clist->name;
             bpl   = clist->bpl;
             clist = clist->n;
         }
