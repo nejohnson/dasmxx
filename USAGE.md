@@ -49,9 +49,11 @@ Dump commands:
 
      aXXXX       alphanumeric dump
      bXXXX[,N]   byte dump (N bytes, default is 16)
+     mXXXX       bitmap (each byte is dumped as a string of # and . for 1 and 0 bits respectively)
      sXXXX       string dump
-     wXXXX       word dump
      vXXXX       vector address dump
+     wXXXX       word dump
+     zXXXX       skip (emits a SKIP with the number of bytes). Source must already be 0-filled.
 
 Code disassembly commands:
 
