@@ -516,6 +516,7 @@ static void readlist( const char *listfile, struct params *params )
             case 'w': /* word dump                   */
             case 'm': /* bitmap dump                 */
             case 'u': /* widechar string dump        */
+            case 'z': /* skip empty areas            */
                 {
                     unsigned int cmd_idx = strchr( datchars, cmd ) - datchars;
                     unsigned bytes_per_line = BYTES_PER_LINE;
