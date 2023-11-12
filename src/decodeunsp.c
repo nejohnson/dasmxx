@@ -16,7 +16,7 @@
 /* Note: u'nSP is not able to address individual bytes at all.
  * So dasm_word_width_bytes is set to 2, and only 16-bit words can be addressed.
  */
-DASM_PROFILE( "dasmunsp", "SunPlus µnSP", 4, 5, 0, 2, 2 )
+DASM_PROFILE( "dasmunsp", "SunPlus µnSP", 4, 8, 0, 2, 2 )
 
 const char* const regname[] = { "SP", "R1", "R2", "R3", "R4", "BP", "SR", "PC" };
 
@@ -34,6 +34,12 @@ OPERAND_FUNC(int)
 {
 	const char* const intname[] = { "OFF", "IRQ", "FIQ", "IRQ,FIQ" };
 	operand( "%s", intname[OPB]);
+}
+
+OPERAND_FUNC(fir)
+{
+	const char* const intname[] = { "ON", "OFF" };
+	operand( "%s", intname[OPB & 1]);
 }
 
 OPERAND_FUNC(call)
@@ -154,7 +160,7 @@ OPERAND_FUNC(op2)
 					break;
 				}
 				default:
-					operand("?? unknown OP4 opn %d", opn);
+					operand("%s ASR %d", regname[OPB], opn - 3);
 					break;
 			}
 			break;
@@ -166,6 +172,15 @@ OPERAND_FUNC(op2)
 				operand("%s LSR %d", regname[OPB], opn - 3);
 			else
 				operand("%s LSL %d", regname[OPB], opn + 1);
+			break;
+		}
+		case 6:
+		{
+			int opn = OPN;
+			if (opn >= 4)
+				operand("%s ROR %d", regname[OPB], opn - 3);
+			else
+				operand("%s ROL %d", regname[OPB], opn + 1);
 			break;
 		}
 		default:
@@ -186,6 +201,14 @@ OPERAND_FUNC(mul)
 	operand("%s, %s", regname[OPA], regname[OPB]);
 }
 
+OPERAND_FUNC(mac)
+{
+	int opn = OPN;
+	int op1 = OP1;
+	opn += (op1 & 1) << 3;
+	operand("%s, %s, %d", regname[OPA], regname[OPB], opn);
+}
+
 TWO_OPERAND(op1, op2)
 TWO_OPERAND(op1, op3)
 TWO_OPERAND(pushset, stack)
@@ -197,6 +220,7 @@ optab_t base_optab[] = {
 	MASK( "JCC", jmp,     0xFF80, 0x0E00, X_JMP)
 	MASK( "JNZ", jmp,     0xFF80, 0x4E00, X_JMP)
 	MASK( "JZ",  jmp,     0xFF80, 0x5E00, X_JMP)
+	MASK( "JMI", jmp,     0xFF80, 0x7E00, X_JMP)
 	MASK( "JA",  jmp,     0xFF80, 0x9E00, X_JMP)
 	MASK( "JG",  jmp,     0xFF80, 0xBE00, X_JMP)
 	MASK( "JMP", jmp,     0xFF80, 0xEE00, X_JMP)
@@ -223,7 +247,12 @@ optab_t base_optab[] = {
 
 	// Specials
 	MASK( "INT",  int,  0xF1FC, 0xF140, X_NONE)
+	MASK( "FIR_MOV",  fir,  0xF1FE, 0xF144, X_NONE)
 	MASK( "CALL", call, 0xF1C0, 0xF040, X_CALL)
-	MASK( "MULS", mul,  0xF1C8, 0xF108, X_NONE)
+	MASK( "GOTO", call, 0xFFC0, 0xFE80, X_CALL)
+	MASK( "MULU", mul,  0xF1F8, 0xF008, X_NONE)
+	MASK( "MULS", mul,  0xF1F8, 0xF108, X_NONE)
+	MASK( "MACU", mac,  0xF180, 0xF080, X_NONE)
+	MASK( "MACS", mac,  0xF180, 0xF180, X_NONE)
 	END
 };
