@@ -51,6 +51,7 @@ Dump commands:
      bXXXX[,N]   byte dump (N bytes, default is 16)
      mXXXX       bitmap (each byte is dumped as a string of # and . for 1 and 0 bits respectively)
      sXXXX       string dump
+     uXXXX       string dump with 16-bit characters (utf-16)
      vXXXX       vector address dump
      wXXXX       word dump
      zXXXX       skip (emits a SKIP with the number of bytes). Source must already be 0-filled.

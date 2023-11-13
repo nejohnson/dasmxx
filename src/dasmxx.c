@@ -73,6 +73,7 @@
  *      bXXXX[,N]   byte dump (N bytes, default is 16)
  *      mXXXX       bitmap
  *      sXXXX       string dump
+ *      uXXXX       string dump with 16-bit characters (utf-16)
  *      vXXXX       vector address dump
  *      wXXXX       word dump
  *      zXXXX       skip (emits a SKIP with the number of bytes). Source must already be 0-filled.
@@ -169,7 +170,7 @@ struct comment  *blockcmt   = NULL;
 int             string_terminator = '\0';
 
 /* List of display modes.  Defines must match entry position. */
-static char datchars[] = "cbsewapvmz";
+static char datchars[] = "cbsewapvmuz";
 #define CODE            0
 #define BYTES           1
 #define STRINGS         2
@@ -179,7 +180,8 @@ static char datchars[] = "cbsewapvmz";
 #define PROCS           6
 #define VECTORS         7
 #define BITMAPS         8
-#define SKIP            9
+#define WSTRING         9
+#define SKIP            10
 
 /* Global instruction byte buffer */
 static UBYTE *insn_byte_buffer = NULL;
@@ -513,6 +515,8 @@ static void readlist( const char *listfile, struct params *params )
             case 'v': /* vector dump                 */
             case 'w': /* word dump                   */
             case 'm': /* bitmap dump                 */
+            case 'u': /* widechar string dump        */
+            case 'z': /* skip empty areas            */
                 {
                     unsigned int cmd_idx = strchr( datchars, cmd ) - datchars;
                     unsigned bytes_per_line = BYTES_PER_LINE;
@@ -548,16 +552,17 @@ static void readlist( const char *listfile, struct params *params )
                             char *pfx;
                             unsigned int num;
                         } tbl[] = {
-                            { "CL",     1 },
-                            { "BDATA",  1 }, 
-                            { "STRING", 1 },
-                            { NULL,     0 }, /* END */
-                            { "WDATA",  1 },
-                            { "CDATA",  1 },
-                            { "PROC",   1 },
-                            { "VCTR",   1 },
-                            { "BMAP",   1 },
-                            { "SKIP",   1 }
+                            { "CL",      1 },
+                            { "BDATA",   1 }, 
+                            { "STRING",  1 },
+                            { NULL,      0 }, /* END */
+                            { "WDATA",   1 },
+                            { "CDATA",   1 },
+                            { "PROC",    1 },
+                            { "VCTR",    1 },
+                            { "BMAP",    1 },
+                            { "WSTRING", 1 },
+                            { "SKIP",    1 }
                         };
 
                         if ( tbl[cmd_idx].pfx )
@@ -939,6 +944,66 @@ static void run_disasm( struct params params )
             if ( mode == CODE || mode == PROCS )
                 newline();
             name  = clist->name; 
+            bpl   = clist->bpl;
+            clist = clist->n;
+        }
+        else if ( mode == WSTRING )
+        {
+            /*****************************************************************
+            *            u - WIDECHAR STRING DATA
+            *****************************************************************/
+
+            int c;
+
+            newline();
+            printcomment( blockcmt, addr, 0 );
+
+            while ( addr < clist->addr )
+            {
+                emitaddr( addr, &params );
+                if ( params.want_asm_out )
+                    printf( params.want_stripped ? "   " : "\n   " );
+
+                int in_quote = 0;
+                printf( "DW      " );
+
+                while ( c = nextw( f, &addr ) )
+                {
+                    if ( c == string_terminator )
+                        break;
+
+                    if ( isprint( c ) )
+                    {
+                        if ( !in_quote )
+                        {
+                            putchar( '\'' );
+                            in_quote = 1;
+                        }
+                        putchar( c );
+                    }
+                    else
+                    {
+                        if ( in_quote )
+                        {
+                            printf( "', " );
+                            in_quote = 0;
+                        }
+                        else
+                        {
+                            printf( ", " );
+                        }
+                        printf ("%#04X", (uint16_t) c );
+                    }
+                }
+                if ( in_quote )
+                    printf( "'" );
+                newline();
+            }
+
+            mode = clist->mode;
+            if ( mode == CODE || mode == PROCS )
+                newline();
+            name  = clist->name;
             bpl   = clist->bpl;
             clist = clist->n;
         }
