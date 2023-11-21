@@ -117,6 +117,7 @@
 #include <stdarg.h>
 #include <unistd.h> /* for getopt */
 #include <ctype.h>
+#include <stdint.h>
 
 #include "dasmxx.h"
 
