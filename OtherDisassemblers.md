@@ -2,6 +2,9 @@
 
 dasmxx is by no means the first multi-device scriptable disassembler.  This page documents a number of them, with comments where appropriate.
 
+# Ghidra #
+
+[Ghidra](https://ghidra-sre.org/) is a "software reverse engineering (SRE) suite of tools developed by NSA's Research Directorate in support of the Cybersecurity mission". It is a Java-based tool that looks extremely powerful.
 
 # DASMx #
 
