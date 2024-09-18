@@ -791,7 +791,9 @@ static void run_disasm( struct params params )
     
     printf( "%s   Processing \"%s\" (%ld bytes)", COMMENT_DELIM, inputfile, filelength ); newline();
     if ( file_offset )
+    {
          printf( "%s   File offset: 0x%04X", COMMENT_DELIM, file_offset ); newline();
+    }
     printf( "%s   Disassembly start address: 0x%04X", COMMENT_DELIM, addr );              newline();
     printf( "%s   String terminator: 0x%02x", COMMENT_DELIM, string_terminator );         newline();
     newline();
