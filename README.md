@@ -8,11 +8,11 @@ Features:
 
 Supported Processors:
   * Atmel AVR
-  * Intel 8048
-  * Intel 8051
+  * Intel 8035, 8048, 8049 (MCS-48)
+  * Intel 8031, 8051 (MCS-51)
   * Intel 8080/8085
   * Intel 8086/8088
-  * Intel 8096 (including 196 variants)
+  * Intel 8096 (MCS-96, including 196 variants)
   * Microchip PIC10/12/16/18
   * Mostek 6502
   * Motorola 6805 family
