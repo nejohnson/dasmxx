@@ -1,6 +1,6 @@
 /*****************************************************************************
  *
- * Copyright (C) 2014-2015, Neil Johnson
+ * Copyright (C) 2014-2024, Neil Johnson
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms,
@@ -57,11 +57,12 @@
  *  processing to tell the disassembler what the memory at a particular address
  *  is for (unknown, code, or some sort of data).
  *
- * The commands are (where XXXX denotes hexadecimal address):
+ * The commands are (where XXXX denotes hexadecimal field):
  *
  * File commands:
  *      fName       input file = `Name'
  *      iName       include file `Name' in place of include command
+ *      >XXXX       fast forward to offset XXXX from start of file
  *
  * Configuration commands:
  *      tXX         string terminator byte (default = 00)
@@ -169,6 +170,7 @@ struct comment  *linecmt    = NULL;
 struct comment  *blockcmt   = NULL;
 
 int             string_terminator = '\0';
+unsigned int    file_offset = 0;
 
 /* List of display modes.  Defines must match entry position. */
 static char datchars[] = "cbsewapvmuz";
@@ -592,6 +594,10 @@ static void readlist( const char *listfile, struct params *params )
                 readlist( pbuf, params );
                 break;
 
+            case '>':   /* fast forward */
+		sscanf( pbuf, "%x", &file_offset );
+		break;
+
             case 'r':   /* Xref range */
                 {
                     /* Deprecated */
@@ -775,7 +781,7 @@ static void run_disasm( struct params params )
         
     fseek( f, 0, SEEK_END );
     filelength = ftell( f );
-    fseek( f, 0, SEEK_SET );
+    fseek( f, file_offset, SEEK_SET );
     
     addr  = clist->addr;
     mode  = clist->mode;
@@ -784,6 +790,8 @@ static void run_disasm( struct params params )
     clist = clist->n;
     
     printf( "%s   Processing \"%s\" (%ld bytes)", COMMENT_DELIM, inputfile, filelength ); newline();
+    if ( file_offset )
+         printf( "%s   File offset: 0x%04X", COMMENT_DELIM, file_offset ); newline();
     printf( "%s   Disassembly start address: 0x%04X", COMMENT_DELIM, addr );              newline();
     printf( "%s   String terminator: 0x%02x", COMMENT_DELIM, string_terminator );         newline();
     newline();
