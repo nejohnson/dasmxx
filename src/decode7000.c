@@ -1,6 +1,6 @@
 /*****************************************************************************
  *
- * Copyright (C) 2014-2015, Neil Johnson
+ * Copyright (C) 2014-2024, Neil Johnson
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms,
@@ -156,7 +156,7 @@ OPERAND_FUNC(Pn)
 
 OPERAND_FUNC(trap)
 {
-    UBYTE t = opc - 0xE8;
+    UBYTE t = 0xFF - opc;
     
     operand( "%d", t );
 }
