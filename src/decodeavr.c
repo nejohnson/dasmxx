@@ -1,6 +1,6 @@
 /*****************************************************************************
  *
- * Copyright (C) 2014, Neil Johnson
+ * Copyright (C) 2014-2025, Neil Johnson
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms,
@@ -637,8 +637,11 @@ optab_t base_optab[] = {
     MASK ( "ORI",    rhigh_k8,      0xF000, 0x6000, X_IMM )
     MASK ( "ANDI",   rhigh_k8,      0xF000, 0x7000, X_IMM )
     
-    MASK ( "LD",     r_YZ,          0xD200, 0x8000, X_NONE )
-    MASK ( "ST",     YZ_r,          0xD200, 0x8200, X_NONE )
+    MASK ( "LD",     r_YZ,          0xFE07, 0x8000, X_NONE )
+    MASK ( "LDD",    r_YZ,          0xD200, 0x8000, X_NONE )
+
+    MASK ( "ST",     YZ_r,          0xFE07, 0x8200, X_NONE )
+    MASK ( "STD",    YZ_r,          0xD200, 0x8200, X_NONE )
     
     MASK ( "LPM",    r_Zpm,         0xFE0F, 0x9004, X_NONE )
     MASK ( "LPM",    r_Zpm,         0xFE0F, 0x9005, X_NONE )
