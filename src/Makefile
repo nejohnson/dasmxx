@@ -30,7 +30,8 @@ TARGETS = dasm78k3$(X) \
           dasmpic12$(X)\
           dasmpic16$(X)\
           dasmpic18$(X)\
-          dasmunsp$(X)  \
+          dasmunsp$(X) \
+          dasmm8$(X)   \
           txt2bin$(X)
 
 CORE_OBJS = dasmxx.o xref.o optab.o
@@ -170,6 +171,13 @@ dasmunsp: ${DUNSP_OBJS}
 
 #################################################
 
+DM8_OBJS = ${CORE_OBJS} decodem8.o
+
+dasmm8: ${DM8_OBJS}
+	$(CC) ${DM8_OBJS} -o ${@}
+
+#################################################
+
 txt2bin: txt2bin.c
 	$(CC) $< -o $@
 
@@ -208,6 +216,7 @@ what:
 	@echo "     dasmpic16  -- Microchip PIC16"
 	@echo "     dasmpic18  -- Microchip PIC18"
 	@echo "     dasmunsp   -- SunPlus/GeneralPlus µ'nSP"
+	@echo "     dasmm8     -- ST Microelectronics STM8"
 	@echo ""
 
 #################################################
