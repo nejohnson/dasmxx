@@ -42,7 +42,7 @@
  * Globally-visible decoder properties
  *****************************************************************************/
 
-DASM_PROFILE( "dasmm8", "ST Micro STM8", 3, 9, 1, 1, 1 )
+DASM_PROFILE( "dasmm8", "ST Micro STM8", 5, 7, 1, 1, 1 )
 
 /*****************************************************************************
  * Private data types, macros, constants.
