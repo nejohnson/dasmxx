@@ -90,7 +90,7 @@ int main( int argc, char *argv[] )
     if ( argc != 3 )
     {
         fprintf( stderr, "txt2bin <input.txt> <output.bin>\n" );
-        EXIT_FAILURE;
+        return EXIT_FAILURE;
     }
     
     fin = fopen( argv[1], "r" );
