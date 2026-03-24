@@ -13,6 +13,7 @@ src/dasm68k
 src/dasm85
 src/dasm96
 src/dasmavr
+src/dasmm8
 src/dasmpic12
 src/dasmpic16
 src/dasmpic18
@@ -25,6 +26,7 @@ src/dasmz80
 test/*/output/
 test/*/generated/*.bin
 test/tool_features/testdata/*.bin
+test/*/test.bin
 *.pyc
 __pycache__/
 
