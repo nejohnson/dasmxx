@@ -1,0 +1,4 @@
+# Test basic code disassembly with 'c' command
+f../testdata/simple_code.bin
+c0000
+e0032

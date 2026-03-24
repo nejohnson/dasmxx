@@ -1,0 +1,6 @@
+# Test manual labels with 'l' command
+f../testdata/simple_code.bin
+c0000
+l000B DataString
+p0018 GetData
+e0032

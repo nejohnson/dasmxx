@@ -1,0 +1,4 @@
+# Test byte dump with 'b' command
+f../testdata/simple_code.bin
+b0020,8
+e0032

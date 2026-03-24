@@ -1,0 +1,5 @@
+# Test procedure labels with 'p' command
+f../testdata/simple_code.bin
+c0000
+p0018 MyProc
+e0032

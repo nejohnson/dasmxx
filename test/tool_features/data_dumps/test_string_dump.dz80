@@ -1,0 +1,5 @@
+# Test string dump with 's' command
+f../testdata/simple_code.bin
+s000B
+s002C
+e0032

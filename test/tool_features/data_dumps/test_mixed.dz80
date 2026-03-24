@@ -1,0 +1,9 @@
+# Test mixed code and data dumps
+f../testdata/simple_code.bin
+c0000
+s000B
+p0018 MyProc
+b0020,8
+w0028
+s002C
+e0032

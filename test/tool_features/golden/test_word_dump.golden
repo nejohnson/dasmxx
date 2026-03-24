@@ -1,0 +1,13 @@
+   dasmz80 -- Zilog Z80 Disassembler --
+-----------------------------------------------------------------
+
+;   Processing "../testdata/simple_code.bin" (50 bytes)
+;   Disassembly start address: 0x0028
+;   String terminator: 0x00
+
+
+___WDATA_0001:
+    0028:    DW      423E
+
+___WDATA_0002:
+    002A:    DW      10C3, CD00, 0020, 0000

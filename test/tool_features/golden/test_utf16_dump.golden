@@ -1,0 +1,11 @@
+   dasmz80 -- Zilog Z80 Disassembler --
+-----------------------------------------------------------------
+
+;   Processing "../testdata/simple_code.bin" (50 bytes)
+;   Disassembly start address: 0x0030
+;   String terminator: 0x00
+
+
+___BDATA_0001:
+    0030:    DB      3E, 42      >B
+              

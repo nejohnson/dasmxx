@@ -1,0 +1,52 @@
+   dasmz80 -- Zilog Z80 Disassembler --
+-----------------------------------------------------------------
+
+;   Processing "../testdata/simple_code.bin" (50 bytes)
+;   Disassembly start address: 0x0000
+;   String terminator: 0x00
+
+___CL_0001:
+    0000:    3E 42          LD       A, #$42
+    0002:    C3 10 00       JP       $0010
+    0005:    CD 20 00       CALL     $0020
+    0008:    00             NOP      
+    0009:    00             NOP      
+    000A:    00             NOP      
+DataString:
+    000B:    48             LD       C, B
+    000C:    65             LD       H, L
+    000D:    6C             LD       L, H
+    000E:    6C             LD       L, H
+    000F:    6F             LD       L, A
+    0010:    00             NOP      
+    0011:    00             NOP      
+    0012:    00             NOP      
+    0013:    21 10 00       LD       HL, #$0010
+    0016:    C9             RET      
+    0017:    01 02 03       LD       BC, #$0302
+
+;----------------------------------------------------------------
+;        Function: GetData
+
+    001A:    04             INC      B
+    001B:    05             DEC      B
+    001C:    06 07          LD       B, #$07
+    001E:    08             EX       AF, AF'
+    001F:    34             INC      (HL)
+    0020:    12             LD       (DE), A
+    0021:    78             LD       A, B
+    0022:    56             LD       D, (HL)
+    0023:    57             LD       D, A
+    0024:    6F             LD       L, A
+    0025:    72             LD       (HL), D
+    0026:    6C             LD       L, H
+    0027:    64             LD       H, H
+    0028:    21 00 41       LD       HL, #$4100
+    002B:    00             NOP      
+    002C:    42             LD       B, D
+    002D:    00             NOP      
+    002E:    43             LD       B, E
+    002F:    00             NOP      
+    0030:    00             NOP      
+    0031:    00             NOP      
+

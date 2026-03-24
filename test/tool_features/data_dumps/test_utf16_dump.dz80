@@ -1,0 +1,4 @@
+# Test UTF-16 string dump with 'u' command (Note: binary is too small for this)
+f../testdata/simple_code.bin
+b0030,2
+e0032

@@ -1,0 +1,62 @@
+# Simple test code for tool feature testing
+# This creates a small Z80 binary with known patterns
+
+# Code section
+3E      # ld a,$42
+42
+C3      # jp $0010
+10
+00
+CD      # call $0020
+20
+00
+00      # nop
+00      # nop
+00      # nop
+
+# Some data at 0010
+48      # "Hello\0"
+65
+6C
+6C
+6F
+00
+00
+00
+
+# A procedure at 0020 (offset 0x18 in file)
+21      # ld hl,$0010
+10
+00
+C9      # ret
+
+# More data for testing different dump modes at 0030
+01
+02
+03
+04
+05
+06
+07
+08
+34      # words (little-endian): $1234, $5678
+12
+78
+56
+57      # "World!\0"
+6F
+72
+6C
+64
+21
+00
+
+# Some UTF-16 data for testing 'u' command at 0050
+41      # "ABC\0" in UTF-16LE
+00
+42
+00
+43
+00
+00
+00

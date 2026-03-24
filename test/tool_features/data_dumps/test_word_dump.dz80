@@ -1,0 +1,5 @@
+# Test word dump with 'w' command
+f../testdata/simple_code.bin
+w0028
+w002A
+e0032
