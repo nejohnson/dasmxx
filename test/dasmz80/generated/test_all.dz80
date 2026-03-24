@@ -1,0 +1,4 @@
+# Generated command file for Z80 instruction tests
+ftest_all.bin
+c0000
+e00CF

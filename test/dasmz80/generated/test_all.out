@@ -1,0 +1,151 @@
+   dasmz80 -- Zilog Z80 Disassembler --
+-----------------------------------------------------------------
+
+;   Processing "test_all.bin" (207 bytes)
+;   Disassembly start address: 0x0000
+;   String terminator: 0x00
+
+___CL_0001:
+    0000:    09             ADD      HL, BC
+    0001:    19             ADD      HL, DE
+    0002:    29             ADD      HL, HL
+    0003:    39             ADD      HL, SP
+    0004:    03             INC      BC
+    0005:    13             INC      DE
+    0006:    23             INC      HL
+    0007:    33             INC      SP
+    0008:    0B             DEC      BC
+    0009:    1B             DEC      DE
+    000A:    2B             DEC      HL
+    000B:    3B             DEC      SP
+    000C:    01 34 12       LD       BC, #$1234
+    000F:    11 34 12       LD       DE, #$1234
+    0012:    21 34 12       LD       HL, #$1234
+    0015:    31 34 12       LD       SP, #$1234
+    0018:    2A 34 12       LD       HL, ($1234)
+    001B:    22 34 12       LD       ($1234), HL
+    001E:    F9             LD       SP, HL
+    001F:    C5             PUSH     BC
+    0020:    D5             PUSH     DE
+    0021:    E5             PUSH     HL
+    0022:    F5             PUSH     AF
+    0023:    C1             POP      BC
+    0024:    D1             POP      DE
+    0025:    E1             POP      HL
+    0026:    F1             POP      AF
+    0027:    80             ADD      A, B
+    0028:    81             ADD      A, C
+    0029:    82             ADD      A, D
+    002A:    83             ADD      A, E
+    002B:    84             ADD      A, H
+    002C:    85             ADD      A, L
+    002D:    87             ADD      A, A
+    002E:    C6 42          ADD      A, #$42
+    0030:    86             ADD      A, (HL)
+    0031:    88             ADC      A, B
+    0032:    CE 42          ADC      A, #$42
+    0034:    90             SUB      A, B
+    0035:    91             SUB      A, C
+    0036:    D6 42          SUB      A, #$42
+    0038:    98             SBC      A, B
+    0039:    DE 42          SBC      A, #$42
+    003B:    A0             AND      A, B
+    003C:    E6 42          AND      A, #$42
+    003E:    B0             OR       A, B
+    003F:    F6 42          OR       A, #$42
+    0041:    A8             XOR      A, B
+    0042:    EE 42          XOR      #$42
+    0044:    B8             CP       A, B
+    0045:    FE 42          CP       #$42
+    0047:    04             INC      B
+    0048:    05             DEC      B
+    0049:    34             INC      (HL)
+    004A:    35             DEC      (HL)
+    004B:    40             LD       B, B
+    004C:    41             LD       B, C
+    004D:    42             LD       B, D
+    004E:    43             LD       B, E
+    004F:    44             LD       B, H
+    0050:    45             LD       B, L
+    0051:    47             LD       B, A
+    0052:    48             LD       C, B
+    0053:    49             LD       C, C
+    0054:    4A             LD       C, D
+    0055:    4B             LD       C, E
+    0056:    4C             LD       C, H
+    0057:    4D             LD       C, L
+    0058:    4F             LD       C, A
+    0059:    06 42          LD       B, #$42
+    005B:    0E 42          LD       C, #$42
+    005D:    16 42          LD       D, #$42
+    005F:    1E 42          LD       E, #$42
+    0061:    26 42          LD       H, #$42
+    0063:    2E 42          LD       L, #$42
+    0065:    3E 42          LD       A, #$42
+    0067:    46             LD       B, (HL)
+    0068:    4E             LD       C, (HL)
+    0069:    56             LD       D, (HL)
+    006A:    5E             LD       E, (HL)
+    006B:    66             LD       H, (HL)
+    006C:    6E             LD       L, (HL)
+    006D:    7E             LD       A, (HL)
+    006E:    70             LD       (HL), B
+    006F:    71             LD       (HL), C
+    0070:    72             LD       (HL), D
+    0071:    73             LD       (HL), E
+    0072:    74             LD       (HL), H
+    0073:    75             LD       (HL), L
+    0074:    77             LD       (HL), A
+    0075:    36 42          LD       (HL), #$42
+    0077:    0A             LD       A, (BC)
+    0078:    1A             LD       A, (DE)
+    0079:    02             LD       (BC), A
+    007A:    12             LD       (DE), A
+    007B:    3A 34 12       LD       A, ($1234)
+    007E:    32 34 12       LD       ($1234), A
+    0081:    CB 40          BIT      0, B
+    0083:    CB 7F          BIT      7, A
+    0085:    CB C0          SET      0, B
+    0087:    CB FF          SET      7, A
+    0089:    CB 80          RES      0, B
+    008B:    CB BF          RES      7, A
+    008D:    00             NOP      
+    008E:    76             HALT     
+    008F:    F3             DI       
+    0090:    FB             EI       
+    0091:    EB             EX       DE, HL
+    0092:    08             EX       AF, AF'
+    0093:    D9             EXX      
+    0094:    C3 34 12       JP       $1234
+    0097:    C2 34 12       JP       NZ, $1234
+    009A:    CA 34 12       JP       Z, $1234
+    009D:    D2 34 12       JP       NC, $1234
+    00A0:    DA 34 12       JP       C, $1234
+    00A3:    18 03          JR       $00A8
+    00A5:    20 03          JR       NZ, $00AA
+    00A7:    28 03          JR       Z, $00AC
+    00A9:    E9             JP       (HL)
+    00AA:    10 03          DJNZ     $00AF
+    00AC:    CD 34 12       CALL     $1234
+    00AF:    C4 34 12       CALL     NZ, $1234
+    00B2:    CC 34 12       CALL     Z, $1234
+    00B5:    C9             RET      
+    00B6:    C0             RET      NZ
+    00B7:    C8             RET      Z
+    00B8:    D0             RET      NC
+    00B9:    D8             RET      C
+    00BA:    C7             RST      $00
+    00BB:    CF             RST      $08
+    00BC:    FF             RST      $38
+    00BD:    07             RLCA     
+    00BE:    0F             RRCA     
+    00BF:    17             RLA      
+    00C0:    1F             RRA      
+    00C1:    CB 00          RLC      B
+    00C3:    CB 10          RL       B
+    00C5:    CB 08          RRC      B
+    00C7:    CB 18          RR       B
+    00C9:    CB 20          SLA      B
+    00CB:    CB 28          SRA      B
+    00CD:    CB 38          SRL      B
+

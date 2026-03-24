@@ -1,0 +1,690 @@
+processor: z80
+
+reference:
+  title: "Z80 CPU User Manual"
+  version: "UM008008-0116"
+  publisher: "Zilog"
+  url: "https://www.zilog.com/docs/z80/um0080.pdf"
+
+instructions:
+  # 8-Bit Load Group
+  - mnemonic: LD
+    category: "8-bit Load"
+    variants:
+      # LD r,r' - Register to register
+      - mnemonic: "LD B,B"
+        operands: "B,B"
+        opcode: [0x40]
+        reference: "page 69"
+      - mnemonic: "LD B,C"
+        operands: "B,C"
+        opcode: [0x41]
+        reference: "page 69"
+      - mnemonic: "LD B,D"
+        operands: "B,D"
+        opcode: [0x42]
+        reference: "page 69"
+      - mnemonic: "LD B,E"
+        operands: "B,E"
+        opcode: [0x43]
+        reference: "page 69"
+      - mnemonic: "LD B,H"
+        operands: "B,H"
+        opcode: [0x44]
+        reference: "page 69"
+      - mnemonic: "LD B,L"
+        operands: "B,L"
+        opcode: [0x45]
+        reference: "page 69"
+      - mnemonic: "LD B,A"
+        operands: "B,A"
+        opcode: [0x47]
+        reference: "page 69"
+
+      - mnemonic: "LD C,B"
+        operands: "C,B"
+        opcode: [0x48]
+        reference: "page 69"
+      - mnemonic: "LD C,C"
+        operands: "C,C"
+        opcode: [0x49]
+        reference: "page 69"
+      - mnemonic: "LD C,D"
+        operands: "C,D"
+        opcode: [0x4A]
+        reference: "page 69"
+      - mnemonic: "LD C,E"
+        operands: "C,E"
+        opcode: [0x4B]
+        reference: "page 69"
+      - mnemonic: "LD C,H"
+        operands: "C,H"
+        opcode: [0x4C]
+        reference: "page 69"
+      - mnemonic: "LD C,L"
+        operands: "C,L"
+        opcode: [0x4D]
+        reference: "page 69"
+      - mnemonic: "LD C,A"
+        operands: "C,A"
+        opcode: [0x4F]
+        reference: "page 69"
+
+      # LD r,n - Immediate to register
+      - mnemonic: "LD B,#$42"
+        operands: "B,#$42"
+        opcode: [0x06, 0x42]
+        reference: "page 70"
+      - mnemonic: "LD C,#$42"
+        operands: "C,#$42"
+        opcode: [0x0E, 0x42]
+        reference: "page 70"
+      - mnemonic: "LD D,#$42"
+        operands: "D,#$42"
+        opcode: [0x16, 0x42]
+        reference: "page 70"
+      - mnemonic: "LD E,#$42"
+        operands: "E,#$42"
+        opcode: [0x1E, 0x42]
+        reference: "page 70"
+      - mnemonic: "LD H,#$42"
+        operands: "H,#$42"
+        opcode: [0x26, 0x42]
+        reference: "page 70"
+      - mnemonic: "LD L,#$42"
+        operands: "L,#$42"
+        opcode: [0x2E, 0x42]
+        reference: "page 70"
+      - mnemonic: "LD A,#$42"
+        operands: "A,#$42"
+        opcode: [0x3E, 0x42]
+        reference: "page 70"
+
+      # LD r,(HL) - Load from memory
+      - mnemonic: "LD B,(HL)"
+        operands: "B,(HL)"
+        opcode: [0x46]
+        reference: "page 71"
+      - mnemonic: "LD C,(HL)"
+        operands: "C,(HL)"
+        opcode: [0x4E]
+        reference: "page 71"
+      - mnemonic: "LD D,(HL)"
+        operands: "D,(HL)"
+        opcode: [0x56]
+        reference: "page 71"
+      - mnemonic: "LD E,(HL)"
+        operands: "E,(HL)"
+        opcode: [0x5E]
+        reference: "page 71"
+      - mnemonic: "LD H,(HL)"
+        operands: "H,(HL)"
+        opcode: [0x66]
+        reference: "page 71"
+      - mnemonic: "LD L,(HL)"
+        operands: "L,(HL)"
+        opcode: [0x6E]
+        reference: "page 71"
+      - mnemonic: "LD A,(HL)"
+        operands: "A,(HL)"
+        opcode: [0x7E]
+        reference: "page 71"
+
+      # LD (HL),r - Store to memory
+      - mnemonic: "LD (HL),B"
+        operands: "(HL),B"
+        opcode: [0x70]
+        reference: "page 72"
+      - mnemonic: "LD (HL),C"
+        operands: "(HL),C"
+        opcode: [0x71]
+        reference: "page 72"
+      - mnemonic: "LD (HL),D"
+        operands: "(HL),D"
+        opcode: [0x72]
+        reference: "page 72"
+      - mnemonic: "LD (HL),E"
+        operands: "(HL),E"
+        opcode: [0x73]
+        reference: "page 72"
+      - mnemonic: "LD (HL),H"
+        operands: "(HL),H"
+        opcode: [0x74]
+        reference: "page 72"
+      - mnemonic: "LD (HL),L"
+        operands: "(HL),L"
+        opcode: [0x75]
+        reference: "page 72"
+      - mnemonic: "LD (HL),A"
+        operands: "(HL),A"
+        opcode: [0x77]
+        reference: "page 72"
+
+      # LD (HL),n - Immediate to memory
+      - mnemonic: "LD (HL),#$42"
+        operands: "(HL),#$42"
+        opcode: [0x36, 0x42]
+        reference: "page 73"
+
+      # LD A,(BC/DE) - Load A from address
+      - mnemonic: "LD A,(BC)"
+        operands: "A,(BC)"
+        opcode: [0x0A]
+        reference: "page 74"
+      - mnemonic: "LD A,(DE)"
+        operands: "A,(DE)"
+        opcode: [0x1A]
+        reference: "page 74"
+
+      # LD (BC/DE),A - Store A to address
+      - mnemonic: "LD (BC),A"
+        operands: "(BC),A"
+        opcode: [0x02]
+        reference: "page 75"
+      - mnemonic: "LD (DE),A"
+        operands: "(DE),A"
+        opcode: [0x12]
+        reference: "page 75"
+
+      # LD A,(nn) - Load A from absolute address
+      - mnemonic: "LD A,($1234)"
+        operands: "A,($1234)"
+        opcode: [0x3A, 0x34, 0x12]
+        reference: "page 76"
+
+      # LD (nn),A - Store A to absolute address
+      - mnemonic: "LD ($1234),A"
+        operands: "($1234),A"
+        opcode: [0x32, 0x34, 0x12]
+        reference: "page 77"
+
+  # 16-Bit Load Group
+  - mnemonic: LD
+    category: "16-bit Load"
+    variants:
+      # LD dd,nn - Load 16-bit immediate
+      - mnemonic: "LD BC,#$1234"
+        operands: "BC,#$1234"
+        opcode: [0x01, 0x34, 0x12]
+        reference: "page 82"
+      - mnemonic: "LD DE,#$1234"
+        operands: "DE,#$1234"
+        opcode: [0x11, 0x34, 0x12]
+        reference: "page 82"
+      - mnemonic: "LD HL,#$1234"
+        operands: "HL,#$1234"
+        opcode: [0x21, 0x34, 0x12]
+        reference: "page 82"
+      - mnemonic: "LD SP,#$1234"
+        operands: "SP,#$1234"
+        opcode: [0x31, 0x34, 0x12]
+        reference: "page 82"
+
+      # LD HL,(nn) - Load HL from memory
+      - mnemonic: "LD HL,($1234)"
+        operands: "HL,($1234)"
+        opcode: [0x2A, 0x34, 0x12]
+        reference: "page 83"
+
+      # LD (nn),HL - Store HL to memory
+      - mnemonic: "LD ($1234),HL"
+        operands: "($1234),HL"
+        opcode: [0x22, 0x34, 0x12]
+        reference: "page 84"
+
+      # LD SP,HL
+      - mnemonic: "LD SP,HL"
+        operands: "SP,HL"
+        opcode: [0xF9]
+        reference: "page 85"
+
+      # PUSH/POP
+      - mnemonic: "PUSH BC"
+        operands: "BC"
+        opcode: [0xC5]
+        reference: "page 86"
+      - mnemonic: "PUSH DE"
+        operands: "DE"
+        opcode: [0xD5]
+        reference: "page 86"
+      - mnemonic: "PUSH HL"
+        operands: "HL"
+        opcode: [0xE5]
+        reference: "page 86"
+      - mnemonic: "PUSH AF"
+        operands: "AF"
+        opcode: [0xF5]
+        reference: "page 86"
+
+      - mnemonic: "POP BC"
+        operands: "BC"
+        opcode: [0xC1]
+        reference: "page 87"
+      - mnemonic: "POP DE"
+        operands: "DE"
+        opcode: [0xD1]
+        reference: "page 87"
+      - mnemonic: "POP HL"
+        operands: "HL"
+        opcode: [0xE1]
+        reference: "page 87"
+      - mnemonic: "POP AF"
+        operands: "AF"
+        opcode: [0xF1]
+        reference: "page 87"
+
+  # 8-Bit Arithmetic
+  - category: "8-bit Arithmetic"
+    variants:
+      # ADD A,r
+      - mnemonic: "ADD A,B"
+        operands: "A,B"
+        opcode: [0x80]
+        reference: "page 90"
+      - mnemonic: "ADD A,C"
+        operands: "A,C"
+        opcode: [0x81]
+        reference: "page 90"
+      - mnemonic: "ADD A,D"
+        operands: "A,D"
+        opcode: [0x82]
+        reference: "page 90"
+      - mnemonic: "ADD A,E"
+        operands: "A,E"
+        opcode: [0x83]
+        reference: "page 90"
+      - mnemonic: "ADD A,H"
+        operands: "A,H"
+        opcode: [0x84]
+        reference: "page 90"
+      - mnemonic: "ADD A,L"
+        operands: "A,L"
+        opcode: [0x85]
+        reference: "page 90"
+      - mnemonic: "ADD A,A"
+        operands: "A,A"
+        opcode: [0x87]
+        reference: "page 90"
+
+      # ADD A,n
+      - mnemonic: "ADD A,#$42"
+        operands: "A,#$42"
+        opcode: [0xC6, 0x42]
+        reference: "page 91"
+
+      # ADD A,(HL)
+      - mnemonic: "ADD A,(HL)"
+        operands: "A,(HL)"
+        opcode: [0x86]
+        reference: "page 92"
+
+      # ADC A,r (Add with carry)
+      - mnemonic: "ADC A,B"
+        operands: "A,B"
+        opcode: [0x88]
+        reference: "page 93"
+      - mnemonic: "ADC A,#$42"
+        operands: "A,#$42"
+        opcode: [0xCE, 0x42]
+        reference: "page 94"
+
+      # SUB r
+      - mnemonic: "SUB B"
+        operands: "B"
+        opcode: [0x90]
+        reference: "page 95"
+      - mnemonic: "SUB C"
+        operands: "C"
+        opcode: [0x91]
+        reference: "page 95"
+      - mnemonic: "SUB #$42"
+        operands: "#$42"
+        opcode: [0xD6, 0x42]
+        reference: "page 96"
+
+      # SBC A,r (Subtract with carry)
+      - mnemonic: "SBC A,B"
+        operands: "A,B"
+        opcode: [0x98]
+        reference: "page 97"
+      - mnemonic: "SBC A,#$42"
+        operands: "A,#$42"
+        opcode: [0xDE, 0x42]
+        reference: "page 98"
+
+      # AND r
+      - mnemonic: "AND B"
+        operands: "B"
+        opcode: [0xA0]
+        reference: "page 99"
+      - mnemonic: "AND #$42"
+        operands: "#$42"
+        opcode: [0xE6, 0x42]
+        reference: "page 100"
+
+      # OR r
+      - mnemonic: "OR B"
+        operands: "B"
+        opcode: [0xB0]
+        reference: "page 101"
+      - mnemonic: "OR #$42"
+        operands: "#$42"
+        opcode: [0xF6, 0x42]
+        reference: "page 102"
+
+      # XOR r
+      - mnemonic: "XOR B"
+        operands: "B"
+        opcode: [0xA8]
+        reference: "page 103"
+      - mnemonic: "XOR #$42"
+        operands: "#$42"
+        opcode: [0xEE, 0x42]
+        reference: "page 104"
+
+      # CP r (Compare)
+      - mnemonic: "CP B"
+        operands: "B"
+        opcode: [0xB8]
+        reference: "page 105"
+      - mnemonic: "CP #$42"
+        operands: "#$42"
+        opcode: [0xFE, 0x42]
+        reference: "page 106"
+
+      # INC/DEC r
+      - mnemonic: "INC B"
+        operands: "B"
+        opcode: [0x04]
+        reference: "page 107"
+      - mnemonic: "DEC B"
+        operands: "B"
+        opcode: [0x05]
+        reference: "page 108"
+      - mnemonic: "INC (HL)"
+        operands: "(HL)"
+        opcode: [0x34]
+        reference: "page 109"
+      - mnemonic: "DEC (HL)"
+        operands: "(HL)"
+        opcode: [0x35]
+        reference: "page 110"
+
+  # 16-Bit Arithmetic
+  - category: "16-bit Arithmetic"
+    variants:
+      # ADD HL,ss
+      - mnemonic: "ADD HL,BC"
+        operands: "HL,BC"
+        opcode: [0x09]
+        reference: "page 111"
+      - mnemonic: "ADD HL,DE"
+        operands: "HL,DE"
+        opcode: [0x19]
+        reference: "page 111"
+      - mnemonic: "ADD HL,HL"
+        operands: "HL,HL"
+        opcode: [0x29]
+        reference: "page 111"
+      - mnemonic: "ADD HL,SP"
+        operands: "HL,SP"
+        opcode: [0x39]
+        reference: "page 111"
+
+      # INC/DEC ss
+      - mnemonic: "INC BC"
+        operands: "BC"
+        opcode: [0x03]
+        reference: "page 112"
+      - mnemonic: "INC DE"
+        operands: "DE"
+        opcode: [0x13]
+        reference: "page 112"
+      - mnemonic: "INC HL"
+        operands: "HL"
+        opcode: [0x23]
+        reference: "page 112"
+      - mnemonic: "INC SP"
+        operands: "SP"
+        opcode: [0x33]
+        reference: "page 112"
+
+      - mnemonic: "DEC BC"
+        operands: "BC"
+        opcode: [0x0B]
+        reference: "page 113"
+      - mnemonic: "DEC DE"
+        operands: "DE"
+        opcode: [0x1B]
+        reference: "page 113"
+      - mnemonic: "DEC HL"
+        operands: "HL"
+        opcode: [0x2B]
+        reference: "page 113"
+      - mnemonic: "DEC SP"
+        operands: "SP"
+        opcode: [0x3B]
+        reference: "page 113"
+
+  # Rotate and Shift
+  - category: "Rotate and Shift"
+    variants:
+      # RLCA, RRCA, RLA, RRA
+      - mnemonic: "RLCA"
+        operands: ""
+        opcode: [0x07]
+        reference: "page 114"
+      - mnemonic: "RRCA"
+        operands: ""
+        opcode: [0x0F]
+        reference: "page 115"
+      - mnemonic: "RLA"
+        operands: ""
+        opcode: [0x17]
+        reference: "page 116"
+      - mnemonic: "RRA"
+        operands: ""
+        opcode: [0x1F]
+        reference: "page 117"
+
+      # CB-prefixed rotates
+      - mnemonic: "RLC B"
+        operands: "B"
+        opcode: [0xCB, 0x00]
+        reference: "page 118"
+      - mnemonic: "RL B"
+        operands: "B"
+        opcode: [0xCB, 0x10]
+        reference: "page 119"
+      - mnemonic: "RRC B"
+        operands: "B"
+        opcode: [0xCB, 0x08]
+        reference: "page 120"
+      - mnemonic: "RR B"
+        operands: "B"
+        opcode: [0xCB, 0x18]
+        reference: "page 121"
+      - mnemonic: "SLA B"
+        operands: "B"
+        opcode: [0xCB, 0x20]
+        reference: "page 122"
+      - mnemonic: "SRA B"
+        operands: "B"
+        opcode: [0xCB, 0x28]
+        reference: "page 123"
+      - mnemonic: "SRL B"
+        operands: "B"
+        opcode: [0xCB, 0x38]
+        reference: "page 124"
+
+  # Bit Operations
+  - category: "Bit Operations"
+    variants:
+      # BIT b,r
+      - mnemonic: "BIT 0,B"
+        operands: "0,B"
+        opcode: [0xCB, 0x40]
+        reference: "page 125"
+      - mnemonic: "BIT 7,A"
+        operands: "7,A"
+        opcode: [0xCB, 0x7F]
+        reference: "page 125"
+
+      # SET b,r
+      - mnemonic: "SET 0,B"
+        operands: "0,B"
+        opcode: [0xCB, 0xC0]
+        reference: "page 126"
+      - mnemonic: "SET 7,A"
+        operands: "7,A"
+        opcode: [0xCB, 0xFF]
+        reference: "page 126"
+
+      # RES b,r
+      - mnemonic: "RES 0,B"
+        operands: "0,B"
+        opcode: [0xCB, 0x80]
+        reference: "page 127"
+      - mnemonic: "RES 7,A"
+        operands: "7,A"
+        opcode: [0xCB, 0xBF]
+        reference: "page 127"
+
+  # Jump, Call, and Return
+  - category: "Jump, Call, Return"
+    variants:
+      # JP nn
+      - mnemonic: "JP $1234"
+        operands: "$1234"
+        opcode: [0xC3, 0x34, 0x12]
+        reference: "page 130"
+
+      # JP cc,nn (conditional jumps)
+      - mnemonic: "JP NZ,$1234"
+        operands: "NZ,$1234"
+        opcode: [0xC2, 0x34, 0x12]
+        reference: "page 131"
+      - mnemonic: "JP Z,$1234"
+        operands: "Z,$1234"
+        opcode: [0xCA, 0x34, 0x12]
+        reference: "page 131"
+      - mnemonic: "JP NC,$1234"
+        operands: "NC,$1234"
+        opcode: [0xD2, 0x34, 0x12]
+        reference: "page 131"
+      - mnemonic: "JP C,$1234"
+        operands: "C,$1234"
+        opcode: [0xDA, 0x34, 0x12]
+        reference: "page 131"
+
+      # JR e (relative jump)
+      - mnemonic: "JR $+5"
+        operands: "$+5"
+        opcode: [0x18, 0x03]
+        reference: "page 132"
+      - mnemonic: "JR NZ,$+5"
+        operands: "NZ,$+5"
+        opcode: [0x20, 0x03]
+        reference: "page 133"
+      - mnemonic: "JR Z,$+5"
+        operands: "Z,$+5"
+        opcode: [0x28, 0x03]
+        reference: "page 133"
+
+      # JP (HL)
+      - mnemonic: "JP (HL)"
+        operands: "(HL)"
+        opcode: [0xE9]
+        reference: "page 134"
+
+      # DJNZ
+      - mnemonic: "DJNZ $+5"
+        operands: "$+5"
+        opcode: [0x10, 0x03]
+        reference: "page 135"
+
+      # CALL nn
+      - mnemonic: "CALL $1234"
+        operands: "$1234"
+        opcode: [0xCD, 0x34, 0x12]
+        reference: "page 136"
+
+      # CALL cc,nn
+      - mnemonic: "CALL NZ,$1234"
+        operands: "NZ,$1234"
+        opcode: [0xC4, 0x34, 0x12]
+        reference: "page 137"
+      - mnemonic: "CALL Z,$1234"
+        operands: "Z,$1234"
+        opcode: [0xCC, 0x34, 0x12]
+        reference: "page 137"
+
+      # RET
+      - mnemonic: "RET"
+        operands: ""
+        opcode: [0xC9]
+        reference: "page 138"
+
+      # RET cc
+      - mnemonic: "RET NZ"
+        operands: "NZ"
+        opcode: [0xC0]
+        reference: "page 139"
+      - mnemonic: "RET Z"
+        operands: "Z"
+        opcode: [0xC8]
+        reference: "page 139"
+      - mnemonic: "RET NC"
+        operands: "NC"
+        opcode: [0xD0]
+        reference: "page 139"
+      - mnemonic: "RET C"
+        operands: "C"
+        opcode: [0xD8]
+        reference: "page 139"
+
+      # RST p
+      - mnemonic: "RST $00"
+        operands: "$00"
+        opcode: [0xC7]
+        reference: "page 140"
+      - mnemonic: "RST $08"
+        operands: "$08"
+        opcode: [0xCF]
+        reference: "page 140"
+      - mnemonic: "RST $38"
+        operands: "$38"
+        opcode: [0xFF]
+        reference: "page 140"
+
+  # Control
+  - category: "CPU Control"
+    variants:
+      - mnemonic: "NOP"
+        operands: ""
+        opcode: [0x00]
+        reference: "page 141"
+      - mnemonic: "HALT"
+        operands: ""
+        opcode: [0x76]
+        reference: "page 142"
+      - mnemonic: "DI"
+        operands: ""
+        opcode: [0xF3]
+        reference: "page 143"
+      - mnemonic: "EI"
+        operands: ""
+        opcode: [0xFB]
+        reference: "page 144"
+      - mnemonic: "EX DE,HL"
+        operands: "DE,HL"
+        opcode: [0xEB]
+        reference: "page 145"
+      - mnemonic: "EX AF,AF'"
+        operands: "AF,AF'"
+        opcode: [0x08]
+        reference: "page 146"
+      - mnemonic: "EXX"
+        operands: ""
+        opcode: [0xD9]
+        reference: "page 147"

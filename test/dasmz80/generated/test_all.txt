@@ -1,0 +1,368 @@
+# Generated instruction tests for Z80
+# Total instructions: 142
+
+
+# 16-bit Arithmetic
+# ADD HL,BC HL,BC                (page 111)
+09
+# ADD HL,DE HL,DE                (page 111)
+19
+# ADD HL,HL HL,HL                (page 111)
+29
+# ADD HL,SP HL,SP                (page 111)
+39
+# INC BC BC                      (page 112)
+03
+# INC DE DE                      (page 112)
+13
+# INC HL HL                      (page 112)
+23
+# INC SP SP                      (page 112)
+33
+# DEC BC BC                      (page 113)
+0B
+# DEC DE DE                      (page 113)
+1B
+# DEC HL HL                      (page 113)
+2B
+# DEC SP SP                      (page 113)
+3B
+
+# 16-bit Load
+# LD BC,#$1234 BC,#$1234         (page 82)
+01
+34
+12
+# LD DE,#$1234 DE,#$1234         (page 82)
+11
+34
+12
+# LD HL,#$1234 HL,#$1234         (page 82)
+21
+34
+12
+# LD SP,#$1234 SP,#$1234         (page 82)
+31
+34
+12
+# LD HL,($1234) HL,($1234)       (page 83)
+2A
+34
+12
+# LD ($1234),HL ($1234),HL       (page 84)
+22
+34
+12
+# LD SP,HL SP,HL                 (page 85)
+F9
+# PUSH BC BC                     (page 86)
+C5
+# PUSH DE DE                     (page 86)
+D5
+# PUSH HL HL                     (page 86)
+E5
+# PUSH AF AF                     (page 86)
+F5
+# POP BC BC                      (page 87)
+C1
+# POP DE DE                      (page 87)
+D1
+# POP HL HL                      (page 87)
+E1
+# POP AF AF                      (page 87)
+F1
+
+# 8-bit Arithmetic
+# ADD A,B A,B                    (page 90)
+80
+# ADD A,C A,C                    (page 90)
+81
+# ADD A,D A,D                    (page 90)
+82
+# ADD A,E A,E                    (page 90)
+83
+# ADD A,H A,H                    (page 90)
+84
+# ADD A,L A,L                    (page 90)
+85
+# ADD A,A A,A                    (page 90)
+87
+# ADD A,#$42 A,#$42              (page 91)
+C6
+42
+# ADD A,(HL) A,(HL)              (page 92)
+86
+# ADC A,B A,B                    (page 93)
+88
+# ADC A,#$42 A,#$42              (page 94)
+CE
+42
+# SUB B B                        (page 95)
+90
+# SUB C C                        (page 95)
+91
+# SUB #$42 #$42                  (page 96)
+D6
+42
+# SBC A,B A,B                    (page 97)
+98
+# SBC A,#$42 A,#$42              (page 98)
+DE
+42
+# AND B B                        (page 99)
+A0
+# AND #$42 #$42                  (page 100)
+E6
+42
+# OR B B                         (page 101)
+B0
+# OR #$42 #$42                   (page 102)
+F6
+42
+# XOR B B                        (page 103)
+A8
+# XOR #$42 #$42                  (page 104)
+EE
+42
+# CP B B                         (page 105)
+B8
+# CP #$42 #$42                   (page 106)
+FE
+42
+# INC B B                        (page 107)
+04
+# DEC B B                        (page 108)
+05
+# INC (HL) (HL)                  (page 109)
+34
+# DEC (HL) (HL)                  (page 110)
+35
+
+# 8-bit Load
+# LD B,B B,B                     (page 69)
+40
+# LD B,C B,C                     (page 69)
+41
+# LD B,D B,D                     (page 69)
+42
+# LD B,E B,E                     (page 69)
+43
+# LD B,H B,H                     (page 69)
+44
+# LD B,L B,L                     (page 69)
+45
+# LD B,A B,A                     (page 69)
+47
+# LD C,B C,B                     (page 69)
+48
+# LD C,C C,C                     (page 69)
+49
+# LD C,D C,D                     (page 69)
+4A
+# LD C,E C,E                     (page 69)
+4B
+# LD C,H C,H                     (page 69)
+4C
+# LD C,L C,L                     (page 69)
+4D
+# LD C,A C,A                     (page 69)
+4F
+# LD B,#$42 B,#$42               (page 70)
+06
+42
+# LD C,#$42 C,#$42               (page 70)
+0E
+42
+# LD D,#$42 D,#$42               (page 70)
+16
+42
+# LD E,#$42 E,#$42               (page 70)
+1E
+42
+# LD H,#$42 H,#$42               (page 70)
+26
+42
+# LD L,#$42 L,#$42               (page 70)
+2E
+42
+# LD A,#$42 A,#$42               (page 70)
+3E
+42
+# LD B,(HL) B,(HL)               (page 71)
+46
+# LD C,(HL) C,(HL)               (page 71)
+4E
+# LD D,(HL) D,(HL)               (page 71)
+56
+# LD E,(HL) E,(HL)               (page 71)
+5E
+# LD H,(HL) H,(HL)               (page 71)
+66
+# LD L,(HL) L,(HL)               (page 71)
+6E
+# LD A,(HL) A,(HL)               (page 71)
+7E
+# LD (HL),B (HL),B               (page 72)
+70
+# LD (HL),C (HL),C               (page 72)
+71
+# LD (HL),D (HL),D               (page 72)
+72
+# LD (HL),E (HL),E               (page 72)
+73
+# LD (HL),H (HL),H               (page 72)
+74
+# LD (HL),L (HL),L               (page 72)
+75
+# LD (HL),A (HL),A               (page 72)
+77
+# LD (HL),#$42 (HL),#$42         (page 73)
+36
+42
+# LD A,(BC) A,(BC)               (page 74)
+0A
+# LD A,(DE) A,(DE)               (page 74)
+1A
+# LD (BC),A (BC),A               (page 75)
+02
+# LD (DE),A (DE),A               (page 75)
+12
+# LD A,($1234) A,($1234)         (page 76)
+3A
+34
+12
+# LD ($1234),A ($1234),A         (page 77)
+32
+34
+12
+
+# Bit Operations
+# BIT 0,B 0,B                    (page 125)
+CB
+40
+# BIT 7,A 7,A                    (page 125)
+CB
+7F
+# SET 0,B 0,B                    (page 126)
+CB
+C0
+# SET 7,A 7,A                    (page 126)
+CB
+FF
+# RES 0,B 0,B                    (page 127)
+CB
+80
+# RES 7,A 7,A                    (page 127)
+CB
+BF
+
+# CPU Control
+# NOP                            (page 141)
+00
+# HALT                           (page 142)
+76
+# DI                             (page 143)
+F3
+# EI                             (page 144)
+FB
+# EX DE,HL DE,HL                 (page 145)
+EB
+# EX AF,AF' AF,AF'               (page 146)
+08
+# EXX                            (page 147)
+D9
+
+# Jump, Call, Return
+# JP $1234 $1234                 (page 130)
+C3
+34
+12
+# JP NZ,$1234 NZ,$1234           (page 131)
+C2
+34
+12
+# JP Z,$1234 Z,$1234             (page 131)
+CA
+34
+12
+# JP NC,$1234 NC,$1234           (page 131)
+D2
+34
+12
+# JP C,$1234 C,$1234             (page 131)
+DA
+34
+12
+# JR $+5 $+5                     (page 132)
+18
+03
+# JR NZ,$+5 NZ,$+5               (page 133)
+20
+03
+# JR Z,$+5 Z,$+5                 (page 133)
+28
+03
+# JP (HL) (HL)                   (page 134)
+E9
+# DJNZ $+5 $+5                   (page 135)
+10
+03
+# CALL $1234 $1234               (page 136)
+CD
+34
+12
+# CALL NZ,$1234 NZ,$1234         (page 137)
+C4
+34
+12
+# CALL Z,$1234 Z,$1234           (page 137)
+CC
+34
+12
+# RET                            (page 138)
+C9
+# RET NZ NZ                      (page 139)
+C0
+# RET Z Z                        (page 139)
+C8
+# RET NC NC                      (page 139)
+D0
+# RET C C                        (page 139)
+D8
+# RST $00 $00                    (page 140)
+C7
+# RST $08 $08                    (page 140)
+CF
+# RST $38 $38                    (page 140)
+FF
+
+# Rotate and Shift
+# RLCA                           (page 114)
+07
+# RRCA                           (page 115)
+0F
+# RLA                            (page 116)
+17
+# RRA                            (page 117)
+1F
+# RLC B B                        (page 118)
+CB
+00
+# RL B B                         (page 119)
+CB
+10
+# RRC B B                        (page 120)
+CB
+08
+# RR B B                         (page 121)
+CB
+18
+# SLA B B                        (page 122)
+CB
+20
+# SRA B B                        (page 123)
+CB
+28
+# SRL B B                        (page 124)
+CB
+38
