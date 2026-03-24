@@ -20,3 +20,13 @@ src/dasmunsp
 src/dasmx86
 src/dasmz80
 .*.sw?
+
+# Test framework output
+test/*/output/
+test/*/generated/*.bin
+test/tool_features/testdata/*.bin
+*.pyc
+__pycache__/
+
+# Analysis reports
+tools/analysis_reports/
