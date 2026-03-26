@@ -1,0 +1,537 @@
+# Generated instruction tests for M8
+# Total instructions: 175
+
+
+# 16-bit Load
+# LDW X,#$1234                   (Table 14)
+AE
+12
+34
+# LDW X,$10                      (Table 14)
+BE
+10
+# LDW X,$1000                    (Table 14)
+CE
+10
+00
+# LDW X,(X)                      (Table 14)
+FE
+# LDW X,($10,X)                  (Table 14)
+EE
+10
+# LDW X,($10,SP)                 (Table 14)
+1E
+10
+# LDW Y,#$1234                   (Table 14)
+90
+AE
+12
+34
+# LDW $10,X                      (Table 14)
+BF
+10
+# LDW $1000,X                    (Table 14)
+CF
+10
+00
+# LDW X,Y                        (Table 14)
+93
+# LDW Y,X                        (Table 14)
+90
+93
+
+# Arithmetic
+# ADD A,#$42                     (Table 16)
+AB
+42
+# ADD A,$10                      (Table 16)
+BB
+10
+# ADD A,$1000                    (Table 16)
+CB
+10
+00
+# ADD A,(X)                      (Table 16)
+FB
+# ADD A,($10,X)                  (Table 16)
+EB
+10
+# ADC A,#$42                     (Table 16)
+A9
+42
+# ADC A,$10                      (Table 16)
+B9
+10
+# ADDW X,#$1234                  (Table 16)
+1C
+12
+34
+# ADDW X,$10                     (Table 16)
+BB
+10
+# ADDW Y,#$1234                  (Table 16)
+72
+A9
+12
+34
+# ADDW SP,#$42                   (Table 16)
+5B
+42
+# SUB A,#$42                     (Table 16)
+A0
+42
+# SUB A,$10                      (Table 16)
+B0
+10
+# SUB A,$1000                    (Table 16)
+C0
+10
+00
+# SBC A,#$42                     (Table 16)
+A2
+42
+# SUBW X,#$1234                  (Table 16)
+1D
+12
+34
+# SUBW Y,#$1234                  (Table 16)
+72
+A2
+12
+34
+# INC A                          (Table 16)
+4C
+# INC $10                        (Table 16)
+3C
+10
+# INC (X)                        (Table 16)
+7C
+# INCW X                         (Table 16)
+5C
+# DEC A                          (Table 16)
+4A
+# DEC $10                        (Table 16)
+3A
+10
+# DECW X                         (Table 16)
+5A
+# NEG A                          (Table 16)
+40
+# NEG $10                        (Table 16)
+30
+10
+# NEGW X                         (Table 16)
+50
+# MUL X,A                        (Table 16)
+42
+# DIV X,A                        (Table 16)
+62
+# DIVW X,Y                       (Table 16)
+65
+
+# Bit Operations
+# BSET $10,#0                    (Table 19)
+10
+10
+# BSET $10,#7                    (Table 19)
+1E
+10
+# BRES $10,#0                    (Table 19)
+11
+10
+# BRES $10,#7                    (Table 19)
+1F
+10
+# BCPL $10,#0                    (Table 19)
+10
+10
+# BTJT $10,#0,$+5                (Table 19)
+00
+10
+03
+# BTJF $10,#0,$+5                (Table 19)
+01
+10
+03
+
+# Call and Return
+# CALL $1234                     (Table 23)
+CD
+12
+34
+# CALL $12                       (Table 23)
+AD
+12
+# CALLF $123456                  (Table 23)
+8D
+12
+34
+56
+# CALLR $+5                      (Table 23)
+AD
+03
+# RET                            (Table 23)
+81
+# RETF                           (Table 23)
+87
+
+# Compare and Test
+# CP A,#$42                      (Table 18)
+A1
+42
+# CP A,$10                       (Table 18)
+B1
+10
+# CP A,$1000                     (Table 18)
+C1
+10
+00
+# CP A,(X)                       (Table 18)
+F1
+# CPW X,#$1234                   (Table 18)
+A3
+12
+34
+# CPW X,$10                      (Table 18)
+B3
+10
+# CPW Y,#$1234                   (Table 18)
+90
+A3
+12
+34
+# TNZ A                          (Table 18)
+4D
+# TNZ $10                        (Table 18)
+3D
+10
+# TNZW X                         (Table 18)
+5D
+
+# Condition Code
+# CCF                            (Table 12)
+8C
+# RCF                            (Table 12)
+98
+# RVF                            (Table 12)
+9C
+# SCF                            (Table 12)
+99
+
+# Conditional Jump
+# JREQ $+5                       (Table 22)
+27
+03
+# JRNE $+5                       (Table 22)
+26
+03
+# JRC $+5                        (Table 22)
+25
+03
+# JRNC $+5                       (Table 22)
+24
+03
+# JRMI $+5                       (Table 22)
+2B
+03
+# JRPL $+5                       (Table 22)
+2A
+03
+# JRH $+5                        (Table 22)
+29
+03
+# JRNH $+5                       (Table 22)
+28
+03
+# JRIH $+5                       (Table 22)
+2F
+03
+# JRIL $+5                       (Table 22)
+2E
+03
+# JRUGE $+5                      (Table 22)
+24
+03
+# JRULT $+5                      (Table 22)
+25
+03
+# JRUGT $+5                      (Table 22)
+22
+03
+# JRULE $+5                      (Table 22)
+23
+03
+# JRSGT $+5                      (Table 22)
+2C
+03
+# JRSLE $+5                      (Table 22)
+2D
+03
+# JRSGE $+5                      (Table 22)
+2E
+03
+# JRSLT $+5                      (Table 22)
+2D
+03
+
+# Exchange
+# EXG A,XL                       (Table 24)
+41
+# EXG A,YL                       (Table 24)
+61
+# EXGW X,Y                       (Table 24)
+51
+# MOV $10,#$42                   (Table 24)
+35
+42
+10
+# MOV $10,$20                    (Table 24)
+45
+20
+10
+# MOV $1000,$20                  (Table 24)
+55
+20
+10
+00
+
+# Interrupt Management
+# INT $123456                    (Table 12)
+82
+12
+34
+56
+# RIM                            (Table 12)
+9A
+# SIM                            (Table 12)
+9B
+
+# Load and Store
+# LD A,#$42                      (Table 13)
+A6
+42
+# LD A,$10                       (Table 13)
+B6
+10
+# LD A,$1000                     (Table 13)
+C6
+10
+00
+# LD A,(X)                       (Table 13)
+F6
+# LD A,($10,X)                   (Table 13)
+E6
+10
+# LD A,($1000,X)                 (Table 13)
+D6
+10
+00
+# LD A,(Y)                       (Table 13)
+90
+F6
+# LD A,($10,Y)                   (Table 13)
+90
+E6
+10
+# LD A,($1000,Y)                 (Table 13)
+90
+D6
+10
+00
+# LD A,($10,SP)                  (Table 13)
+7B
+10
+# LD A,[$10.w]                   (Table 13)
+92
+C6
+10
+# LD A,([$10.w],X)               (Table 13)
+92
+D6
+10
+# LD A,([$10.w],Y)               (Table 13)
+91
+D6
+10
+# LD $10,A                       (Table 13)
+B7
+10
+# LD $1000,A                     (Table 13)
+C7
+10
+00
+# LD (X),A                       (Table 13)
+F7
+# LD ($10,X),A                   (Table 13)
+E7
+10
+# LD ($1000,X),A                 (Table 13)
+D7
+10
+00
+# LD X,A                         (Table 13)
+97
+# LD XL,A                        (Table 13)
+97
+# LD XH,A                        (Table 13)
+95
+# LD A,XL                        (Table 13)
+9F
+# LD A,XH                        (Table 13)
+9E
+# LD Y,A                         (Table 13)
+90
+97
+# LD YL,A                        (Table 13)
+90
+97
+# LD YH,A                        (Table 13)
+90
+95
+# LD A,YL                        (Table 13)
+90
+9F
+# LD A,YH                        (Table 13)
+90
+9E
+
+# Logical
+# AND A,#$42                     (Table 17)
+A4
+42
+# AND A,$10                      (Table 17)
+B4
+10
+# AND A,$1000                    (Table 17)
+C4
+10
+00
+# OR A,#$42                      (Table 17)
+AA
+42
+# OR A,$10                       (Table 17)
+BA
+10
+# XOR A,#$42                     (Table 17)
+A8
+42
+# XOR A,$10                      (Table 17)
+B8
+10
+# CPL A                          (Table 17)
+43
+# CPL $10                        (Table 17)
+33
+10
+# CPLW X                         (Table 17)
+53
+
+# Shift and Rotate
+# SLL A                          (Table 20)
+48
+# SLL $10                        (Table 20)
+38
+10
+# SLLW X                         (Table 20)
+58
+# SRL A                          (Table 20)
+44
+# SRL $10                        (Table 20)
+34
+10
+# SRLW X                         (Table 20)
+54
+# SRA A                          (Table 20)
+47
+# SRA $10                        (Table 20)
+37
+10
+# SRAW X                         (Table 20)
+57
+# RLC A                          (Table 20)
+49
+# RLC $10                        (Table 20)
+39
+10
+# RLCW X                         (Table 20)
+59
+# RLWA X,A                       (Table 20)
+02
+# RRC A                          (Table 20)
+46
+# RRC $10                        (Table 20)
+36
+10
+# RRCW X                         (Table 20)
+56
+# RRWA X,A                       (Table 20)
+01
+# SWAP A                         (Table 20)
+4E
+# SWAP $10                       (Table 20)
+3E
+10
+# SWAPW X                        (Table 20)
+5E
+
+# Stack Operations
+# PUSH A                         (Table 15)
+88
+# PUSH CC                        (Table 15)
+8A
+# PUSH #$42                      (Table 15)
+4B
+42
+# PUSHW X                        (Table 15)
+89
+# PUSHW Y                        (Table 15)
+90
+89
+# POP A                          (Table 15)
+84
+# POP CC                         (Table 15)
+86
+# POPW X                         (Table 15)
+85
+# POPW Y                         (Table 15)
+90
+85
+
+# System Control
+# BREAK                          (Table 12)
+8B
+# HALT                           (Table 12)
+8E
+# IRET                           (Table 12)
+80
+# NOP                            (Table 12)
+9D
+# TRAP                           (Table 12)
+83
+# WFI                            (Table 12)
+8F
+# WFE                            (Table 12)
+8D
+
+# Unconditional Jump
+# JP $1234                       (Table 21)
+CC
+12
+34
+# JP $12                         (Table 21)
+AC
+12
+# JPF $123456                    (Table 21)
+AC
+12
+34
+56
+# JRA $+5                        (Table 21)
+20
+03
+# JRT $+5                        (Table 21)
+20
+03
+# JRF $+2                        (Table 21)
+21
+00

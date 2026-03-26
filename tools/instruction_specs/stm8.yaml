@@ -1,0 +1,1130 @@
+processor: m8
+
+reference:
+  title: "STM8 CPU Programming Manual"
+  version: "PM0044"
+  publisher: "STMicroelectronics"
+  url: "https://www.st.com/resource/en/programming_manual/pm0044-stm8-cpu-programming-manual-stmicroelectronics.pdf"
+  notes: "Comprehensive instruction set reference for STM8 8-bit microcontroller family"
+
+instructions:
+  # System and Control Instructions
+  - category: "System Control"
+    variants:
+      - mnemonic: "BREAK"
+        operands: ""
+        opcode: [0x8B]
+        reference: "Table 12"
+        description: "Software breakpoint"
+
+      - mnemonic: "HALT"
+        operands: ""
+        opcode: [0x8E]
+        reference: "Table 12"
+        description: "Halt mode"
+
+      - mnemonic: "IRET"
+        operands: ""
+        opcode: [0x80]
+        reference: "Table 12"
+        description: "Interrupt return"
+
+      - mnemonic: "NOP"
+        operands: ""
+        opcode: [0x9D]
+        reference: "Table 12"
+        description: "No operation"
+
+      - mnemonic: "TRAP"
+        operands: ""
+        opcode: [0x83]
+        reference: "Table 12"
+        description: "Software trap"
+
+      - mnemonic: "WFI"
+        operands: ""
+        opcode: [0x8F]
+        reference: "Table 12"
+        description: "Wait for interrupt"
+
+      - mnemonic: "WFE"
+        operands: ""
+        opcode: [0x8D]
+        reference: "Table 12"
+        description: "Wait for event"
+
+  # Interrupt Management
+  - category: "Interrupt Management"
+    variants:
+      - mnemonic: "INT"
+        operands: "$123456"
+        opcode: [0x82, 0x12, 0x34, 0x56]
+        reference: "Table 12"
+        description: "Software interrupt with 24-bit address"
+
+      - mnemonic: "RIM"
+        operands: ""
+        opcode: [0x9A]
+        reference: "Table 12"
+        description: "Enable interrupts (reset interrupt mask)"
+
+      - mnemonic: "SIM"
+        operands: ""
+        opcode: [0x9B]
+        reference: "Table 12"
+        description: "Disable interrupts (set interrupt mask)"
+
+  # Condition Code Register
+  - category: "Condition Code"
+    variants:
+      - mnemonic: "CCF"
+        operands: ""
+        opcode: [0x8C]
+        reference: "Table 12"
+        description: "Complement carry flag"
+
+      - mnemonic: "RCF"
+        operands: ""
+        opcode: [0x98]
+        reference: "Table 12"
+        description: "Reset carry flag"
+
+      - mnemonic: "RVF"
+        operands: ""
+        opcode: [0x9C]
+        reference: "Table 12"
+        description: "Reset overflow flag"
+
+      - mnemonic: "SCF"
+        operands: ""
+        opcode: [0x99]
+        reference: "Table 12"
+        description: "Set carry flag"
+
+  # Load and Transfer
+  - category: "Load and Store"
+    variants:
+      # LD A variants
+      - mnemonic: "LD"
+        operands: "A,#$42"
+        opcode: [0xA6, 0x42]
+        reference: "Table 13"
+        description: "Load immediate to A"
+
+      - mnemonic: "LD"
+        operands: "A,$10"
+        opcode: [0xB6, 0x10]
+        reference: "Table 13"
+        description: "Load short direct to A"
+
+      - mnemonic: "LD"
+        operands: "A,$1000"
+        opcode: [0xC6, 0x10, 0x00]
+        reference: "Table 13"
+        description: "Load long direct to A"
+
+      - mnemonic: "LD"
+        operands: "A,(X)"
+        opcode: [0xF6]
+        reference: "Table 13"
+        description: "Load indirect X to A"
+
+      - mnemonic: "LD"
+        operands: "A,($10,X)"
+        opcode: [0xE6, 0x10]
+        reference: "Table 13"
+        description: "Load indexed short X to A"
+
+      - mnemonic: "LD"
+        operands: "A,($1000,X)"
+        opcode: [0xD6, 0x10, 0x00]
+        reference: "Table 13"
+        description: "Load indexed long X to A"
+
+      - mnemonic: "LD"
+        operands: "A,(Y)"
+        opcode: [0x90, 0xF6]
+        reference: "Table 13"
+        description: "Load indirect Y to A"
+
+      - mnemonic: "LD"
+        operands: "A,($10,Y)"
+        opcode: [0x90, 0xE6, 0x10]
+        reference: "Table 13"
+        description: "Load indexed short Y to A"
+
+      - mnemonic: "LD"
+        operands: "A,($1000,Y)"
+        opcode: [0x90, 0xD6, 0x10, 0x00]
+        reference: "Table 13"
+        description: "Load indexed long Y to A"
+
+      - mnemonic: "LD"
+        operands: "A,($10,SP)"
+        opcode: [0x7B, 0x10]
+        reference: "Table 13"
+        description: "Load indexed SP to A"
+
+      - mnemonic: "LD"
+        operands: "A,[$10.w]"
+        opcode: [0x92, 0xC6, 0x10]
+        reference: "Table 13"
+        description: "Load short pointer to A"
+
+      - mnemonic: "LD"
+        operands: "A,([$10.w],X)"
+        opcode: [0x92, 0xD6, 0x10]
+        reference: "Table 13"
+        description: "Load short pointer indexed X to A"
+
+      - mnemonic: "LD"
+        operands: "A,([$10.w],Y)"
+        opcode: [0x91, 0xD6, 0x10]
+        reference: "Table 13"
+        description: "Load short pointer indexed Y to A"
+
+      # LD to memory variants
+      - mnemonic: "LD"
+        operands: "$10,A"
+        opcode: [0xB7, 0x10]
+        reference: "Table 13"
+        description: "Store A to short direct"
+
+      - mnemonic: "LD"
+        operands: "$1000,A"
+        opcode: [0xC7, 0x10, 0x00]
+        reference: "Table 13"
+        description: "Store A to long direct"
+
+      - mnemonic: "LD"
+        operands: "(X),A"
+        opcode: [0xF7]
+        reference: "Table 13"
+        description: "Store A to indirect X"
+
+      - mnemonic: "LD"
+        operands: "($10,X),A"
+        opcode: [0xE7, 0x10]
+        reference: "Table 13"
+        description: "Store A to indexed short X"
+
+      - mnemonic: "LD"
+        operands: "($1000,X),A"
+        opcode: [0xD7, 0x10, 0x00]
+        reference: "Table 13"
+        description: "Store A to indexed long X"
+
+      # LD X variants
+      - mnemonic: "LD"
+        operands: "X,A"
+        opcode: [0x97]
+        reference: "Table 13"
+        description: "Load A to X (low byte)"
+
+      - mnemonic: "LD"
+        operands: "XL,A"
+        opcode: [0x97]
+        reference: "Table 13"
+        description: "Load A to XL"
+
+      - mnemonic: "LD"
+        operands: "XH,A"
+        opcode: [0x95]
+        reference: "Table 13"
+        description: "Load A to XH"
+
+      - mnemonic: "LD"
+        operands: "A,XL"
+        opcode: [0x9F]
+        reference: "Table 13"
+        description: "Load XL to A"
+
+      - mnemonic: "LD"
+        operands: "A,XH"
+        opcode: [0x9E]
+        reference: "Table 13"
+        description: "Load XH to A"
+
+      # LD Y variants
+      - mnemonic: "LD"
+        operands: "Y,A"
+        opcode: [0x90, 0x97]
+        reference: "Table 13"
+        description: "Load A to Y (low byte)"
+
+      - mnemonic: "LD"
+        operands: "YL,A"
+        opcode: [0x90, 0x97]
+        reference: "Table 13"
+        description: "Load A to YL"
+
+      - mnemonic: "LD"
+        operands: "YH,A"
+        opcode: [0x90, 0x95]
+        reference: "Table 13"
+        description: "Load A to YH"
+
+      - mnemonic: "LD"
+        operands: "A,YL"
+        opcode: [0x90, 0x9F]
+        reference: "Table 13"
+        description: "Load YL to A"
+
+      - mnemonic: "LD"
+        operands: "A,YH"
+        opcode: [0x90, 0x9E]
+        reference: "Table 13"
+        description: "Load YH to A"
+
+  # 16-bit Load Operations
+  - category: "16-bit Load"
+    variants:
+      - mnemonic: "LDW"
+        operands: "X,#$1234"
+        opcode: [0xAE, 0x12, 0x34]
+        reference: "Table 14"
+        description: "Load 16-bit immediate to X"
+
+      - mnemonic: "LDW"
+        operands: "X,$10"
+        opcode: [0xBE, 0x10]
+        reference: "Table 14"
+        description: "Load 16-bit short direct to X"
+
+      - mnemonic: "LDW"
+        operands: "X,$1000"
+        opcode: [0xCE, 0x10, 0x00]
+        reference: "Table 14"
+        description: "Load 16-bit long direct to X"
+
+      - mnemonic: "LDW"
+        operands: "X,(X)"
+        opcode: [0xFE]
+        reference: "Table 14"
+        description: "Load 16-bit indirect X"
+
+      - mnemonic: "LDW"
+        operands: "X,($10,X)"
+        opcode: [0xEE, 0x10]
+        reference: "Table 14"
+        description: "Load 16-bit indexed short X"
+
+      - mnemonic: "LDW"
+        operands: "X,($10,SP)"
+        opcode: [0x1E, 0x10]
+        reference: "Table 14"
+        description: "Load 16-bit indexed SP to X"
+
+      - mnemonic: "LDW"
+        operands: "Y,#$1234"
+        opcode: [0x90, 0xAE, 0x12, 0x34]
+        reference: "Table 14"
+        description: "Load 16-bit immediate to Y"
+
+      - mnemonic: "LDW"
+        operands: "$10,X"
+        opcode: [0xBF, 0x10]
+        reference: "Table 14"
+        description: "Store X to short direct"
+
+      - mnemonic: "LDW"
+        operands: "$1000,X"
+        opcode: [0xCF, 0x10, 0x00]
+        reference: "Table 14"
+        description: "Store X to long direct"
+
+      - mnemonic: "LDW"
+        operands: "X,Y"
+        opcode: [0x93]
+        reference: "Table 14"
+        description: "Transfer Y to X"
+
+      - mnemonic: "LDW"
+        operands: "Y,X"
+        opcode: [0x90, 0x93]
+        reference: "Table 14"
+        description: "Transfer X to Y"
+
+  # Stack Operations
+  - category: "Stack Operations"
+    variants:
+      - mnemonic: "PUSH"
+        operands: "A"
+        opcode: [0x88]
+        reference: "Table 15"
+        description: "Push A onto stack"
+
+      - mnemonic: "PUSH"
+        operands: "CC"
+        opcode: [0x8A]
+        reference: "Table 15"
+        description: "Push condition codes onto stack"
+
+      - mnemonic: "PUSH"
+        operands: "#$42"
+        opcode: [0x4B, 0x42]
+        reference: "Table 15"
+        description: "Push immediate byte onto stack"
+
+      - mnemonic: "PUSHW"
+        operands: "X"
+        opcode: [0x89]
+        reference: "Table 15"
+        description: "Push X onto stack"
+
+      - mnemonic: "PUSHW"
+        operands: "Y"
+        opcode: [0x90, 0x89]
+        reference: "Table 15"
+        description: "Push Y onto stack"
+
+      - mnemonic: "POP"
+        operands: "A"
+        opcode: [0x84]
+        reference: "Table 15"
+        description: "Pop A from stack"
+
+      - mnemonic: "POP"
+        operands: "CC"
+        opcode: [0x86]
+        reference: "Table 15"
+        description: "Pop condition codes from stack"
+
+      - mnemonic: "POPW"
+        operands: "X"
+        opcode: [0x85]
+        reference: "Table 15"
+        description: "Pop X from stack"
+
+      - mnemonic: "POPW"
+        operands: "Y"
+        opcode: [0x90, 0x85]
+        reference: "Table 15"
+        description: "Pop Y from stack"
+
+  # Arithmetic Operations
+  - category: "Arithmetic"
+    variants:
+      # ADD
+      - mnemonic: "ADD"
+        operands: "A,#$42"
+        opcode: [0xAB, 0x42]
+        reference: "Table 16"
+        description: "Add immediate to A"
+
+      - mnemonic: "ADD"
+        operands: "A,$10"
+        opcode: [0xBB, 0x10]
+        reference: "Table 16"
+        description: "Add short direct to A"
+
+      - mnemonic: "ADD"
+        operands: "A,$1000"
+        opcode: [0xCB, 0x10, 0x00]
+        reference: "Table 16"
+        description: "Add long direct to A"
+
+      - mnemonic: "ADD"
+        operands: "A,(X)"
+        opcode: [0xFB]
+        reference: "Table 16"
+        description: "Add indirect X to A"
+
+      - mnemonic: "ADD"
+        operands: "A,($10,X)"
+        opcode: [0xEB, 0x10]
+        reference: "Table 16"
+        description: "Add indexed short X to A"
+
+      # ADC
+      - mnemonic: "ADC"
+        operands: "A,#$42"
+        opcode: [0xA9, 0x42]
+        reference: "Table 16"
+        description: "Add with carry immediate to A"
+
+      - mnemonic: "ADC"
+        operands: "A,$10"
+        opcode: [0xB9, 0x10]
+        reference: "Table 16"
+        description: "Add with carry short direct to A"
+
+      # ADDW
+      - mnemonic: "ADDW"
+        operands: "X,#$1234"
+        opcode: [0x1C, 0x12, 0x34]
+        reference: "Table 16"
+        description: "Add 16-bit immediate to X"
+
+      - mnemonic: "ADDW"
+        operands: "X,$10"
+        opcode: [0xBB, 0x10]
+        reference: "Table 16"
+        description: "Add 16-bit short direct to X"
+
+      - mnemonic: "ADDW"
+        operands: "Y,#$1234"
+        opcode: [0x72, 0xA9, 0x12, 0x34]
+        reference: "Table 16"
+        description: "Add 16-bit immediate to Y"
+
+      - mnemonic: "ADDW"
+        operands: "SP,#$42"
+        opcode: [0x5B, 0x42]
+        reference: "Table 16"
+        description: "Add byte to SP"
+
+      # SUB
+      - mnemonic: "SUB"
+        operands: "A,#$42"
+        opcode: [0xA0, 0x42]
+        reference: "Table 16"
+        description: "Subtract immediate from A"
+
+      - mnemonic: "SUB"
+        operands: "A,$10"
+        opcode: [0xB0, 0x10]
+        reference: "Table 16"
+        description: "Subtract short direct from A"
+
+      - mnemonic: "SUB"
+        operands: "A,$1000"
+        opcode: [0xC0, 0x10, 0x00]
+        reference: "Table 16"
+        description: "Subtract long direct from A"
+
+      # SBC
+      - mnemonic: "SBC"
+        operands: "A,#$42"
+        opcode: [0xA2, 0x42]
+        reference: "Table 16"
+        description: "Subtract with carry immediate from A"
+
+      # SUBW
+      - mnemonic: "SUBW"
+        operands: "X,#$1234"
+        opcode: [0x1D, 0x12, 0x34]
+        reference: "Table 16"
+        description: "Subtract 16-bit immediate from X"
+
+      - mnemonic: "SUBW"
+        operands: "Y,#$1234"
+        opcode: [0x72, 0xA2, 0x12, 0x34]
+        reference: "Table 16"
+        description: "Subtract 16-bit immediate from Y"
+
+      # INC/DEC
+      - mnemonic: "INC"
+        operands: "A"
+        opcode: [0x4C]
+        reference: "Table 16"
+        description: "Increment A"
+
+      - mnemonic: "INC"
+        operands: "$10"
+        opcode: [0x3C, 0x10]
+        reference: "Table 16"
+        description: "Increment short direct"
+
+      - mnemonic: "INC"
+        operands: "(X)"
+        opcode: [0x7C]
+        reference: "Table 16"
+        description: "Increment indirect X"
+
+      - mnemonic: "INCW"
+        operands: "X"
+        opcode: [0x5C]
+        reference: "Table 16"
+        description: "Increment X"
+
+      - mnemonic: "DEC"
+        operands: "A"
+        opcode: [0x4A]
+        reference: "Table 16"
+        description: "Decrement A"
+
+      - mnemonic: "DEC"
+        operands: "$10"
+        opcode: [0x3A, 0x10]
+        reference: "Table 16"
+        description: "Decrement short direct"
+
+      - mnemonic: "DECW"
+        operands: "X"
+        opcode: [0x5A]
+        reference: "Table 16"
+        description: "Decrement X"
+
+      # NEG
+      - mnemonic: "NEG"
+        operands: "A"
+        opcode: [0x40]
+        reference: "Table 16"
+        description: "Negate A (two's complement)"
+
+      - mnemonic: "NEG"
+        operands: "$10"
+        opcode: [0x30, 0x10]
+        reference: "Table 16"
+        description: "Negate short direct"
+
+      # NEGW
+      - mnemonic: "NEGW"
+        operands: "X"
+        opcode: [0x50]
+        reference: "Table 16"
+        description: "Negate X"
+
+      # MUL/DIV
+      - mnemonic: "MUL"
+        operands: "X,A"
+        opcode: [0x42]
+        reference: "Table 16"
+        description: "Multiply X by A, result in X (unsigned)"
+
+      - mnemonic: "DIV"
+        operands: "X,A"
+        opcode: [0x62]
+        reference: "Table 16"
+        description: "Divide X by A, quotient in X, remainder in A"
+
+      - mnemonic: "DIVW"
+        operands: "X,Y"
+        opcode: [0x65]
+        reference: "Table 16"
+        description: "Divide X by Y (16-bit)"
+
+  # Logical Operations
+  - category: "Logical"
+    variants:
+      # AND
+      - mnemonic: "AND"
+        operands: "A,#$42"
+        opcode: [0xA4, 0x42]
+        reference: "Table 17"
+        description: "Logical AND immediate with A"
+
+      - mnemonic: "AND"
+        operands: "A,$10"
+        opcode: [0xB4, 0x10]
+        reference: "Table 17"
+        description: "Logical AND short direct with A"
+
+      - mnemonic: "AND"
+        operands: "A,$1000"
+        opcode: [0xC4, 0x10, 0x00]
+        reference: "Table 17"
+        description: "Logical AND long direct with A"
+
+      # OR
+      - mnemonic: "OR"
+        operands: "A,#$42"
+        opcode: [0xAA, 0x42]
+        reference: "Table 17"
+        description: "Logical OR immediate with A"
+
+      - mnemonic: "OR"
+        operands: "A,$10"
+        opcode: [0xBA, 0x10]
+        reference: "Table 17"
+        description: "Logical OR short direct with A"
+
+      # XOR
+      - mnemonic: "XOR"
+        operands: "A,#$42"
+        opcode: [0xA8, 0x42]
+        reference: "Table 17"
+        description: "Logical XOR immediate with A"
+
+      - mnemonic: "XOR"
+        operands: "A,$10"
+        opcode: [0xB8, 0x10]
+        reference: "Table 17"
+        description: "Logical XOR short direct with A"
+
+      # CPL
+      - mnemonic: "CPL"
+        operands: "A"
+        opcode: [0x43]
+        reference: "Table 17"
+        description: "Complement A (one's complement)"
+
+      - mnemonic: "CPL"
+        operands: "$10"
+        opcode: [0x33, 0x10]
+        reference: "Table 17"
+        description: "Complement short direct"
+
+      - mnemonic: "CPLW"
+        operands: "X"
+        opcode: [0x53]
+        reference: "Table 17"
+        description: "Complement X"
+
+  # Compare and Test
+  - category: "Compare and Test"
+    variants:
+      # CP
+      - mnemonic: "CP"
+        operands: "A,#$42"
+        opcode: [0xA1, 0x42]
+        reference: "Table 18"
+        description: "Compare A with immediate"
+
+      - mnemonic: "CP"
+        operands: "A,$10"
+        opcode: [0xB1, 0x10]
+        reference: "Table 18"
+        description: "Compare A with short direct"
+
+      - mnemonic: "CP"
+        operands: "A,$1000"
+        opcode: [0xC1, 0x10, 0x00]
+        reference: "Table 18"
+        description: "Compare A with long direct"
+
+      - mnemonic: "CP"
+        operands: "A,(X)"
+        opcode: [0xF1]
+        reference: "Table 18"
+        description: "Compare A with indirect X"
+
+      # CPW
+      - mnemonic: "CPW"
+        operands: "X,#$1234"
+        opcode: [0xA3, 0x12, 0x34]
+        reference: "Table 18"
+        description: "Compare X with 16-bit immediate"
+
+      - mnemonic: "CPW"
+        operands: "X,$10"
+        opcode: [0xB3, 0x10]
+        reference: "Table 18"
+        description: "Compare X with short direct"
+
+      - mnemonic: "CPW"
+        operands: "Y,#$1234"
+        opcode: [0x90, 0xA3, 0x12, 0x34]
+        reference: "Table 18"
+        description: "Compare Y with 16-bit immediate"
+
+      # TNZ
+      - mnemonic: "TNZ"
+        operands: "A"
+        opcode: [0x4D]
+        reference: "Table 18"
+        description: "Test A for negative or zero"
+
+      - mnemonic: "TNZ"
+        operands: "$10"
+        opcode: [0x3D, 0x10]
+        reference: "Table 18"
+        description: "Test short direct for negative or zero"
+
+      - mnemonic: "TNZW"
+        operands: "X"
+        opcode: [0x5D]
+        reference: "Table 18"
+        description: "Test X for negative or zero"
+
+  # Bit Operations
+  - category: "Bit Operations"
+    variants:
+      - mnemonic: "BSET"
+        operands: "$10,#0"
+        opcode: [0x10, 0x10]
+        reference: "Table 19"
+        description: "Set bit 0 in short direct"
+
+      - mnemonic: "BSET"
+        operands: "$10,#7"
+        opcode: [0x1E, 0x10]
+        reference: "Table 19"
+        description: "Set bit 7 in short direct"
+
+      - mnemonic: "BRES"
+        operands: "$10,#0"
+        opcode: [0x11, 0x10]
+        reference: "Table 19"
+        description: "Reset bit 0 in short direct"
+
+      - mnemonic: "BRES"
+        operands: "$10,#7"
+        opcode: [0x1F, 0x10]
+        reference: "Table 19"
+        description: "Reset bit 7 in short direct"
+
+      - mnemonic: "BCPL"
+        operands: "$10,#0"
+        opcode: [0x10, 0x10]
+        reference: "Table 19"
+        description: "Complement bit 0 in short direct (BCCM prefix required)"
+
+      - mnemonic: "BTJT"
+        operands: "$10,#0,$+5"
+        opcode: [0x00, 0x10, 0x03]
+        reference: "Table 19"
+        description: "Bit test and jump if true (bit set)"
+
+      - mnemonic: "BTJF"
+        operands: "$10,#0,$+5"
+        opcode: [0x01, 0x10, 0x03]
+        reference: "Table 19"
+        description: "Bit test and jump if false (bit reset)"
+
+  # Shift and Rotate
+  - category: "Shift and Rotate"
+    variants:
+      # Shift Left
+      - mnemonic: "SLL"
+        operands: "A"
+        opcode: [0x48]
+        reference: "Table 20"
+        description: "Shift left logical A"
+
+      - mnemonic: "SLL"
+        operands: "$10"
+        opcode: [0x38, 0x10]
+        reference: "Table 20"
+        description: "Shift left logical short direct"
+
+      - mnemonic: "SLLW"
+        operands: "X"
+        opcode: [0x58]
+        reference: "Table 20"
+        description: "Shift left logical X"
+
+      # Shift Right
+      - mnemonic: "SRL"
+        operands: "A"
+        opcode: [0x44]
+        reference: "Table 20"
+        description: "Shift right logical A"
+
+      - mnemonic: "SRL"
+        operands: "$10"
+        opcode: [0x34, 0x10]
+        reference: "Table 20"
+        description: "Shift right logical short direct"
+
+      - mnemonic: "SRLW"
+        operands: "X"
+        opcode: [0x54]
+        reference: "Table 20"
+        description: "Shift right logical X"
+
+      - mnemonic: "SRA"
+        operands: "A"
+        opcode: [0x47]
+        reference: "Table 20"
+        description: "Shift right arithmetic A"
+
+      - mnemonic: "SRA"
+        operands: "$10"
+        opcode: [0x37, 0x10]
+        reference: "Table 20"
+        description: "Shift right arithmetic short direct"
+
+      - mnemonic: "SRAW"
+        operands: "X"
+        opcode: [0x57]
+        reference: "Table 20"
+        description: "Shift right arithmetic X"
+
+      # Rotate Left
+      - mnemonic: "RLC"
+        operands: "A"
+        opcode: [0x49]
+        reference: "Table 20"
+        description: "Rotate left through carry A"
+
+      - mnemonic: "RLC"
+        operands: "$10"
+        opcode: [0x39, 0x10]
+        reference: "Table 20"
+        description: "Rotate left through carry short direct"
+
+      - mnemonic: "RLCW"
+        operands: "X"
+        opcode: [0x59]
+        reference: "Table 20"
+        description: "Rotate left through carry X"
+
+      - mnemonic: "RLWA"
+        operands: "X,A"
+        opcode: [0x02]
+        reference: "Table 20"
+        description: "Rotate left A through X"
+
+      # Rotate Right
+      - mnemonic: "RRC"
+        operands: "A"
+        opcode: [0x46]
+        reference: "Table 20"
+        description: "Rotate right through carry A"
+
+      - mnemonic: "RRC"
+        operands: "$10"
+        opcode: [0x36, 0x10]
+        reference: "Table 20"
+        description: "Rotate right through carry short direct"
+
+      - mnemonic: "RRCW"
+        operands: "X"
+        opcode: [0x56]
+        reference: "Table 20"
+        description: "Rotate right through carry X"
+
+      - mnemonic: "RRWA"
+        operands: "X,A"
+        opcode: [0x01]
+        reference: "Table 20"
+        description: "Rotate right A through X"
+
+      # Swap
+      - mnemonic: "SWAP"
+        operands: "A"
+        opcode: [0x4E]
+        reference: "Table 20"
+        description: "Swap nibbles of A"
+
+      - mnemonic: "SWAP"
+        operands: "$10"
+        opcode: [0x3E, 0x10]
+        reference: "Table 20"
+        description: "Swap nibbles of short direct"
+
+      - mnemonic: "SWAPW"
+        operands: "X"
+        opcode: [0x5E]
+        reference: "Table 20"
+        description: "Swap bytes of X"
+
+  # Unconditional Jump and Call
+  - category: "Unconditional Jump"
+    variants:
+      - mnemonic: "JP"
+        operands: "$1234"
+        opcode: [0xCC, 0x12, 0x34]
+        reference: "Table 21"
+        description: "Jump absolute long"
+
+      - mnemonic: "JP"
+        operands: "$12"
+        opcode: [0xAC, 0x12]
+        reference: "Table 21"
+        description: "Jump absolute extended (lower page)"
+
+      - mnemonic: "JPF"
+        operands: "$123456"
+        opcode: [0xAC, 0x12, 0x34, 0x56]
+        reference: "Table 21"
+        description: "Jump far (24-bit address)"
+
+      - mnemonic: "JRA"
+        operands: "$+5"
+        opcode: [0x20, 0x03]
+        reference: "Table 21"
+        description: "Jump relative always"
+
+      - mnemonic: "JRT"
+        operands: "$+5"
+        opcode: [0x20, 0x03]
+        reference: "Table 21"
+        description: "Jump relative true (alias for JRA)"
+
+      - mnemonic: "JRF"
+        operands: "$+2"
+        opcode: [0x21, 0x00]
+        reference: "Table 21"
+        description: "Jump relative false (never jumps)"
+
+  # Conditional Jump
+  - category: "Conditional Jump"
+    variants:
+      - mnemonic: "JREQ"
+        operands: "$+5"
+        opcode: [0x27, 0x03]
+        reference: "Table 22"
+        description: "Jump relative if equal (Z=1)"
+
+      - mnemonic: "JRNE"
+        operands: "$+5"
+        opcode: [0x26, 0x03]
+        reference: "Table 22"
+        description: "Jump relative if not equal (Z=0)"
+
+      - mnemonic: "JRC"
+        operands: "$+5"
+        opcode: [0x25, 0x03]
+        reference: "Table 22"
+        description: "Jump relative if carry (C=1)"
+
+      - mnemonic: "JRNC"
+        operands: "$+5"
+        opcode: [0x24, 0x03]
+        reference: "Table 22"
+        description: "Jump relative if no carry (C=0)"
+
+      - mnemonic: "JRMI"
+        operands: "$+5"
+        opcode: [0x2B, 0x03]
+        reference: "Table 22"
+        description: "Jump relative if minus (N=1)"
+
+      - mnemonic: "JRPL"
+        operands: "$+5"
+        opcode: [0x2A, 0x03]
+        reference: "Table 22"
+        description: "Jump relative if plus (N=0)"
+
+      - mnemonic: "JRH"
+        operands: "$+5"
+        opcode: [0x29, 0x03]
+        reference: "Table 22"
+        description: "Jump relative if half-carry (H=1)"
+
+      - mnemonic: "JRNH"
+        operands: "$+5"
+        opcode: [0x28, 0x03]
+        reference: "Table 22"
+        description: "Jump relative if no half-carry (H=0)"
+
+      - mnemonic: "JRIH"
+        operands: "$+5"
+        opcode: [0x2F, 0x03]
+        reference: "Table 22"
+        description: "Jump relative if interrupt mask high (I1:I0=11)"
+
+      - mnemonic: "JRIL"
+        operands: "$+5"
+        opcode: [0x2E, 0x03]
+        reference: "Table 22"
+        description: "Jump relative if interrupt mask low (I1:I0!=11)"
+
+      - mnemonic: "JRUGE"
+        operands: "$+5"
+        opcode: [0x24, 0x03]
+        reference: "Table 22"
+        description: "Jump relative unsigned greater or equal (C=0)"
+
+      - mnemonic: "JRULT"
+        operands: "$+5"
+        opcode: [0x25, 0x03]
+        reference: "Table 22"
+        description: "Jump relative unsigned less than (C=1)"
+
+      - mnemonic: "JRUGT"
+        operands: "$+5"
+        opcode: [0x22, 0x03]
+        reference: "Table 22"
+        description: "Jump relative unsigned greater than"
+
+      - mnemonic: "JRULE"
+        operands: "$+5"
+        opcode: [0x23, 0x03]
+        reference: "Table 22"
+        description: "Jump relative unsigned less or equal"
+
+      - mnemonic: "JRSGT"
+        operands: "$+5"
+        opcode: [0x2C, 0x03]
+        reference: "Table 22"
+        description: "Jump relative signed greater than"
+
+      - mnemonic: "JRSLE"
+        operands: "$+5"
+        opcode: [0x2D, 0x03]
+        reference: "Table 22"
+        description: "Jump relative signed less or equal"
+
+      - mnemonic: "JRSGE"
+        operands: "$+5"
+        opcode: [0x2E, 0x03]
+        reference: "Table 22"
+        description: "Jump relative signed greater or equal"
+
+      - mnemonic: "JRSLT"
+        operands: "$+5"
+        opcode: [0x2D, 0x03]
+        reference: "Table 22"
+        description: "Jump relative signed less than"
+
+  # Call and Return
+  - category: "Call and Return"
+    variants:
+      - mnemonic: "CALL"
+        operands: "$1234"
+        opcode: [0xCD, 0x12, 0x34]
+        reference: "Table 23"
+        description: "Call subroutine long"
+
+      - mnemonic: "CALL"
+        operands: "$12"
+        opcode: [0xAD, 0x12]
+        reference: "Table 23"
+        description: "Call subroutine extended"
+
+      - mnemonic: "CALLF"
+        operands: "$123456"
+        opcode: [0x8D, 0x12, 0x34, 0x56]
+        reference: "Table 23"
+        description: "Call subroutine far (24-bit)"
+
+      - mnemonic: "CALLR"
+        operands: "$+5"
+        opcode: [0xAD, 0x03]
+        reference: "Table 23"
+        description: "Call subroutine relative"
+
+      - mnemonic: "RET"
+        operands: ""
+        opcode: [0x81]
+        reference: "Table 23"
+        description: "Return from subroutine"
+
+      - mnemonic: "RETF"
+        operands: ""
+        opcode: [0x87]
+        reference: "Table 23"
+        description: "Return from far subroutine"
+
+  # Exchange and Transfer
+  - category: "Exchange"
+    variants:
+      - mnemonic: "EXG"
+        operands: "A,XL"
+        opcode: [0x41]
+        reference: "Table 24"
+        description: "Exchange A with XL"
+
+      - mnemonic: "EXG"
+        operands: "A,YL"
+        opcode: [0x61]
+        reference: "Table 24"
+        description: "Exchange A with YL"
+
+      - mnemonic: "EXGW"
+        operands: "X,Y"
+        opcode: [0x51]
+        reference: "Table 24"
+        description: "Exchange X with Y"
+
+      - mnemonic: "MOV"
+        operands: "$10,#$42"
+        opcode: [0x35, 0x42, 0x10]
+        reference: "Table 24"
+        description: "Move immediate to short direct"
+
+      - mnemonic: "MOV"
+        operands: "$10,$20"
+        opcode: [0x45, 0x20, 0x10]
+        reference: "Table 24"
+        description: "Move short direct to short direct"
+
+      - mnemonic: "MOV"
+        operands: "$1000,$20"
+        opcode: [0x55, 0x20, 0x10, 0x00]
+        reference: "Table 24"
+        description: "Move short direct to long direct"
