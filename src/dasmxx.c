@@ -502,11 +502,13 @@ static void readlist( const char *listfile, struct params *params )
             SKIP_SPACE(pbuf);
             
             /* Skip comment and blank lines */
-            if ( *pbuf == '#' || *pbuf == '\n' )
+            if ( *pbuf == '#' || *pbuf == '\n' || *pbuf == '\r' )
                 continue;
-            
-            /* Remove trailing newline char */
+
+            /* Remove trailing newline/carriage-return chars (handle CRLF) */
             if ( (q = strchr( pbuf, '\n' )) )
+                *q = '\0';
+            if ( (q = strchr( pbuf, '\r' )) )
                 *q = '\0';
 
             /* Peel off command code, then do something about it */
