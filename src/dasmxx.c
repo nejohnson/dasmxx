@@ -937,7 +937,7 @@ static void run_disasm( struct params params )
                     printf( params.want_stripped ? "   " : "\n   " );
                 printf( "DB      '" );
 
-                while ( c = next( f, &addr ) )
+                while ( addr < clist->addr && ( c = next( f, &addr ) ) )
                 {
                     if ( c == string_terminator )
                         break;
@@ -954,7 +954,7 @@ static void run_disasm( struct params params )
             mode = clist->mode;
             if ( mode == CODE || mode == PROCS )
                 newline();
-            name  = clist->name; 
+            name  = clist->name;
             bpl   = clist->bpl;
             clist = clist->n;
         }
@@ -978,7 +978,7 @@ static void run_disasm( struct params params )
                 int in_quote = 0;
                 printf( "DW      " );
 
-                while ( c = nextw( f, &addr ) )
+                while ( addr < clist->addr && ( c = nextw( f, &addr ) ) )
                 {
                     if ( c == string_terminator )
                         break;
