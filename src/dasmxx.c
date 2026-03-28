@@ -570,7 +570,7 @@ static void readlist( const char *listfile, struct params *params )
                         };
 
                         if ( tbl[cmd_idx].pfx )
-                            sprintf( pbuf, GEN_LABEL_PREFIX "%s_%04d", tbl[cmd_idx].pfx, tbl[cmd_idx].num++ );
+                            snprintf( pbuf, buf + sizeof(buf) - pbuf, GEN_LABEL_PREFIX "%s_%04d", tbl[cmd_idx].pfx, tbl[cmd_idx].num++ );
                     }
                     
                     /* Add a cross-ref entry for everything except an end entry */
@@ -622,7 +622,7 @@ static void readlist( const char *listfile, struct params *params )
                     {
                         static unsigned int auto_label = 1;
                    
-                        sprintf( pbuf, "AL_%04d", auto_label++ );
+                        snprintf( pbuf, buf + sizeof(buf) - pbuf, "AL_%04d", auto_label++ );
                     }
                     
                     xref_addxreflabel( addr, pbuf );
@@ -687,8 +687,10 @@ static void readlist( const char *listfile, struct params *params )
                     if ( *pbuf == '"' )
                     {
                         char title[LINE_BUF_LEN];
-                        strcpy( title, pbuf+1 );
-                        title[strlen(title)-1] = '\0';
+                        strncpy( title, pbuf+1, sizeof(title) - 1 );
+                        title[sizeof(title) - 1] = '\0';
+                        if ( strlen(title) > 0 )
+                            title[strlen(title)-1] = '\0';
                         page_title = strdup( title );
                     }
                     else if ( params->inputfile )
