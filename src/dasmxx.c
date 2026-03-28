@@ -463,8 +463,11 @@ static void addlist( struct fmt **list, ADDR addr, int mode, unsigned int bytes_
                                    M_p++;\
                            } while(0)
 
+#define MAX_INCLUDE_DEPTH   16
+
 static void readlist( const char *listfile, struct params *params )
 {
+    static int include_depth = 0;
     FILE *f;
     char buf[LINE_BUF_LEN + 1], *pbuf, *q;
     ADDR addr;
@@ -482,7 +485,10 @@ static void readlist( const char *listfile, struct params *params )
     
     if ( !listfile )
         error( "No listfile specifed" );
-        
+
+    if ( ++include_depth > MAX_INCLUDE_DEPTH )
+        error( "Include nesting too deep (limit is %d)", MAX_INCLUDE_DEPTH );
+
     f = fopen( listfile, "r" );
     if ( !f )
         error( "Failed to open list command file \"%s\"", listfile );
@@ -738,6 +744,7 @@ static void readlist( const char *listfile, struct params *params )
 
     free( notebuf );
     fclose( f );
+    include_depth--;
 }
 
 /***********************************************************
