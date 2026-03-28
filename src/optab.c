@@ -116,6 +116,7 @@ static OPC next_insn( FILE* fp, ADDR *addr  )
         return (OPC)nextw( fp, addr );
     else
         error( "INTERNAL ERROR: unsupported instruction size.\n" );
+    return 0; /* unreachable, error() exits */
 }
 
 /***********************************************************
