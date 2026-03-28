@@ -155,7 +155,7 @@ struct params {
 
 /* Set various physical limits */
 #define BYTES_PER_LINE  16
-#define NOTE_BUF_SIZE   4096
+#define NOTE_BUF_INIT   4096
 #define COL_LINECOMMENT 60
 
 #define COMMENT_DELIM        ";"
@@ -470,8 +470,9 @@ static void readlist( const char *listfile, struct params *params )
     ADDR addr;
     int cmd;
     int n;
-    char notebuf[NOTE_BUF_SIZE + 1];
+    char *notebuf = NULL;
     int notelength;
+    int notebufsize = 0;
     unsigned int lineno = 0;
    
     enum {
@@ -645,9 +646,13 @@ static void readlist( const char *listfile, struct params *params )
                     sscanf( pbuf, "%x%n", &addr, &n );
                     addr *= dasm_word_width_bytes;
                     pbuf += n;
-                    
+
                     /* Initialise the note buffer and switch to LINE_NOTE mode. */
                     notelength = 0;
+                    notebufsize = NOTE_BUF_INIT;
+                    notebuf = realloc( notebuf, notebufsize );
+                    if ( !notebuf )
+                        error( "Out of memory for note buffer" );
                     notebuf[0] = '\0';
                     linemode = LINE_NOTE;
 
@@ -713,12 +718,23 @@ static void readlist( const char *listfile, struct params *params )
             }
             else
             {
-                size_t len = MIN( strlen( pbuf ), NOTE_BUF_SIZE - notelength );
-                strncat( notebuf, pbuf, len );
+                size_t linelen = strlen( pbuf );
+
+                /* Grow buffer if needed */
+                while ( notelength + linelen + 1 > notebufsize )
+                {
+                    notebufsize *= 2;
+                    notebuf = realloc( notebuf, notebufsize );
+                    if ( !notebuf )
+                        error( "Out of memory for note buffer" );
+                }
+                memcpy( notebuf + notelength, pbuf, linelen + 1 );
+                notelength += linelen;
             }
         }
     }
 
+    free( notebuf );
     fclose( f );
 }
 
