@@ -499,7 +499,7 @@ static void readlist( const char *listfile, struct params *params )
                 continue;
             
             /* Remove trailing newline char */
-            if ( q = strchr( pbuf, '\n' ) )
+            if ( (q = strchr( pbuf, '\n' )) )
                 *q = '\0';
 
             /* Peel off command code, then do something about it */
