@@ -164,10 +164,12 @@ void xref_addxreflabel( ADDR ref, char *label )
     if ( p != NULL && ref == p->ref)  /* new label for ref */
     {
         if ( p->label )
+        {
             if ( strncmp( p->label, GEN_LABEL_PREFIX, strlen( GEN_LABEL_PREFIX ) ) )
                 error( "multiple labels for same address (0x%X) (was: %s, new:%s)", ref, p->label, label );
             else
                 free( p->label );
+        }
         
         p->label = dupstr( label );
     }

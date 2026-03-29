@@ -155,7 +155,7 @@ struct params {
 
 /* Set various physical limits */
 #define BYTES_PER_LINE  16
-#define NOTE_BUF_SIZE   4096
+#define NOTE_BUF_INIT   4096
 #define COL_LINECOMMENT 60
 
 #define COMMENT_DELIM        ";"
@@ -463,15 +463,19 @@ static void addlist( struct fmt **list, ADDR addr, int mode, unsigned int bytes_
                                    M_p++;\
                            } while(0)
 
+#define MAX_INCLUDE_DEPTH   16
+
 static void readlist( const char *listfile, struct params *params )
 {
+    static int include_depth = 0;
     FILE *f;
     char buf[LINE_BUF_LEN + 1], *pbuf, *q;
     ADDR addr;
     int cmd;
     int n;
-    char notebuf[NOTE_BUF_SIZE + 1];
+    char *notebuf = NULL;
     int notelength;
+    int notebufsize = 0;
     unsigned int lineno = 0;
    
     enum {
@@ -481,7 +485,10 @@ static void readlist( const char *listfile, struct params *params )
     
     if ( !listfile )
         error( "No listfile specifed" );
-        
+
+    if ( ++include_depth > MAX_INCLUDE_DEPTH )
+        error( "Include nesting too deep (limit is %d)", MAX_INCLUDE_DEPTH );
+
     f = fopen( listfile, "r" );
     if ( !f )
         error( "Failed to open list command file \"%s\"", listfile );
@@ -495,11 +502,13 @@ static void readlist( const char *listfile, struct params *params )
             SKIP_SPACE(pbuf);
             
             /* Skip comment and blank lines */
-            if ( *pbuf == '#' || *pbuf == '\n' )
+            if ( *pbuf == '#' || *pbuf == '\n' || *pbuf == '\r' )
                 continue;
-            
-            /* Remove trailing newline char */
-            if ( q = strchr( pbuf, '\n' ) )
+
+            /* Remove trailing newline/carriage-return chars (handle CRLF) */
+            if ( (q = strchr( pbuf, '\n' )) )
+                *q = '\0';
+            if ( (q = strchr( pbuf, '\r' )) )
                 *q = '\0';
 
             /* Peel off command code, then do something about it */
@@ -569,7 +578,7 @@ static void readlist( const char *listfile, struct params *params )
                         };
 
                         if ( tbl[cmd_idx].pfx )
-                            sprintf( pbuf, GEN_LABEL_PREFIX "%s_%04d", tbl[cmd_idx].pfx, tbl[cmd_idx].num++ );
+                            snprintf( pbuf, buf + sizeof(buf) - pbuf, GEN_LABEL_PREFIX "%s_%04d", tbl[cmd_idx].pfx, tbl[cmd_idx].num++ );
                     }
                     
                     /* Add a cross-ref entry for everything except an end entry */
@@ -621,7 +630,7 @@ static void readlist( const char *listfile, struct params *params )
                     {
                         static unsigned int auto_label = 1;
                    
-                        sprintf( pbuf, "AL_%04d", auto_label++ );
+                        snprintf( pbuf, buf + sizeof(buf) - pbuf, "AL_%04d", auto_label++ );
                     }
                     
                     xref_addxreflabel( addr, pbuf );
@@ -645,9 +654,13 @@ static void readlist( const char *listfile, struct params *params )
                     sscanf( pbuf, "%x%n", &addr, &n );
                     addr *= dasm_word_width_bytes;
                     pbuf += n;
-                    
+
                     /* Initialise the note buffer and switch to LINE_NOTE mode. */
                     notelength = 0;
+                    notebufsize = NOTE_BUF_INIT;
+                    notebuf = realloc( notebuf, notebufsize );
+                    if ( !notebuf )
+                        error( "Out of memory for note buffer" );
                     notebuf[0] = '\0';
                     linemode = LINE_NOTE;
 
@@ -682,8 +695,10 @@ static void readlist( const char *listfile, struct params *params )
                     if ( *pbuf == '"' )
                     {
                         char title[LINE_BUF_LEN];
-                        strcpy( title, pbuf+1 );
-                        title[strlen(title)-1] = '\0';
+                        strncpy( title, pbuf+1, sizeof(title) - 1 );
+                        title[sizeof(title) - 1] = '\0';
+                        if ( strlen(title) > 0 )
+                            title[strlen(title)-1] = '\0';
                         page_title = strdup( title );
                     }
                     else if ( params->inputfile )
@@ -713,13 +728,25 @@ static void readlist( const char *listfile, struct params *params )
             }
             else
             {
-                size_t len = MIN( strlen( pbuf ), NOTE_BUF_SIZE - notelength );
-                strncat( notebuf, pbuf, len );
+                size_t linelen = strlen( pbuf );
+
+                /* Grow buffer if needed */
+                while ( notelength + linelen + 1 > notebufsize )
+                {
+                    notebufsize *= 2;
+                    notebuf = realloc( notebuf, notebufsize );
+                    if ( !notebuf )
+                        error( "Out of memory for note buffer" );
+                }
+                memcpy( notebuf + notelength, pbuf, linelen + 1 );
+                notelength += linelen;
             }
         }
     }
 
+    free( notebuf );
     fclose( f );
+    include_depth--;
 }
 
 /***********************************************************
@@ -937,7 +964,7 @@ static void run_disasm( struct params params )
                     printf( params.want_stripped ? "   " : "\n   " );
                 printf( "DB      '" );
 
-                while ( c = next( f, &addr ) )
+                while ( addr < clist->addr && ( c = next( f, &addr ) ) )
                 {
                     if ( c == string_terminator )
                         break;
@@ -954,7 +981,7 @@ static void run_disasm( struct params params )
             mode = clist->mode;
             if ( mode == CODE || mode == PROCS )
                 newline();
-            name  = clist->name; 
+            name  = clist->name;
             bpl   = clist->bpl;
             clist = clist->n;
         }
@@ -978,7 +1005,7 @@ static void run_disasm( struct params params )
                 int in_quote = 0;
                 printf( "DW      " );
 
-                while ( c = nextw( f, &addr ) )
+                while ( addr < clist->addr && ( c = nextw( f, &addr ) ) )
                 {
                     if ( c == string_terminator )
                         break;

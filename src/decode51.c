@@ -236,7 +236,7 @@ OPERAND_FUNC(addr16)
 OPERAND_FUNC(rel8)
 {
    BYTE ofst = (BYTE)next( f, addr );
-   ADDR dest = *addr + ofst;
+   ADDR dest = (*addr + ofst) & 0xFFFF;
    
    operand( xref_genwordaddr( NULL, FORMAT_NUM_16BIT, dest ) );
    xref_addxref( xtype, g_insn_addr, dest );
@@ -254,6 +254,7 @@ TWO_OPERAND(iram, rel8)
 TWO_OPERAND(iram, iram)
 TWO_OPERAND(indreg, imm8)
 TWO_OPERAND(dptr, imm16)
+TWO_OPERAND(addrbit, rel8)
 
 TWO_OPERAND_PAIR(A, reg)
 TWO_OPERAND_PAIR(A, iram)
@@ -449,9 +450,9 @@ optab_t base_optab[] = {
     INSN( "DJNZ", iram_rel8, 0xD5,       X_JMP )
     MASK( "DJNZ", reg_rel8,  0xF8, 0xD8, X_JMP )
 
-    INSN( "JBC",  rel8, 0x10, X_JMP )
-    INSN( "JB",   rel8, 0x20, X_JMP )
-    INSN( "JNB",  rel8, 0x30, X_JMP )
+    INSN( "JBC",  addrbit_rel8, 0x10, X_JMP )
+    INSN( "JB",   addrbit_rel8, 0x20, X_JMP )
+    INSN( "JNB",  addrbit_rel8, 0x30, X_JMP )
     INSN( "JC",   rel8, 0x40, X_JMP )
     INSN( "JNC",  rel8, 0x50, X_JMP )
     INSN( "JZ",   rel8, 0x60, X_JMP )

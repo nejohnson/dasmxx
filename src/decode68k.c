@@ -203,13 +203,13 @@ OPERAND_FUNC(simm32)
  ************************************************************/
 OPERAND_FUNC(relX)
 {
-    BYTE disp8 = opc & 0xFF;
+    BYTE disp8 = (BYTE)(opc & 0xFF);
     WORD dest = (ADDR)disp8;
-    
-    if ( disp8 == 0xFF || disp8 == 0 ) /* extended displacement */
+
+    if ( disp8 == -1 || disp8 == 0 ) /* extended displacement */
     {
         dest = (WORD)nextw( f, addr );
-        if ( disp8 == 0xFF ) /* 32-bit displacement */
+        if ( disp8 == -1 ) /* 32-bit displacement */
         {
             UWORD lo = (UWORD)nextw( f, addr );
             dest = MK_LONG(dest, lo);
