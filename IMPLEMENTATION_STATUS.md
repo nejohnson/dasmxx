@@ -141,15 +141,16 @@ test/dasmz80/generated/
 
 ### ⏳ Phase 2: Additional Processor Specifications
 
-**Status:** Framework ready, specifications needed
+**Status:** 1 of 5 complete (STM8), 4 remaining
 
-**Tasks:**
-- Create instruction specs for 5 more processors:
-  - 6502
-  - 8051
-  - AVR
-  - STM8
-  - M8 or another priority processor
+**Completed:**
+- ✅ STM8 (M8) - 175 instructions from PM0044 manual
+
+**Remaining:**
+- 6502
+- 8051
+- AVR
+- One more TBD
 
 - Each spec should include:
   - REFERENCE.md documenting authoritative source
@@ -185,7 +186,8 @@ All tool feature tests passing with golden file verification.
 
 ### Generated Instruction Tests
 
-Z80: 142 instructions generated and tested successfully with disassembler.
+- **Z80**: 142 instructions (pilot implementation)
+- **STM8 (M8)**: 175 instructions (first of 5 additional processors)
 
 ## Project Statistics
 
@@ -193,13 +195,15 @@ Z80: 142 instructions generated and tested successfully with disassembler.
 - Test framework: ~940 lines of Python
 - Test generator: ~450 lines of Python
 - Static analysis: ~250 lines of Bash
-- Test specifications: ~400 lines of YAML
-- Test command files: 12 test cases
+- Test specifications: ~900 lines of YAML (Z80: ~400, STM8: ~500)
+- Tool feature tests: 12 test cases
+- Generated instruction tests: 317 test cases
 
 ### Test Coverage
 - Tool features: 12 automated tests
-- Instruction tests: 142 Z80 instructions (pilot)
-- Processors with test infrastructure: Z80 (more pending)
+- Instruction tests: 317 total instructions (Z80: 142, STM8: 175)
+- Processors with comprehensive tests: Z80, STM8/M8
+- Remaining target processors: 4 more (6502, 8051, AVR, and one more TBD)
 
 ## Usage Examples
 
