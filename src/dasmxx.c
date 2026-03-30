@@ -459,7 +459,7 @@ static void addlist( struct fmt **list, ADDR addr, int mode, unsigned int bytes_
 
 #define LINE_BUF_LEN        ( 256 )
 #define SKIP_SPACE(M_p)    do {\
-                               while(*M_p && isspace(*M_p))\
+                               while(*M_p && isspace((unsigned char)*M_p))\
                                    M_p++;\
                            } while(0)
 
@@ -513,7 +513,7 @@ static void readlist( const char *listfile, struct params *params )
 
             /* Peel off command code, then do something about it */
             cmd = *pbuf++;
-            cmd = tolower( cmd ); /* Be case-agnostic */
+            cmd = tolower( (unsigned char)cmd ); /* Be case-agnostic */
             switch ( cmd )
             {
             case 0: break; /* Catch blank line at end of file */
@@ -710,7 +710,7 @@ static void readlist( const char *listfile, struct params *params )
 
             default: /* Unknown command */
                 {
-                    if ( isprint( cmd ) )
+                    if ( isprint( (unsigned char)cmd ) )
                         error( "%s(%u) :: Unknown command code '%d'\n", listfile, lineno, cmd );
                     else
                         error( "%s :: Illegal character in command file - is this a binary file?\n", listfile );
@@ -908,7 +908,7 @@ static void run_disasm( struct params params )
                         printf( "; " );
 
                     for ( p = 0; p < bpl; p++ )
-                        if ( isprint( buf[p] ) )
+                        if ( isprint( (unsigned char)buf[p] ) )
                             putchar( buf[p] );
                         else
                             putchar( '.' );
@@ -931,7 +931,7 @@ static void run_disasm( struct params params )
                     printf( "; " );
 
                 for ( p = 0; p < i; p++ )
-                    if ( isprint( buf[p] ) )
+                    if ( isprint( (unsigned char)buf[p] ) )
                         putchar( buf[p] );
                     else
                         putchar( '.' );
@@ -969,7 +969,7 @@ static void run_disasm( struct params params )
                     if ( c == string_terminator )
                         break;
 
-                    if ( isprint( c ) )
+                    if ( isprint( (unsigned char)c ) )
                         putchar( c );
                     else
                         printf ("\\%02X", (unsigned char) c );
@@ -1010,7 +1010,7 @@ static void run_disasm( struct params params )
                     if ( c == string_terminator )
                         break;
 
-                    if ( isprint( c ) )
+                    if ( isprint( (unsigned char)c ) )
                     {
                         if ( !in_quote )
                         {
@@ -1190,7 +1190,7 @@ static void run_disasm( struct params params )
 
                 c = next( f, &addr );
 
-                if ( isprint( c ) )
+                if ( isprint( (unsigned char)c ) )
                     printf( "'%c'", c );
                 else
                     printf( "%02X", (unsigned char)c );

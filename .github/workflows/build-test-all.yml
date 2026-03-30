@@ -22,4 +22,4 @@ jobs:
     - name: Run all tests
       run: |
         cd test
-        for f in *; do pushd $f; make; popd; done
+        for f in */; do pushd "$f"; make; popd; done
