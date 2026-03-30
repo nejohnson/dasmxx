@@ -23,6 +23,7 @@ Supported Processors:
   * Zilog Z80
   * RCA CDP1802
   * Motorola 68000 (WORK IN PROGRESS!)
+  * STMicroelectronics STM8
 
 Planned Features:
   * More processors (in no specific order):
@@ -32,4 +33,8 @@ Planned Features:
   * Support for merging multiple ROM files
   * Assembler-compatible output for subsequent re-assembly
   
-
+Thanks to:
+  * hharte for various fixes
+  * pulkomandy for the the unsp decoder and various fixes
+  * gareth8118 for 6805 decoder
+  * Willem Jan Hengeveld for the original 8096 decoder
