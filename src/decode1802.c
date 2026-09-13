@@ -114,7 +114,11 @@ OPERAND_FUNC(reg)
 OPERAND_FUNC(page8)
 {
     UBYTE aa = next( f, addr );
-    ADDR dest = ( *addr & 0xFF00 ) | aa;
+    /* A taken short branch replaces R(P).0 only, so the target lies in the
+     * page holding the branch address byte itself.  *addr has already been
+     * advanced past that byte, hence the -1: without it a branch whose
+     * operand is the last byte of a page resolves one page too high. */
+    ADDR dest = ( ( *addr - 1 ) & 0xFF00 ) | aa;
     
     operand( xref_genwordaddr( NULL, FORMAT_NUM_16BIT, dest ) );
     xref_addxref( xtype, g_insn_addr, dest );
@@ -137,8 +141,9 @@ OPERAND_FUNC(io)
 
 OPERAND_FUNC(addr16)
 {
-    UBYTE low_addr  = next( f, addr );
+    /* The long branches store the target address high byte first. */
     UBYTE high_addr = next( f, addr );
+    UBYTE low_addr  = next( f, addr );
     UWORD addr16    = MK_WORD( low_addr, high_addr );
 
     operand( xref_genwordaddr( NULL, FORMAT_NUM_16BIT, addr16 ) );
@@ -207,7 +212,7 @@ optab_t base_optab[] = {
     INSN ( "SEQ",   none, 0x7B, X_NONE )
     
     INSN ( "ADCI",  imm8, 0x7C, X_IMM )
-    INSN ( "SBDI",  imm8, 0x7D, X_IMM )
+    INSN ( "SDBI",  imm8, 0x7D, X_IMM )
     INSN ( "SHLC",  none, 0x7E, X_NONE )
     INSN ( "SMBI",  imm8, 0x7F, X_IMM )
     
