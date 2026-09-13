@@ -42,7 +42,7 @@
  * Globally-visible decoder properties
  *****************************************************************************/
 
-DASM_PROFILE( "dasmx86", "Intel x86", 5, 9, 0, 1, 1 )
+DASM_PROFILE( "dasmx86", "Intel x86", 8, 9, 0, 1, 1 )
 
 /*****************************************************************************
  * Private data types, macros, constants.
@@ -159,11 +159,25 @@ OPERAND_FUNC(port8)
     operand( FORMAT_NUM_8BIT, byte );
 }
 
+/*
+ * Near (intra-segment) branch targets are computed modulo 64K: the 8086
+ * family adds the displacement to IP, which is 16 bits wide, and the
+ * segment base is unchanged.  dasmxx works in a flat address space, so a
+ * plain "*addr + disp" escapes the segment on any backwards branch taken
+ * from near the bottom of the address space (e.g. E9 F0 FF at 0x00100 must
+ * target 0x000F3, not 0x100F3).  NEAR_TARGET converts the flat address back
+ * to an offset within the segment named by the command file's 'g' command,
+ * wraps the addition to 16 bits, and converts back.  With no 'g' command
+ * the segment base is 0, which reproduces plain 8086 (CS=0) behaviour.
+ */
+#define NEAR_TARGET(pc, disp)  \
+    ( dasm_segment_base + ( ( (pc) - dasm_segment_base + (disp) ) & 0xFFFF ) )
+
 OPERAND_FUNC(disp8)
 {
     BYTE disp = (BYTE)next( f, addr );
-    ADDR dest = *addr + disp;
-    
+    ADDR dest = NEAR_TARGET( *addr, (ADDR)(LWORD)disp );
+
     operand( xref_genwordaddr( NULL, FORMAT_NUM_16BIT, dest ) );
     xref_addxref( xtype, g_insn_addr, dest );
 }
@@ -195,8 +209,8 @@ OPERAND_FUNC(disp16)
 {
     UBYTE lsb = next( f, addr );
     UBYTE msb = next( f, addr );
-    ADDR dest = *addr + MK_WORD( lsb, msb );
-    
+    ADDR dest = NEAR_TARGET( *addr, (ADDR)MK_WORD( lsb, msb ) );
+
     EMIT_SEG_PFX;
     operand( xref_genwordaddr( NULL, FORMAT_NUM_16BIT, dest ) );
     xref_addxref( xtype, g_insn_addr, dest );
@@ -208,11 +222,24 @@ OPERAND_FUNC(segoff)
     UBYTE offhi = next( f, addr );
     UBYTE seglo = next( f, addr );
     UBYTE seghi = next( f, addr );
-    
+
     ADDR offset = MK_WORD( offlo, offhi );
     ADDR segment = MK_WORD( seglo, seghi );
-    
-    operand( FORMAT_NUM_16BIT ":" FORMAT_NUM_16BIT, segment, offset );    
+    ADDR linear  = ( segment << 4 ) + offset;
+    char *label  = xref_findaddrlabel( linear );
+
+    /*
+     * Far pointers are printed as SEG:OFF (the form that appears in the
+     * ROM image) with the resolved flat address, and any label already
+     * attached to it, alongside - and the flat address is registered as a
+     * cross-reference so far call/jump targets show up in the -x dump.
+     */
+    if ( label )
+        operand( FORMAT_NUM_16BIT ":" FORMAT_NUM_16BIT " {%s}", segment, offset, label );
+    else
+        operand( FORMAT_NUM_16BIT ":" FORMAT_NUM_16BIT " {%05X}", segment, offset, linear );
+
+    xref_addxref( xtype, g_insn_addr, linear );
 }
 
 OPERAND_FUNC(segmreg)
@@ -248,7 +275,14 @@ OPERAND_FUNC(modrm)
         case 0xC5: /* LDS */
             dir = 1;
             break;
-            
+
+        case 0x62: /* BOUND r16,m16&16      (80186) */
+        case 0x69: /* IMUL r16,r/m16,imm16  (80186) */
+        case 0x6B: /* IMUL r16,r/m16,imm8   (80186) */
+            wordop = 1;
+            dir = 1;
+            break;
+
         case 0x8E:  /* MOV to SEG */
         case 0x8C:  /* MOV from SEG */
             isseg  = 1;
@@ -262,10 +296,11 @@ OPERAND_FUNC(modrm)
      * these cases there is no REG, just the ADDR.
      * */
     if ( opc == 0xFF || opc == 0xFE || opc == 0x8F || opc == 0xD0 || opc == 0xD1
-         || opc == 0xD2 || opc == 0xD3 
-         || opc == 0x80 || opc == 0x81 || opc == 0x83 
-         || opc == 0xC6 || opc == 0xC7 
-         || opc == 0xF6 || opc == 0xF7 
+         || opc == 0xD2 || opc == 0xD3
+         || opc == 0x80 || opc == 0x81 || opc == 0x83
+         || opc == 0xC6 || opc == 0xC7
+         || opc == 0xF6 || opc == 0xF7
+         || opc == 0xC0 || opc == 0xC1 /* 80186 shift/rotate-by-imm8 group */
          || ((opc & 0xF8) == 0xD8) )
     {
         src = action = DO_ADDR;
@@ -282,7 +317,11 @@ OPERAND_FUNC(modrm)
         {
         case DO_REG:
             if ( isseg )
-                operand( segreg[reg+1] );
+                /* Only REG 0-3 name a segment register; 4-7 are undefined
+                 * encodings of 8C/8E and used to index segreg[] out of
+                 * bounds, passing a wild pointer to operand() -> SIGSEGV
+                 * as soon as a data byte pair like "8C 34" was decoded. */
+                operand( reg < 4 ? segreg[reg+1] : "?SEG?" );
             else
                 operand( (wordop ? wordreg : bytereg)[reg] );
             break;
@@ -391,6 +430,51 @@ OPERAND_FUNC(modrmimm)
     }
 }
 
+/* 80186: IMUL r16,r/m16,imm16 (0x69) -- modrm() prints "REG, R/M" (dir
+ * forced above), then the 16-bit immediate follows. */
+OPERAND_FUNC(modrm_imm16)
+{
+    UBYTE lo, hi;
+    UWORD imm16;
+
+    operand_modrm( f, addr, opc, xtype );
+    operand( ", " );
+
+    lo = next( f, addr );
+    hi = next( f, addr );
+    imm16 = MK_WORD( lo, hi );
+    operand( FORMAT_NUM_16BIT, imm16 );
+}
+
+/* 80186: IMUL r16,r/m16,imm8 (0x6B) -- immediate is sign-extended to 16
+ * bits before the multiply, so print the sign-extended value to match the
+ * modrm_imm16 sibling above. */
+OPERAND_FUNC(modrm_imm8)
+{
+    UWORD imm16;
+
+    operand_modrm( f, addr, opc, xtype );
+    operand( ", " );
+
+    imm16 = next( f, addr );
+    if ( imm16 & 0x80 ) imm16 |= 0xFF00;
+    operand( FORMAT_NUM_16BIT, imm16 );
+}
+
+/* 80186: shift/rotate-by-imm8 group (C0 /n ib, C1 /n ib) -- same REG-field
+ * group selection as the D0-D3 shift/rotate-by-CL-or-1 group (modrmC
+ * above), but the count is an explicit imm8 operand instead of "CL"/"1". */
+OPERAND_FUNC(modrm_shiftimm)
+{
+    UBYTE count;
+
+    operand_modrm( f, addr, opc, xtype );
+    operand( ", " );
+
+    count = next( f, addr );
+    operand( FORMAT_NUM_8BIT, count );
+}
+
 /******************************************************************************/
 /**                            Double Operands                               **/
 /******************************************************************************/
@@ -404,6 +488,8 @@ TWO_OPERAND(acc, imm16)
 
 TWO_OPERAND(reg, imm8)
 TWO_OPERAND(reg, imm16)
+
+TWO_OPERAND(imm16, imm8)  /* 80186 ENTER: allocsize, nestlevel */
 
 /******************************************************************************/
 /** Instruction Decoding Tables                                              **/
@@ -439,18 +525,23 @@ optab_t base_optab[] = {
     MASK( "PUSH",   reg16,       0xF8, 0x50, X_NONE )
     MASK( "PUSH",   segmreg,     0xE7, 0x06, X_NONE )
     MASK2( "PUSH",  modrm,       0xFF, 0x38, 0x30, X_NONE )
-        
+    INSN( "PUSH",   imm16,       0x68, X_NONE ) /* 80186 */
+    INSN( "PUSH",   imm8,        0x6A, X_NONE ) /* 80186 */
+    INSN( "PUSHA",  none,        0x60, X_NONE ) /* 80186 */
+
     MASK( "POP",    reg16,       0xF8, 0x58, X_NONE )
     MASK( "POP",    segmreg,     0xE7, 0x07, X_NONE )
     MASK2( "POP",   modrm,       0x8F, 0x38, 0x00, X_NONE )
-    
+    INSN( "POPA",   none,        0x61, X_NONE ) /* 80186 */
+
     MASK( "XCHG",   reg16,       0xF8, 0x90, X_NONE )
     MASK( "XCHG",   modrm,       0xFE, 0x86, X_NONE )
-  
+
     INSN( "XLAT",   none,        0xD7, X_NONE )
     INSN( "LEA",    modrm,       0x8D, X_NONE )
     INSN( "LDS",    modrm,       0xC5, X_NONE )
     INSN( "LES",    modrm,       0xC4, X_NONE )
+    INSN( "BOUND",  modrm,       0x62, X_NONE ) /* 80186 */
     
     INSN( "LAHF",   none, 0x9F, X_NONE )
     INSN( "SAHF",   none, 0x9E, X_NONE )
@@ -480,21 +571,34 @@ optab_t base_optab[] = {
     MASK2(M_name,modrmimm,0x81,0x38,M_mask,X_NONE) \
     MASK2(M_name,modrmimm,0x83,0x38,M_mask,X_NONE)
     
+    /* The 80/81/83 group selects the operation with the REG field of the
+     * modrm byte, so the mask value below is (reg << 3).  ADC is reg=2 and
+     * so must be 0x10; it read 0x80, which lies outside the 0x38 mask and
+     * therefore never matched, leaving "ADC r/m,imm" undecodable.  The
+     * 0x83 (sign-extended imm8) form applies to all eight operations, AND,
+     * OR and XOR included.
+     */
     ARITH_IMMX_RM( "ADD", 0x00 )
-    ARITH_IMMX_RM( "ADC", 0x80 )
-    ARITH_IMMX_RM( "SUB", 0x28 )
+    ARITH_IMMX_RM( "OR",  0x08 )
+    ARITH_IMMX_RM( "ADC", 0x10 )
     ARITH_IMMX_RM( "SBB", 0x18 )
+    ARITH_IMMX_RM( "AND", 0x20 )
+    ARITH_IMMX_RM( "SUB", 0x28 )
+    ARITH_IMMX_RM( "XOR", 0x30 )
     ARITH_IMMX_RM( "CMP", 0x38 )
-    
-#define ARITH_IMM_RM(M_name,M_mask) \
-    MASK2(M_name,modrmimm,0x80,0x38,M_mask,X_NONE) \
-    MASK2(M_name,modrmimm,0x81,0x38,M_mask,X_NONE)
-    
-    ARITH_IMM_RM( "AND", 0x20 )
-    ARITH_IMM_RM( "OR",  0x08 )
-    ARITH_IMM_RM( "XOR", 0x30 )
 
-    MASK( "TEST",   modrmimm, 0xFE, 0xF6, X_NONE )    
+    /* Group 3 (opcodes F6/F7) selects the operation with the modrm REG
+     * field: /0 (and the /1 alias) TEST imm, /2 NOT, /3 NEG, /4 MUL,
+     * /5 IMUL, /6 DIV, /7 IDIV.  The table used to match F6/F7 with ANY
+     * reg field as "TEST r/m,imm", so MUL/DIV/NEG/NOT decoded as TEST and
+     * swallowed the following 1-2 bytes as a non-existent immediate -- a
+     * silent resync error.  The group-3 entries proper are down with the
+     * arithmetic ops below.
+     */
+    MASK2( "TEST",  modrmimm, 0xF6, 0x38, 0x00, X_NONE )
+    MASK2( "TEST",  modrmimm, 0xF7, 0x38, 0x00, X_NONE )
+    MASK2( "TEST",  modrmimm, 0xF6, 0x38, 0x08, X_NONE )
+    MASK2( "TEST",  modrmimm, 0xF7, 0x38, 0x08, X_NONE )
     
     MASK( "ADD",    modrm, 0xFC, 0x00, X_NONE )
     MASK( "ADC",    modrm, 0xFC, 0x10, X_NONE )
@@ -514,20 +618,22 @@ optab_t base_optab[] = {
     MASK2( "DEC",   modrm, 0xFE, 0x38, 0x08, X_NONE )
     MASK2( "DEC",   modrm, 0xFF, 0x38, 0x08, X_NONE )
     
-    MASK2( "NEG",   modrm, 0xFE, 0x38, 0x18, X_NONE )
-    MASK2( "NEG",   modrm, 0xFF, 0x38, 0x18, X_NONE )
+    MASK2( "NEG",   modrm, 0xF6, 0x38, 0x18, X_NONE )
+    MASK2( "NEG",   modrm, 0xF7, 0x38, 0x18, X_NONE )
     
-    MASK2( "MUL",   modrm, 0xFE, 0x38, 0x20, X_NONE )
-    MASK2( "MUL",   modrm, 0xFF, 0x38, 0x20, X_NONE )
+    MASK2( "MUL",   modrm, 0xF6, 0x38, 0x20, X_NONE )
+    MASK2( "MUL",   modrm, 0xF7, 0x38, 0x20, X_NONE )
     
-    MASK2( "IMUL",  modrm, 0xFE, 0x38, 0x28, X_NONE )
-    MASK2( "IMUL",  modrm, 0xFF, 0x38, 0x28, X_NONE )
+    MASK2( "IMUL",  modrm, 0xF6, 0x38, 0x28, X_NONE )
+    MASK2( "IMUL",  modrm, 0xF7, 0x38, 0x28, X_NONE )
+    INSN( "IMUL",   modrm_imm16, 0x69, X_NONE ) /* 80186 r16,r/m16,imm16 */
+    INSN( "IMUL",   modrm_imm8,  0x6B, X_NONE ) /* 80186 r16,r/m16,imm8  */
 
-    MASK2( "DIV",   modrm, 0xFE, 0x38, 0x30, X_NONE )
-    MASK2( "DIV",   modrm, 0xFF, 0x38, 0x30, X_NONE )
+    MASK2( "DIV",   modrm, 0xF6, 0x38, 0x30, X_NONE )
+    MASK2( "DIV",   modrm, 0xF7, 0x38, 0x30, X_NONE )
     
-    MASK2( "IDIV",  modrm, 0xFE, 0x38, 0x38, X_NONE )
-    MASK2( "IDIV",  modrm, 0xFF, 0x38, 0x38, X_NONE )
+    MASK2( "IDIV",  modrm, 0xF6, 0x38, 0x38, X_NONE )
+    MASK2( "IDIV",  modrm, 0xF7, 0x38, 0x38, X_NONE )
     
     INSN( "AAA",    none, 0x37, X_NONE )
     INSN( "BAA",    none, 0x27, X_NONE )
@@ -542,8 +648,8 @@ optab_t base_optab[] = {
   LOGIC
   ----------------------------------------------------------------------------*/
   
-    MASK2( "NOT",   modrm, 0xFE, 0x38, 0x10, X_NONE )
-    MASK2( "NOT",   modrm, 0xFF, 0x38, 0x10, X_NONE )
+    MASK2( "NOT",   modrm, 0xF6, 0x38, 0x10, X_NONE )
+    MASK2( "NOT",   modrm, 0xF7, 0x38, 0x10, X_NONE )
     
 #define SHIFT_ROT_GRP(M_name,M_mask) \
     MASK2( M_name, modrmC, 0xD0, 0x38, M_mask, X_NONE ) \
@@ -557,7 +663,21 @@ optab_t base_optab[] = {
     SHIFT_ROT_GRP( "ROL", 0x00 )
     SHIFT_ROT_GRP( "ROR", 0x08 )
     SHIFT_ROT_GRP( "RCL", 0x10 )
-    SHIFT_ROT_GRP( "RCR", 0x18 )  
+    SHIFT_ROT_GRP( "RCR", 0x18 )
+
+/* 80186: shift/rotate-by-imm8 (C0 /n ib, C1 /n ib) -- same REG-field group
+ * selectors as SHIFT_ROT_GRP above, explicit imm8 count instead of CL/1. */
+#define SHIFT_ROT_IMM_GRP(M_name,M_mask) \
+    MASK2( M_name, modrm_shiftimm, 0xC0, 0x38, M_mask, X_NONE ) \
+    MASK2( M_name, modrm_shiftimm, 0xC1, 0x38, M_mask, X_NONE )
+
+    SHIFT_ROT_IMM_GRP( "SHL", 0x20 )
+    SHIFT_ROT_IMM_GRP( "SHR", 0x28 )
+    SHIFT_ROT_IMM_GRP( "SAR", 0x38 )
+    SHIFT_ROT_IMM_GRP( "ROL", 0x00 )
+    SHIFT_ROT_IMM_GRP( "ROR", 0x08 )
+    SHIFT_ROT_IMM_GRP( "RCL", 0x10 )
+    SHIFT_ROT_IMM_GRP( "RCR", 0x18 )
 
 /*----------------------------------------------------------------------------
   STRING MANIPULATION
@@ -583,7 +703,12 @@ optab_t base_optab[] = {
     
     INSN( "STOSB", none, 0xAA, X_NONE )
     INSN( "STOSW", none, 0xAB, X_NONE )
-  
+
+    INSN( "INSB",  none, 0x6C, X_NONE ) /* 80186 */
+    INSN( "INSW",  none, 0x6D, X_NONE ) /* 80186 */
+    INSN( "OUTSB", none, 0x6E, X_NONE ) /* 80186 */
+    INSN( "OUTSW", none, 0x6F, X_NONE ) /* 80186 */
+
 /*----------------------------------------------------------------------------
   CONTROL TRANSFER
   ----------------------------------------------------------------------------*/
@@ -603,7 +728,9 @@ optab_t base_optab[] = {
     INSN( "RETN",  imm16,  0xC2, X_NONE )
     INSN( "RETF",  none,   0xCB, X_NONE )
     INSN( "RETF",  imm16,  0xCA, X_NONE )
-  
+    INSN( "ENTER", imm16_imm8, 0xC8, X_NONE ) /* 80186 */
+    INSN( "LEAVE", none,   0xC9, X_NONE )     /* 80186 */
+
     INSN( "JO",    disp8,  0x70, X_JMP )
     INSN( "JNO",   disp8,  0x71, X_JMP )
     INSN( "JB",    disp8,  0x72, X_JMP )
