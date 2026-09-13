@@ -138,6 +138,7 @@ struct fmt {
     int              mode;
     ADDR             addr;
     unsigned int     bpl; /* bytes per line */
+    ADDR             seg; /* segment base in force for this entry ('g' cmd) */
     char            *name;
     struct fmt      *n;
 };
@@ -171,6 +172,12 @@ struct comment  *blockcmt   = NULL;
 
 int             string_terminator = '\0';
 unsigned int    file_offset = 0;
+
+/* Segment base (flat address of offset 0 of the current segment), set by
+ * the 'g' command.  Segmented targets (x86) use it to resolve intra-segment
+ * branch targets; decoders for flat architectures ignore it.
+ */
+ADDR            dasm_segment_base = 0;
 
 /* List of display modes.  Defines must match entry position. */
 static char datchars[] = "cbsewapvmuz";
@@ -409,7 +416,7 @@ static int emitaddr( ADDR addr, struct params *params )
  *
  ************************************************************/
 
-static void addlist( struct fmt **list, ADDR addr, int mode, unsigned int bytes_per_line, char *name )
+static void addlist( struct fmt **list, ADDR addr, int mode, unsigned int bytes_per_line, ADDR seg, char *name )
 {
     struct fmt *p = *list, *q = NULL;
 
@@ -438,6 +445,7 @@ static void addlist( struct fmt **list, ADDR addr, int mode, unsigned int bytes_
     q->mode = mode;
     q->n    = p;
     q->bpl  = bytes_per_line;
+    q->seg  = seg;
     if ( name != NULL )
         q->name = dupstr( name );
     else
@@ -468,6 +476,7 @@ static void addlist( struct fmt **list, ADDR addr, int mode, unsigned int bytes_
 static void readlist( const char *listfile, struct params *params )
 {
     static int include_depth = 0;
+    static ADDR cur_segment_base = 0;   /* set by the 'g' command, file order */
     FILE *f;
     char buf[LINE_BUF_LEN + 1], *pbuf, *q;
     ADDR addr;
@@ -589,6 +598,7 @@ static void readlist( const char *listfile, struct params *params )
                                 addr, 
                                 cmd_idx, 
                                 bytes_per_line,
+                                cur_segment_base,
                                 pbuf );
                 }
                 break;
@@ -606,6 +616,14 @@ static void readlist( const char *listfile, struct params *params )
             case '>':   /* fast forward */
 		sscanf( pbuf, "%x", &file_offset );
 		break;
+
+            case 'g':   /* segment base for following code entries */
+                {
+                    unsigned int seg;
+                    sscanf( pbuf, "%x", &seg );
+                    cur_segment_base = (ADDR)seg;
+                }
+                break;
 
             case 'r':   /* Xref range */
                 {
@@ -814,6 +832,7 @@ static void run_disasm( struct params params )
     mode  = clist->mode;
     name  = clist->name;
     bpl   = clist->bpl;
+    dasm_segment_base = clist->seg;
     clist = clist->n;
     
     printf( "%s   Processing \"%s\" (%ld bytes)", COMMENT_DELIM, inputfile, filelength ); newline();
@@ -834,6 +853,7 @@ static void run_disasm( struct params params )
             mode  = clist->mode;
             name  = clist->name;
             bpl   = clist->bpl;
+            dasm_segment_base = clist->seg;
             clist = clist->n;
         }
         
@@ -944,6 +964,7 @@ static void run_disasm( struct params params )
                 newline();
             name  = clist->name;
             bpl   = clist->bpl;
+            dasm_segment_base = clist->seg;
             clist = clist->n;
         }
         else if ( mode == STRINGS )
@@ -983,6 +1004,7 @@ static void run_disasm( struct params params )
                 newline();
             name  = clist->name;
             bpl   = clist->bpl;
+            dasm_segment_base = clist->seg;
             clist = clist->n;
         }
         else if ( mode == WSTRING )
@@ -1043,6 +1065,7 @@ static void run_disasm( struct params params )
                 newline();
             name  = clist->name;
             bpl   = clist->bpl;
+            dasm_segment_base = clist->seg;
             clist = clist->n;
         }
         else if ( mode == WORDS )
@@ -1091,6 +1114,7 @@ static void run_disasm( struct params params )
                 newline();
             name  = clist->name; 
             bpl   = clist->bpl;
+            dasm_segment_base = clist->seg;
             clist = clist->n;
         }
         else if ( mode == SKIP )
@@ -1126,6 +1150,7 @@ static void run_disasm( struct params params )
                 newline();
             name  = clist->name;
             bpl   = clist->bpl;
+            dasm_segment_base = clist->seg;
             clist = clist->n;
         }
         else if ( mode == VECTORS )
@@ -1165,6 +1190,7 @@ static void run_disasm( struct params params )
                 newline();
             name  = clist->name; 
             bpl   = clist->bpl;
+            dasm_segment_base = clist->seg;
             clist = clist->n;
         }
         else if ( mode == CHARS )
@@ -1209,6 +1235,7 @@ static void run_disasm( struct params params )
                 newline();
             name  = clist->name; 
             bpl   = clist->bpl;
+            dasm_segment_base = clist->seg;
             clist = clist->n;
         }
         else if ( mode == END )
@@ -1272,6 +1299,7 @@ static void run_disasm( struct params params )
                 newline();
             name  = clist->name; 
             bpl   = clist->bpl;
+            dasm_segment_base = clist->seg;
             clist = clist->n;
         }
     } /* while() */

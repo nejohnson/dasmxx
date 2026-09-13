@@ -69,6 +69,12 @@ typedef UWORD              OPC;
 extern void error( char *fmt, ... );
 extern void warning( char *fmt, ... );
 extern void *zalloc( size_t n );
+/* Segment base (flat address of offset 0 in the segment currently in
+ * force), set by the 'g' command in the command list file.  Segmented
+ * architectures use it to resolve intra-segment branch targets.
+ */
+extern ADDR dasm_segment_base;
+
 extern UBYTE next( FILE* fp, ADDR *addr );
 extern UWORD nextw( FILE *fp, ADDR *addr );
 extern UBYTE peek( FILE *fp );
