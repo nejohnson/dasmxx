@@ -74,6 +74,10 @@ extern void *zalloc( size_t n );
  * architectures use it to resolve intra-segment branch targets.
  */
 extern ADDR dasm_segment_base;
+/* Optional CPU generation selected by a command-file option.  Zero means
+ * decoder default; decoders that do not need it can ignore it.
+ */
+extern unsigned int dasm_cpu_level;
 
 extern UBYTE next( FILE* fp, ADDR *addr );
 extern UWORD nextw( FILE *fp, ADDR *addr );

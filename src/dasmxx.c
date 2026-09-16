@@ -178,6 +178,7 @@ unsigned int    file_offset = 0;
  * branch targets; decoders for flat architectures ignore it.
  */
 ADDR            dasm_segment_base = 0;
+unsigned int    dasm_cpu_level = 0;
 
 /* List of display modes.  Defines must match entry position. */
 static char datchars[] = "cbsewapvmuz";
@@ -622,6 +623,36 @@ static void readlist( const char *listfile, struct params *params )
                     unsigned int seg;
                     sscanf( pbuf, "%x", &seg );
                     cur_segment_base = (ADDR)seg;
+                }
+                break;
+
+            case 'o':   /* decoder option */
+                {
+                    SKIP_SPACE(pbuf);
+
+                    if ( !strncmp( pbuf, "cpu=", 4 ) )
+                    {
+                        char *cpu = pbuf + 4;
+
+                        if ( !strcmp( cpu, "default" ) || !strcmp( cpu, "max" ) )
+                            dasm_cpu_level = 0;
+                        else if ( !strcmp( cpu, "86" ) || !strcmp( cpu, "8086" ) || !strcmp( cpu, "8088" ) )
+                            dasm_cpu_level = 8086;
+                        else if ( !strcmp( cpu, "186" ) || !strcmp( cpu, "80186" ) || !strcmp( cpu, "80188" ) )
+                            dasm_cpu_level = 80186;
+                        else if ( !strcmp( cpu, "286" ) || !strcmp( cpu, "80286" ) )
+                            dasm_cpu_level = 80286;
+                        else if ( !strcmp( cpu, "386" ) || !strcmp( cpu, "80386" ) )
+                            dasm_cpu_level = 80386;
+                        else if ( !strcmp( cpu, "486" ) || !strcmp( cpu, "80486" ) )
+                            dasm_cpu_level = 80486;
+                        else
+                            error( "%s(%u) :: Unsupported CPU option '%s'", listfile, lineno, cpu );
+                    }
+                    else
+                    {
+                        error( "%s(%u) :: Unsupported decoder option '%s'", listfile, lineno, pbuf );
+                    }
                 }
                 break;
 

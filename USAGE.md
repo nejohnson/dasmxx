@@ -44,6 +44,7 @@ Configuration commands:
 
      tXX         string terminator byte (default = 00)
      gXXXX       segment base for following code entries
+     oName=Value decoder option (for example, ocpu=8086)
      eXXXX       end of disassembly
      q[,N]["title"]  pagination, N lines (default=60), optional title
 

@@ -18,6 +18,7 @@ B9 33 44
 9C      # PUSHF
 9D      # POPF
 
+91      # XCHG AX,CX
 86 03
 26 87 8C 34 12
 
@@ -165,6 +166,16 @@ DF E0           # FNSTSW AX
 DB E3           # FNINIT
 DE D9           # FCOMPP
 
+## 80286 ##############################################################
+
+63 C1           # ARPL CX, AX
+0F 06           # CLTS
+0F 00 00        # SLDT W[BX + SI]
+0F 00 20        # VERR W[BX + SI]
+0F 01 10        # LGDT W[BX + SI]
+0F 01 30        # LMSW W[BX + SI]
+0F 02 C1        # LAR AX, CX
+0F 03 C1        # LSL AX, CX
 
 
 

@@ -480,6 +480,79 @@ OPERAND_FUNC(modrm_shiftimm)
     operand( FORMAT_NUM_8BIT, count );
 }
 
+static void operand_ea16( FILE *f, ADDR *addr, UBYTE arg, const char *size )
+{
+    int mod = (arg >> 6) & 3;
+    int rm  = arg & 7;
+
+    switch( mod )
+    {
+    case 0:
+        EMIT_SEG_PFX;
+        if ( rm == 6 )
+        {
+            UBYTE displo = next( f, addr );
+            UBYTE disphi = next( f, addr );
+            ADDR disp = MK_WORD( displo, disphi );
+            operand( "%s[" FORMAT_NUM_16BIT "]", size, disp );
+        }
+        else
+        {
+            operand( "%s[%s]", size, eareg[rm] );
+        }
+        break;
+
+    case 1:
+    {
+        BYTE disp = (BYTE)next( f, addr );
+        EMIT_SEG_PFX;
+        operand( "%s[%s + " FORMAT_NUM_8BIT "]", size, eareg[rm], disp );
+        break;
+    }
+
+    case 2:
+    {
+        UBYTE displo = next( f, addr );
+        UBYTE disphi = next( f, addr );
+        ADDR disp = MK_WORD( displo, disphi );
+        EMIT_SEG_PFX;
+        operand( "%s[%s + " FORMAT_NUM_16BIT "]", size, eareg[rm], disp );
+        break;
+    }
+
+    case 3:
+        operand( wordreg[rm] );
+        break;
+    }
+}
+
+OPERAND_FUNC(rm16)
+{
+    UBYTE arg = next( f, addr );
+
+    operand_ea16( f, addr, arg, "W" );
+}
+
+OPERAND_FUNC(reg16_rm16)
+{
+    UBYTE arg = next( f, addr );
+    int reg = (arg >> 3) & 7;
+
+    operand( wordreg[reg] );
+    COMMA;
+    operand_ea16( f, addr, arg, "W" );
+}
+
+OPERAND_FUNC(rm16_reg16)
+{
+    UBYTE arg = next( f, addr );
+    int reg = (arg >> 3) & 7;
+
+    operand_ea16( f, addr, arg, "W" );
+    COMMA;
+    operand( wordreg[reg] );
+}
+
 /***********************************************************
  * 8087/80187 floating-point operands.
  ************************************************************/
@@ -617,6 +690,7 @@ TWO_OPERAND(acc, imm16)
 
 TWO_OPERAND(reg, imm8)
 TWO_OPERAND(reg, imm16)
+TWO_OPERAND(AX, reg16)
 
 TWO_OPERAND(imm16, imm8)  /* 80186 ENTER: allocsize, nestlevel */
 
@@ -625,10 +699,35 @@ TWO_OPERAND(imm16, imm8)  /* 80186 ENTER: allocsize, nestlevel */
 /** Note: tables are here as they refer to operand functions defined above.  **/
 /******************************************************************************/
 
+static optab_t x86_0f_optab[] = {
+    MASK2( "SLDT", rm16,        0x00, 0x38, 0x00, X_NONE )
+    MASK2( "STR",  rm16,        0x00, 0x38, 0x08, X_NONE )
+    MASK2( "LLDT", rm16,        0x00, 0x38, 0x10, X_NONE )
+    MASK2( "LTR",  rm16,        0x00, 0x38, 0x18, X_NONE )
+    MASK2( "VERR", rm16,        0x00, 0x38, 0x20, X_NONE )
+    MASK2( "VERW", rm16,        0x00, 0x38, 0x28, X_NONE )
+
+    MASK2( "SGDT", rm16,        0x01, 0x38, 0x00, X_NONE )
+    MASK2( "SIDT", rm16,        0x01, 0x38, 0x08, X_NONE )
+    MASK2( "LGDT", rm16,        0x01, 0x38, 0x10, X_NONE )
+    MASK2( "LIDT", rm16,        0x01, 0x38, 0x18, X_NONE )
+    MASK2( "SMSW", rm16,        0x01, 0x38, 0x20, X_NONE )
+    MASK2( "LMSW", rm16,        0x01, 0x38, 0x30, X_NONE )
+
+    INSN(  "LAR",  reg16_rm16,  0x02, X_NONE )
+    INSN(  "LSL",  reg16_rm16,  0x03, X_NONE )
+    INSN(  "CLTS", none,        0x06, X_NONE )
+
+    END
+};
+
 optab_t base_optab[] = {
 
 /* This has to go first because it is actually a pseudonym for "XCHG AX,AX" */
     INSN( "NOP",    none,  0x90, X_NONE )
+
+/* In strict 8086 mode 0F falls through to the legacy POP CS match below. */
+    TABLE_CPU( x86_0f_optab, 0x0F, 80286 )
     
 /*----------------------------------------------------------------------------
   DATA TRANSFER
@@ -663,7 +762,7 @@ optab_t base_optab[] = {
     MASK2( "POP",   modrm,       0x8F, 0x38, 0x00, X_NONE )
     INSN( "POPA",   none,        0x61, X_NONE ) /* 80186 */
 
-    MASK( "XCHG",   reg16,       0xF8, 0x90, X_NONE )
+    MASK( "XCHG",   AX_reg16,    0xF8, 0x90, X_NONE )
     MASK( "XCHG",   modrm,       0xFE, 0x86, X_NONE )
 
     INSN( "XLAT",   none,        0xD7, X_NONE )
@@ -671,6 +770,7 @@ optab_t base_optab[] = {
     INSN( "LDS",    modrm,       0xC5, X_NONE )
     INSN( "LES",    modrm,       0xC4, X_NONE )
     INSN( "BOUND",  modrm,       0x62, X_NONE ) /* 80186 */
+    INSN( "ARPL",   rm16_reg16,  0x63, X_NONE ) /* 80286 */
     
     INSN( "LAHF",   none, 0x9F, X_NONE )
     INSN( "SAHF",   none, 0x9E, X_NONE )

@@ -1,0 +1,1 @@
+0F # POP CS on 8086; 286+ uses 0F as an extended opcode escape

@@ -149,7 +149,8 @@ static int walk_table( FILE * f, ADDR * addr, optab_t * optab, OPC opc )
     while ( optab->opcode != NULL )
     {
         /* printf("type:%d  ", optab->type); */
-        if ( optab->type == OPTAB_TABLE && optab->opc == opc )
+        if ( optab->type == OPTAB_TABLE && optab->opc == opc
+             && ( optab->min_cpu == 0 || dasm_cpu_level == 0 || dasm_cpu_level >= optab->min_cpu ) )
         {
             opc = next_insn( f, addr );
             return walk_table( f, addr, optab->u.table, opc );
@@ -342,4 +343,3 @@ ADDR dasm_insn( FILE *f, char *outbuf, ADDR addr )
 /****************************************************************************/
 /****************************************************************************/
 /****************************************************************************/
-

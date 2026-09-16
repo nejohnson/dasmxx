@@ -1,12 +1,14 @@
 
 ftest.bin
+ocpu=80486
 c0000  Code
-s00AE  String
-w00B8  Word
-a00BC  Alpha
-m00C0  Bitmap
-c00C8  Floating point
-e00FC
+s00AF  String
+w00B9  Word
+a00BD  Alpha
+m00C1  Bitmap
+c00C9  Floating point
+c00FD  286 protected-mode
+e0113
 
 k0000 This is a comment
 

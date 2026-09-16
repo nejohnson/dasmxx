@@ -40,6 +40,7 @@
 **/
 typedef struct optab_s {
     OPC opc;
+    unsigned int min_cpu;
     const char * opcode;
     void (*operands)( FILE *, ADDR *, OPC, XREF_TYPE); /* operand function */
     XREF_TYPE xtype;
@@ -88,6 +89,14 @@ typedef struct optab_s {
       .opc     = M_opc,              \
       .opcode  = "TABLE",            \
       .u.table = M_tablename         \
+    },
+
+#define TABLE_CPU(M_tablename, M_opc, M_min_cpu) \
+    { .type    = OPTAB_TABLE,                    \
+      .opc     = M_opc,                          \
+      .min_cpu = M_min_cpu,                      \
+      .opcode  = "TABLE",                        \
+      .u.table = M_tablename                     \
     },
 
 /**
@@ -239,4 +248,3 @@ extern OPC  stack_pop( void );
 extern ADDR g_insn_addr;
 
 #endif /* _OPTAB_H_ */
-
