@@ -3,4 +3,4 @@ ftest.bin
 ocpu=68000
 c0000 Start
 
-e0044
+e0089

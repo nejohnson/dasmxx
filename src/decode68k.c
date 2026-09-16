@@ -72,6 +72,11 @@ enum {
     OPSIZE_WORD = 2,
     OPSIZE_LONG = 4
 };
+
+static LWORD abs_lword( LWORD value )
+{
+    return value < 0 ? -value : value;
+}
                                 
 /*****************************************************************************
  *        Private Functions
@@ -138,6 +143,23 @@ OPERAND_FUNC(dreg9)
     operand( FORMAT_DREG, reg );
 }
 
+OPERAND_FUNC(dreg0_dreg9)
+{
+    operand( FORMAT_DREG ", " FORMAT_DREG, opc & 0x07, (opc >> 9) & 0x07 );
+}
+
+OPERAND_FUNC(predec0_predec9)
+{
+    operand( "-(" FORMAT_AREG "), -(" FORMAT_AREG ")",
+             opc & 0x07, (opc >> 9) & 0x07 );
+}
+
+OPERAND_FUNC(postinc0_postinc9)
+{
+    operand( "(" FORMAT_AREG ")+, (" FORMAT_AREG ")+",
+             opc & 0x07, (opc >> 9) & 0x07 );
+}
+
 /***********************************************************
  * Process 3-bit vector operands.
  *    vector number comes from bits 2:0 in opc
@@ -201,7 +223,7 @@ OPERAND_FUNC(simm32)
     LWORD imm = (LWORD)nextw( f, addr );
     imm = ( imm << 16 ) | (UWORD)nextw( f, addr );
     
-    operand( "%s#" FORMAT_IMM32, imm < 0 ? "-" : "", abs(imm) );
+    operand( "%s#" FORMAT_IMM32, imm < 0 ? "-" : "", abs_lword( imm ) );
 }
 
 /************************************************************
@@ -442,6 +464,134 @@ static int ea_field_is_control( int ea )
         || (mode == EAMODE_SUB_MODE && reg <= 3);
 }
 
+static int ea_field_is_register( int ea )
+{
+    int mode = (ea >> 3) & 0x7;
+
+    return mode == EAMODE_DATA_DIRECT || mode == EAMODE_ADDR_DIRECT;
+}
+
+static int ea_field_is_data( int ea )
+{
+    int mode = (ea >> 3) & 0x7;
+    int reg  = ea & 0x7;
+
+    return mode == EAMODE_DATA_DIRECT
+        || mode == EAMODE_ADDR_INDIR
+        || mode == EAMODE_ADDR_POST_INC
+        || mode == EAMODE_ADDR_PRE_DEC
+        || mode == EAMODE_ADDR_IND_DISP
+        || mode == EAMODE_ADDR_IND_IDX
+        || (mode == EAMODE_SUB_MODE && reg <= 4);
+}
+
+static int ea_field_is_memory_alterable( int ea )
+{
+    int mode = (ea >> 3) & 0x7;
+    int reg  = ea & 0x7;
+
+    return mode == EAMODE_ADDR_INDIR
+        || mode == EAMODE_ADDR_POST_INC
+        || mode == EAMODE_ADDR_PRE_DEC
+        || mode == EAMODE_ADDR_IND_DISP
+        || mode == EAMODE_ADDR_IND_IDX
+        || (mode == EAMODE_SUB_MODE && reg <= 1);
+}
+
+static int ea_field_is_data_alterable( int ea )
+{
+    int mode = (ea >> 3) & 0x7;
+    int reg  = ea & 0x7;
+
+    return mode == EAMODE_DATA_DIRECT
+        || mode == EAMODE_ADDR_INDIR
+        || mode == EAMODE_ADDR_POST_INC
+        || mode == EAMODE_ADDR_PRE_DEC
+        || mode == EAMODE_ADDR_IND_DISP
+        || mode == EAMODE_ADDR_IND_IDX
+        || (mode == EAMODE_SUB_MODE && reg <= 1);
+}
+
+static int ea_field_is_alterable( int ea )
+{
+    int mode = (ea >> 3) & 0x7;
+    int reg  = ea & 0x7;
+
+    return mode == EAMODE_DATA_DIRECT
+        || mode == EAMODE_ADDR_DIRECT
+        || mode == EAMODE_ADDR_INDIR
+        || mode == EAMODE_ADDR_POST_INC
+        || mode == EAMODE_ADDR_PRE_DEC
+        || mode == EAMODE_ADDR_IND_DISP
+        || mode == EAMODE_ADDR_IND_IDX
+        || (mode == EAMODE_SUB_MODE && reg <= 1);
+}
+
+static int size_from_bits_76( OPC opc )
+{
+    switch ( (opc >> 6) & 0x03 )
+    {
+    case 0:
+        return OPSIZE_BYTE;
+    case 1:
+        return OPSIZE_WORD;
+    case 2:
+        return OPSIZE_LONG;
+    default:
+        return 0;
+    }
+}
+
+static int move_size( OPC opc )
+{
+    switch ( (opc >> 12) & 0x03 )
+    {
+    case 1:
+        return OPSIZE_BYTE;
+    case 2:
+        return OPSIZE_LONG;
+    case 3:
+        return OPSIZE_WORD;
+    default:
+        return 0;
+    }
+}
+
+static const char *size_suffix( int size )
+{
+    switch ( size )
+    {
+    case OPSIZE_BYTE:
+        return ".B";
+    case OPSIZE_WORD:
+        return ".W";
+    case OPSIZE_LONG:
+        return ".L";
+    default:
+        return "";
+    }
+}
+
+static const char *condition_name( int cc )
+{
+    static const char *names[] = {
+        "T", "F", "HI", "LS", "CC", "CS", "NE", "EQ",
+        "VC", "VS", "PL", "MI", "GE", "LT", "GT", "LE"
+    };
+
+    return names[cc & 0x0F];
+}
+
+static int move_dest_ea( OPC opc )
+{
+    return ((opc >> 3) & 0x38) | ((opc >> 9) & 0x07);
+}
+
+static void emit_bad_operands( void )
+{
+    operand( "???" );
+}
+
 OPERAND_FUNC(ea)
 {
     emit_ea_field( f, addr, opc & 0x3F, OPSIZE_WORD, xtype );
@@ -456,6 +606,510 @@ OPERAND_FUNC(ea_control)
     else
         operand( "???" );
 }
+
+OPERAND_FUNC(move)
+{
+    int size = move_size( opc );
+    int src = opc & 0x3F;
+    int dst = move_dest_ea( opc );
+
+    if ( size == 0 || !ea_field_is_data( src ) || !ea_field_is_data_alterable( dst ) )
+    {
+        emit_bad_operands();
+        return;
+    }
+
+    emit_ea_field( f, addr, src, size, xtype );
+    operand( ", " );
+    emit_ea_field( f, addr, dst, size, X_NONE );
+}
+
+OPERAND_FUNC(movea)
+{
+    int size = move_size( opc );
+    int src = opc & 0x3F;
+    int dst = (opc >> 9) & 0x07;
+
+    if ( size == OPSIZE_BYTE || !ea_field_is_data( src ) )
+    {
+        emit_bad_operands();
+        return;
+    }
+
+    emit_ea_field( f, addr, src, size, xtype );
+    operand( ", " FORMAT_AREG, dst );
+}
+
+OPERAND_FUNC(ea_dreg9_s76)
+{
+    int size = size_from_bits_76( opc );
+    int ea = opc & 0x3F;
+
+    if ( size == 0 || !ea_field_is_data( ea ) )
+    {
+        emit_bad_operands();
+        return;
+    }
+
+    emit_ea_field( f, addr, ea, size, xtype );
+    operand( ", " FORMAT_DREG, (opc >> 9) & 0x07 );
+}
+
+OPERAND_FUNC(dreg9_ea_s76)
+{
+    int size = size_from_bits_76( opc );
+    int ea = opc & 0x3F;
+
+    if ( size == 0 || !ea_field_is_data_alterable( ea ) )
+    {
+        emit_bad_operands();
+        return;
+    }
+
+    operand( FORMAT_DREG ", ", (opc >> 9) & 0x07 );
+    emit_ea_field( f, addr, ea, size, xtype );
+}
+
+OPERAND_FUNC(ea_areg9_s76)
+{
+    int size = size_from_bits_76( opc );
+    int ea = opc & 0x3F;
+
+    if ( size == OPSIZE_BYTE || !ea_field_is_data( ea ) )
+    {
+        emit_bad_operands();
+        return;
+    }
+
+    emit_ea_field( f, addr, ea, size, xtype );
+    operand( ", " FORMAT_AREG, (opc >> 9) & 0x07 );
+}
+
+OPERAND_FUNC(imm_ea_s76)
+{
+    int size = size_from_bits_76( opc );
+    int ea = opc & 0x3F;
+
+    if ( size == 0 || !ea_field_is_data_alterable( ea ) )
+    {
+        emit_bad_operands();
+        return;
+    }
+
+    emit_imm_ea( f, addr, size );
+    operand( ", " );
+    emit_ea_field( f, addr, ea, size, xtype );
+}
+
+OPERAND_FUNC(bitnum_ea)
+{
+    int ea = opc & 0x3F;
+    UWORD bitnum = nextw( f, addr );
+
+    if ( !ea_field_is_data( ea ) || !ea_field_is_data_alterable( ea ) )
+    {
+        emit_bad_operands();
+        return;
+    }
+
+    operand( "#" FORMAT_IMM8 ", ", bitnum & 0xFF );
+    emit_ea_field( f, addr, ea, ea_field_is_register( ea ) ? OPSIZE_LONG : OPSIZE_BYTE, xtype );
+}
+
+OPERAND_FUNC(dreg9_ea_bit)
+{
+    int ea = opc & 0x3F;
+
+    if ( !ea_field_is_data( ea ) )
+    {
+        emit_bad_operands();
+        return;
+    }
+
+    operand( FORMAT_DREG ", ", (opc >> 9) & 0x07 );
+    emit_ea_field( f, addr, ea, ea_field_is_register( ea ) ? OPSIZE_LONG : OPSIZE_BYTE, xtype );
+}
+
+OPERAND_FUNC(quick_ea_s76)
+{
+    int size = size_from_bits_76( opc );
+    int ea = opc & 0x3F;
+    int data = (opc >> 9) & 0x07;
+
+    if ( data == 0 )
+        data = 8;
+
+    if ( size == 0 || !ea_field_is_alterable( ea ) )
+    {
+        emit_bad_operands();
+        return;
+    }
+
+    operand( "#" FORMAT_IMM8 ", ", data );
+    emit_ea_field( f, addr, ea, size, xtype );
+}
+
+OPERAND_FUNC(scc_ea)
+{
+    int ea = opc & 0x3F;
+
+    if ( !ea_field_is_data_alterable( ea ) )
+    {
+        emit_bad_operands();
+        return;
+    }
+
+    emit_ea_field( f, addr, ea, OPSIZE_BYTE, xtype );
+}
+
+OPERAND_FUNC(dbcc)
+{
+    WORD disp = (WORD)nextw( f, addr );
+    ADDR dest = *addr + disp;
+
+    operand( FORMAT_DREG ", ", opc & 0x07 );
+    operand( xref_genwordaddr( NULL, FORMAT_IMM32, dest ) );
+    xref_addxref( xtype, g_insn_addr, dest );
+}
+
+OPERAND_FUNC(ea_s76)
+{
+    int size = size_from_bits_76( opc );
+    int ea = opc & 0x3F;
+
+    if ( size == 0 || !ea_field_is_data_alterable( ea ) )
+    {
+        emit_bad_operands();
+        return;
+    }
+
+    emit_ea_field( f, addr, ea, size, xtype );
+}
+
+OPERAND_FUNC(ea_word_dreg9)
+{
+    int ea = opc & 0x3F;
+
+    if ( !ea_field_is_data( ea ) )
+    {
+        emit_bad_operands();
+        return;
+    }
+
+    emit_ea_field( f, addr, ea, OPSIZE_WORD, xtype );
+    operand( ", " FORMAT_DREG, (opc >> 9) & 0x07 );
+}
+
+OPERAND_FUNC(ea_long_areg9)
+{
+    int ea = opc & 0x3F;
+
+    if ( !ea_field_is_control( ea ) )
+    {
+        emit_bad_operands();
+        return;
+    }
+
+    emit_ea_field( f, addr, ea, OPSIZE_LONG, xtype );
+    operand( ", " FORMAT_AREG, (opc >> 9) & 0x07 );
+}
+
+OPERAND_FUNC(usp_areg0)
+{
+    operand( "USP, " FORMAT_AREG, opc & 0x07 );
+}
+
+OPERAND_FUNC(areg0_usp)
+{
+    operand( FORMAT_AREG ", USP", opc & 0x07 );
+}
+
+OPERAND_FUNC(disp_areg0_dreg9)
+{
+    WORD disp = (WORD)nextw( f, addr );
+
+    operand( "(" );
+    emit_displacement( disp, FORMAT_IMM16 );
+    operand( "," FORMAT_AREG "), " FORMAT_DREG, opc & 0x07, (opc >> 9) & 0x07 );
+}
+
+OPERAND_FUNC(dreg9_disp_areg0)
+{
+    WORD disp = (WORD)nextw( f, addr );
+
+    operand( FORMAT_DREG ", (", (opc >> 9) & 0x07 );
+    emit_displacement( disp, FORMAT_IMM16 );
+    operand( "," FORMAT_AREG ")", opc & 0x07 );
+}
+
+static void emit_movem_reglist( UWORD mask, int predecrement )
+{
+    int bit;
+    int need_comma = 0;
+
+    for ( bit = 0; bit < 16; bit++ )
+    {
+        int regnum;
+        char regtype;
+
+        if ( predecrement )
+        {
+            if ( bit < 8 )
+            {
+                regtype = 'A';
+                regnum = 7 - bit;
+            }
+            else
+            {
+                regtype = 'D';
+                regnum = 15 - bit;
+            }
+        }
+        else
+        {
+            if ( bit < 8 )
+            {
+                regtype = 'D';
+                regnum = bit;
+            }
+            else
+            {
+                regtype = 'A';
+                regnum = bit - 8;
+            }
+        }
+
+        if ( mask & (1 << bit) )
+        {
+            operand( "%s%c%d", need_comma ? "/" : "", regtype, regnum );
+            need_comma = 1;
+        }
+    }
+}
+
+OPERAND_FUNC(movem_regs_ea)
+{
+    UWORD regmask = nextw( f, addr );
+    int ea = opc & 0x3F;
+    int size = (opc & 0x0040) ? OPSIZE_LONG : OPSIZE_WORD;
+    int predecrement = ((ea >> 3) & 0x07) == EAMODE_ADDR_PRE_DEC;
+
+    if ( !ea_field_is_control( ea ) && !ea_field_is_memory_alterable( ea ) )
+    {
+        emit_bad_operands();
+        return;
+    }
+
+    emit_movem_reglist( regmask, predecrement );
+    operand( ", " );
+    emit_ea_field( f, addr, ea, size, xtype );
+}
+
+OPERAND_FUNC(movem_ea_regs)
+{
+    UWORD regmask = nextw( f, addr );
+    int ea = opc & 0x3F;
+    int size = (opc & 0x0040) ? OPSIZE_LONG : OPSIZE_WORD;
+
+    if ( !ea_field_is_control( ea ) && !ea_field_is_memory_alterable( ea ) )
+    {
+        emit_bad_operands();
+        return;
+    }
+
+    emit_ea_field( f, addr, ea, size, xtype );
+    operand( ", " );
+    emit_movem_reglist( regmask, 0 );
+}
+
+OPERAND_FUNC(shift_reg)
+{
+    int count = (opc >> 9) & 0x07;
+    int reg = opc & 0x07;
+
+    if ( opc & 0x20 )
+        operand( FORMAT_DREG ", " FORMAT_DREG, count, reg );
+    else
+    {
+        if ( count == 0 )
+            count = 8;
+        operand( "#" FORMAT_IMM8 ", " FORMAT_DREG, count, reg );
+    }
+}
+
+OPERAND_FUNC(shift_mem)
+{
+    int ea = opc & 0x3F;
+
+    if ( !ea_field_is_memory_alterable( ea ) )
+    {
+        emit_bad_operands();
+        return;
+    }
+
+    emit_ea_field( f, addr, ea, OPSIZE_WORD, xtype );
+}
+
+OPERAND_FUNC(imm8_ccr)
+{
+    operand( "#" FORMAT_IMM8 ", CCR", (UWORD)nextw( f, addr ) & 0xFF );
+}
+
+OPERAND_FUNC(imm16_sr)
+{
+    operand( "#" FORMAT_IMM16 ", SR", (UWORD)nextw( f, addr ) );
+}
+
+OPERAND_FUNC(sr_ea)
+{
+    int ea = opc & 0x3F;
+
+    if ( !ea_field_is_data_alterable( ea ) )
+    {
+        emit_bad_operands();
+        return;
+    }
+
+    operand( "SR, " );
+    emit_ea_field( f, addr, ea, OPSIZE_WORD, xtype );
+}
+
+OPERAND_FUNC(ea_ccr)
+{
+    int ea = opc & 0x3F;
+
+    if ( !ea_field_is_data( ea ) )
+    {
+        emit_bad_operands();
+        return;
+    }
+
+    emit_ea_field( f, addr, ea, OPSIZE_WORD, xtype );
+    operand( ", CCR" );
+}
+
+OPERAND_FUNC(ea_sr)
+{
+    int ea = opc & 0x3F;
+
+    if ( !ea_field_is_data( ea ) )
+    {
+        emit_bad_operands();
+        return;
+    }
+
+    emit_ea_field( f, addr, ea, OPSIZE_WORD, xtype );
+    operand( ", SR" );
+}
+
+/******************************************************************************/
+/**                            Opcode Functions                              **/
+/******************************************************************************/
+
+static const char *opcode_move( OPC opc )
+{
+    static char text[16];
+
+    sprintf( text, "MOVE%s", size_suffix( move_size( opc ) ) );
+    return text;
+}
+
+static const char *opcode_movea( OPC opc )
+{
+    static char text[16];
+
+    sprintf( text, "MOVEA%s", size_suffix( move_size( opc ) ) );
+    return text;
+}
+
+static const char *opcode_size76( const char *base, OPC opc )
+{
+    static char text[16];
+
+    sprintf( text, "%s%s", base, size_suffix( size_from_bits_76( opc ) ) );
+    return text;
+}
+
+static const char *opcode_ori( OPC opc )  { return opcode_size76( "ORI",  opc ); }
+static const char *opcode_andi( OPC opc ) { return opcode_size76( "ANDI", opc ); }
+static const char *opcode_subi( OPC opc ) { return opcode_size76( "SUBI", opc ); }
+static const char *opcode_addi( OPC opc ) { return opcode_size76( "ADDI", opc ); }
+static const char *opcode_eori( OPC opc ) { return opcode_size76( "EORI", opc ); }
+static const char *opcode_cmpi( OPC opc ) { return opcode_size76( "CMPI", opc ); }
+static const char *opcode_negx( OPC opc ) { return opcode_size76( "NEGX", opc ); }
+static const char *opcode_clr( OPC opc )  { return opcode_size76( "CLR",  opc ); }
+static const char *opcode_neg( OPC opc )  { return opcode_size76( "NEG",  opc ); }
+static const char *opcode_not( OPC opc )  { return opcode_size76( "NOT",  opc ); }
+static const char *opcode_tst( OPC opc )  { return opcode_size76( "TST",  opc ); }
+static const char *opcode_addq( OPC opc ) { return opcode_size76( "ADDQ", opc ); }
+static const char *opcode_subq( OPC opc ) { return opcode_size76( "SUBQ", opc ); }
+static const char *opcode_addx( OPC opc ) { return opcode_size76( "ADDX", opc ); }
+static const char *opcode_subx( OPC opc ) { return opcode_size76( "SUBX", opc ); }
+
+static const char *opcode_to_dreg9( const char *base, OPC opc )
+{
+    return opcode_size76( base, opc );
+}
+
+static const char *opcode_or_ea_dreg9( OPC opc )  { return opcode_to_dreg9( "OR",  opc ); }
+static const char *opcode_or_dreg9_ea( OPC opc )  { return opcode_to_dreg9( "OR",  opc ); }
+static const char *opcode_sub_ea_dreg9( OPC opc ) { return opcode_to_dreg9( "SUB", opc ); }
+static const char *opcode_sub_dreg9_ea( OPC opc ) { return opcode_to_dreg9( "SUB", opc ); }
+static const char *opcode_cmp( OPC opc )          { return opcode_to_dreg9( "CMP", opc ); }
+static const char *opcode_eor( OPC opc )          { return opcode_to_dreg9( "EOR", opc ); }
+static const char *opcode_and_ea_dreg9( OPC opc ) { return opcode_to_dreg9( "AND", opc ); }
+static const char *opcode_and_dreg9_ea( OPC opc ) { return opcode_to_dreg9( "AND", opc ); }
+static const char *opcode_add_ea_dreg9( OPC opc ) { return opcode_to_dreg9( "ADD", opc ); }
+static const char *opcode_add_dreg9_ea( OPC opc ) { return opcode_to_dreg9( "ADD", opc ); }
+
+static const char *opcode_scc( OPC opc )
+{
+    static char text[16];
+
+    sprintf( text, "S%s", condition_name( (opc >> 8) & 0x0F ) );
+    return text;
+}
+
+static const char *opcode_dbcc( OPC opc )
+{
+    static char text[16];
+
+    sprintf( text, "DB%s", condition_name( (opc >> 8) & 0x0F ) );
+    return text;
+}
+
+static const char *opcode_shift_reg( OPC opc )
+{
+    static char text[16];
+    static const char *names[] = { "AS", "LS", "ROX", "RO" };
+    int kind = (opc >> 3) & 0x03;
+    int left = opc & 0x0100;
+
+    sprintf( text, "%s%c%s", names[kind], left ? 'L' : 'R',
+             size_suffix( size_from_bits_76( opc ) ) );
+    return text;
+}
+
+static const char *opcode_shift_mem( OPC opc )
+{
+    static char text[16];
+    static const char *names[] = { "AS", "LS", "ROX", "RO" };
+    int kind = (opc >> 9) & 0x03;
+    int left = opc & 0x0100;
+
+    sprintf( text, "%s%c.W", names[kind], left ? 'L' : 'R' );
+    return text;
+}
+
+#define MASK_DYN(M_opcode_fn, M_ops, M_mask, M_val, M_xt)  \
+    { .type     = OPTAB_MASK,                              \
+      .opcode   = "DYNAMIC",                               \
+      .opcode_fn = opcode_ ## M_opcode_fn,                  \
+      .operands = operand_ ## M_ops,                        \
+      .xtype    = M_xt,                                     \
+      .u.mask.mask = M_mask,                                \
+      .u.mask.val  = M_val                                  \
+    },
 
 
 
@@ -690,26 +1344,67 @@ optab_t base_optab[] = {
   0000 - BIT, MOVEP, Imm
   ----------------------------------------------------------------------------*/
 
+    INSN ( "ORI",       imm8_ccr,       0x003C,         X_IMM )
+    INSN ( "ORI",       imm16_sr,       0x007C,         X_IMM )
+    INSN ( "ANDI",      imm8_ccr,       0x023C,         X_IMM )
+    INSN ( "ANDI",      imm16_sr,       0x027C,         X_IMM )
+    INSN ( "EORI",      imm8_ccr,       0x0A3C,         X_IMM )
+    INSN ( "EORI",      imm16_sr,       0x0A7C,         X_IMM )
 
+    MASK ( "BTST",      bitnum_ea,      0xFFC0, 0x0800, X_IMM )
+    MASK ( "BCHG",      bitnum_ea,      0xFFC0, 0x0840, X_IMM )
+    MASK ( "BCLR",      bitnum_ea,      0xFFC0, 0x0880, X_IMM )
+    MASK ( "BSET",      bitnum_ea,      0xFFC0, 0x08C0, X_IMM )
+
+    MASK ( "MOVEP.W",   disp_areg0_dreg9, 0xF1F8, 0x0108, X_PTR )
+    MASK ( "MOVEP.L",   disp_areg0_dreg9, 0xF1F8, 0x0148, X_PTR )
+    MASK ( "MOVEP.W",   dreg9_disp_areg0, 0xF1F8, 0x0188, X_PTR )
+    MASK ( "MOVEP.L",   dreg9_disp_areg0, 0xF1F8, 0x01C8, X_PTR )
+
+    MASK ( "BTST",      dreg9_ea_bit,   0xF1C0, 0x0100, X_REG )
+    MASK ( "BCHG",      dreg9_ea_bit,   0xF1C0, 0x0140, X_REG )
+    MASK ( "BCLR",      dreg9_ea_bit,   0xF1C0, 0x0180, X_REG )
+    MASK ( "BSET",      dreg9_ea_bit,   0xF1C0, 0x01C0, X_REG )
+
+    MASK_DYN ( ori,     imm_ea_s76,     0xFFC0, 0x0000, X_IMM )
+    MASK_DYN ( ori,     imm_ea_s76,     0xFFC0, 0x0040, X_IMM )
+    MASK_DYN ( ori,     imm_ea_s76,     0xFFC0, 0x0080, X_IMM )
+    MASK_DYN ( andi,    imm_ea_s76,     0xFFC0, 0x0200, X_IMM )
+    MASK_DYN ( andi,    imm_ea_s76,     0xFFC0, 0x0240, X_IMM )
+    MASK_DYN ( andi,    imm_ea_s76,     0xFFC0, 0x0280, X_IMM )
+    MASK_DYN ( subi,    imm_ea_s76,     0xFFC0, 0x0400, X_IMM )
+    MASK_DYN ( subi,    imm_ea_s76,     0xFFC0, 0x0440, X_IMM )
+    MASK_DYN ( subi,    imm_ea_s76,     0xFFC0, 0x0480, X_IMM )
+    MASK_DYN ( addi,    imm_ea_s76,     0xFFC0, 0x0600, X_IMM )
+    MASK_DYN ( addi,    imm_ea_s76,     0xFFC0, 0x0640, X_IMM )
+    MASK_DYN ( addi,    imm_ea_s76,     0xFFC0, 0x0680, X_IMM )
+    MASK_DYN ( eori,    imm_ea_s76,     0xFFC0, 0x0A00, X_IMM )
+    MASK_DYN ( eori,    imm_ea_s76,     0xFFC0, 0x0A40, X_IMM )
+    MASK_DYN ( eori,    imm_ea_s76,     0xFFC0, 0x0A80, X_IMM )
+    MASK_DYN ( cmpi,    imm_ea_s76,     0xFFC0, 0x0C00, X_IMM )
+    MASK_DYN ( cmpi,    imm_ea_s76,     0xFFC0, 0x0C40, X_IMM )
+    MASK_DYN ( cmpi,    imm_ea_s76,     0xFFC0, 0x0C80, X_IMM )
 
 
 /*----------------------------------------------------------------------------
   0001 - MOVE byte
   ----------------------------------------------------------------------------*/
 
-    
+    MASK_DYN ( move,    move,           0xF000, 0x1000, X_PTR )
 
 /*----------------------------------------------------------------------------
   0010 - MOVE long (32 bit)
   ----------------------------------------------------------------------------*/
 
-
+    MASK_DYN ( movea,   movea,          0xF1C0, 0x2040, X_PTR )
+    MASK_DYN ( move,    move,           0xF000, 0x2000, X_PTR )
 
 /*----------------------------------------------------------------------------
   0011 - MOVE word (16 bit)
   ----------------------------------------------------------------------------*/
 
-
+    MASK_DYN ( movea,   movea,          0xF1C0, 0x3040, X_PTR )
+    MASK_DYN ( move,    move,           0xF000, 0x3000, X_PTR )
 
 
 
@@ -718,7 +1413,31 @@ optab_t base_optab[] = {
   0100 - MISC
   ----------------------------------------------------------------------------*/
 
+    INSN ( "ILLEGAL",   none,           0x4AFC,         X_NONE )
 
+    MASK ( "MOVE",      sr_ea,          0xFFC0, 0x40C0, X_REG )
+    MASK ( "MOVE",      ea_ccr,         0xFFC0, 0x44C0, X_REG )
+    MASK ( "MOVE",      ea_sr,          0xFFC0, 0x46C0, X_REG )
+
+    MASK_DYN ( negx,    ea_s76,         0xFFC0, 0x4000, X_NONE )
+    MASK_DYN ( negx,    ea_s76,         0xFFC0, 0x4040, X_NONE )
+    MASK_DYN ( negx,    ea_s76,         0xFFC0, 0x4080, X_NONE )
+    MASK_DYN ( clr,     ea_s76,         0xFFC0, 0x4200, X_NONE )
+    MASK_DYN ( clr,     ea_s76,         0xFFC0, 0x4240, X_NONE )
+    MASK_DYN ( clr,     ea_s76,         0xFFC0, 0x4280, X_NONE )
+    MASK_DYN ( neg,     ea_s76,         0xFFC0, 0x4400, X_NONE )
+    MASK_DYN ( neg,     ea_s76,         0xFFC0, 0x4440, X_NONE )
+    MASK_DYN ( neg,     ea_s76,         0xFFC0, 0x4480, X_NONE )
+    MASK_DYN ( not,     ea_s76,         0xFFC0, 0x4600, X_NONE )
+    MASK_DYN ( not,     ea_s76,         0xFFC0, 0x4640, X_NONE )
+    MASK_DYN ( not,     ea_s76,         0xFFC0, 0x4680, X_NONE )
+    MASK_DYN ( tst,     ea_s76,         0xFFC0, 0x4A00, X_NONE )
+    MASK_DYN ( tst,     ea_s76,         0xFFC0, 0x4A40, X_NONE )
+    MASK_DYN ( tst,     ea_s76,         0xFFC0, 0x4A80, X_NONE )
+
+    MASK ( "NBCD",      ea,             0xFFC0, 0x4800, X_NONE )
+    MASK ( "TAS",       ea,             0xFFC0, 0x4AC0, X_NONE )
+    MASK ( "CHK.W",     ea_word_dreg9,  0xF1C0, 0x4180, X_NONE )
 
 
 
@@ -728,7 +1447,14 @@ optab_t base_optab[] = {
   0101 - ADDQ, SUBQ, Scc, DBcc, TRAPc
   ----------------------------------------------------------------------------*/
 
-
+    MASK_DYN ( dbcc,    dbcc,           0xF0F8, 0x50C8, X_JMP )
+    MASK_DYN ( scc,     scc_ea,         0xF0C0, 0x50C0, X_NONE )
+    MASK_DYN ( addq,    quick_ea_s76,   0xF1C0, 0x5000, X_IMM )
+    MASK_DYN ( addq,    quick_ea_s76,   0xF1C0, 0x5040, X_IMM )
+    MASK_DYN ( addq,    quick_ea_s76,   0xF1C0, 0x5080, X_IMM )
+    MASK_DYN ( subq,    quick_ea_s76,   0xF1C0, 0x5100, X_IMM )
+    MASK_DYN ( subq,    quick_ea_s76,   0xF1C0, 0x5140, X_IMM )
+    MASK_DYN ( subq,    quick_ea_s76,   0xF1C0, 0x5180, X_IMM )
 
 
 
@@ -739,6 +1465,7 @@ optab_t base_optab[] = {
 
 
     MASK ( "BRA",       relX,   0xFF00, 0x6000, X_JMP )
+    MASK ( "BSR",       relX,   0xFF00, 0x6100, X_CALL )
     MASK ( "BHI",       relX,   0xFF00, 0x6200, X_JMP )
     MASK ( "BLS",       relX,   0xFF00, 0x6300, X_JMP )
     MASK ( "BCC",       relX,   0xFF00, 0x6400, X_JMP )
@@ -766,7 +1493,17 @@ optab_t base_optab[] = {
   1000 - OR, DIV, SBCD
   ----------------------------------------------------------------------------*/
 
+    MASK ( "DIVU.W",    ea_word_dreg9,  0xF1C0, 0x80C0, X_NONE )
+    MASK ( "DIVS.W",    ea_word_dreg9,  0xF1C0, 0x81C0, X_NONE )
+    MASK ( "SBCD",      dreg0_dreg9,    0xF1F8, 0x8100, X_REG )
+    MASK ( "SBCD",      predec0_predec9, 0xF1F8, 0x8108, X_REG )
 
+    MASK_DYN ( or_ea_dreg9, ea_dreg9_s76, 0xF1C0, 0x8000, X_NONE )
+    MASK_DYN ( or_ea_dreg9, ea_dreg9_s76, 0xF1C0, 0x8040, X_NONE )
+    MASK_DYN ( or_ea_dreg9, ea_dreg9_s76, 0xF1C0, 0x8080, X_NONE )
+    MASK_DYN ( or_dreg9_ea, dreg9_ea_s76, 0xF1C0, 0x8100, X_NONE )
+    MASK_DYN ( or_dreg9_ea, dreg9_ea_s76, 0xF1C0, 0x8140, X_NONE )
+    MASK_DYN ( or_dreg9_ea, dreg9_ea_s76, 0xF1C0, 0x8180, X_NONE )
 
 
 
@@ -775,7 +1512,21 @@ optab_t base_optab[] = {
   1001 - SUB, SUBX
   ----------------------------------------------------------------------------*/
 
+    MASK ( "SUBA.W",    ea_areg9_s76,   0xF1C0, 0x90C0, X_NONE )
+    MASK ( "SUBA.L",    ea_areg9_s76,   0xF1C0, 0x91C0, X_NONE )
+    MASK_DYN ( subx,    dreg0_dreg9,    0xF1F8, 0x9100, X_REG )
+    MASK_DYN ( subx,    predec0_predec9, 0xF1F8, 0x9108, X_REG )
+    MASK_DYN ( subx,    dreg0_dreg9,    0xF1F8, 0x9140, X_REG )
+    MASK_DYN ( subx,    predec0_predec9, 0xF1F8, 0x9148, X_REG )
+    MASK_DYN ( subx,    dreg0_dreg9,    0xF1F8, 0x9180, X_REG )
+    MASK_DYN ( subx,    predec0_predec9, 0xF1F8, 0x9188, X_REG )
 
+    MASK_DYN ( sub_ea_dreg9, ea_dreg9_s76, 0xF1C0, 0x9000, X_NONE )
+    MASK_DYN ( sub_ea_dreg9, ea_dreg9_s76, 0xF1C0, 0x9040, X_NONE )
+    MASK_DYN ( sub_ea_dreg9, ea_dreg9_s76, 0xF1C0, 0x9080, X_NONE )
+    MASK_DYN ( sub_dreg9_ea, dreg9_ea_s76, 0xF1C0, 0x9100, X_NONE )
+    MASK_DYN ( sub_dreg9_ea, dreg9_ea_s76, 0xF1C0, 0x9140, X_NONE )
+    MASK_DYN ( sub_dreg9_ea, dreg9_ea_s76, 0xF1C0, 0x9180, X_NONE )
 
 
 
@@ -783,7 +1534,18 @@ optab_t base_optab[] = {
   1011 - CMP, EOR
   ----------------------------------------------------------------------------*/
 
+    MASK ( "CMPA.W",    ea_areg9_s76,   0xF1C0, 0xB0C0, X_NONE )
+    MASK ( "CMPA.L",    ea_areg9_s76,   0xF1C0, 0xB1C0, X_NONE )
+    MASK ( "CMPM.B",    postinc0_postinc9, 0xF1F8, 0xB108, X_REG )
+    MASK ( "CMPM.W",    postinc0_postinc9, 0xF1F8, 0xB148, X_REG )
+    MASK ( "CMPM.L",    postinc0_postinc9, 0xF1F8, 0xB188, X_REG )
 
+    MASK_DYN ( cmp,     ea_dreg9_s76,   0xF1C0, 0xB000, X_NONE )
+    MASK_DYN ( cmp,     ea_dreg9_s76,   0xF1C0, 0xB040, X_NONE )
+    MASK_DYN ( cmp,     ea_dreg9_s76,   0xF1C0, 0xB080, X_NONE )
+    MASK_DYN ( eor,     dreg9_ea_s76,   0xF1C0, 0xB100, X_NONE )
+    MASK_DYN ( eor,     dreg9_ea_s76,   0xF1C0, 0xB140, X_NONE )
+    MASK_DYN ( eor,     dreg9_ea_s76,   0xF1C0, 0xB180, X_NONE )
 
 
 
@@ -792,20 +1554,42 @@ optab_t base_optab[] = {
   1100 - AND, MUL, ABCD, EXG
   ----------------------------------------------------------------------------*/
 
-
+    MASK ( "MULU.W",    ea_word_dreg9,  0xF1C0, 0xC0C0, X_NONE )
+    MASK ( "MULS.W",    ea_word_dreg9,  0xF1C0, 0xC1C0, X_NONE )
+    MASK ( "ABCD",      dreg0_dreg9,    0xF1F8, 0xC100, X_REG )
+    MASK ( "ABCD",      predec0_predec9, 0xF1F8, 0xC108, X_REG )
 
     MASK ( "EXG",       dreg9_dreg0,    0xF1F8, 0xC140, X_REG )
     MASK ( "EXG",       areg9_areg0,    0xF1F8, 0xC148, X_REG )
     MASK ( "EXG",       dreg9_areg0,    0xF1F8, 0xC188, X_REG )
 
-
+    MASK_DYN ( and_ea_dreg9, ea_dreg9_s76, 0xF1C0, 0xC000, X_NONE )
+    MASK_DYN ( and_ea_dreg9, ea_dreg9_s76, 0xF1C0, 0xC040, X_NONE )
+    MASK_DYN ( and_ea_dreg9, ea_dreg9_s76, 0xF1C0, 0xC080, X_NONE )
+    MASK_DYN ( and_dreg9_ea, dreg9_ea_s76, 0xF1C0, 0xC100, X_NONE )
+    MASK_DYN ( and_dreg9_ea, dreg9_ea_s76, 0xF1C0, 0xC140, X_NONE )
+    MASK_DYN ( and_dreg9_ea, dreg9_ea_s76, 0xF1C0, 0xC180, X_NONE )
 
 
 /*----------------------------------------------------------------------------
   1101 - ADD, ADDX
   ----------------------------------------------------------------------------*/
 
+    MASK ( "ADDA.W",    ea_areg9_s76,   0xF1C0, 0xD0C0, X_NONE )
+    MASK ( "ADDA.L",    ea_areg9_s76,   0xF1C0, 0xD1C0, X_NONE )
+    MASK_DYN ( addx,    dreg0_dreg9,    0xF1F8, 0xD100, X_REG )
+    MASK_DYN ( addx,    predec0_predec9, 0xF1F8, 0xD108, X_REG )
+    MASK_DYN ( addx,    dreg0_dreg9,    0xF1F8, 0xD140, X_REG )
+    MASK_DYN ( addx,    predec0_predec9, 0xF1F8, 0xD148, X_REG )
+    MASK_DYN ( addx,    dreg0_dreg9,    0xF1F8, 0xD180, X_REG )
+    MASK_DYN ( addx,    predec0_predec9, 0xF1F8, 0xD188, X_REG )
 
+    MASK_DYN ( add_ea_dreg9, ea_dreg9_s76, 0xF1C0, 0xD000, X_NONE )
+    MASK_DYN ( add_ea_dreg9, ea_dreg9_s76, 0xF1C0, 0xD040, X_NONE )
+    MASK_DYN ( add_ea_dreg9, ea_dreg9_s76, 0xF1C0, 0xD080, X_NONE )
+    MASK_DYN ( add_dreg9_ea, dreg9_ea_s76, 0xF1C0, 0xD100, X_NONE )
+    MASK_DYN ( add_dreg9_ea, dreg9_ea_s76, 0xF1C0, 0xD140, X_NONE )
+    MASK_DYN ( add_dreg9_ea, dreg9_ea_s76, 0xF1C0, 0xD180, X_NONE )
     
     
     
@@ -814,7 +1598,8 @@ optab_t base_optab[] = {
   1110 - Shift, Rotate, Bit Field
   ----------------------------------------------------------------------------*/
 
-    
+    MASK_DYN ( shift_mem, shift_mem,     0xF8C0, 0xE0C0, X_NONE )
+    MASK_DYN ( shift_reg, shift_reg,     0xF000, 0xE000, X_NONE )
     
     
     
@@ -854,6 +1639,11 @@ optab_t base_optab[] = {
   
     MASK ( "SWAP",      dreg0, 0xFFF8, 0x4840, X_REG )
     MASK ( "PEA",       ea_control,     0xFFC0, 0x4840, X_NONE )
+    MASK ( "LEA",       ea_long_areg9,  0xF1C0, 0x41C0, X_PTR )
+    MASK ( "MOVEM.W",   movem_regs_ea,  0xFFC0, 0x4880, X_PTR )
+    MASK ( "MOVEM.L",   movem_regs_ea,  0xFFC0, 0x48C0, X_PTR )
+    MASK ( "MOVEM.W",   movem_ea_regs,  0xFFC0, 0x4C80, X_PTR )
+    MASK ( "MOVEM.L",   movem_ea_regs,  0xFFC0, 0x4CC0, X_PTR )
 
   
   
@@ -864,10 +1654,10 @@ optab_t base_optab[] = {
     MASK ( "JSR",       ea_control,     0xFFC0, 0x4E80, X_CALL )
     MASK ( "JMP",       ea_control,     0xFFC0, 0x4EC0, X_JMP )
 
-  
+    MASK ( "MOVE",      usp_areg0,      0xFFF8, 0x4E60, X_REG )
+    MASK ( "MOVE",      areg0_usp,      0xFFF8, 0x4E68, X_REG )
+
     MASK ( "BKPT",      vector3, 0xFFF8, 0x4848, X_NONE )
-  
-    INSN ( "ILLEGAL",   none,   0x4AFC,         X_NONE )
   
     INSN ( "RESET",     none,   0x4E70,         X_NONE )
     INSN ( "RTE",       none,   0x4E73,         X_NONE )
