@@ -148,9 +148,14 @@ static int walk_table( FILE * f, ADDR * addr, optab_t * optab, OPC opc )
         
     while ( optab->opcode != NULL )
     {
+        if ( optab->min_cpu != 0 && dasm_cpu_level != 0 && dasm_cpu_level < optab->min_cpu )
+        {
+            optab++;
+            continue;
+        }
+
         /* printf("type:%d  ", optab->type); */
-        if ( optab->type == OPTAB_TABLE && optab->opc == opc
-             && ( optab->min_cpu == 0 || dasm_cpu_level == 0 || dasm_cpu_level >= optab->min_cpu ) )
+        if ( optab->type == OPTAB_TABLE && optab->opc == opc )
         {
             opc = next_insn( f, addr );
             return walk_table( f, addr, optab->u.table, opc );

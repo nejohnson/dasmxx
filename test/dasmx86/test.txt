@@ -177,6 +177,22 @@ DE D9           # FCOMPP
 0F 02 C1        # LAR AX, CX
 0F 03 C1        # LSL AX, CX
 
+## 80386 ##############################################################
+
+0F 94 C0        # SETZ AL
+0F B6 C1        # MOVZX AX, CL
+0F BE C1        # MOVSX AX, CL
+0F BC C1        # BSF AX, CX
+0F BD C1        # BSR AX, CX
+0F A3 C1        # BT CX, AX
+0F BA E1 05     # BT CX, 05
+0F AB C1        # BTS CX, AX
+0F B3 C1        # BTR CX, AX
+0F BB C1        # BTC CX, AX
+0F A4 C1 04     # SHLD CX, AX, 04
+0F A5 C1        # SHLD CX, AX, CL
+0F AC C1 04     # SHRD CX, AX, 04
+0F AD C1        # SHRD CX, AX, CL
 
 
 

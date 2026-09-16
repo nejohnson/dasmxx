@@ -132,6 +132,15 @@ typedef struct optab_s {
       .xtype    = M_xt                      \
     },
 
+#define INSN_CPU(M_opcode, M_ops, M_opc, M_xt, M_min_cpu)  \
+    { .type     = OPTAB_INSN,                              \
+      .opc      = M_opc,                                   \
+      .min_cpu  = M_min_cpu,                               \
+      .opcode   = M_opcode,                                \
+      .operands = operand_ ## M_ops,                       \
+      .xtype    = M_xt                                     \
+    },
+
 /**
     A RANGE matches the first byte anywhere between M_min and M_max inclusive.
 **/    
@@ -169,6 +178,17 @@ typedef struct optab_s {
       .xtype    = M_xt,                                     \
       .u.mask.mask = M_mask,                                \
       .u.mask.val  = M_val                                  \
+    },
+
+#define MASK2_CPU(M_opcode, M_ops, M_opc, M_mask, M_val, M_xt, M_min_cpu) \
+    { .type     = OPTAB_MASK2,                                            \
+      .opcode   = M_opcode,                                               \
+      .opc      = M_opc,                                                  \
+      .min_cpu  = M_min_cpu,                                              \
+      .operands = operand_ ## M_ops,                                      \
+      .xtype    = M_xt,                                                   \
+      .u.mask.mask = M_mask,                                              \
+      .u.mask.val  = M_val                                                \
     },
                                                             
 /**

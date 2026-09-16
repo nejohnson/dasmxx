@@ -8,7 +8,8 @@ a00BD  Alpha
 m00C1  Bitmap
 c00C9  Floating point
 c00FD  286 protected-mode
-e0113
+c0113  386 extended
+e0140
 
 k0000 This is a comment
 

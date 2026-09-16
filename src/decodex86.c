@@ -480,7 +480,7 @@ OPERAND_FUNC(modrm_shiftimm)
     operand( FORMAT_NUM_8BIT, count );
 }
 
-static void operand_ea16( FILE *f, ADDR *addr, UBYTE arg, const char *size )
+static void operand_ea( FILE *f, ADDR *addr, UBYTE arg, const char *size, const char * const *regs )
 {
     int mod = (arg >> 6) & 3;
     int rm  = arg & 7;
@@ -521,36 +521,80 @@ static void operand_ea16( FILE *f, ADDR *addr, UBYTE arg, const char *size )
     }
 
     case 3:
-        operand( wordreg[rm] );
+        operand( regs[rm] );
         break;
     }
+}
+
+static void operand_rm_reg( FILE *f, ADDR *addr, int wordop )
+{
+    UBYTE arg = next( f, addr );
+    int reg = (arg >> 3) & 7;
+
+    operand_ea( f, addr, arg, wordop ? "W" : "B", wordop ? wordreg : bytereg );
+    COMMA;
+    operand( (wordop ? wordreg : bytereg)[reg] );
+}
+
+static void operand_reg_rm( FILE *f, ADDR *addr, int dstword, int srcword )
+{
+    UBYTE arg = next( f, addr );
+    int reg = (arg >> 3) & 7;
+
+    operand( (dstword ? wordreg : bytereg)[reg] );
+    COMMA;
+    operand_ea( f, addr, arg, srcword ? "W" : "B", srcword ? wordreg : bytereg );
 }
 
 OPERAND_FUNC(rm16)
 {
     UBYTE arg = next( f, addr );
 
-    operand_ea16( f, addr, arg, "W" );
+    operand_ea( f, addr, arg, "W", wordreg );
+}
+
+OPERAND_FUNC(rm8)
+{
+    UBYTE arg = next( f, addr );
+
+    operand_ea( f, addr, arg, "B", bytereg );
 }
 
 OPERAND_FUNC(reg16_rm16)
 {
-    UBYTE arg = next( f, addr );
-    int reg = (arg >> 3) & 7;
+    operand_reg_rm( f, addr, 1, 1 );
+}
 
-    operand( wordreg[reg] );
-    COMMA;
-    operand_ea16( f, addr, arg, "W" );
+OPERAND_FUNC(reg16_rm8)
+{
+    operand_reg_rm( f, addr, 1, 0 );
 }
 
 OPERAND_FUNC(rm16_reg16)
 {
-    UBYTE arg = next( f, addr );
-    int reg = (arg >> 3) & 7;
+    operand_rm_reg( f, addr, 1 );
+}
 
-    operand_ea16( f, addr, arg, "W" );
+OPERAND_FUNC(rm16_reg16_imm8)
+{
+    operand_rm_reg( f, addr, 1 );
     COMMA;
-    operand( wordreg[reg] );
+    operand_imm8( f, addr, opc, xtype );
+}
+
+OPERAND_FUNC(rm16_reg16_CL)
+{
+    operand_rm_reg( f, addr, 1 );
+    operand( ", CL" );
+}
+
+OPERAND_FUNC(rm16_imm8)
+{
+    UBYTE arg = next( f, addr );
+
+    operand_ea( f, addr, arg, "W", wordreg );
+    COMMA;
+    operand_imm8( f, addr, opc, xtype );
 }
 
 /***********************************************************
@@ -717,6 +761,43 @@ static optab_t x86_0f_optab[] = {
     INSN(  "LAR",  reg16_rm16,  0x02, X_NONE )
     INSN(  "LSL",  reg16_rm16,  0x03, X_NONE )
     INSN(  "CLTS", none,        0x06, X_NONE )
+
+    INSN_CPU( "SHLD",  rm16_reg16_imm8, 0xA4, X_NONE, 80386 )
+    INSN_CPU( "SHLD",  rm16_reg16_CL,   0xA5, X_NONE, 80386 )
+    INSN_CPU( "BT",    rm16_reg16,      0xA3, X_NONE, 80386 )
+    INSN_CPU( "BTS",   rm16_reg16,      0xAB, X_NONE, 80386 )
+    INSN_CPU( "SHRD",  rm16_reg16_imm8, 0xAC, X_NONE, 80386 )
+    INSN_CPU( "SHRD",  rm16_reg16_CL,   0xAD, X_NONE, 80386 )
+    INSN_CPU( "BTR",   rm16_reg16,      0xB3, X_NONE, 80386 )
+    INSN_CPU( "BTC",   rm16_reg16,      0xBB, X_NONE, 80386 )
+    INSN_CPU( "BSF",   reg16_rm16,      0xBC, X_NONE, 80386 )
+    INSN_CPU( "BSR",   reg16_rm16,      0xBD, X_NONE, 80386 )
+    INSN_CPU( "MOVZX", reg16_rm8,       0xB6, X_NONE, 80386 )
+    INSN_CPU( "MOVZX", reg16_rm16,      0xB7, X_NONE, 80386 )
+    INSN_CPU( "MOVSX", reg16_rm8,       0xBE, X_NONE, 80386 )
+    INSN_CPU( "MOVSX", reg16_rm16,      0xBF, X_NONE, 80386 )
+
+    MASK2_CPU( "BT",  rm16_imm8, 0xBA, 0x38, 0x20, X_NONE, 80386 )
+    MASK2_CPU( "BTS", rm16_imm8, 0xBA, 0x38, 0x28, X_NONE, 80386 )
+    MASK2_CPU( "BTR", rm16_imm8, 0xBA, 0x38, 0x30, X_NONE, 80386 )
+    MASK2_CPU( "BTC", rm16_imm8, 0xBA, 0x38, 0x38, X_NONE, 80386 )
+
+    INSN_CPU( "SETO",   rm8, 0x90, X_NONE, 80386 )
+    INSN_CPU( "SETNO",  rm8, 0x91, X_NONE, 80386 )
+    INSN_CPU( "SETB",   rm8, 0x92, X_NONE, 80386 )
+    INSN_CPU( "SETNB",  rm8, 0x93, X_NONE, 80386 )
+    INSN_CPU( "SETZ",   rm8, 0x94, X_NONE, 80386 )
+    INSN_CPU( "SETNZ",  rm8, 0x95, X_NONE, 80386 )
+    INSN_CPU( "SETBE",  rm8, 0x96, X_NONE, 80386 )
+    INSN_CPU( "SETNBE", rm8, 0x97, X_NONE, 80386 )
+    INSN_CPU( "SETS",   rm8, 0x98, X_NONE, 80386 )
+    INSN_CPU( "SETNS",  rm8, 0x99, X_NONE, 80386 )
+    INSN_CPU( "SETP",   rm8, 0x9A, X_NONE, 80386 )
+    INSN_CPU( "SETNP",  rm8, 0x9B, X_NONE, 80386 )
+    INSN_CPU( "SETL",   rm8, 0x9C, X_NONE, 80386 )
+    INSN_CPU( "SETNL",  rm8, 0x9D, X_NONE, 80386 )
+    INSN_CPU( "SETLE",  rm8, 0x9E, X_NONE, 80386 )
+    INSN_CPU( "SETNLE", rm8, 0x9F, X_NONE, 80386 )
 
     END
 };
