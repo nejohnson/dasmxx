@@ -938,6 +938,16 @@ OPERAND_FUNC(reg_memptr)
     operand_ea( f, addr, arg, "F", dwordreg );
 }
 
+OPERAND_FUNC(reg_bound)
+{
+    UBYTE arg = next( f, addr );
+    int reg = (arg >> 3) & 7;
+
+    operand( regs_for_width( op_width( 1 ) )[reg] );
+    COMMA;
+    operand_ea( f, addr, arg, op32 ? "DQ" : "DD", dwordreg );
+}
+
 OPERAND_FUNC(regop_rm16)
 {
     UBYTE arg = next( f, addr );
@@ -1272,7 +1282,7 @@ optab_t base_optab[] = {
     INSN( "LEA",    modrm,       0x8D, X_NONE )
     INSN( "LDS",    reg_memptr,  0xC5, X_NONE )
     INSN( "LES",    reg_memptr,  0xC4, X_NONE )
-    INSN_CPU( "BOUND",  modrm,       0x62, X_NONE, 80186 )
+    INSN_CPU( "BOUND",  reg_bound,   0x62, X_NONE, 80186 )
     INSN_CPU( "ARPL",   rm16_reg16_fixed,  0x63, X_NONE, 80286 )
     
     INSN( "LAHF",   none, 0x9F, X_NONE )

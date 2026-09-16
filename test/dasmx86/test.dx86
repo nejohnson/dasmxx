@@ -2,20 +2,20 @@
 ftest.bin
 ocpu=80486
 c0000  Code
-s00B5  String
-w00BF  Word
-a00C3  Alpha
-m00C7  Bitmap
-c00CF  Floating point
-c0103  286 protected-mode
-c0119  386 extended
-c0152  486 extended
-c0169  387 floating point
-c017B  386 32-bit modes
-c01B8  386 system
-c01ED  486 identification
-c01EF  386 size-dependent mnemonics
-e020C
+s00BA  String
+w00C4  Word
+a00C8  Alpha
+m00CC  Bitmap
+c00D4  Floating point
+c0108  286 protected-mode
+c011E  386 extended
+c0157  486 extended
+c016E  387 floating point
+c0180  386 32-bit modes
+c01D2  386 system
+c0207  486 identification
+c0209  386 size-dependent mnemonics
+e0226
 
 k0000 This is a comment
 
