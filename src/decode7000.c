@@ -271,6 +271,7 @@ TWO_OPERAND(iop, reg_ofst)
 THREE_OPERAND(A, Pn, ofst)
 THREE_OPERAND(B, Pn, ofst)
 THREE_OPERAND(reg, Pn, ofst)
+THREE_OPERAND(iop, Pn, ofst)
 
 /******************************************************************************/
 /** Instruction Decoding Tables                                              **/
@@ -311,7 +312,7 @@ THREE_OPERAND(reg, Pn, ofst)
                 INSN( M_name, iop_reg_ofst,    ( 0x70 | M_mask ), X_NONE ) \
                 INSN( M_name "P", A_Pn_ofst,   ( 0x80 | M_mask ), X_NONE ) \
                 INSN( M_name "P", B_Pn_ofst,   ( 0x90 | M_mask ), X_NONE ) \
-                INSN( M_name "P", reg_Pn_ofst, ( 0xA0 | M_mask ), X_NONE )
+                INSN( M_name "P", iop_Pn_ofst, ( 0xA0 | M_mask ), X_NONE )
 
 optab_t base_optab[] = {
 
