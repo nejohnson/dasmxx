@@ -901,6 +901,26 @@ OPERAND_FUNC(rm16_imm8)
     operand_imm8( f, addr, opc, xtype );
 }
 
+OPERAND_FUNC(mem_f)
+{
+    UBYTE arg = next( f, addr );
+
+    if ( (arg & 0xC0) == 0xC0 )
+        operand( "???" );
+    else
+        operand_ea( f, addr, arg, "F", dwordreg );
+}
+
+OPERAND_FUNC(mem_m)
+{
+    UBYTE arg = next( f, addr );
+
+    if ( (arg & 0xC0) == 0xC0 )
+        operand( "???" );
+    else
+        operand_ea( f, addr, arg, "M", dwordreg );
+}
+
 OPERAND_FUNC(far_rm)
 {
     UBYTE arg = next( f, addr );
@@ -916,6 +936,26 @@ OPERAND_FUNC(reg_memptr)
     operand( regs_for_width( op_width( 1 ) )[reg] );
     COMMA;
     operand_ea( f, addr, arg, "F", dwordreg );
+}
+
+OPERAND_FUNC(regop_rm16)
+{
+    UBYTE arg = next( f, addr );
+    int reg = (arg >> 3) & 7;
+
+    operand( regs_for_width( op_width( 1 ) )[reg] );
+    COMMA;
+    operand_ea( f, addr, arg, "W", wordreg );
+}
+
+OPERAND_FUNC(rm16_reg16_fixed)
+{
+    UBYTE arg = next( f, addr );
+    int reg = (arg >> 3) & 7;
+
+    operand_ea( f, addr, arg, "W", wordreg );
+    COMMA;
+    operand( wordreg[reg] );
 }
 
 /***********************************************************
@@ -1092,16 +1132,16 @@ static optab_t x86_0f_optab[] = {
     MASK2( "VERR", rm16,        0x00, 0x38, 0x20, X_NONE )
     MASK2( "VERW", rm16,        0x00, 0x38, 0x28, X_NONE )
 
-    MASK2( "SGDT", rm16,        0x01, 0x38, 0x00, X_NONE )
-    MASK2( "SIDT", rm16,        0x01, 0x38, 0x08, X_NONE )
-    MASK2( "LGDT", rm16,        0x01, 0x38, 0x10, X_NONE )
-    MASK2( "LIDT", rm16,        0x01, 0x38, 0x18, X_NONE )
+    MASK2( "SGDT", mem_f,       0x01, 0x38, 0x00, X_NONE )
+    MASK2( "SIDT", mem_f,       0x01, 0x38, 0x08, X_NONE )
+    MASK2( "LGDT", mem_f,       0x01, 0x38, 0x10, X_NONE )
+    MASK2( "LIDT", mem_f,       0x01, 0x38, 0x18, X_NONE )
     MASK2( "SMSW", rm16,        0x01, 0x38, 0x20, X_NONE )
     MASK2( "LMSW", rm16,        0x01, 0x38, 0x30, X_NONE )
-    MASK2_CPU( "INVLPG", rm16,  0x01, 0x38, 0x38, X_NONE, 80486 )
+    MASK2_CPU( "INVLPG", mem_m, 0x01, 0x38, 0x38, X_NONE, 80486 )
 
-    INSN(  "LAR",  reg16_rm16,  0x02, X_NONE )
-    INSN(  "LSL",  reg16_rm16,  0x03, X_NONE )
+    INSN(  "LAR",  regop_rm16,  0x02, X_NONE )
+    INSN(  "LSL",  regop_rm16,  0x03, X_NONE )
     INSN(  "CLTS", none,        0x06, X_NONE )
     INSN_CPU( "INVD",   none,   0x08, X_NONE, 80486 )
     INSN_CPU( "WBINVD", none,   0x09, X_NONE, 80486 )
@@ -1150,9 +1190,9 @@ static optab_t x86_0f_optab[] = {
     INSN_CPU( "BSF",   reg16_rm16,      0xBC, X_NONE, 80386 )
     INSN_CPU( "BSR",   reg16_rm16,      0xBD, X_NONE, 80386 )
     INSN_CPU( "MOVZX", reg16_rm8,       0xB6, X_NONE, 80386 )
-    INSN_CPU( "MOVZX", reg16_rm16,      0xB7, X_NONE, 80386 )
+    INSN_CPU( "MOVZX", regop_rm16,      0xB7, X_NONE, 80386 )
     INSN_CPU( "MOVSX", reg16_rm8,       0xBE, X_NONE, 80386 )
-    INSN_CPU( "MOVSX", reg16_rm16,      0xBF, X_NONE, 80386 )
+    INSN_CPU( "MOVSX", regop_rm16,      0xBF, X_NONE, 80386 )
     INSN_CPU( "CMPXCHG", rm8_reg8,      0xB0, X_NONE, 80486 )
     INSN_CPU( "CMPXCHG", rm16_reg16,    0xB1, X_NONE, 80486 )
     INSN_CPU( "XADD",    rm8_reg8,      0xC0, X_NONE, 80486 )
@@ -1233,7 +1273,7 @@ optab_t base_optab[] = {
     INSN( "LDS",    reg_memptr,  0xC5, X_NONE )
     INSN( "LES",    reg_memptr,  0xC4, X_NONE )
     INSN_CPU( "BOUND",  modrm,       0x62, X_NONE, 80186 )
-    INSN_CPU( "ARPL",   rm16_reg16,  0x63, X_NONE, 80286 )
+    INSN_CPU( "ARPL",   rm16_reg16_fixed,  0x63, X_NONE, 80286 )
     
     INSN( "LAHF",   none, 0x9F, X_NONE )
     INSN( "SAHF",   none, 0x9E, X_NONE )

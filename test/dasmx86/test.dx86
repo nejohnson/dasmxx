@@ -9,13 +9,13 @@ m00C7  Bitmap
 c00CF  Floating point
 c0103  286 protected-mode
 c0119  386 extended
-c0146  486 extended
-c015D  387 floating point
-c016F  386 32-bit modes
-c01AC  386 system
-c01E1  486 identification
-c01E3  386 size-dependent mnemonics
-e0200
+c0152  486 extended
+c0169  387 floating point
+c017B  386 32-bit modes
+c01B8  386 system
+c01ED  486 identification
+c01EF  386 size-dependent mnemonics
+e020C
 
 k0000 This is a comment
 

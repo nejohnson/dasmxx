@@ -175,7 +175,7 @@ DE D9           # FCOMPP
 0F 06           # CLTS
 0F 00 00        # SLDT W[BX + SI]
 0F 00 20        # VERR W[BX + SI]
-0F 01 10        # LGDT W[BX + SI]
+0F 01 10        # LGDT F[BX + SI]
 0F 01 30        # LMSW W[BX + SI]
 0F 02 C1        # LAR AX, CX
 0F 03 C1        # LSL AX, CX
@@ -184,8 +184,11 @@ DE D9           # FCOMPP
 
 0F 94 C0        # SETZ AL
 0F B6 C1        # MOVZX AX, CL
+66 0F B7 C1     # MOVZX EAX, CX
 0F BE C1        # MOVSX AX, CL
+66 0F BF C1     # MOVSX EAX, CX
 0F BC C1        # BSF AX, CX
+66 0F 02 C1     # LAR EAX, CX
 0F BD C1        # BSR AX, CX
 0F A3 C1        # BT CX, AX
 0F BA E1 05     # BT CX, 05
