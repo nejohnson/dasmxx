@@ -95,7 +95,7 @@ PREFIX_FUNC(pfx_rep)
     if ( opc & 1 )
         operand( "REP  " );
     else
-        operand( "REPZ " );    
+        operand( "REPNZ " );
 }
 
 /******************************************************************************/
@@ -765,7 +765,7 @@ optab_t base_optab[] = {
     MASK2( "IDIV",  modrm, 0xF7, 0x38, 0x38, X_NONE )
     
     INSN( "AAA",    none, 0x37, X_NONE )
-    INSN( "BAA",    none, 0x27, X_NONE )
+    INSN( "DAA",    none, 0x27, X_NONE )
     INSN( "AAS",    none, 0x3F, X_NONE )
     INSN( "DAS",    none, 0x2F, X_NONE )
     MASK2( "AAM",   gobble, 0xD4, 0xFF, 0x0A, X_NONE )
@@ -878,8 +878,8 @@ optab_t base_optab[] = {
     INSN( "JNLE",  disp8,  0x7F, X_JMP )
     
     INSN( "LOOP",  disp8,  0xE2, X_JMP )
-    INSN( "LOOPZ", disp8,  0xE0, X_JMP )
-    INSN( "LOOPNZ",disp8,  0xE1, X_JMP )
+    INSN( "LOOPNZ",disp8,  0xE0, X_JMP )
+    INSN( "LOOPZ", disp8,  0xE1, X_JMP )
     INSN( "JCXZ",  disp8,  0xE3, X_JMP )
 
     INSN( "INT",   imm8,   0xCD, X_NONE )

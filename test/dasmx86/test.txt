@@ -60,7 +60,7 @@ C7 00 44 55
 34 FF
 
 37      # AAA
-27      # BAA
+27      # DAA
 
 3F      # AAS
 2F      # DAS
@@ -90,8 +90,8 @@ D3 b8 11 88
 
 ## String Manipulation ###############################################
 
-F2 A4
-F3 AF
+F2 A4   # REPNZ MOVSB
+F3 AF   # REP SCASW
 
 
 ## Control Transfer  #################################################
@@ -99,9 +99,9 @@ F3 AF
 74 00   # JZ +0
 77 F8
 
-E2 04
-E1 08
-E0 F8
+E2 04   # LOOP
+E1 08   # LOOPZ
+E0 F8   # LOOPNZ
 E3 04
 
 EA 34 12 78 56
