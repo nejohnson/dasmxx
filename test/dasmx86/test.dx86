@@ -11,11 +11,12 @@ c0108  286 protected-mode
 c011E  386 extended
 c0157  486 extended
 c016E  387 floating point
-c0180  386 32-bit modes
-c01E6  386 system
-c0227  486 identification
-c0229  386 size-dependent mnemonics
-e0246
+c017E  386 32-bit modes
+c01E4  386 system
+c0225  486 identification
+c0227  386 size-dependent mnemonics
+c0244  memory-only operand validation
+e0257
 
 k0000 This is a comment
 

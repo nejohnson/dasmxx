@@ -557,7 +557,10 @@ OPERAND_FUNC(modrm)
             break;
                 
         case DO_ADDR:
-            operand_ea( f, addr, arg, (char []){ size_for_width( width ), '\0' }, regs_for_width( width ) );
+            if ( opc == 0x8D && mod == 3 )
+                operand( "???" );
+            else
+                operand_ea( f, addr, arg, (char []){ size_for_width( width ), '\0' }, regs_for_width( width ) );
             break;
         }
         
@@ -925,7 +928,10 @@ OPERAND_FUNC(far_rm)
 {
     UBYTE arg = next( f, addr );
 
-    operand_ea( f, addr, arg, "F", dwordreg );
+    if ( (arg & 0xC0) == 0xC0 )
+        operand( "???" );
+    else
+        operand_ea( f, addr, arg, "F", dwordreg );
 }
 
 OPERAND_FUNC(reg_memptr)
@@ -935,7 +941,10 @@ OPERAND_FUNC(reg_memptr)
 
     operand( regs_for_width( op_width( 1 ) )[reg] );
     COMMA;
-    operand_ea( f, addr, arg, "F", dwordreg );
+    if ( (arg & 0xC0) == 0xC0 )
+        operand( "???" );
+    else
+        operand_ea( f, addr, arg, "F", dwordreg );
 }
 
 OPERAND_FUNC(reg_bound)
@@ -945,7 +954,10 @@ OPERAND_FUNC(reg_bound)
 
     operand( regs_for_width( op_width( 1 ) )[reg] );
     COMMA;
-    operand_ea( f, addr, arg, op32 ? "DQ" : "DD", dwordreg );
+    if ( (arg & 0xC0) == 0xC0 )
+        operand( "???" );
+    else
+        operand_ea( f, addr, arg, op32 ? "DQ" : "DD", dwordreg );
 }
 
 OPERAND_FUNC(regop_rm16)
@@ -1681,8 +1693,6 @@ optab_t base_optab[] = {
     FP_MEM( "FIDIVR", fp_m16int, 0xDE, 0x38 )
 
     MASK2( "FNSTSW", gobble_AX,   0xDF, 0xFF, 0xE0, X_NONE )
-    MASK2( "FFREEP", fp_sti,      0xDF, 0xF8, 0xC0, X_NONE )
-
     FP_MEM( "FILD",  fp_m16int,  0xDF, 0x00 )
     FP_MEM( "FIST",  fp_m16int,  0xDF, 0x10 )
     FP_MEM( "FISTP", fp_m16int,  0xDF, 0x18 )

@@ -1,0 +1,4 @@
+ftest386.bin
+ocpu=80386
+c0000  386 strict mode
+e0025

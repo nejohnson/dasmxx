@@ -1,0 +1,4 @@
+ftest286.bin
+ocpu=80286
+c0000  286 strict mode
+e0018

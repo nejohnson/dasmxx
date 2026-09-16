@@ -1,0 +1,14 @@
+# 80286 strict-mode smoke test
+
+60              # PUSHA
+61              # POPA
+68 34 12        # PUSH 1234
+6A 80           # PUSH 80
+C0 00 04        # ROL B[BX + SI], 04
+C1 20 04        # SHL W[BX + SI], 04
+C8 34 12 02     # ENTER 1234, 02
+C9              # LEAVE
+0F 06           # CLTS
+66              # ???
+67              # ???
+0F A0           # ???

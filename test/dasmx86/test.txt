@@ -223,7 +223,6 @@ D9 FF           # FCOS
 DA E9           # FUCOMPP
 DD E0           # FUCOM ST(0)
 DD E8           # FUCOMP ST(0)
-DF C0           # FFREEP ST(0)
 DB E4           # FNSETPM
 
 ## 80386 32-bit modes ################################################
@@ -289,9 +288,18 @@ DB E4           # FNSETPM
 66 AB                       # STOSD
 66 6D                       # INSD
 66 6F                       # OUTSD
-67 E3 00                    # JECXZ
+67 E3 FE                    # JECXZ
 
+## memory-only operand validation ####################################
 
+8D C0                       # LEA AX, ???
+FF D8                       # CALL ???
+FF E8                       # JMP ???
+62 C0                       # BOUND AX, ???
+C4 C0                       # LES AX, ???
+0F B2 C0                    # LSS AX, ???
+0F B4 C0                    # LFS AX, ???
+0F B5 C0                    # LGS AX, ???
 
 
 

@@ -1,0 +1,10 @@
+# 80386 strict-mode smoke test
+
+66 B8 78 56 34 12  # MOV EAX, 12345678
+67 A1 78 56 34 12  # MOV AX, W[12345678]
+0F A0              # PUSH FS
+0F A2              # ???
+0F C8              # ???
+66 E8 78 56 34 12  # CALL near32
+66 E9 78 56 34 12  # JMP near32
+66 EA 78 56 34 12 CD AB  # JMP ABCD:12345678
