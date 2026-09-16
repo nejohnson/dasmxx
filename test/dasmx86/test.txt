@@ -30,6 +30,8 @@ C4 8C 34 12
 
 FF B0 78 56
 FF 20 
+FF 18
+FF 28
 
 FF 00
 FE 00
@@ -115,6 +117,7 @@ CD 03   # Longer INT3
 CC      # INT3
 CE      # INTO
 CF      # IRET
+66 CF   # IRETD
 
 ## Processor Control #################################################
 
@@ -247,6 +250,7 @@ DB E4           # FNSETPM
 66 0F AF C1                 # IMUL EAX, ECX
 0F B2 00                    # LSS AX, W[BX + SI]
 66 0F B4 00                 # LFS EAX, D[BX + SI]
+66 0F B5 00                 # LGS EAX, D[BX + SI]
 8C 20                       # MOV W[BX + SI], FS
 8E 28                       # MOV GS, W[BX + SI]
 

@@ -209,6 +209,11 @@ static const char *opcode_jcxz( OPC opc )
     return addr32 ? "JECXZ" : "JCXZ";
 }
 
+static const char *opcode_iret( OPC opc )
+{
+    return op32 ? "IRETD" : "IRET";
+}
+
 /******************************************************************************/
 /**                            Operand Functions                             **/
 /******************************************************************************/
@@ -896,6 +901,23 @@ OPERAND_FUNC(rm16_imm8)
     operand_imm8( f, addr, opc, xtype );
 }
 
+OPERAND_FUNC(far_rm)
+{
+    UBYTE arg = next( f, addr );
+
+    operand_ea( f, addr, arg, "F", dwordreg );
+}
+
+OPERAND_FUNC(reg_memptr)
+{
+    UBYTE arg = next( f, addr );
+    int reg = (arg >> 3) & 7;
+
+    operand( regs_for_width( op_width( 1 ) )[reg] );
+    COMMA;
+    operand_ea( f, addr, arg, "F", dwordreg );
+}
+
 /***********************************************************
  * 8087/80187 floating-point operands.
  ************************************************************/
@@ -1121,9 +1143,9 @@ static optab_t x86_0f_optab[] = {
     INSN_CPU( "SHRD",  rm16_reg16_imm8, 0xAC, X_NONE, 80386 )
     INSN_CPU( "SHRD",  rm16_reg16_CL,   0xAD, X_NONE, 80386 )
     INSN_CPU( "BTR",   rm16_reg16,      0xB3, X_NONE, 80386 )
-    INSN_CPU( "LSS",   reg16_rm16,      0xB2, X_NONE, 80386 )
-    INSN_CPU( "LFS",   reg16_rm16,      0xB4, X_NONE, 80386 )
-    INSN_CPU( "LGS",   reg16_rm16,      0xB5, X_NONE, 80386 )
+    INSN_CPU( "LSS",   reg_memptr,      0xB2, X_NONE, 80386 )
+    INSN_CPU( "LFS",   reg_memptr,      0xB4, X_NONE, 80386 )
+    INSN_CPU( "LGS",   reg_memptr,      0xB5, X_NONE, 80386 )
     INSN_CPU( "BTC",   rm16_reg16,      0xBB, X_NONE, 80386 )
     INSN_CPU( "BSF",   reg16_rm16,      0xBC, X_NONE, 80386 )
     INSN_CPU( "BSR",   reg16_rm16,      0xBD, X_NONE, 80386 )
@@ -1208,8 +1230,8 @@ optab_t base_optab[] = {
 
     INSN( "XLAT",   none,        0xD7, X_NONE )
     INSN( "LEA",    modrm,       0x8D, X_NONE )
-    INSN( "LDS",    modrm,       0xC5, X_NONE )
-    INSN( "LES",    modrm,       0xC4, X_NONE )
+    INSN( "LDS",    reg_memptr,  0xC5, X_NONE )
+    INSN( "LES",    reg_memptr,  0xC4, X_NONE )
     INSN_CPU( "BOUND",  modrm,       0x62, X_NONE, 80186 )
     INSN_CPU( "ARPL",   rm16_reg16,  0x63, X_NONE, 80286 )
     
@@ -1386,13 +1408,13 @@ optab_t base_optab[] = {
     INSN( "CALL",  disp16, 0xE8, X_CALL )
     INSN( "CALL",  segoff, 0x9A, X_CALL )
     MASK2( "CALL", modrm, 0xFF, 0x38, 0x10, X_CALL )
-    MASK2( "CALL", modrm, 0xFF, 0x38, 0x18, X_CALL )
+    MASK2( "CALL", far_rm, 0xFF, 0x38, 0x18, X_CALL )
   
     INSN( "JMP",   disp8,  0xEB, X_JMP )
     INSN( "JMP",   disp16, 0xE9, X_JMP )
     INSN( "JMP",   segoff, 0xEA, X_JMP )
     MASK2( "JMP",  modrm, 0xFF, 0x38, 0x20, X_JMP )
-    MASK2( "JMP",  modrm, 0xFF, 0x38, 0x28, X_JMP )
+    MASK2( "JMP",  far_rm, 0xFF, 0x38, 0x28, X_JMP )
   
     INSN( "RETN",  none,   0xC3, X_NONE )
     INSN( "RETN",  imm16,  0xC2, X_NONE )
@@ -1426,7 +1448,7 @@ optab_t base_optab[] = {
     INSN( "INT",   imm8,   0xCD, X_NONE )
     INSN( "INT3",  none,   0xCC, X_NONE )
     INSN( "INTO",  none,   0xCE, X_NONE )
-    INSN( "IRET",  none,   0xCF, X_NONE )
+    INSN_DYN( iret,  none, 0xCF, X_NONE )
 
 /*----------------------------------------------------------------------------
   PROCESSOR CONTROL
