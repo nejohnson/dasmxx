@@ -1,0 +1,5 @@
+ftest68010.bin
+ocpu=68010
+c0000 Start
+
+e000c

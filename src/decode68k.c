@@ -974,6 +974,20 @@ OPERAND_FUNC(sr_ea)
     emit_ea_field( f, addr, ea, OPSIZE_WORD, xtype );
 }
 
+OPERAND_FUNC(ccr_ea)
+{
+    int ea = opc & 0x3F;
+
+    if ( !ea_field_is_data_alterable( ea ) )
+    {
+        emit_bad_operands();
+        return;
+    }
+
+    operand( "CCR, " );
+    emit_ea_field( f, addr, ea, OPSIZE_WORD, xtype );
+}
+
 OPERAND_FUNC(ea_ccr)
 {
     int ea = opc & 0x3F;
@@ -1000,6 +1014,90 @@ OPERAND_FUNC(ea_sr)
 
     emit_ea_field( f, addr, ea, OPSIZE_WORD, xtype );
     operand( ", SR" );
+}
+
+static const char *control_reg_name( UWORD ctrl )
+{
+    switch ( ctrl )
+    {
+    case 0x000:
+        return "SFC";
+    case 0x001:
+        return "DFC";
+    case 0x800:
+        return "USP";
+    case 0x801:
+        return "VBR";
+    case 0x002:
+        return "CACR";
+    case 0x802:
+        return "CAAR";
+    case 0x803:
+        return "MSP";
+    case 0x804:
+        return "ISP";
+    default:
+        return NULL;
+    }
+}
+
+static void emit_movec_reg( UWORD ext )
+{
+    operand( "%c%d", (ext & 0x8000) ? 'A' : 'D', (ext >> 12) & 0x07 );
+}
+
+static void emit_control_reg( UWORD ctrl )
+{
+    const char *name = control_reg_name( ctrl );
+
+    if ( name )
+        operand( "%s", name );
+    else
+        operand( "CR$%03X", ctrl );
+}
+
+OPERAND_FUNC(creg_reg)
+{
+    UWORD ext = nextw( f, addr );
+
+    emit_control_reg( ext & 0x0FFF );
+    operand( ", " );
+    emit_movec_reg( ext );
+}
+
+OPERAND_FUNC(reg_creg)
+{
+    UWORD ext = nextw( f, addr );
+
+    emit_movec_reg( ext );
+    operand( ", " );
+    emit_control_reg( ext & 0x0FFF );
+}
+
+OPERAND_FUNC(moves)
+{
+    UWORD ext = nextw( f, addr );
+    int size = size_from_bits_76( opc );
+    int ea = opc & 0x3F;
+    char regtype = (ext & 0x8000) ? 'A' : 'D';
+    int reg = (ext >> 12) & 0x07;
+
+    if ( size == 0 || !ea_field_is_data_alterable( ea ) )
+    {
+        emit_bad_operands();
+        return;
+    }
+
+    if ( ext & 0x0800 )
+    {
+        operand( "%c%d, ", regtype, reg );
+        emit_ea_field( f, addr, ea, size, xtype );
+    }
+    else
+    {
+        emit_ea_field( f, addr, ea, size, xtype );
+        operand( ", %c%d", regtype, reg );
+    }
 }
 
 /******************************************************************************/
@@ -1385,6 +1483,10 @@ optab_t base_optab[] = {
     MASK_DYN ( cmpi,    imm_ea_s76,     0xFFC0, 0x0C40, X_IMM )
     MASK_DYN ( cmpi,    imm_ea_s76,     0xFFC0, 0x0C80, X_IMM )
 
+    MASK_CPU ( "MOVES.B", moves,        0xFFC0, 0x0E00, X_PTR, 68010 )
+    MASK_CPU ( "MOVES.W", moves,        0xFFC0, 0x0E40, X_PTR, 68010 )
+    MASK_CPU ( "MOVES.L", moves,        0xFFC0, 0x0E80, X_PTR, 68010 )
+
 
 /*----------------------------------------------------------------------------
   0001 - MOVE byte
@@ -1416,6 +1518,7 @@ optab_t base_optab[] = {
     INSN ( "ILLEGAL",   none,           0x4AFC,         X_NONE )
 
     MASK ( "MOVE",      sr_ea,          0xFFC0, 0x40C0, X_REG )
+    MASK_CPU ( "MOVE",  ccr_ea,         0xFFC0, 0x42C0, X_REG, 68010 )
     MASK ( "MOVE",      ea_ccr,         0xFFC0, 0x44C0, X_REG )
     MASK ( "MOVE",      ea_sr,          0xFFC0, 0x46C0, X_REG )
 
@@ -1625,7 +1728,7 @@ optab_t base_optab[] = {
     MASK ( "UNLK",      areg0,          0xFFF8, 0x4E58, X_REG )
     
     MASK ( "LINK",      areg0_simm16,   0xFFF8, 0x4E50, X_REG )
-    MASK ( "LINK",      areg0_simm32,   0xFFF8, 0x4808, X_REG )
+    MASK_CPU ( "LINK",  areg0_simm32,   0xFFF8, 0x4808, X_REG, 68020 )
     
     
     
@@ -1634,10 +1737,11 @@ optab_t base_optab[] = {
 
     MASK ( "EXT.W",     dreg0,  0xFFF8, 0x4880, X_REG )
     MASK ( "EXT.L",     dreg0,  0xFFF8, 0x48C0, X_REG )
-    MASK ( "EXTB.L",    dreg0,  0xFFF8, 0x49C0, X_REG )
+    MASK_CPU ( "EXTB.L", dreg0, 0xFFF8, 0x49C0, X_REG, 68020 )
 
   
     MASK ( "SWAP",      dreg0, 0xFFF8, 0x4840, X_REG )
+    MASK_CPU ( "BKPT",  vector3, 0xFFF8, 0x4848, X_NONE, 68010 )
     MASK ( "PEA",       ea_control,     0xFFC0, 0x4840, X_NONE )
     MASK ( "LEA",       ea_long_areg9,  0xF1C0, 0x41C0, X_PTR )
     MASK ( "MOVEM.W",   movem_regs_ea,  0xFFC0, 0x4880, X_PTR )
@@ -1651,14 +1755,15 @@ optab_t base_optab[] = {
     
     INSN ( "RTR",       none,   0x4E77,         X_NONE )
     INSN ( "RTS",       none,   0x4E75,         X_NONE )
+    INSN_CPU ( "RTD",   imm16,  0x4E74,         X_IMM,  68010 )
+    INSN_CPU ( "MOVEC", creg_reg, 0x4E7A,       X_REG,  68010 )
+    INSN_CPU ( "MOVEC", reg_creg, 0x4E7B,       X_REG,  68010 )
     MASK ( "JSR",       ea_control,     0xFFC0, 0x4E80, X_CALL )
     MASK ( "JMP",       ea_control,     0xFFC0, 0x4EC0, X_JMP )
 
     MASK ( "MOVE",      usp_areg0,      0xFFF8, 0x4E60, X_REG )
     MASK ( "MOVE",      areg0_usp,      0xFFF8, 0x4E68, X_REG )
 
-    MASK ( "BKPT",      vector3, 0xFFF8, 0x4848, X_NONE )
-  
     INSN ( "RESET",     none,   0x4E70,         X_NONE )
     INSN ( "RTE",       none,   0x4E73,         X_NONE )
     
@@ -1669,7 +1774,7 @@ optab_t base_optab[] = {
     INSN ( "TRAPV",     none,   0x4E76,         X_NONE )
 
 
-    INSN ( "PFLUSHA",   none,   0x2400,         X_NONE )
+    INSN_CPU ( "PFLUSHA", none,  0x2400,         X_NONE, 68030 )
 
 
 
