@@ -234,10 +234,10 @@ OPERAND_FUNC(relX)
     BYTE disp8 = (BYTE)(opc & 0xFF);
     WORD dest = (ADDR)disp8;
 
-    if ( disp8 == -1 || disp8 == 0 ) /* extended displacement */
+    if ( disp8 == 0 || ( disp8 == -1 && ( dasm_cpu_level == 0 || dasm_cpu_level >= 68020 ) ) )
     {
         dest = (WORD)nextw( f, addr );
-        if ( disp8 == -1 ) /* 32-bit displacement */
+        if ( disp8 == -1 )
         {
             UWORD lo = (UWORD)nextw( f, addr );
             dest = MK_LONG(dest, lo);
@@ -1100,6 +1100,87 @@ OPERAND_FUNC(moves)
     }
 }
 
+static void emit_bitfield_spec( UWORD ext )
+{
+    int offset = (ext >> 6) & 0x1F;
+    int width = ext & 0x1F;
+
+    operand( "{" );
+    if ( ext & 0x0800 )
+        operand( FORMAT_DREG, offset & 0x07 );
+    else
+        operand( "#" FORMAT_IMM8, offset );
+
+    operand( ":" );
+    if ( ext & 0x0020 )
+        operand( FORMAT_DREG, width & 0x07 );
+    else
+        operand( "#" FORMAT_IMM8, width == 0 ? 32 : width );
+    operand( "}" );
+}
+
+OPERAND_FUNC(bitfield_ea)
+{
+    UWORD ext = nextw( f, addr );
+    int ea = opc & 0x3F;
+
+    if ( !ea_field_is_data( ea ) )
+    {
+        emit_bad_operands();
+        return;
+    }
+
+    emit_ea_field( f, addr, ea, OPSIZE_LONG, xtype );
+    emit_bitfield_spec( ext );
+}
+
+OPERAND_FUNC(bitfield_ea_dreg)
+{
+    UWORD ext = nextw( f, addr );
+    int ea = opc & 0x3F;
+
+    if ( !ea_field_is_data( ea ) )
+    {
+        emit_bad_operands();
+        return;
+    }
+
+    emit_ea_field( f, addr, ea, OPSIZE_LONG, xtype );
+    emit_bitfield_spec( ext );
+    operand( ", " FORMAT_DREG, (ext >> 12) & 0x07 );
+}
+
+OPERAND_FUNC(bitfield_dreg_ea)
+{
+    UWORD ext = nextw( f, addr );
+    int ea = opc & 0x3F;
+
+    if ( !ea_field_is_data_alterable( ea ) )
+    {
+        emit_bad_operands();
+        return;
+    }
+
+    operand( FORMAT_DREG ", ", (ext >> 12) & 0x07 );
+    emit_ea_field( f, addr, ea, OPSIZE_LONG, xtype );
+    emit_bitfield_spec( ext );
+}
+
+OPERAND_FUNC(trapcc)
+{
+    /* empty */
+}
+
+OPERAND_FUNC(trapcc_imm16)
+{
+    operand( "#" FORMAT_IMM16, (UWORD)nextw( f, addr ) );
+}
+
+OPERAND_FUNC(trapcc_imm32)
+{
+    operand( "#" FORMAT_IMM32, (ULWORD)read_s32( f, addr ) );
+}
+
 /******************************************************************************/
 /**                            Opcode Functions                              **/
 /******************************************************************************/
@@ -1176,6 +1257,14 @@ static const char *opcode_dbcc( OPC opc )
     return text;
 }
 
+static const char *opcode_trapcc( OPC opc )
+{
+    static char text[16];
+
+    sprintf( text, "TRAP%s", condition_name( (opc >> 8) & 0x0F ) );
+    return text;
+}
+
 static const char *opcode_shift_reg( OPC opc )
 {
     static char text[16];
@@ -1207,6 +1296,17 @@ static const char *opcode_shift_mem( OPC opc )
       .xtype    = M_xt,                                     \
       .u.mask.mask = M_mask,                                \
       .u.mask.val  = M_val                                  \
+    },
+
+#define MASK_DYN_CPU(M_opcode_fn, M_ops, M_mask, M_val, M_xt, M_min_cpu) \
+    { .type     = OPTAB_MASK,                                            \
+      .min_cpu  = M_min_cpu,                                             \
+      .opcode   = "DYNAMIC",                                             \
+      .opcode_fn = opcode_ ## M_opcode_fn,                                \
+      .operands = operand_ ## M_ops,                                      \
+      .xtype    = M_xt,                                                   \
+      .u.mask.mask = M_mask,                                              \
+      .u.mask.val  = M_val                                                \
     },
 
 
@@ -1538,6 +1638,7 @@ optab_t base_optab[] = {
     MASK_DYN ( tst,     ea_s76,         0xFFC0, 0x4A40, X_NONE )
     MASK_DYN ( tst,     ea_s76,         0xFFC0, 0x4A80, X_NONE )
 
+    MASK_CPU ( "LINK.L", areg0_simm32,  0xFFF8, 0x4808, X_REG, 68020 )
     MASK ( "NBCD",      ea,             0xFFC0, 0x4800, X_NONE )
     MASK ( "TAS",       ea,             0xFFC0, 0x4AC0, X_NONE )
     MASK ( "CHK.W",     ea_word_dreg9,  0xF1C0, 0x4180, X_NONE )
@@ -1551,6 +1652,9 @@ optab_t base_optab[] = {
   ----------------------------------------------------------------------------*/
 
     MASK_DYN ( dbcc,    dbcc,           0xF0F8, 0x50C8, X_JMP )
+    MASK_DYN_CPU ( trapcc, trapcc,       0xF0FF, 0x50FC, X_NONE, 68020 )
+    MASK_DYN_CPU ( trapcc, trapcc_imm16, 0xF0FF, 0x50FA, X_IMM,  68020 )
+    MASK_DYN_CPU ( trapcc, trapcc_imm32, 0xF0FF, 0x50FB, X_IMM,  68020 )
     MASK_DYN ( scc,     scc_ea,         0xF0C0, 0x50C0, X_NONE )
     MASK_DYN ( addq,    quick_ea_s76,   0xF1C0, 0x5000, X_IMM )
     MASK_DYN ( addq,    quick_ea_s76,   0xF1C0, 0x5040, X_IMM )
@@ -1702,6 +1806,14 @@ optab_t base_optab[] = {
   ----------------------------------------------------------------------------*/
 
     MASK_DYN ( shift_mem, shift_mem,     0xF8C0, 0xE0C0, X_NONE )
+    MASK_CPU ( "BFTST",   bitfield_ea,      0xFFC0, 0xE8C0, X_NONE, 68020 )
+    MASK_CPU ( "BFEXTU",  bitfield_ea_dreg, 0xFFC0, 0xE9C0, X_NONE, 68020 )
+    MASK_CPU ( "BFCHG",   bitfield_ea,      0xFFC0, 0xEAC0, X_NONE, 68020 )
+    MASK_CPU ( "BFEXTS",  bitfield_ea_dreg, 0xFFC0, 0xEBC0, X_NONE, 68020 )
+    MASK_CPU ( "BFCLR",   bitfield_ea,      0xFFC0, 0xECC0, X_NONE, 68020 )
+    MASK_CPU ( "BFFFO",   bitfield_ea_dreg, 0xFFC0, 0xEDC0, X_NONE, 68020 )
+    MASK_CPU ( "BFSET",   bitfield_ea,      0xFFC0, 0xEEC0, X_NONE, 68020 )
+    MASK_CPU ( "BFINS",   bitfield_dreg_ea, 0xFFC0, 0xEFC0, X_NONE, 68020 )
     MASK_DYN ( shift_reg, shift_reg,     0xF000, 0xE000, X_NONE )
     
     
@@ -1728,7 +1840,6 @@ optab_t base_optab[] = {
     MASK ( "UNLK",      areg0,          0xFFF8, 0x4E58, X_REG )
     
     MASK ( "LINK",      areg0_simm16,   0xFFF8, 0x4E50, X_REG )
-    MASK_CPU ( "LINK",  areg0_simm32,   0xFFF8, 0x4808, X_REG, 68020 )
     
     
     
