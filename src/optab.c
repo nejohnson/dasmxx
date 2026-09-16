@@ -46,6 +46,8 @@
 #define INSN_FOUND              ( 1 )
 #define INSN_NOT_FOUND          ( 0 )
 
+#define SWAP(a,b)   do { int t = a; a = b; b = t; } while(0)
+
 /*****************************************************************************
  * External data.
  *****************************************************************************/
@@ -126,6 +128,28 @@ static OPC next_insn( FILE* fp, ADDR *addr  )
     return 0; /* unreachable, error() exits */
 }
 
+static OPC peek_insn_word( FILE *fp )
+{
+    int lo = fgetc( fp );
+    int hi = fgetc( fp );
+    OPC w;
+
+    if ( hi != EOF )
+        ungetc( hi, fp );
+    if ( lo != EOF )
+        ungetc( lo, fp );
+
+    if ( lo == EOF || hi == EOF )
+        return 0;
+
+    if ( dasm_word_msb_first )
+        SWAP( lo, hi );
+
+    w = ( ( hi & 0xFF ) << 8 ) | ( lo & 0xFF );
+
+    return w;
+}
+
 #if defined(__GNUC__)
 void __attribute__((weak)) dasm_pre_insn( void )
 {
@@ -203,6 +227,14 @@ static int walk_table( FILE * f, ADDR * addr, optab_t * optab, OPC opc )
                     ||
                     ( optab->type == OPTAB_MASK 
                       && ( ( opc & optab->u.mask.mask ) == optab->u.mask.val ) ) )
+        {
+            opcode( optab_opcode( optab, opc ) );
+            optab->operands( f, addr, opc, optab->xtype );
+            return INSN_FOUND;
+        }
+        else if ( optab->type == OPTAB_MASK_EXT
+                  && ( ( opc & optab->u.mask_ext.mask ) == optab->u.mask_ext.val )
+                  && ( ( peek_insn_word( f ) & optab->u.mask_ext.ext_mask ) == optab->u.mask_ext.ext_val ) )
         {
             opcode( optab_opcode( optab, opc ) );
             optab->operands( f, addr, opc, optab->xtype );

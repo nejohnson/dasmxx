@@ -51,6 +51,7 @@ typedef struct optab_s {
         OPTAB_INSN,
         OPTAB_RANGE,
         OPTAB_MASK,
+        OPTAB_MASK_EXT,
         OPTAB_MASK2,
         OPTAB_MEMMOD,
         OPTAB_TABLE,
@@ -64,6 +65,10 @@ typedef struct optab_s {
         struct {
             OPC mask, val;
         } mask;
+        struct {
+            OPC mask, val;
+            OPC ext_mask, ext_val;
+        } mask_ext;
         struct optab_s * table;
         struct {
             struct optab_s * table;
@@ -213,6 +218,18 @@ typedef struct optab_s {
       .xtype    = M_xt,                                            \
       .u.mask.mask = M_mask,                                       \
       .u.mask.val  = M_val                                         \
+    },
+
+#define MASK_EXT_FPU(M_opcode, M_ops, M_mask, M_val, M_ext_mask, M_ext_val, M_xt, M_min_fpu) \
+    { .type     = OPTAB_MASK_EXT,                                                       \
+      .min_fpu  = M_min_fpu,                                                            \
+      .opcode   = M_opcode,                                                             \
+      .operands = operand_ ## M_ops,                                                     \
+      .xtype    = M_xt,                                                                  \
+      .u.mask_ext.mask = M_mask,                                                         \
+      .u.mask_ext.val  = M_val,                                                          \
+      .u.mask_ext.ext_mask = M_ext_mask,                                                 \
+      .u.mask_ext.ext_val  = M_ext_val                                                   \
     },
 
 /**

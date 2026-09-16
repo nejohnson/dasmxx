@@ -1211,6 +1211,13 @@ OPERAND_FUNC(fbranch32)
     xref_addxref( xtype, g_insn_addr, dest );
 }
 
+OPERAND_FUNC(fpreg_fpreg)
+{
+    UWORD ext = nextw( f, addr );
+
+    operand( "FP%d, FP%d", (ext >> 10) & 0x07, (ext >> 7) & 0x07 );
+}
+
 /******************************************************************************/
 /**                            Opcode Functions                              **/
 /******************************************************************************/
@@ -1871,6 +1878,13 @@ optab_t base_optab[] = {
 
     MASK_DYN_FPU ( fbcc, fbranch16,      0xFFC0, 0xF280, X_JMP, 68881 )
     MASK_DYN_FPU ( fbcc, fbranch32,      0xFFC0, 0xF2C0, X_JMP, 68881 )
+    MASK_EXT_FPU ( "FMOVE.X", fpreg_fpreg, 0xFFFF, 0xF200, 0x007F, 0x0000, X_REG, 68881 )
+    MASK_EXT_FPU ( "FABS.X",  fpreg_fpreg, 0xFFFF, 0xF200, 0x007F, 0x0018, X_REG, 68881 )
+    MASK_EXT_FPU ( "FNEG.X",  fpreg_fpreg, 0xFFFF, 0xF200, 0x007F, 0x001A, X_REG, 68881 )
+    MASK_EXT_FPU ( "FDIV.X",  fpreg_fpreg, 0xFFFF, 0xF200, 0x007F, 0x0020, X_REG, 68881 )
+    MASK_EXT_FPU ( "FADD.X",  fpreg_fpreg, 0xFFFF, 0xF200, 0x007F, 0x0022, X_REG, 68881 )
+    MASK_EXT_FPU ( "FMUL.X",  fpreg_fpreg, 0xFFFF, 0xF200, 0x007F, 0x0023, X_REG, 68881 )
+    MASK_EXT_FPU ( "FSUB.X",  fpreg_fpreg, 0xFFFF, 0xF200, 0x007F, 0x0028, X_REG, 68881 )
     MASK_FPU ( "FRESTORE", ea_control,   0xFFC0, 0xF300, X_NONE, 68881 )
     MASK_FPU ( "FSAVE",    ea_control,   0xFFC0, 0xF340, X_NONE, 68881 )
     
