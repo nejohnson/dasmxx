@@ -14,7 +14,8 @@ c0157  387 floating point
 c0169  386 32-bit modes
 c01A6  386 system
 c01D7  486 identification
-e01D9
+c01D9  386 size-dependent mnemonics
+e01F6
 
 k0000 This is a comment
 

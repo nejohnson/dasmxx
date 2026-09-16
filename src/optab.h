@@ -42,6 +42,7 @@ typedef struct optab_s {
     OPC opc;
     unsigned int min_cpu;
     const char * opcode;
+    const char * (*opcode_fn)( OPC );
     void (*operands)( FILE *, ADDR *, OPC, XREF_TYPE); /* operand function */
     XREF_TYPE xtype;
     enum {
@@ -147,6 +148,25 @@ typedef struct optab_s {
       .opcode   = M_opcode,                                \
       .operands = operand_ ## M_ops,                       \
       .xtype    = M_xt                                     \
+    },
+
+#define INSN_DYN(M_opcode_fn, M_ops, M_opc, M_xt)  \
+    { .type      = OPTAB_INSN,                     \
+      .opc       = M_opc,                          \
+      .opcode    = "DYNAMIC",                      \
+      .opcode_fn = opcode_ ## M_opcode_fn,         \
+      .operands  = operand_ ## M_ops,              \
+      .xtype     = M_xt                            \
+    },
+
+#define INSN_DYN_CPU(M_opcode_fn, M_ops, M_opc, M_xt, M_min_cpu) \
+    { .type      = OPTAB_INSN,                                  \
+      .opc       = M_opc,                                       \
+      .min_cpu   = M_min_cpu,                                   \
+      .opcode    = "DYNAMIC",                                   \
+      .opcode_fn = opcode_ ## M_opcode_fn,                      \
+      .operands  = operand_ ## M_ops,                           \
+      .xtype     = M_xt                                         \
     },
 
 /**

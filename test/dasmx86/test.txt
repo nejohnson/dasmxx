@@ -254,6 +254,23 @@ DB E4           # FNSETPM
 
 0F A2                       # CPUID
 
+## 80386 size-dependent mnemonics ####################################
+
+66 9C                       # PUSHFD
+66 9D                       # POPFD
+66 60                       # PUSHAD
+66 61                       # POPAD
+66 98                       # CWDE
+66 99                       # CDQ
+66 A5                       # MOVSD
+66 A7                       # CMPSD
+66 AF                       # SCASD
+66 AD                       # LODSD
+66 AB                       # STOSD
+66 6D                       # INSD
+66 6F                       # OUTSD
+67 E3 00                    # JECXZ
+
 
 
 

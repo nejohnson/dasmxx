@@ -139,6 +139,76 @@ PREFIX_FUNC(pfx_rep)
         operand( "REPNZ " );
 }
 
+static const char *opcode_pushf( OPC opc )
+{
+    return op32 ? "PUSHFD" : "PUSHF";
+}
+
+static const char *opcode_popf( OPC opc )
+{
+    return op32 ? "POPFD" : "POPF";
+}
+
+static const char *opcode_pusha( OPC opc )
+{
+    return op32 ? "PUSHAD" : "PUSHA";
+}
+
+static const char *opcode_popa( OPC opc )
+{
+    return op32 ? "POPAD" : "POPA";
+}
+
+static const char *opcode_cbw( OPC opc )
+{
+    return op32 ? "CWDE" : "CBW";
+}
+
+static const char *opcode_cwd( OPC opc )
+{
+    return op32 ? "CDQ" : "CWD";
+}
+
+static const char *opcode_movs( OPC opc )
+{
+    return op32 ? "MOVSD" : "MOVSW";
+}
+
+static const char *opcode_cmps( OPC opc )
+{
+    return op32 ? "CMPSD" : "CMPSW";
+}
+
+static const char *opcode_scas( OPC opc )
+{
+    return op32 ? "SCASD" : "SCASW";
+}
+
+static const char *opcode_lods( OPC opc )
+{
+    return op32 ? "LODSD" : "LODSW";
+}
+
+static const char *opcode_stos( OPC opc )
+{
+    return op32 ? "STOSD" : "STOSW";
+}
+
+static const char *opcode_ins( OPC opc )
+{
+    return op32 ? "INSD" : "INSW";
+}
+
+static const char *opcode_outs( OPC opc )
+{
+    return op32 ? "OUTSD" : "OUTSW";
+}
+
+static const char *opcode_jcxz( OPC opc )
+{
+    return addr32 ? "JECXZ" : "JCXZ";
+}
+
 /******************************************************************************/
 /**                            Operand Functions                             **/
 /******************************************************************************/
@@ -1124,14 +1194,14 @@ optab_t base_optab[] = {
     MASK( "PUSH",   reg_op,      0xF8, 0x50, X_NONE )
     MASK( "PUSH",   segmreg,     0xE7, 0x06, X_NONE )
     MASK2( "PUSH",  modrm,       0xFF, 0x38, 0x30, X_NONE )
-    INSN( "PUSH",   imm_op,      0x68, X_NONE ) /* 80186 */
-    INSN( "PUSH",   imm8,        0x6A, X_NONE ) /* 80186 */
-    INSN( "PUSHA",  none,        0x60, X_NONE ) /* 80186 */
+    INSN_CPU( "PUSH",   imm_op,  0x68, X_NONE, 80186 )
+    INSN_CPU( "PUSH",   imm8,    0x6A, X_NONE, 80186 )
+    INSN_DYN_CPU( pusha, none,   0x60, X_NONE, 80186 )
 
     MASK( "POP",    reg_op,      0xF8, 0x58, X_NONE )
     MASK( "POP",    segmreg,     0xE7, 0x07, X_NONE )
     MASK2( "POP",   modrm,       0x8F, 0x38, 0x00, X_NONE )
-    INSN( "POPA",   none,        0x61, X_NONE ) /* 80186 */
+    INSN_DYN_CPU( popa,  none,   0x61, X_NONE, 80186 )
 
     MASK( "XCHG",   acc_reg_op,  0xF8, 0x90, X_NONE )
     MASK( "XCHG",   modrm,       0xFE, 0x86, X_NONE )
@@ -1140,13 +1210,13 @@ optab_t base_optab[] = {
     INSN( "LEA",    modrm,       0x8D, X_NONE )
     INSN( "LDS",    modrm,       0xC5, X_NONE )
     INSN( "LES",    modrm,       0xC4, X_NONE )
-    INSN( "BOUND",  modrm,       0x62, X_NONE ) /* 80186 */
-    INSN( "ARPL",   rm16_reg16,  0x63, X_NONE ) /* 80286 */
+    INSN_CPU( "BOUND",  modrm,       0x62, X_NONE, 80186 )
+    INSN_CPU( "ARPL",   rm16_reg16,  0x63, X_NONE, 80286 )
     
     INSN( "LAHF",   none, 0x9F, X_NONE )
     INSN( "SAHF",   none, 0x9E, X_NONE )
-    INSN( "PUSHF",  none, 0x9C, X_NONE )
-    INSN( "POPF",   none, 0x9D, X_NONE )
+    INSN_DYN( pushf, none, 0x9C, X_NONE )
+    INSN_DYN( popf,  none, 0x9D, X_NONE )
   
 /*----------------------------------------------------------------------------
   ARITHMETIC
@@ -1226,8 +1296,8 @@ optab_t base_optab[] = {
     
     MASK2( "IMUL",  modrm, 0xF6, 0x38, 0x28, X_NONE )
     MASK2( "IMUL",  modrm, 0xF7, 0x38, 0x28, X_NONE )
-    INSN( "IMUL",   modrm_imm16, 0x69, X_NONE ) /* 80186 r16,r/m16,imm16 */
-    INSN( "IMUL",   modrm_imm8,  0x6B, X_NONE ) /* 80186 r16,r/m16,imm8  */
+    INSN_CPU( "IMUL",   modrm_imm16, 0x69, X_NONE, 80186 )
+    INSN_CPU( "IMUL",   modrm_imm8,  0x6B, X_NONE, 80186 )
 
     MASK2( "DIV",   modrm, 0xF6, 0x38, 0x30, X_NONE )
     MASK2( "DIV",   modrm, 0xF7, 0x38, 0x30, X_NONE )
@@ -1241,8 +1311,8 @@ optab_t base_optab[] = {
     INSN( "DAS",    none, 0x2F, X_NONE )
     MASK2( "AAM",   gobble, 0xD4, 0xFF, 0x0A, X_NONE )
     MASK2( "AAD",   gobble, 0xD5, 0xFF, 0x0A, X_NONE )
-    INSN( "CBW",    none, 0x98, X_NONE )
-    INSN( "CWD",    none, 0x99, X_NONE )
+    INSN_DYN( cbw,   none, 0x98, X_NONE )
+    INSN_DYN( cwd,   none, 0x99, X_NONE )
     
 /*----------------------------------------------------------------------------
   LOGIC
@@ -1268,8 +1338,8 @@ optab_t base_optab[] = {
 /* 80186: shift/rotate-by-imm8 (C0 /n ib, C1 /n ib) -- same REG-field group
  * selectors as SHIFT_ROT_GRP above, explicit imm8 count instead of CL/1. */
 #define SHIFT_ROT_IMM_GRP(M_name,M_mask) \
-    MASK2( M_name, modrm_shiftimm, 0xC0, 0x38, M_mask, X_NONE ) \
-    MASK2( M_name, modrm_shiftimm, 0xC1, 0x38, M_mask, X_NONE )
+    MASK2_CPU( M_name, modrm_shiftimm, 0xC0, 0x38, M_mask, X_NONE, 80186 ) \
+    MASK2_CPU( M_name, modrm_shiftimm, 0xC1, 0x38, M_mask, X_NONE, 80186 )
 
     SHIFT_ROT_IMM_GRP( "SHL", 0x20 )
     SHIFT_ROT_IMM_GRP( "SHR", 0x28 )
@@ -1287,27 +1357,27 @@ optab_t base_optab[] = {
     PREFIX( pfx_rep, 0xF3 )
   
     INSN( "MOVSB", none, 0xA4, X_NONE )
-    INSN( "MOVSW", none, 0xA5, X_NONE )
+    INSN_DYN( movs, none, 0xA5, X_NONE )
     
     INSN( "CMPSB", none, 0xA6, X_NONE )
-    INSN( "CMPSW", none, 0xA7, X_NONE )
+    INSN_DYN( cmps, none, 0xA7, X_NONE )
     
     INSN( "MOVSB", none, 0xA4, X_NONE )
-    INSN( "MOVSW", none, 0xA5, X_NONE )
+    INSN_DYN( movs, none, 0xA5, X_NONE )
     
     INSN( "SCASB", none, 0xAE, X_NONE )
-    INSN( "SCASW", none, 0xAF, X_NONE )
+    INSN_DYN( scas, none, 0xAF, X_NONE )
     
     INSN( "LODSB", none, 0xAC, X_NONE )
-    INSN( "LODSW", none, 0xAD, X_NONE )
+    INSN_DYN( lods, none, 0xAD, X_NONE )
     
     INSN( "STOSB", none, 0xAA, X_NONE )
-    INSN( "STOSW", none, 0xAB, X_NONE )
+    INSN_DYN( stos, none, 0xAB, X_NONE )
 
-    INSN( "INSB",  none, 0x6C, X_NONE ) /* 80186 */
-    INSN( "INSW",  none, 0x6D, X_NONE ) /* 80186 */
-    INSN( "OUTSB", none, 0x6E, X_NONE ) /* 80186 */
-    INSN( "OUTSW", none, 0x6F, X_NONE ) /* 80186 */
+    INSN_CPU( "INSB",  none, 0x6C, X_NONE, 80186 )
+    INSN_DYN_CPU( ins, none, 0x6D, X_NONE, 80186 )
+    INSN_CPU( "OUTSB", none, 0x6E, X_NONE, 80186 )
+    INSN_DYN_CPU( outs, none, 0x6F, X_NONE, 80186 )
 
 /*----------------------------------------------------------------------------
   CONTROL TRANSFER
@@ -1328,8 +1398,8 @@ optab_t base_optab[] = {
     INSN( "RETN",  imm16,  0xC2, X_NONE )
     INSN( "RETF",  none,   0xCB, X_NONE )
     INSN( "RETF",  imm16,  0xCA, X_NONE )
-    INSN( "ENTER", imm16_imm8, 0xC8, X_NONE ) /* 80186 */
-    INSN( "LEAVE", none,   0xC9, X_NONE )     /* 80186 */
+    INSN_CPU( "ENTER", imm16_imm8, 0xC8, X_NONE, 80186 )
+    INSN_CPU( "LEAVE", none,   0xC9, X_NONE, 80186 )
 
     INSN( "JO",    disp8,  0x70, X_JMP )
     INSN( "JNO",   disp8,  0x71, X_JMP )
@@ -1351,7 +1421,7 @@ optab_t base_optab[] = {
     INSN( "LOOP",  disp8,  0xE2, X_JMP )
     INSN( "LOOPNZ",disp8,  0xE0, X_JMP )
     INSN( "LOOPZ", disp8,  0xE1, X_JMP )
-    INSN( "JCXZ",  disp8,  0xE3, X_JMP )
+    INSN_DYN( jcxz,  disp8,  0xE3, X_JMP )
 
     INSN( "INT",   imm8,   0xCD, X_NONE )
     INSN( "INT3",  none,   0xCC, X_NONE )

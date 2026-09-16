@@ -94,6 +94,13 @@ static void opcode( const char *opcode )
     output_buffer += n;
 }
 
+static const char *optab_opcode( optab_t *optab, OPC opc )
+{
+    if ( optab->opcode_fn )
+        return optab->opcode_fn( opc );
+    return optab->opcode;
+}
+
 /***********************************************************
  *
  * FUNCTION
@@ -191,7 +198,7 @@ static int walk_table( FILE * f, ADDR * addr, optab_t * optab, OPC opc )
                     ( optab->type == OPTAB_MASK 
                       && ( ( opc & optab->u.mask.mask ) == optab->u.mask.val ) ) )
         {
-            opcode( optab->opcode );
+            opcode( optab_opcode( optab, opc ) );
             optab->operands( f, addr, opc, optab->xtype );
             return INSN_FOUND;
         }
@@ -205,7 +212,7 @@ static int walk_table( FILE * f, ADDR * addr, optab_t * optab, OPC opc )
             
             if ( ( peek_byte & optab->u.mask.mask ) == optab->u.mask.val )
             {
-                opcode( optab->opcode );
+                opcode( optab_opcode( optab, opc ) );
                 optab->operands( f, addr, opc, optab->xtype );
                 return INSN_FOUND;
             }
@@ -221,7 +228,7 @@ static int walk_table( FILE * f, ADDR * addr, optab_t * optab, OPC opc )
             
             if ( ( peek_byte & 0x8F ) == optab->opc )
             {
-                opcode( optab->opcode );
+                opcode( optab_opcode( optab, opc ) );
                 optab->operands( f, addr, opc, optab->xtype );
                 return INSN_FOUND;
             }        
