@@ -5,7 +5,8 @@ s00AE  String
 w00B8  Word
 a00BC  Alpha
 m00C0  Bitmap
-e00C8
+c00C8  Floating point
+e00FC
 
 k0000 This is a comment
 
@@ -14,4 +15,3 @@ l5678  JumpDest1
 l6678  JumpDest2
 
 l05E0  UndocInsn
-

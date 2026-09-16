@@ -144,6 +144,26 @@ DB 00
 
 80 40 20 10 08 04 02 01
 
+## Floating Point #####################################################
+
+D9 E8           # FLD1
+D9 EE           # FLDZ
+D9 C1           # FLD ST(1)
+D9 C9           # FXCH ST(1)
+D8 C1           # FADD ST, ST(1)
+DC C1           # FADD ST(1), ST
+DE C1           # FADDP ST(1), ST
+D8 06 34 12     # FADD D[1234]
+D9 16 34 12     # FST D[1234]
+D9 2E 34 12     # FLDCW W[1234]
+DA 06 34 12     # FIADD D[1234]
+DB 2E 34 12     # FLD T[1234]
+DD 3E 34 12     # FNSTSW W[1234]
+DE 06 34 12     # FIADD W[1234]
+DF 2E 34 12     # FILD Q[1234]
+DF E0           # FNSTSW AX
+DB E3           # FNINIT
+DE D9           # FCOMPP
 
 
 

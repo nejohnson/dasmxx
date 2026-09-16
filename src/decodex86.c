@@ -66,6 +66,8 @@ DASM_PROFILE( "dasmx86", "Intel x86", 8, 9, 0, 1, 1 )
 static const char * const segreg[5]  = { "", "ES", "CS", "SS", "DS" };
 static const char * const wordreg[8] = { "AX", "CX", "DX", "BX", "SP", "BP", "SI", "DI" };
 static const char * const bytereg[8] = { "AL", "CL", "DL", "BL", "AH", "CH", "DH", "BH" };
+static const char * const eareg[8]   = { "BX + SI", "BX + DI", "BP + SI", "BP + DI",
+                                         "SI", "DI", "BP", "BX" };
 
 static int segpfx = NOSEGPFX;
 
@@ -122,6 +124,11 @@ OPERAND_FUNC(gobble)
 OPERAND_FUNC(dx)
 {
     operand( "DX" );
+}
+
+OPERAND_FUNC(AX)
+{
+    operand( "AX" );
 }
 
 OPERAND_FUNC(reg)
@@ -260,8 +267,6 @@ OPERAND_FUNC(modrm)
     int isseg  = 0;
     int dest, src, action;
     enum { DO_REG, DO_ADDR };
-    static char *eareg[8] = { "BX + SI", "BX + DI", "BP + SI", "BP + DI",
-                              "SI", "DI", "BP", "BX" };
     
     /* Handle special-case opcodes */
     switch( opc )
@@ -473,6 +478,130 @@ OPERAND_FUNC(modrm_shiftimm)
 
     count = next( f, addr );
     operand( FORMAT_NUM_8BIT, count );
+}
+
+/***********************************************************
+ * 8087/80187 floating-point operands.
+ ************************************************************/
+
+static void operand_fp_ea( FILE *f, ADDR *addr, const char *size )
+{
+    UBYTE arg = next( f, addr );
+    int mod   = (arg >> 6) & 3;
+    int rm    = arg & 7;
+
+    switch( mod )
+    {
+    case 0:
+        EMIT_SEG_PFX;
+        if ( rm == 6 )
+        {
+            UBYTE displo = next( f, addr );
+            UBYTE disphi = next( f, addr );
+            ADDR disp = MK_WORD( displo, disphi );
+            operand( "%s[" FORMAT_NUM_16BIT "]", size, disp );
+        }
+        else
+        {
+            operand( "%s[%s]", size, eareg[rm] );
+        }
+        break;
+
+    case 1:
+    {
+        BYTE disp = (BYTE)next( f, addr );
+        EMIT_SEG_PFX;
+        operand( "%s[%s + " FORMAT_NUM_8BIT "]", size, eareg[rm], disp );
+        break;
+    }
+
+    case 2:
+    {
+        UBYTE displo = next( f, addr );
+        UBYTE disphi = next( f, addr );
+        ADDR disp = MK_WORD( displo, disphi );
+        EMIT_SEG_PFX;
+        operand( "%s[%s + " FORMAT_NUM_16BIT "]", size, eareg[rm], disp );
+        break;
+    }
+
+    case 3:
+        operand( "ST(%d)", rm );
+        break;
+    }
+}
+
+OPERAND_FUNC(fp_m16int)
+{
+    operand_fp_ea( f, addr, "W" );
+}
+
+OPERAND_FUNC(fp_m32int)
+{
+    operand_fp_ea( f, addr, "D" );
+}
+
+OPERAND_FUNC(fp_m64int)
+{
+    operand_fp_ea( f, addr, "Q" );
+}
+
+OPERAND_FUNC(fp_m32real)
+{
+    operand_fp_ea( f, addr, "D" );
+}
+
+OPERAND_FUNC(fp_m64real)
+{
+    operand_fp_ea( f, addr, "Q" );
+}
+
+OPERAND_FUNC(fp_m80real)
+{
+    operand_fp_ea( f, addr, "T" );
+}
+
+OPERAND_FUNC(fp_m80bcd)
+{
+    operand_fp_ea( f, addr, "T" );
+}
+
+OPERAND_FUNC(fp_menv)
+{
+    operand_fp_ea( f, addr, "ENV" );
+}
+
+OPERAND_FUNC(fp_m16)
+{
+    operand_fp_ea( f, addr, "W" );
+}
+
+OPERAND_FUNC(fp_sti)
+{
+    UBYTE arg = next( f, addr );
+
+    operand( "ST(%d)", arg & 7 );
+}
+
+OPERAND_FUNC(fp_st_sti)
+{
+    UBYTE arg = next( f, addr );
+
+    operand( "ST, ST(%d)", arg & 7 );
+}
+
+OPERAND_FUNC(fp_sti_st)
+{
+    UBYTE arg = next( f, addr );
+
+    operand( "ST(%d), ST", arg & 7 );
+}
+
+OPERAND_FUNC(gobble_AX)
+{
+    UBYTE unused = next( f, addr );
+
+    operand_AX( f, addr, opc, xtype );
 }
 
 /******************************************************************************/
@@ -774,7 +903,144 @@ optab_t base_optab[] = {
     
     INSN( "HLT",    none,  0xF4, X_NONE )
     INSN( "WAIT",   none,  0x9B, X_NONE )
-    
+
+/*----------------------------------------------------------------------------
+  FLOATING POINT (8087/80187)
+  ----------------------------------------------------------------------------*/
+
+#define FP_MEM(M_name, M_ops, M_opc, M_reg) \
+    MASK2( M_name, M_ops, M_opc, 0xF8, (0x00 | M_reg), X_NONE ) \
+    MASK2( M_name, M_ops, M_opc, 0xF8, (0x40 | M_reg), X_NONE ) \
+    MASK2( M_name, M_ops, M_opc, 0xF8, (0x80 | M_reg), X_NONE )
+
+    MASK2( "FADD",   fp_st_sti,  0xD8, 0xF8, 0xC0, X_NONE )
+    MASK2( "FMUL",   fp_st_sti,  0xD8, 0xF8, 0xC8, X_NONE )
+    MASK2( "FCOM",   fp_sti,     0xD8, 0xF8, 0xD0, X_NONE )
+    MASK2( "FCOMP",  fp_sti,     0xD8, 0xF8, 0xD8, X_NONE )
+    MASK2( "FSUB",   fp_st_sti,  0xD8, 0xF8, 0xE0, X_NONE )
+    MASK2( "FSUBR",  fp_st_sti,  0xD8, 0xF8, 0xE8, X_NONE )
+    MASK2( "FDIV",   fp_st_sti,  0xD8, 0xF8, 0xF0, X_NONE )
+    MASK2( "FDIVR",  fp_st_sti,  0xD8, 0xF8, 0xF8, X_NONE )
+
+    FP_MEM( "FADD",  fp_m32real, 0xD8, 0x00 )
+    FP_MEM( "FMUL",  fp_m32real, 0xD8, 0x08 )
+    FP_MEM( "FCOM",  fp_m32real, 0xD8, 0x10 )
+    FP_MEM( "FCOMP", fp_m32real, 0xD8, 0x18 )
+    FP_MEM( "FSUB",  fp_m32real, 0xD8, 0x20 )
+    FP_MEM( "FSUBR", fp_m32real, 0xD8, 0x28 )
+    FP_MEM( "FDIV",  fp_m32real, 0xD8, 0x30 )
+    FP_MEM( "FDIVR", fp_m32real, 0xD8, 0x38 )
+
+    MASK2( "FLD",    fp_sti,     0xD9, 0xF8, 0xC0, X_NONE )
+    MASK2( "FXCH",   fp_sti,     0xD9, 0xF8, 0xC8, X_NONE )
+    MASK2( "FNOP",   gobble,     0xD9, 0xFF, 0xD0, X_NONE )
+    MASK2( "FCHS",   gobble,     0xD9, 0xFF, 0xE0, X_NONE )
+    MASK2( "FABS",   gobble,     0xD9, 0xFF, 0xE1, X_NONE )
+    MASK2( "FTST",   gobble,     0xD9, 0xFF, 0xE4, X_NONE )
+    MASK2( "FXAM",   gobble,     0xD9, 0xFF, 0xE5, X_NONE )
+    MASK2( "FLD1",   gobble,     0xD9, 0xFF, 0xE8, X_NONE )
+    MASK2( "FLDL2T", gobble,     0xD9, 0xFF, 0xE9, X_NONE )
+    MASK2( "FLDL2E", gobble,     0xD9, 0xFF, 0xEA, X_NONE )
+    MASK2( "FLDPI",  gobble,     0xD9, 0xFF, 0xEB, X_NONE )
+    MASK2( "FLDLG2", gobble,     0xD9, 0xFF, 0xEC, X_NONE )
+    MASK2( "FLDLN2", gobble,     0xD9, 0xFF, 0xED, X_NONE )
+    MASK2( "FLDZ",   gobble,     0xD9, 0xFF, 0xEE, X_NONE )
+    MASK2( "F2XM1",  gobble,     0xD9, 0xFF, 0xF0, X_NONE )
+    MASK2( "FYL2X",  gobble,     0xD9, 0xFF, 0xF1, X_NONE )
+    MASK2( "FPTAN",  gobble,     0xD9, 0xFF, 0xF2, X_NONE )
+    MASK2( "FPATAN", gobble,     0xD9, 0xFF, 0xF3, X_NONE )
+    MASK2( "FXTRACT",gobble,     0xD9, 0xFF, 0xF4, X_NONE )
+    MASK2( "FDECSTP",gobble,     0xD9, 0xFF, 0xF6, X_NONE )
+    MASK2( "FINCSTP",gobble,     0xD9, 0xFF, 0xF7, X_NONE )
+    MASK2( "FPREM",  gobble,     0xD9, 0xFF, 0xF8, X_NONE )
+    MASK2( "FYL2XP1",gobble,     0xD9, 0xFF, 0xF9, X_NONE )
+    MASK2( "FSQRT",  gobble,     0xD9, 0xFF, 0xFA, X_NONE )
+    MASK2( "FRNDINT",gobble,     0xD9, 0xFF, 0xFC, X_NONE )
+    MASK2( "FSCALE", gobble,     0xD9, 0xFF, 0xFD, X_NONE )
+
+    FP_MEM( "FLD",    fp_m32real, 0xD9, 0x00 )
+    FP_MEM( "FST",    fp_m32real, 0xD9, 0x10 )
+    FP_MEM( "FSTP",   fp_m32real, 0xD9, 0x18 )
+    FP_MEM( "FLDENV", fp_menv,    0xD9, 0x20 )
+    FP_MEM( "FLDCW",  fp_m16,     0xD9, 0x28 )
+    FP_MEM( "FNSTENV",fp_menv,    0xD9, 0x30 )
+    FP_MEM( "FNSTCW", fp_m16,     0xD9, 0x38 )
+
+    FP_MEM( "FIADD",  fp_m32int,  0xDA, 0x00 )
+    FP_MEM( "FIMUL",  fp_m32int,  0xDA, 0x08 )
+    FP_MEM( "FICOM",  fp_m32int,  0xDA, 0x10 )
+    FP_MEM( "FICOMP", fp_m32int,  0xDA, 0x18 )
+    FP_MEM( "FISUB",  fp_m32int,  0xDA, 0x20 )
+    FP_MEM( "FISUBR", fp_m32int,  0xDA, 0x28 )
+    FP_MEM( "FIDIV",  fp_m32int,  0xDA, 0x30 )
+    FP_MEM( "FIDIVR", fp_m32int,  0xDA, 0x38 )
+
+    MASK2( "FNENI",   gobble,     0xDB, 0xFF, 0xE0, X_NONE )
+    MASK2( "FNDISI",  gobble,     0xDB, 0xFF, 0xE1, X_NONE )
+    MASK2( "FNCLEX",  gobble,     0xDB, 0xFF, 0xE2, X_NONE )
+    MASK2( "FNINIT",  gobble,     0xDB, 0xFF, 0xE3, X_NONE )
+    MASK2( "FNSETPM", gobble,     0xDB, 0xFF, 0xE4, X_NONE )
+
+    FP_MEM( "FILD",   fp_m32int,  0xDB, 0x00 )
+    FP_MEM( "FIST",   fp_m32int,  0xDB, 0x10 )
+    FP_MEM( "FISTP",  fp_m32int,  0xDB, 0x18 )
+    FP_MEM( "FLD",    fp_m80real, 0xDB, 0x28 )
+    FP_MEM( "FSTP",   fp_m80real, 0xDB, 0x38 )
+
+    MASK2( "FADD",   fp_sti_st,   0xDC, 0xF8, 0xC0, X_NONE )
+    MASK2( "FMUL",   fp_sti_st,   0xDC, 0xF8, 0xC8, X_NONE )
+    MASK2( "FSUBR",  fp_sti_st,   0xDC, 0xF8, 0xE0, X_NONE )
+    MASK2( "FSUB",   fp_sti_st,   0xDC, 0xF8, 0xE8, X_NONE )
+    MASK2( "FDIVR",  fp_sti_st,   0xDC, 0xF8, 0xF0, X_NONE )
+    MASK2( "FDIV",   fp_sti_st,   0xDC, 0xF8, 0xF8, X_NONE )
+
+    FP_MEM( "FADD",  fp_m64real, 0xDC, 0x00 )
+    FP_MEM( "FMUL",  fp_m64real, 0xDC, 0x08 )
+    FP_MEM( "FCOM",  fp_m64real, 0xDC, 0x10 )
+    FP_MEM( "FCOMP", fp_m64real, 0xDC, 0x18 )
+    FP_MEM( "FSUB",  fp_m64real, 0xDC, 0x20 )
+    FP_MEM( "FSUBR", fp_m64real, 0xDC, 0x28 )
+    FP_MEM( "FDIV",  fp_m64real, 0xDC, 0x30 )
+    FP_MEM( "FDIVR", fp_m64real, 0xDC, 0x38 )
+
+    MASK2( "FFREE",  fp_sti,      0xDD, 0xF8, 0xC0, X_NONE )
+    MASK2( "FST",    fp_sti,      0xDD, 0xF8, 0xD0, X_NONE )
+    MASK2( "FSTP",   fp_sti,      0xDD, 0xF8, 0xD8, X_NONE )
+
+    FP_MEM( "FLD",    fp_m64real, 0xDD, 0x00 )
+    FP_MEM( "FST",    fp_m64real, 0xDD, 0x10 )
+    FP_MEM( "FSTP",   fp_m64real, 0xDD, 0x18 )
+    FP_MEM( "FRSTOR", fp_menv,    0xDD, 0x20 )
+    FP_MEM( "FNSAVE", fp_menv,    0xDD, 0x30 )
+    FP_MEM( "FNSTSW", fp_m16,     0xDD, 0x38 )
+
+    MASK2( "FADDP",  fp_sti_st,   0xDE, 0xF8, 0xC0, X_NONE )
+    MASK2( "FMULP",  fp_sti_st,   0xDE, 0xF8, 0xC8, X_NONE )
+    MASK2( "FCOMPP", gobble,      0xDE, 0xFF, 0xD9, X_NONE )
+    MASK2( "FSUBRP", fp_sti_st,   0xDE, 0xF8, 0xE0, X_NONE )
+    MASK2( "FSUBP",  fp_sti_st,   0xDE, 0xF8, 0xE8, X_NONE )
+    MASK2( "FDIVRP", fp_sti_st,   0xDE, 0xF8, 0xF0, X_NONE )
+    MASK2( "FDIVP",  fp_sti_st,   0xDE, 0xF8, 0xF8, X_NONE )
+
+    FP_MEM( "FIADD",  fp_m16int, 0xDE, 0x00 )
+    FP_MEM( "FIMUL",  fp_m16int, 0xDE, 0x08 )
+    FP_MEM( "FICOM",  fp_m16int, 0xDE, 0x10 )
+    FP_MEM( "FICOMP", fp_m16int, 0xDE, 0x18 )
+    FP_MEM( "FISUB",  fp_m16int, 0xDE, 0x20 )
+    FP_MEM( "FISUBR", fp_m16int, 0xDE, 0x28 )
+    FP_MEM( "FIDIV",  fp_m16int, 0xDE, 0x30 )
+    FP_MEM( "FIDIVR", fp_m16int, 0xDE, 0x38 )
+
+    MASK2( "FNSTSW", gobble_AX,   0xDF, 0xFF, 0xE0, X_NONE )
+
+    FP_MEM( "FILD",  fp_m16int,  0xDF, 0x00 )
+    FP_MEM( "FIST",  fp_m16int,  0xDF, 0x10 )
+    FP_MEM( "FISTP", fp_m16int,  0xDF, 0x18 )
+    FP_MEM( "FBLD",  fp_m80bcd,  0xDF, 0x20 )
+    FP_MEM( "FILD",  fp_m64int,  0xDF, 0x28 )
+    FP_MEM( "FBSTP", fp_m80bcd,  0xDF, 0x30 )
+    FP_MEM( "FISTP", fp_m64int,  0xDF, 0x38 )
+
     MASK( "ESC",     modrm, 0xF8, 0xD8, X_NONE )
     
     INSN( "LOCK",   none,  0xF0, X_NONE )
