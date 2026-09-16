@@ -11,7 +11,10 @@ c00FD  286 protected-mode
 c0113  386 extended
 c0140  486 extended
 c0157  387 floating point
-e0165
+c0169  386 32-bit modes
+c01A6  386 system
+c01D7  486 identification
+e01D9
 
 k0000 This is a comment
 

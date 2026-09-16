@@ -119,6 +119,24 @@ static OPC next_insn( FILE* fp, ADDR *addr  )
     return 0; /* unreachable, error() exits */
 }
 
+#if defined(__GNUC__)
+void __attribute__((weak)) dasm_pre_insn( void )
+{
+}
+
+void __attribute__((weak)) dasm_post_insn( void )
+{
+}
+#else
+void dasm_pre_insn( void )
+{
+}
+
+void dasm_post_insn( void )
+{
+}
+#endif
+
 /***********************************************************
  *
  * FUNCTION
@@ -328,6 +346,7 @@ ADDR dasm_insn( FILE *f, char *outbuf, ADDR addr )
 
     /* Store start address in a global for use in xref calls */    
     g_insn_addr = addr;
+    dasm_pre_insn();
     
     /* Setup g_output_buffer to point to caller's output buffer */
     output_buffer = outbuf;
@@ -341,6 +360,8 @@ ADDR dasm_insn( FILE *f, char *outbuf, ADDR addr )
     /* If we didn't find a match, indicate this to the output */
     if ( found != INSN_FOUND )
         opcode( "???" );
+
+    dasm_post_insn();
     
     return addr;
 }

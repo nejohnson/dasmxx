@@ -81,6 +81,14 @@ typedef struct optab_s {
       .operands = prefix_ ## M_pfx,  \
     },
 
+#define PREFIX_CPU(M_pfx, M_opc, M_min_cpu) \
+    { .type     = OPTAB_PREFIX,             \
+      .opc      = M_opc,                    \
+      .min_cpu  = M_min_cpu,                \
+      .opcode   = "PREFIX",                 \
+      .operands = prefix_ ## M_pfx,         \
+    },
+
 /**
     The given instruction byte jumps to another decode table.
 **/
@@ -276,5 +284,11 @@ extern OPC  stack_pop( void );
 
 /* Start address of each instruction as it is decoded. */
 extern ADDR g_insn_addr;
+
+/* Optional target-specific instruction hooks.  optab.c provides weak no-op
+ * defaults for decoders that do not need per-instruction state.
+ */
+extern void dasm_pre_insn( void );
+extern void dasm_post_insn( void );
 
 #endif /* _OPTAB_H_ */

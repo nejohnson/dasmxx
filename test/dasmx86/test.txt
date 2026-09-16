@@ -215,6 +215,44 @@ D9 FF           # FCOS
 DA E9           # FUCOMPP
 DD E0           # FUCOM ST(0)
 DD E8           # FUCOMP ST(0)
+DF C0           # FFREEP ST(0)
+DB E4           # FNSETPM
+
+## 80386 32-bit modes ################################################
+
+66 B8 78 56 34 12           # MOV EAX, 12345678
+66 05 04 03 02 01           # ADD EAX, 01020304
+66 81 00 78 56 34 12        # ADD D[BX + SI], 12345678
+67 8B 04 8D 78 56 34 12     # MOV AX, W[ECX*4 + 12345678]
+67 8B 44 8B 10              # MOV AX, W[EBX + ECX*4 + 10]
+66 67 8B 84 8B 78 56 34 12  # MOV EAX, D[EBX + ECX*4 + 12345678]
+64 67 8B 00                 # MOV AX, FS:W[EAX]
+66 0F B6 C1                 # MOVZX EAX, CL
+66 0F B1 C1                 # CMPXCHG ECX, EAX
+67 D8 04 8D 78 56 34 12     # FADD D[ECX*4 + 12345678]
+
+## 80386 system and segment ##########################################
+
+0F 84 34 12                 # JE near16
+66 0F 85 78 56 34 12        # JNE near32
+0F 20 C0                    # MOV EAX, CR0
+0F 22 D8                    # MOV CR3, EAX
+0F 21 D8                    # MOV EAX, DR3
+0F 24 F0                    # MOV EAX, TR6
+0F A0                       # PUSH FS
+0F A1                       # POP FS
+0F A8                       # PUSH GS
+0F A9                       # POP GS
+0F AF C1                    # IMUL AX, CX
+66 0F AF C1                 # IMUL EAX, ECX
+0F B2 00                    # LSS AX, W[BX + SI]
+66 0F B4 00                 # LFS EAX, D[BX + SI]
+8C 20                       # MOV W[BX + SI], FS
+8E 28                       # MOV GS, W[BX + SI]
+
+## 80486 identification #############################################
+
+0F A2                       # CPUID
 
 
 

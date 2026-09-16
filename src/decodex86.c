@@ -51,9 +51,14 @@ DASM_PROFILE( "dasmx86", "Intel x86", 8, 9, 0, 1, 1 )
 /* Common output formats */
 #define FORMAT_NUM_8BIT      "0%02X"
 #define FORMAT_NUM_16BIT     "0%04X"
+#define FORMAT_NUM_32BIT     "0%08X"
 
 /* Construct a 16-bit word out of low and high bytes */
 #define MK_WORD(l,h)         ( ((l) & 0xFF) | (((h) & 0xFF) << 8) )
+#define MK_DWORD(a,b,c,d)    ( ((ULWORD)((a) & 0xFF))       \
+                             | ((ULWORD)((b) & 0xFF) << 8)  \
+                             | ((ULWORD)((c) & 0xFF) << 16) \
+                             | ((ULWORD)((d) & 0xFF) << 24) )
 
 #define NOSEGPFX    ( 0 )
 #define EMIT_SEG_PFX \
@@ -63,14 +68,34 @@ DASM_PROFILE( "dasmx86", "Intel x86", 8, 9, 0, 1, 1 )
  * Private data.  Declare as static.
  *****************************************************************************/
 
-static const char * const segreg[5]  = { "", "ES", "CS", "SS", "DS" };
+static const char * const segreg[7]  = { "", "ES", "CS", "SS", "DS", "FS", "GS" };
 static const char * const wordreg[8] = { "AX", "CX", "DX", "BX", "SP", "BP", "SI", "DI" };
 static const char * const bytereg[8] = { "AL", "CL", "DL", "BL", "AH", "CH", "DH", "BH" };
 static const char * const dwordreg[8]= { "EAX", "ECX", "EDX", "EBX", "ESP", "EBP", "ESI", "EDI" };
 static const char * const eareg[8]   = { "BX + SI", "BX + DI", "BP + SI", "BP + DI",
                                          "SI", "DI", "BP", "BX" };
+static const char * const eareg32[8] = { "EAX", "ECX", "EDX", "EBX", "ESP", "EBP", "ESI", "EDI" };
+static const char * const ctrlreg[8] = { "CR0", "CR1", "CR2", "CR3", "CR4", "CR5", "CR6", "CR7" };
+static const char * const dbgreg[8]  = { "DR0", "DR1", "DR2", "DR3", "DR4", "DR5", "DR6", "DR7" };
+static const char * const testreg[8] = { "TR0", "TR1", "TR2", "TR3", "TR4", "TR5", "TR6", "TR7" };
 
 static int segpfx = NOSEGPFX;
+static int op32 = 0;
+static int addr32 = 0;
+
+void dasm_pre_insn( void )
+{
+    segpfx = NOSEGPFX;
+    op32 = 0;
+    addr32 = 0;
+}
+
+void dasm_post_insn( void )
+{
+    segpfx = NOSEGPFX;
+    op32 = 0;
+    addr32 = 0;
+}
 
 /*****************************************************************************
  *        Private Functions
@@ -91,6 +116,21 @@ PREFIX_FUNC(pfx_seg)
     segpfx = reg + 1;
 }
 
+PREFIX_FUNC(pfx_seg386)
+{
+    segpfx = (opc == 0x64) ? 5 : 6;
+}
+
+PREFIX_FUNC(pfx_opsize)
+{
+    op32 = 1;
+}
+
+PREFIX_FUNC(pfx_addrsize)
+{
+    addr32 = 1;
+}
+
 PREFIX_FUNC(pfx_rep)
 {
     if ( opc & 1 )
@@ -102,6 +142,74 @@ PREFIX_FUNC(pfx_rep)
 /******************************************************************************/
 /**                            Operand Functions                             **/
 /******************************************************************************/
+
+static UWORD read_u16( FILE *f, ADDR *addr )
+{
+    UBYTE lo = next( f, addr );
+    UBYTE hi = next( f, addr );
+
+    return MK_WORD( lo, hi );
+}
+
+static ULWORD read_u32( FILE *f, ADDR *addr )
+{
+    UBYTE b0 = next( f, addr );
+    UBYTE b1 = next( f, addr );
+    UBYTE b2 = next( f, addr );
+    UBYTE b3 = next( f, addr );
+
+    return MK_DWORD( b0, b1, b2, b3 );
+}
+
+static int op_width( int wordop )
+{
+    return wordop ? (op32 ? 32 : 16) : 8;
+}
+
+static const char * const *regs_for_width( int width )
+{
+    if ( width == 8 )
+        return bytereg;
+    if ( width == 32 )
+        return dwordreg;
+    return wordreg;
+}
+
+static const char *acc_for_width( int width )
+{
+    if ( width == 8 )
+        return "AL";
+    if ( width == 32 )
+        return "EAX";
+    return "AX";
+}
+
+static char size_for_width( int width )
+{
+    if ( width == 8 )
+        return 'B';
+    if ( width == 32 )
+        return 'D';
+    return 'W';
+}
+
+static void emit_imm_width( FILE *f, ADDR *addr, int width )
+{
+    if ( width == 8 )
+    {
+        operand( FORMAT_NUM_8BIT, next( f, addr ) );
+    }
+    else if ( width == 32 )
+    {
+        operand( FORMAT_NUM_32BIT, read_u32( f, addr ) );
+    }
+    else
+    {
+        operand( FORMAT_NUM_16BIT, read_u16( f, addr ) );
+    }
+}
+
+static void operand_ea( FILE *f, ADDR *addr, UBYTE arg, const char *size, const char * const *regs );
 
 /******************************************************************************/
 /**                            Empty Operands                                **/
@@ -135,9 +243,9 @@ OPERAND_FUNC(AX)
 OPERAND_FUNC(reg)
 {
     int reg = opc & 0x07;
-    int isword = opc & 0x08;
+    int width = op_width( opc & 0x08 );
     
-    operand( (isword ? wordreg : bytereg)[reg] );
+    operand( regs_for_width( width )[reg] );
 }
 
 OPERAND_FUNC(reg16)
@@ -154,10 +262,26 @@ OPERAND_FUNC(reg32)
     operand( dwordreg[reg] );
 }
 
+OPERAND_FUNC(FS)
+{
+    operand( "FS" );
+}
+
+OPERAND_FUNC(GS)
+{
+    operand( "GS" );
+}
+
+OPERAND_FUNC(reg_op)
+{
+    int reg = opc & 0x07;
+
+    operand( regs_for_width( op_width( 1 ) )[reg] );
+}
+
 OPERAND_FUNC(acc)
 {
-    int wordop = opc & 1;
-    operand( wordop ? "AX" : "AL" );
+    operand( acc_for_width( op_width( opc & 1 ) ) );
 }
 
 OPERAND_FUNC(imm8)
@@ -199,47 +323,52 @@ OPERAND_FUNC(disp8)
 
 OPERAND_FUNC(imm16)
 {
-    UBYTE lsb   = next( f, addr );
-    UBYTE msb   = next( f, addr );
-    UWORD imm16 = MK_WORD( lsb, msb );
+    UWORD imm16 = read_u16( f, addr );
 
     operand( xref_genwordaddr( NULL, FORMAT_NUM_16BIT, imm16 ) );
     xref_addxref( xtype, g_insn_addr, imm16 );
 }
 
-OPERAND_FUNC(addr16)
+OPERAND_FUNC(imm_op)
 {
-    UBYTE lsb = next( f, addr );
-    UBYTE msb = next( f, addr );
-    ADDR dest = MK_WORD( lsb, msb );
+    emit_imm_width( f, addr, op_width( 1 ) );
+}
+
+OPERAND_FUNC(addr_off)
+{
+    int width = op_width( opc & 1 );
+    ADDR dest = addr32 ? (ADDR)read_u32( f, addr ) : (ADDR)read_u16( f, addr );
     
     EMIT_SEG_PFX;
-    operand( "%c[%s]", 
-        opc & 1 ? 'W' : 'B', 
-        xref_genwordaddr( NULL, FORMAT_NUM_16BIT, dest ) );
+    operand( "%c[%s]",
+        size_for_width( width ),
+        xref_genwordaddr( NULL, addr32 ? FORMAT_NUM_32BIT : FORMAT_NUM_16BIT, dest ) );
     xref_addxref( xtype, g_insn_addr, dest );
 }
 
 OPERAND_FUNC(disp16)
 {
-    UBYTE lsb = next( f, addr );
-    UBYTE msb = next( f, addr );
-    ADDR dest = NEAR_TARGET( *addr, (ADDR)MK_WORD( lsb, msb ) );
+    ADDR dest;
+
+    if ( op32 )
+    {
+        LWORD disp = (LWORD)read_u32( f, addr );
+        dest = *addr + disp;
+    }
+    else
+    {
+        dest = NEAR_TARGET( *addr, (ADDR)read_u16( f, addr ) );
+    }
 
     EMIT_SEG_PFX;
-    operand( xref_genwordaddr( NULL, FORMAT_NUM_16BIT, dest ) );
+    operand( xref_genwordaddr( NULL, op32 ? FORMAT_NUM_32BIT : FORMAT_NUM_16BIT, dest ) );
     xref_addxref( xtype, g_insn_addr, dest );
 }
 
 OPERAND_FUNC(segoff)
 {
-    UBYTE offlo = next( f, addr );
-    UBYTE offhi = next( f, addr );
-    UBYTE seglo = next( f, addr );
-    UBYTE seghi = next( f, addr );
-
-    ADDR offset = MK_WORD( offlo, offhi );
-    ADDR segment = MK_WORD( seglo, seghi );
+    ADDR offset = op32 ? (ADDR)read_u32( f, addr ) : (ADDR)read_u16( f, addr );
+    ADDR segment = read_u16( f, addr );
     ADDR linear  = ( segment << 4 ) + offset;
     char *label  = xref_findaddrlabel( linear );
 
@@ -249,10 +378,20 @@ OPERAND_FUNC(segoff)
      * attached to it, alongside - and the flat address is registered as a
      * cross-reference so far call/jump targets show up in the -x dump.
      */
-    if ( label )
-        operand( FORMAT_NUM_16BIT ":" FORMAT_NUM_16BIT " {%s}", segment, offset, label );
+    if ( op32 )
+    {
+        if ( label )
+            operand( FORMAT_NUM_16BIT ":" FORMAT_NUM_32BIT " {%s}", segment, offset, label );
+        else
+            operand( FORMAT_NUM_16BIT ":" FORMAT_NUM_32BIT " {%05X}", segment, offset, linear );
+    }
     else
-        operand( FORMAT_NUM_16BIT ":" FORMAT_NUM_16BIT " {%05X}", segment, offset, linear );
+    {
+        if ( label )
+            operand( FORMAT_NUM_16BIT ":" FORMAT_NUM_16BIT " {%s}", segment, offset, label );
+        else
+            operand( FORMAT_NUM_16BIT ":" FORMAT_NUM_16BIT " {%05X}", segment, offset, linear );
+    }
 
     xref_addxref( xtype, g_insn_addr, linear );
 }
@@ -269,10 +408,10 @@ OPERAND_FUNC(modrm)
     UBYTE arg  = next( f, addr );
     int mod    = (arg >> 6) & 3;
     int reg    = (arg >> 3) & 7;
-    int rm     = arg & 7;
     int wordop = opc & 1;
     int dir    = opc & 2;
     int isseg  = 0;
+    int width;
     int dest, src, action;
     enum { DO_REG, DO_ADDR };
     
@@ -302,6 +441,8 @@ OPERAND_FUNC(modrm)
             wordop = 1;
             break;
     }
+
+    width = isseg ? 16 : op_width( wordop );
     
     /* ------------------ */
 
@@ -334,58 +475,14 @@ OPERAND_FUNC(modrm)
                  * encodings of 8C/8E and used to index segreg[] out of
                  * bounds, passing a wild pointer to operand() -> SIGSEGV
                  * as soon as a data byte pair like "8C 34" was decoded. */
-                operand( reg < 4 ? segreg[reg+1] : "?SEG?" );
+                operand( (reg < 4 || (reg < 6 && (dasm_cpu_level == 0 || dasm_cpu_level >= 80386)))
+                    ? segreg[reg+1] : "?SEG?" );
             else
-                operand( (wordop ? wordreg : bytereg)[reg] );
+                operand( regs_for_width( width )[reg] );
             break;
                 
         case DO_ADDR:
-            switch( mod )
-            {
-                case 0: /* MOD = 00, DISP is 0, except if rm = 110 then 
-                         *  EA is 16-bit DISP */
-                    EMIT_SEG_PFX;
-                    if ( rm == 6 )
-                    {
-                        UBYTE displo = next( f, addr );
-                        UBYTE disphi = next( f, addr );
-                        ADDR disp = MK_WORD( displo, disphi );
-                        operand( FORMAT_NUM_16BIT, disp );
-                    }
-                    else
-                    {
-                        operand( "%c[%s]", wordop ? 'W' : 'B', eareg[rm] );
-                    }                
-                    break;
-                    
-                case 1: /* MOD = 01, DISP is 8-bit sign-extended */
-                {
-                    BYTE disp = (BYTE)next( f, addr );
-                    EMIT_SEG_PFX;
-                    operand( "%c[%s + " FORMAT_NUM_8BIT "]", 
-                        wordop ? 'W' : 'B',
-                        eareg[rm], 
-                        disp );
-                    break;
-                }
-                    
-                case 2: /* MOD = 10, DISP is 16-bit signed */
-                {
-                    UBYTE displo = next( f, addr );
-                    UBYTE disphi = next( f, addr );
-                    ADDR disp = MK_WORD( displo, disphi );
-                    EMIT_SEG_PFX;
-                    operand( "%c[%s + " FORMAT_NUM_16BIT "]", 
-                        wordop ? 'W' : 'B',
-                        eareg[rm], 
-                        disp );                
-                    break;
-                }
-                    
-                case 3: /* MOD = 11, r/m is treated as reg field */
-                    operand( (wordop ? wordreg : bytereg)[rm] );                
-                    break;
-            }
+            operand_ea( f, addr, arg, (char []){ size_for_width( width ), '\0' }, regs_for_width( width ) );
             break;
         }
         
@@ -413,6 +510,7 @@ OPERAND_FUNC(modrmimm)
 {
     UBYTE datalo, datahi;
     UWORD imm16;
+    ULWORD imm32;
     
     operand_modrm( f, addr, opc, xtype );
     operand( ", " );
@@ -428,17 +526,34 @@ OPERAND_FUNC(modrmimm)
         operand( FORMAT_NUM_8BIT, datalo );
         break;
         
-    case 1: /* s:w = 01 :: 16-bit immediate */
-        datalo = next( f, addr );
-        datahi = next( f, addr );
-        imm16 = MK_WORD( datalo, datahi );
-        operand( FORMAT_NUM_16BIT, imm16 );
+    case 1: /* s:w = 01 :: word/dword immediate */
+        if ( op32 )
+        {
+            imm32 = read_u32( f, addr );
+            operand( FORMAT_NUM_32BIT, imm32 );
+        }
+        else
+        {
+            datalo = next( f, addr );
+            datahi = next( f, addr );
+            imm16 = MK_WORD( datalo, datahi );
+            operand( FORMAT_NUM_16BIT, imm16 );
+        }
         break;
         
-    case 3: /* s:w = 11 :: 8-bit sign-extended to 16-bit */
-        imm16 = next( f, addr );
-        if ( imm16 & 0x80 ) imm16 |= 0xFF00;
-        operand( FORMAT_NUM_16BIT, imm16 );
+    case 3: /* s:w = 11 :: 8-bit sign-extended to word/dword */
+        if ( op32 )
+        {
+            imm32 = next( f, addr );
+            if ( imm32 & 0x80 ) imm32 |= 0xFFFFFF00;
+            operand( FORMAT_NUM_32BIT, imm32 );
+        }
+        else
+        {
+            imm16 = next( f, addr );
+            if ( imm16 & 0x80 ) imm16 |= 0xFF00;
+            operand( FORMAT_NUM_16BIT, imm16 );
+        }
         break;
     }
 }
@@ -447,16 +562,10 @@ OPERAND_FUNC(modrmimm)
  * forced above), then the 16-bit immediate follows. */
 OPERAND_FUNC(modrm_imm16)
 {
-    UBYTE lo, hi;
-    UWORD imm16;
-
     operand_modrm( f, addr, opc, xtype );
     operand( ", " );
 
-    lo = next( f, addr );
-    hi = next( f, addr );
-    imm16 = MK_WORD( lo, hi );
-    operand( FORMAT_NUM_16BIT, imm16 );
+    emit_imm_width( f, addr, op_width( 1 ) );
 }
 
 /* 80186: IMUL r16,r/m16,imm8 (0x6B) -- immediate is sign-extended to 16
@@ -464,14 +573,15 @@ OPERAND_FUNC(modrm_imm16)
  * modrm_imm16 sibling above. */
 OPERAND_FUNC(modrm_imm8)
 {
-    UWORD imm16;
+    ULWORD imm;
 
     operand_modrm( f, addr, opc, xtype );
     operand( ", " );
 
-    imm16 = next( f, addr );
-    if ( imm16 & 0x80 ) imm16 |= 0xFF00;
-    operand( FORMAT_NUM_16BIT, imm16 );
+    imm = next( f, addr );
+    if ( imm & 0x80 )
+        imm |= op32 ? 0xFFFFFF00 : 0xFF00;
+    operand( op32 ? FORMAT_NUM_32BIT : FORMAT_NUM_16BIT, imm );
 }
 
 /* 80186: shift/rotate-by-imm8 group (C0 /n ib, C1 /n ib) -- same REG-field
@@ -488,7 +598,30 @@ OPERAND_FUNC(modrm_shiftimm)
     operand( FORMAT_NUM_8BIT, count );
 }
 
-static void operand_ea( FILE *f, ADDR *addr, UBYTE arg, const char *size, const char * const *regs )
+static void append_ea_term( char *buf, size_t len, const char *term )
+{
+    if ( buf[0] != '\0' )
+        strncat( buf, " + ", len - strlen( buf ) - 1 );
+    strncat( buf, term, len - strlen( buf ) - 1 );
+}
+
+static void append_ea_disp8( char *buf, size_t len, BYTE disp )
+{
+    char tmp[24];
+
+    sprintf( tmp, FORMAT_NUM_8BIT, (UBYTE)disp );
+    append_ea_term( buf, len, tmp );
+}
+
+static void append_ea_disp32( char *buf, size_t len, ULWORD disp )
+{
+    char tmp[24];
+
+    sprintf( tmp, FORMAT_NUM_32BIT, disp );
+    append_ea_term( buf, len, tmp );
+}
+
+static void operand_ea16( FILE *f, ADDR *addr, UBYTE arg, const char *size, const char * const *regs )
 {
     int mod = (arg >> 6) & 3;
     int rm  = arg & 7;
@@ -534,24 +667,106 @@ static void operand_ea( FILE *f, ADDR *addr, UBYTE arg, const char *size, const 
     }
 }
 
+static void operand_ea32( FILE *f, ADDR *addr, UBYTE arg, const char *size, const char * const *regs )
+{
+    int mod = (arg >> 6) & 3;
+    int rm  = arg & 7;
+    char expr[128];
+    BYTE disp8;
+    ULWORD disp32;
+    int need_disp32 = 0;
+
+    if ( mod == 3 )
+    {
+        operand( regs[rm] );
+        return;
+    }
+
+    expr[0] = '\0';
+
+    if ( rm == 4 )
+    {
+        UBYTE sib = next( f, addr );
+        int scale = 1 << ((sib >> 6) & 3);
+        int index = (sib >> 3) & 7;
+        int base  = sib & 7;
+        char indexbuf[24];
+
+        if ( mod == 0 && base == 5 )
+            need_disp32 = 1;
+        else
+            append_ea_term( expr, sizeof(expr), eareg32[base] );
+
+        if ( index != 4 )
+        {
+            if ( scale == 1 )
+                sprintf( indexbuf, "%s", eareg32[index] );
+            else
+                sprintf( indexbuf, "%s*%d", eareg32[index], scale );
+            append_ea_term( expr, sizeof(expr), indexbuf );
+        }
+    }
+    else if ( !(mod == 0 && rm == 5) )
+    {
+        append_ea_term( expr, sizeof(expr), eareg32[rm] );
+    }
+    else
+    {
+        need_disp32 = 1;
+    }
+
+    switch ( mod )
+    {
+    case 0:
+        if ( need_disp32 )
+            append_ea_disp32( expr, sizeof(expr), read_u32( f, addr ) );
+        break;
+    case 1:
+        disp8 = (BYTE)next( f, addr );
+        append_ea_disp8( expr, sizeof(expr), disp8 );
+        break;
+    case 2:
+        disp32 = read_u32( f, addr );
+        append_ea_disp32( expr, sizeof(expr), disp32 );
+        break;
+    }
+
+    EMIT_SEG_PFX;
+    operand( "%s[%s]", size, expr );
+}
+
+static void operand_ea( FILE *f, ADDR *addr, UBYTE arg, const char *size, const char * const *regs )
+{
+    if ( addr32 )
+        operand_ea32( f, addr, arg, size, regs );
+    else
+        operand_ea16( f, addr, arg, size, regs );
+}
+
 static void operand_rm_reg( FILE *f, ADDR *addr, int wordop )
 {
     UBYTE arg = next( f, addr );
     int reg = (arg >> 3) & 7;
+    int width = op_width( wordop );
 
-    operand_ea( f, addr, arg, wordop ? "W" : "B", wordop ? wordreg : bytereg );
+    operand_ea( f, addr, arg, (char []){ size_for_width( width ), '\0' }, regs_for_width( width ) );
     COMMA;
-    operand( (wordop ? wordreg : bytereg)[reg] );
+    operand( regs_for_width( width )[reg] );
 }
 
-static void operand_reg_rm( FILE *f, ADDR *addr, int dstword, int srcword )
+static void operand_reg_rm_width( FILE *f, ADDR *addr, int dstwidth, int srcwidth )
 {
     UBYTE arg = next( f, addr );
     int reg = (arg >> 3) & 7;
 
-    operand( (dstword ? wordreg : bytereg)[reg] );
+    operand( regs_for_width( dstwidth )[reg] );
     COMMA;
-    operand_ea( f, addr, arg, srcword ? "W" : "B", srcword ? wordreg : bytereg );
+    operand_ea( f, addr, arg, (char []){ size_for_width( srcwidth ), '\0' }, regs_for_width( srcwidth ) );
+}
+
+static void operand_reg_rm( FILE *f, ADDR *addr, int dstword, int srcword )
+{
+    operand_reg_rm_width( f, addr, op_width( dstword ), op_width( srcword ) );
 }
 
 OPERAND_FUNC(rm16)
@@ -570,12 +785,12 @@ OPERAND_FUNC(rm8)
 
 OPERAND_FUNC(reg16_rm16)
 {
-    operand_reg_rm( f, addr, 1, 1 );
+    operand_reg_rm_width( f, addr, op_width( 1 ), op_width( 1 ) );
 }
 
 OPERAND_FUNC(reg16_rm8)
 {
-    operand_reg_rm( f, addr, 1, 0 );
+    operand_reg_rm_width( f, addr, op_width( 1 ), 8 );
 }
 
 OPERAND_FUNC(rm16_reg16)
@@ -604,8 +819,9 @@ OPERAND_FUNC(rm16_reg16_CL)
 OPERAND_FUNC(rm16_imm8)
 {
     UBYTE arg = next( f, addr );
+    int width = op_width( 1 );
 
-    operand_ea( f, addr, arg, "W", wordreg );
+    operand_ea( f, addr, arg, (char []){ size_for_width( width ), '\0' }, regs_for_width( width ) );
     COMMA;
     operand_imm8( f, addr, opc, xtype );
 }
@@ -620,45 +836,13 @@ static void operand_fp_ea( FILE *f, ADDR *addr, const char *size )
     int mod   = (arg >> 6) & 3;
     int rm    = arg & 7;
 
-    switch( mod )
+    if ( mod == 3 )
     {
-    case 0:
-        EMIT_SEG_PFX;
-        if ( rm == 6 )
-        {
-            UBYTE displo = next( f, addr );
-            UBYTE disphi = next( f, addr );
-            ADDR disp = MK_WORD( displo, disphi );
-            operand( "%s[" FORMAT_NUM_16BIT "]", size, disp );
-        }
-        else
-        {
-            operand( "%s[%s]", size, eareg[rm] );
-        }
-        break;
-
-    case 1:
-    {
-        BYTE disp = (BYTE)next( f, addr );
-        EMIT_SEG_PFX;
-        operand( "%s[%s + " FORMAT_NUM_8BIT "]", size, eareg[rm], disp );
-        break;
-    }
-
-    case 2:
-    {
-        UBYTE displo = next( f, addr );
-        UBYTE disphi = next( f, addr );
-        ADDR disp = MK_WORD( displo, disphi );
-        EMIT_SEG_PFX;
-        operand( "%s[%s + " FORMAT_NUM_16BIT "]", size, eareg[rm], disp );
-        break;
-    }
-
-    case 3:
         operand( "ST(%d)", rm );
-        break;
+        return;
     }
+
+    operand_ea( f, addr, arg, size, dwordreg );
 }
 
 OPERAND_FUNC(fp_m16int)
@@ -734,20 +918,72 @@ OPERAND_FUNC(gobble_AX)
     operand_AX( f, addr, opc, xtype );
 }
 
+static void operand_reg32_sreg( FILE *f, ADDR *addr, const char * const *sregs )
+{
+    UBYTE arg = next( f, addr );
+    int reg = (arg >> 3) & 7;
+    int rm = arg & 7;
+
+    operand( dwordreg[rm] );
+    COMMA;
+    operand( sregs[reg] );
+}
+
+static void operand_sreg_reg32( FILE *f, ADDR *addr, const char * const *sregs )
+{
+    UBYTE arg = next( f, addr );
+    int reg = (arg >> 3) & 7;
+    int rm = arg & 7;
+
+    operand( sregs[reg] );
+    COMMA;
+    operand( dwordreg[rm] );
+}
+
+OPERAND_FUNC(reg32_cr)
+{
+    operand_reg32_sreg( f, addr, ctrlreg );
+}
+
+OPERAND_FUNC(cr_reg32)
+{
+    operand_sreg_reg32( f, addr, ctrlreg );
+}
+
+OPERAND_FUNC(reg32_dr)
+{
+    operand_reg32_sreg( f, addr, dbgreg );
+}
+
+OPERAND_FUNC(dr_reg32)
+{
+    operand_sreg_reg32( f, addr, dbgreg );
+}
+
+OPERAND_FUNC(reg32_tr)
+{
+    operand_reg32_sreg( f, addr, testreg );
+}
+
+OPERAND_FUNC(tr_reg32)
+{
+    operand_sreg_reg32( f, addr, testreg );
+}
+
 /******************************************************************************/
 /**                            Double Operands                               **/
 /******************************************************************************/
 
-TWO_OPERAND_PAIR(acc, addr16)
+TWO_OPERAND_PAIR(acc, addr_off)
 TWO_OPERAND_PAIR(acc, port8)
 TWO_OPERAND_PAIR(acc, dx)
 
 TWO_OPERAND(acc, imm8)
-TWO_OPERAND(acc, imm16)
+TWO_OPERAND(acc, imm_op)
 
 TWO_OPERAND(reg, imm8)
-TWO_OPERAND(reg, imm16)
-TWO_OPERAND(AX, reg16)
+TWO_OPERAND(reg, imm_op)
+TWO_OPERAND(acc, reg_op)
 
 TWO_OPERAND(imm16, imm8)  /* 80186 ENTER: allocsize, nestlevel */
 
@@ -778,13 +1014,46 @@ static optab_t x86_0f_optab[] = {
     INSN_CPU( "INVD",   none,   0x08, X_NONE, 80486 )
     INSN_CPU( "WBINVD", none,   0x09, X_NONE, 80486 )
 
+    INSN_CPU( "MOV", reg32_cr, 0x20, X_NONE, 80386 )
+    INSN_CPU( "MOV", reg32_dr, 0x21, X_NONE, 80386 )
+    INSN_CPU( "MOV", cr_reg32, 0x22, X_NONE, 80386 )
+    INSN_CPU( "MOV", dr_reg32, 0x23, X_NONE, 80386 )
+    INSN_CPU( "MOV", reg32_tr, 0x24, X_NONE, 80386 )
+    INSN_CPU( "MOV", tr_reg32, 0x26, X_NONE, 80386 )
+
+    INSN_CPU( "JO",    disp16, 0x80, X_JMP, 80386 )
+    INSN_CPU( "JNO",   disp16, 0x81, X_JMP, 80386 )
+    INSN_CPU( "JB",    disp16, 0x82, X_JMP, 80386 )
+    INSN_CPU( "JNB",   disp16, 0x83, X_JMP, 80386 )
+    INSN_CPU( "JE",    disp16, 0x84, X_JMP, 80386 )
+    INSN_CPU( "JNE",   disp16, 0x85, X_JMP, 80386 )
+    INSN_CPU( "JBE",   disp16, 0x86, X_JMP, 80386 )
+    INSN_CPU( "JNBE",  disp16, 0x87, X_JMP, 80386 )
+    INSN_CPU( "JS",    disp16, 0x88, X_JMP, 80386 )
+    INSN_CPU( "JNS",   disp16, 0x89, X_JMP, 80386 )
+    INSN_CPU( "JP",    disp16, 0x8A, X_JMP, 80386 )
+    INSN_CPU( "JNP",   disp16, 0x8B, X_JMP, 80386 )
+    INSN_CPU( "JL",    disp16, 0x8C, X_JMP, 80386 )
+    INSN_CPU( "JNL",   disp16, 0x8D, X_JMP, 80386 )
+    INSN_CPU( "JLE",   disp16, 0x8E, X_JMP, 80386 )
+    INSN_CPU( "JNLE",  disp16, 0x8F, X_JMP, 80386 )
+
     INSN_CPU( "SHLD",  rm16_reg16_imm8, 0xA4, X_NONE, 80386 )
     INSN_CPU( "SHLD",  rm16_reg16_CL,   0xA5, X_NONE, 80386 )
+    INSN_CPU( "PUSH",  FS,              0xA0, X_NONE, 80386 )
+    INSN_CPU( "POP",   FS,              0xA1, X_NONE, 80386 )
+    INSN_CPU( "CPUID", none,            0xA2, X_NONE, 80486 )
     INSN_CPU( "BT",    rm16_reg16,      0xA3, X_NONE, 80386 )
+    INSN_CPU( "IMUL",  reg16_rm16,      0xAF, X_NONE, 80386 )
+    INSN_CPU( "PUSH",  GS,              0xA8, X_NONE, 80386 )
+    INSN_CPU( "POP",   GS,              0xA9, X_NONE, 80386 )
     INSN_CPU( "BTS",   rm16_reg16,      0xAB, X_NONE, 80386 )
     INSN_CPU( "SHRD",  rm16_reg16_imm8, 0xAC, X_NONE, 80386 )
     INSN_CPU( "SHRD",  rm16_reg16_CL,   0xAD, X_NONE, 80386 )
     INSN_CPU( "BTR",   rm16_reg16,      0xB3, X_NONE, 80386 )
+    INSN_CPU( "LSS",   reg16_rm16,      0xB2, X_NONE, 80386 )
+    INSN_CPU( "LFS",   reg16_rm16,      0xB4, X_NONE, 80386 )
+    INSN_CPU( "LGS",   reg16_rm16,      0xB5, X_NONE, 80386 )
     INSN_CPU( "BTC",   rm16_reg16,      0xBB, X_NONE, 80386 )
     INSN_CPU( "BSF",   reg16_rm16,      0xBC, X_NONE, 80386 )
     INSN_CPU( "BSR",   reg16_rm16,      0xBD, X_NONE, 80386 )
@@ -835,11 +1104,11 @@ optab_t base_optab[] = {
   DATA TRANSFER
   ----------------------------------------------------------------------------*/
   
-    MASK( "MOV",    acc_addr16,  0xFE, 0xA0, X_NONE )
-    MASK( "MOV",    addr16_acc,  0xFE, 0xA2, X_NONE )
+    MASK( "MOV",    acc_addr_off,  0xFE, 0xA0, X_NONE )
+    MASK( "MOV",    addr_off_acc,  0xFE, 0xA2, X_NONE )
     
     MASK( "MOV",    reg_imm8,    0xF8, 0xB0, X_NONE )
-    MASK( "MOV",    reg_imm16,   0xF8, 0xB8, X_NONE )
+    MASK( "MOV",    reg_imm_op,  0xF8, 0xB8, X_NONE )
     
     MASK( "MOV",    modrm,       0xFC, 0x88, X_NONE )
     MASK( "MOV",    modrm,       0xFD, 0x8C, X_NONE ) /* seg regs */
@@ -852,19 +1121,19 @@ optab_t base_optab[] = {
     MASK( "OUT",    port8_acc,   0xFE, 0xE6, X_NONE )
     MASK( "OUT",    dx_acc,      0xFE, 0xEE, X_NONE )
     
-    MASK( "PUSH",   reg16,       0xF8, 0x50, X_NONE )
+    MASK( "PUSH",   reg_op,      0xF8, 0x50, X_NONE )
     MASK( "PUSH",   segmreg,     0xE7, 0x06, X_NONE )
     MASK2( "PUSH",  modrm,       0xFF, 0x38, 0x30, X_NONE )
-    INSN( "PUSH",   imm16,       0x68, X_NONE ) /* 80186 */
+    INSN( "PUSH",   imm_op,      0x68, X_NONE ) /* 80186 */
     INSN( "PUSH",   imm8,        0x6A, X_NONE ) /* 80186 */
     INSN( "PUSHA",  none,        0x60, X_NONE ) /* 80186 */
 
-    MASK( "POP",    reg16,       0xF8, 0x58, X_NONE )
+    MASK( "POP",    reg_op,      0xF8, 0x58, X_NONE )
     MASK( "POP",    segmreg,     0xE7, 0x07, X_NONE )
     MASK2( "POP",   modrm,       0x8F, 0x38, 0x00, X_NONE )
     INSN( "POPA",   none,        0x61, X_NONE ) /* 80186 */
 
-    MASK( "XCHG",   AX_reg16,    0xF8, 0x90, X_NONE )
+    MASK( "XCHG",   acc_reg_op,  0xF8, 0x90, X_NONE )
     MASK( "XCHG",   modrm,       0xFE, 0x86, X_NONE )
 
     INSN( "XLAT",   none,        0xD7, X_NONE )
@@ -885,7 +1154,7 @@ optab_t base_optab[] = {
 
 #define ARITH_IMM_ACC(M_name, M_mask) \
     INSN(M_name,acc_imm8,M_mask,X_NONE ) \
-    INSN(M_name,acc_imm16,M_mask|1,X_NONE )
+    INSN(M_name,acc_imm_op,M_mask|1,X_NONE )
 
     ARITH_IMM_ACC("ADD", 0x04)
     ARITH_IMM_ACC("ADC", 0x14)
@@ -941,11 +1210,11 @@ optab_t base_optab[] = {
     MASK( "OR",     modrm, 0xFC, 0x08, X_NONE )
     MASK( "XOR",    modrm, 0xFC, 0x30, X_NONE )
     
-    MASK( "INC",    reg16, 0xF8, 0x40, X_NONE )
+    MASK( "INC",    reg_op, 0xF8, 0x40, X_NONE )
     MASK2( "INC",   modrm, 0xFF, 0x38, 0x00, X_NONE )
     MASK2( "INC",   modrm, 0xFE, 0x38, 0x00, X_NONE )
     
-    MASK( "DEC",    reg16, 0xF8, 0x48, X_NONE )
+    MASK( "DEC",    reg_op, 0xF8, 0x48, X_NONE )
     MASK2( "DEC",   modrm, 0xFE, 0x38, 0x08, X_NONE )
     MASK2( "DEC",   modrm, 0xFF, 0x38, 0x08, X_NONE )
     
@@ -1186,7 +1455,7 @@ optab_t base_optab[] = {
     MASK2( "FNDISI",  gobble,     0xDB, 0xFF, 0xE1, X_NONE )
     MASK2( "FNCLEX",  gobble,     0xDB, 0xFF, 0xE2, X_NONE )
     MASK2( "FNINIT",  gobble,     0xDB, 0xFF, 0xE3, X_NONE )
-    MASK2( "FNSETPM", gobble,     0xDB, 0xFF, 0xE4, X_NONE )
+    MASK2_CPU( "FNSETPM", gobble, 0xDB, 0xFF, 0xE4, X_NONE, 80286 )
 
     FP_MEM( "FILD",   fp_m32int,  0xDB, 0x00 )
     FP_MEM( "FIST",   fp_m32int,  0xDB, 0x10 )
@@ -1241,6 +1510,7 @@ optab_t base_optab[] = {
     FP_MEM( "FIDIVR", fp_m16int, 0xDE, 0x38 )
 
     MASK2( "FNSTSW", gobble_AX,   0xDF, 0xFF, 0xE0, X_NONE )
+    MASK2( "FFREEP", fp_sti,      0xDF, 0xF8, 0xC0, X_NONE )
 
     FP_MEM( "FILD",  fp_m16int,  0xDF, 0x00 )
     FP_MEM( "FIST",  fp_m16int,  0xDF, 0x10 )
@@ -1262,6 +1532,10 @@ optab_t base_optab[] = {
     PREFIX( pfx_seg, 0x2E ) /* CS */
     PREFIX( pfx_seg, 0x36 ) /* SS */
     PREFIX( pfx_seg, 0x3E ) /* DS */
+    PREFIX_CPU( pfx_seg386,  0x64, 80386 ) /* FS */
+    PREFIX_CPU( pfx_seg386,  0x65, 80386 ) /* GS */
+    PREFIX_CPU( pfx_opsize,  0x66, 80386 )
+    PREFIX_CPU( pfx_addrsize,0x67, 80386 )
   
 /*----------------------------------------------------------------------------*/
 
