@@ -66,6 +66,7 @@ DASM_PROFILE( "dasmx86", "Intel x86", 8, 9, 0, 1, 1 )
 static const char * const segreg[5]  = { "", "ES", "CS", "SS", "DS" };
 static const char * const wordreg[8] = { "AX", "CX", "DX", "BX", "SP", "BP", "SI", "DI" };
 static const char * const bytereg[8] = { "AL", "CL", "DL", "BL", "AH", "CH", "DH", "BH" };
+static const char * const dwordreg[8]= { "EAX", "ECX", "EDX", "EBX", "ESP", "EBP", "ESI", "EDI" };
 static const char * const eareg[8]   = { "BX + SI", "BX + DI", "BP + SI", "BP + DI",
                                          "SI", "DI", "BP", "BX" };
 
@@ -144,6 +145,13 @@ OPERAND_FUNC(reg16)
     int reg = opc & 0x07;
     
     operand( wordreg[reg] );
+}
+
+OPERAND_FUNC(reg32)
+{
+    int reg = opc & 0x07;
+
+    operand( dwordreg[reg] );
 }
 
 OPERAND_FUNC(acc)
@@ -575,6 +583,11 @@ OPERAND_FUNC(rm16_reg16)
     operand_rm_reg( f, addr, 1 );
 }
 
+OPERAND_FUNC(rm8_reg8)
+{
+    operand_rm_reg( f, addr, 0 );
+}
+
 OPERAND_FUNC(rm16_reg16_imm8)
 {
     operand_rm_reg( f, addr, 1 );
@@ -757,10 +770,13 @@ static optab_t x86_0f_optab[] = {
     MASK2( "LIDT", rm16,        0x01, 0x38, 0x18, X_NONE )
     MASK2( "SMSW", rm16,        0x01, 0x38, 0x20, X_NONE )
     MASK2( "LMSW", rm16,        0x01, 0x38, 0x30, X_NONE )
+    MASK2_CPU( "INVLPG", rm16,  0x01, 0x38, 0x38, X_NONE, 80486 )
 
     INSN(  "LAR",  reg16_rm16,  0x02, X_NONE )
     INSN(  "LSL",  reg16_rm16,  0x03, X_NONE )
     INSN(  "CLTS", none,        0x06, X_NONE )
+    INSN_CPU( "INVD",   none,   0x08, X_NONE, 80486 )
+    INSN_CPU( "WBINVD", none,   0x09, X_NONE, 80486 )
 
     INSN_CPU( "SHLD",  rm16_reg16_imm8, 0xA4, X_NONE, 80386 )
     INSN_CPU( "SHLD",  rm16_reg16_CL,   0xA5, X_NONE, 80386 )
@@ -776,6 +792,11 @@ static optab_t x86_0f_optab[] = {
     INSN_CPU( "MOVZX", reg16_rm16,      0xB7, X_NONE, 80386 )
     INSN_CPU( "MOVSX", reg16_rm8,       0xBE, X_NONE, 80386 )
     INSN_CPU( "MOVSX", reg16_rm16,      0xBF, X_NONE, 80386 )
+    INSN_CPU( "CMPXCHG", rm8_reg8,      0xB0, X_NONE, 80486 )
+    INSN_CPU( "CMPXCHG", rm16_reg16,    0xB1, X_NONE, 80486 )
+    INSN_CPU( "XADD",    rm8_reg8,      0xC0, X_NONE, 80486 )
+    INSN_CPU( "XADD",    rm16_reg16,    0xC1, X_NONE, 80486 )
+    MASK_CPU( "BSWAP",   reg32,         0xF8, 0xC8, X_NONE, 80486 )
 
     MASK2_CPU( "BT",  rm16_imm8, 0xBA, 0x38, 0x20, X_NONE, 80386 )
     MASK2_CPU( "BTS", rm16_imm8, 0xBA, 0x38, 0x28, X_NONE, 80386 )

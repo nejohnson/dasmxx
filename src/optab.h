@@ -166,6 +166,16 @@ typedef struct optab_s {
       .u.mask.val  = M_val                          \
     },
 
+#define MASK_CPU(M_opcode, M_ops, M_mask, M_val, M_xt, M_min_cpu)  \
+    { .type     = OPTAB_MASK,                                      \
+      .min_cpu  = M_min_cpu,                                       \
+      .opcode   = M_opcode,                                        \
+      .operands = operand_ ## M_ops,                               \
+      .xtype    = M_xt,                                            \
+      .u.mask.mask = M_mask,                                       \
+      .u.mask.val  = M_val                                         \
+    },
+
 /**
     A MASK2 matches a set of instruction bytes described by a bit mask and a
     value to match against applied to the second search byte.

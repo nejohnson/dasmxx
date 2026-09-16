@@ -194,6 +194,17 @@ DE D9           # FCOMPP
 0F AC C1 04     # SHRD CX, AX, 04
 0F AD C1        # SHRD CX, AX, CL
 
+## 80486 ##############################################################
+
+0F 08           # INVD
+0F 09           # WBINVD
+0F 01 38        # INVLPG W[BX + SI]
+0F B0 C1        # CMPXCHG CL, AL
+0F B1 C1        # CMPXCHG CX, AX
+0F C0 C1        # XADD CL, AL
+0F C1 C1        # XADD CX, AX
+0F C8           # BSWAP EAX
+0F CF           # BSWAP EDI
 
 
 
