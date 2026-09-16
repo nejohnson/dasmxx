@@ -38,10 +38,12 @@ File commands:
 
      fName       input file = `Name'
      iName       include file `Name' in place of include command
+     >XXXX       fast forward to offset XXXX from start of file
 
 Configuration commands:
 
      tXX         string terminator byte (default = 00)
+     gXXXX       segment base for following code entries
      eXXXX       end of disassembly
      q[,N]["title"]  pagination, N lines (default=60), optional title
 
@@ -88,4 +90,3 @@ targets (loops, tests, etc) and data (tables, strings, etc).
 Note: both 'l' and 'p' use auto-naming: if no name is given then dasmxx
 will generate a name for you: "AL_nnnn" for labels, and "PROC_nnnn" for 
 procedures.
-
