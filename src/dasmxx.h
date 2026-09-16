@@ -78,6 +78,7 @@ extern ADDR dasm_segment_base;
  * decoder default; decoders that do not need it can ignore it.
  */
 extern unsigned int dasm_cpu_level;
+extern unsigned int dasm_fpu_level;
 
 extern UBYTE next( FILE* fp, ADDR *addr );
 extern UWORD nextw( FILE *fp, ADDR *addr );

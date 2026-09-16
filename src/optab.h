@@ -41,6 +41,7 @@
 typedef struct optab_s {
     OPC opc;
     unsigned int min_cpu;
+    unsigned int min_fpu;
     const char * opcode;
     const char * (*opcode_fn)( OPC );
     void (*operands)( FILE *, ADDR *, OPC, XREF_TYPE); /* operand function */
@@ -197,6 +198,16 @@ typedef struct optab_s {
 #define MASK_CPU(M_opcode, M_ops, M_mask, M_val, M_xt, M_min_cpu)  \
     { .type     = OPTAB_MASK,                                      \
       .min_cpu  = M_min_cpu,                                       \
+      .opcode   = M_opcode,                                        \
+      .operands = operand_ ## M_ops,                               \
+      .xtype    = M_xt,                                            \
+      .u.mask.mask = M_mask,                                       \
+      .u.mask.val  = M_val                                         \
+    },
+
+#define MASK_FPU(M_opcode, M_ops, M_mask, M_val, M_xt, M_min_fpu)  \
+    { .type     = OPTAB_MASK,                                      \
+      .min_fpu  = M_min_fpu,                                       \
       .opcode   = M_opcode,                                        \
       .operands = operand_ ## M_ops,                               \
       .xtype    = M_xt,                                            \

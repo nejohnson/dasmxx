@@ -179,6 +179,12 @@ static int walk_table( FILE * f, ADDR * addr, optab_t * optab, OPC opc )
             continue;
         }
 
+        if ( optab->min_fpu != 0 && dasm_fpu_level != 0 && dasm_fpu_level < optab->min_fpu )
+        {
+            optab++;
+            continue;
+        }
+
         /* printf("type:%d  ", optab->type); */
         if ( optab->type == OPTAB_TABLE && optab->opc == opc )
         {

@@ -1,0 +1,6 @@
+ftest68881.bin
+ocpu=68020
+ofpu=68881
+c0000 Start
+
+e0007

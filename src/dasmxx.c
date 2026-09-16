@@ -179,6 +179,7 @@ unsigned int    file_offset = 0;
  */
 ADDR            dasm_segment_base = 0;
 unsigned int    dasm_cpu_level = 0;
+unsigned int    dasm_fpu_level = 0;
 
 /* List of display modes.  Defines must match entry position. */
 static char datchars[] = "cbsewapvmuz";
@@ -658,6 +659,23 @@ static void readlist( const char *listfile, struct params *params )
                             dasm_cpu_level = 68040;
                         else
                             error( "%s(%u) :: Unsupported CPU option '%s'", listfile, lineno, cpu );
+                    }
+                    else if ( !strncmp( pbuf, "fpu=", 4 ) )
+                    {
+                        char *fpu = pbuf + 4;
+
+                        if ( !strcmp( fpu, "default" ) || !strcmp( fpu, "max" ) )
+                            dasm_fpu_level = 0;
+                        else if ( !strcmp( fpu, "none" ) )
+                            dasm_fpu_level = 1;
+                        else if ( !strcmp( fpu, "68881" ) )
+                            dasm_fpu_level = 68881;
+                        else if ( !strcmp( fpu, "68882" ) )
+                            dasm_fpu_level = 68882;
+                        else if ( !strcmp( fpu, "68040" ) )
+                            dasm_fpu_level = 68040;
+                        else
+                            error( "%s(%u) :: Unsupported FPU option '%s'", listfile, lineno, fpu );
                     }
                     else
                     {

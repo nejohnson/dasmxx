@@ -582,6 +582,18 @@ static const char *condition_name( int cc )
     return names[cc & 0x0F];
 }
 
+static const char *fpu_condition_name( int cc )
+{
+    static const char *names[] = {
+        "F", "EQ", "OGT", "OGE", "OLT", "OLE", "OGL", "OR",
+        "UN", "UEQ", "UGT", "UGE", "ULT", "ULE", "NE", "T",
+        "SF", "SEQ", "GT", "GE", "LT", "LE", "GL", "GLE",
+        "NGLE", "NGL", "NLE", "NLT", "NGE", "NGT", "SNE", "ST"
+    };
+
+    return names[cc & 0x1F];
+}
+
 static int move_dest_ea( OPC opc )
 {
     return ((opc >> 3) & 0x38) | ((opc >> 9) & 0x07);
@@ -1181,6 +1193,24 @@ OPERAND_FUNC(trapcc_imm32)
     operand( "#" FORMAT_IMM32, (ULWORD)read_s32( f, addr ) );
 }
 
+OPERAND_FUNC(fbranch16)
+{
+    WORD disp = (WORD)nextw( f, addr );
+    ADDR dest = *addr + disp;
+
+    operand( xref_genwordaddr( NULL, FORMAT_IMM32, dest ) );
+    xref_addxref( xtype, g_insn_addr, dest );
+}
+
+OPERAND_FUNC(fbranch32)
+{
+    LWORD disp = read_s32( f, addr );
+    ADDR dest = *addr + disp;
+
+    operand( xref_genwordaddr( NULL, FORMAT_IMM32, dest ) );
+    xref_addxref( xtype, g_insn_addr, dest );
+}
+
 /******************************************************************************/
 /**                            Opcode Functions                              **/
 /******************************************************************************/
@@ -1265,6 +1295,14 @@ static const char *opcode_trapcc( OPC opc )
     return text;
 }
 
+static const char *opcode_fbcc( OPC opc )
+{
+    static char text[16];
+
+    sprintf( text, "FB%s", fpu_condition_name( opc & 0x1F ) );
+    return text;
+}
+
 static const char *opcode_shift_reg( OPC opc )
 {
     static char text[16];
@@ -1301,6 +1339,17 @@ static const char *opcode_shift_mem( OPC opc )
 #define MASK_DYN_CPU(M_opcode_fn, M_ops, M_mask, M_val, M_xt, M_min_cpu) \
     { .type     = OPTAB_MASK,                                            \
       .min_cpu  = M_min_cpu,                                             \
+      .opcode   = "DYNAMIC",                                             \
+      .opcode_fn = opcode_ ## M_opcode_fn,                                \
+      .operands = operand_ ## M_ops,                                      \
+      .xtype    = M_xt,                                                   \
+      .u.mask.mask = M_mask,                                              \
+      .u.mask.val  = M_val                                                \
+    },
+
+#define MASK_DYN_FPU(M_opcode_fn, M_ops, M_mask, M_val, M_xt, M_min_fpu) \
+    { .type     = OPTAB_MASK,                                            \
+      .min_fpu  = M_min_fpu,                                             \
       .opcode   = "DYNAMIC",                                             \
       .opcode_fn = opcode_ ## M_opcode_fn,                                \
       .operands = operand_ ## M_ops,                                      \
@@ -1815,6 +1864,15 @@ optab_t base_optab[] = {
     MASK_CPU ( "BFSET",   bitfield_ea,      0xFFC0, 0xEEC0, X_NONE, 68020 )
     MASK_CPU ( "BFINS",   bitfield_dreg_ea, 0xFFC0, 0xEFC0, X_NONE, 68020 )
     MASK_DYN ( shift_reg, shift_reg,     0xF000, 0xE000, X_NONE )
+
+/*----------------------------------------------------------------------------
+  1111 - Coprocessor
+  ----------------------------------------------------------------------------*/
+
+    MASK_DYN_FPU ( fbcc, fbranch16,      0xFFC0, 0xF280, X_JMP, 68881 )
+    MASK_DYN_FPU ( fbcc, fbranch32,      0xFFC0, 0xF2C0, X_JMP, 68881 )
+    MASK_FPU ( "FRESTORE", ea_control,   0xFFC0, 0xF300, X_NONE, 68881 )
+    MASK_FPU ( "FSAVE",    ea_control,   0xFFC0, 0xF340, X_NONE, 68881 )
     
     
     
