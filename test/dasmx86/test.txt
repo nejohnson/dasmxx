@@ -206,7 +206,7 @@ DE D9           # FCOMPP
 
 0F 08           # INVD
 0F 09           # WBINVD
-0F 01 38        # INVLPG W[BX + SI]
+0F 01 38        # INVLPG M[BX + SI]
 0F B0 C1        # CMPXCHG CL, AL
 0F B1 C1        # CMPXCHG CX, AX
 0F C0 C1        # XADD CL, AL
@@ -235,6 +235,9 @@ DB E4           # FNSETPM
 67 A1 78 56 34 12           # MOV AX, W[12345678]
 66 69 C1 78 56 34 12        # IMUL EAX, ECX, 12345678
 66 6B C1 80                 # IMUL EAX, ECX, FFFFFF80
+67 8B 05 78 56 34 12        # MOV AX, W[12345678]
+67 8B 04 25 78 56 34 12     # MOV AX, W[12345678]
+67 8B 44 24 F0              # MOV AX, W[ESP + F0]
 67 8B 04 8D 78 56 34 12     # MOV AX, W[ECX*4 + 12345678]
 67 8B 44 8B 10              # MOV AX, W[EBX + ECX*4 + 10]
 66 67 8B 84 8B 78 56 34 12  # MOV EAX, D[EBX + ECX*4 + 12345678]
@@ -251,6 +254,10 @@ DB E4           # FNSETPM
 0F 22 D8                    # MOV CR3, EAX
 0F 21 D8                    # MOV EAX, DR3
 0F 24 F0                    # MOV EAX, TR6
+0F 20 E0                    # MOV EAX, ?CR?
+0F 21 E0                    # MOV EAX, ?DR?
+0F 24 C0                    # MOV EAX, ?TR?
+0F 20 00                    # MOV ???
 0F A0                       # PUSH FS
 0F A1                       # POP FS
 0F A8                       # PUSH GS

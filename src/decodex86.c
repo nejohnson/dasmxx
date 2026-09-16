@@ -722,7 +722,7 @@ static void operand_ea16( FILE *f, ADDR *addr, UBYTE arg, const char *size, cons
     {
         BYTE disp = (BYTE)next( f, addr );
         EMIT_SEG_PFX;
-        operand( "%s[%s + " FORMAT_NUM_8BIT "]", size, eareg[rm], disp );
+        operand( "%s[%s + " FORMAT_NUM_8BIT "]", size, eareg[rm], (UBYTE)disp );
         break;
     }
 
@@ -1060,56 +1060,85 @@ OPERAND_FUNC(gobble_AX)
     operand_AX( f, addr, opc, xtype );
 }
 
-static void operand_reg32_sreg( FILE *f, ADDR *addr, const char * const *sregs )
+static int valid_ctrlreg( int reg )
+{
+    return reg == 0 || reg == 2 || reg == 3;
+}
+
+static int valid_dbgreg( int reg )
+{
+    return reg <= 3 || reg == 6 || reg == 7;
+}
+
+static int valid_testreg( int reg )
+{
+    return reg == 6 || reg == 7;
+}
+
+static void operand_reg32_checked_sreg( FILE *f, ADDR *addr, const char * const *sregs,
+    const char *bad, int (*valid)( int ) )
 {
     UBYTE arg = next( f, addr );
     int reg = (arg >> 3) & 7;
     int rm = arg & 7;
+
+    if ( (arg & 0xC0) != 0xC0 )
+    {
+        operand( "???" );
+        return;
+    }
 
     operand( dwordreg[rm] );
     COMMA;
-    operand( sregs[reg] );
+    operand( valid( reg ) ? sregs[reg] : bad );
 }
 
-static void operand_sreg_reg32( FILE *f, ADDR *addr, const char * const *sregs )
+static void operand_checked_sreg_reg32( FILE *f, ADDR *addr, const char * const *sregs,
+    const char *bad, int (*valid)( int ) )
 {
     UBYTE arg = next( f, addr );
     int reg = (arg >> 3) & 7;
     int rm = arg & 7;
 
-    operand( sregs[reg] );
+    if ( (arg & 0xC0) != 0xC0 )
+    {
+        operand( "???" );
+        return;
+    }
+
+    operand( valid( reg ) ? sregs[reg] : bad );
     COMMA;
     operand( dwordreg[rm] );
 }
 
 OPERAND_FUNC(reg32_cr)
 {
-    operand_reg32_sreg( f, addr, ctrlreg );
+    operand_reg32_checked_sreg( f, addr, ctrlreg, "?CR?", valid_ctrlreg );
 }
 
 OPERAND_FUNC(cr_reg32)
 {
-    operand_sreg_reg32( f, addr, ctrlreg );
+    operand_checked_sreg_reg32( f, addr, ctrlreg, "?CR?", valid_ctrlreg );
 }
 
 OPERAND_FUNC(reg32_dr)
 {
-    operand_reg32_sreg( f, addr, dbgreg );
+    operand_reg32_checked_sreg( f, addr, dbgreg, "?DR?", valid_dbgreg );
 }
 
 OPERAND_FUNC(dr_reg32)
 {
-    operand_sreg_reg32( f, addr, dbgreg );
+    operand_checked_sreg_reg32( f, addr, dbgreg, "?DR?", valid_dbgreg );
 }
 
 OPERAND_FUNC(reg32_tr)
 {
-    operand_reg32_sreg( f, addr, testreg );
+    operand_reg32_checked_sreg( f, addr, testreg, "?TR?", valid_testreg );
 }
 
 OPERAND_FUNC(tr_reg32)
 {
-    operand_sreg_reg32( f, addr, testreg );
+    operand_checked_sreg_reg32( f, addr, testreg, "?TR?", valid_testreg );
 }
 
 /******************************************************************************/

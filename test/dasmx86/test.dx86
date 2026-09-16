@@ -12,10 +12,10 @@ c011E  386 extended
 c0157  486 extended
 c016E  387 floating point
 c0180  386 32-bit modes
-c01D2  386 system
-c0207  486 identification
-c0209  386 size-dependent mnemonics
-e0226
+c01E6  386 system
+c0227  486 identification
+c0229  386 size-dependent mnemonics
+e0246
 
 k0000 This is a comment
 
