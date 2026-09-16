@@ -1885,7 +1885,7 @@ optab_t base_optab[] = {
     INSN ( "TRAPV",     none,   0x4E76,         X_NONE )
 
 
-    INSN_CPU ( "PFLUSHA", none,  0x2400,         X_NONE, 68030 )
+    INSN_CPU ( "PFLUSHA", none,  0xF518,         X_NONE, 68030 )
 
 
 
