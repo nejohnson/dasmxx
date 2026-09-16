@@ -1079,7 +1079,7 @@ static int valid_ctrlreg( int reg )
 
 static int valid_dbgreg( int reg )
 {
-    return reg <= 3 || reg == 6 || reg == 7;
+    return reg <= 7;
 }
 
 static int valid_testreg( int reg )
@@ -1094,12 +1094,6 @@ static void operand_reg32_checked_sreg( FILE *f, ADDR *addr, const char * const 
     int reg = (arg >> 3) & 7;
     int rm = arg & 7;
 
-    if ( (arg & 0xC0) != 0xC0 )
-    {
-        operand( "???" );
-        return;
-    }
-
     operand( dwordreg[rm] );
     COMMA;
     operand( valid( reg ) ? sregs[reg] : bad );
@@ -1111,12 +1105,6 @@ static void operand_checked_sreg_reg32( FILE *f, ADDR *addr, const char * const 
     UBYTE arg = next( f, addr );
     int reg = (arg >> 3) & 7;
     int rm = arg & 7;
-
-    if ( (arg & 0xC0) != 0xC0 )
-    {
-        operand( "???" );
-        return;
-    }
 
     operand( valid( reg ) ? sregs[reg] : bad );
     COMMA;
