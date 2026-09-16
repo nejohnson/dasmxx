@@ -206,6 +206,15 @@ DE D9           # FCOMPP
 0F C8           # BSWAP EAX
 0F CF           # BSWAP EDI
 
+## 80387/80487 ########################################################
+
+D9 F5           # FPREM1
+D9 FB           # FSINCOS
+D9 FE           # FSIN
+D9 FF           # FCOS
+DA E9           # FUCOMPP
+DD E0           # FUCOM ST(0)
+DD E8           # FUCOMP ST(0)
 
 
 
