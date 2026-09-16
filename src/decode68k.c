@@ -66,6 +66,12 @@ DASM_PROFILE( "dasm68k", "Motorola 68000", 22, 9, 1, 2, 1 )
 /* Construct a 32-bit long word out of two 1-bit words */
 #define MK_LONG(h,l)            ( ( (l) & 0xFFFF)        \
                                 | (((h) & 0xFFFF) << 16) )
+
+enum {
+    OPSIZE_BYTE = 1,
+    OPSIZE_WORD = 2,
+    OPSIZE_LONG = 4
+};
                                 
 /*****************************************************************************
  *        Private Functions
@@ -95,7 +101,7 @@ OPERAND_FUNC(none)
 OPERAND_FUNC(areg0)
 {
     int reg = opc & 0x07;
-    
+
     operand( FORMAT_AREG, reg );
 }
 
@@ -106,7 +112,7 @@ OPERAND_FUNC(areg0)
 OPERAND_FUNC(areg9)
 {
     int reg = ( opc >> 9 ) & 0x07;
-    
+
     operand( FORMAT_AREG, reg );
 }
 
@@ -117,7 +123,7 @@ OPERAND_FUNC(areg9)
 OPERAND_FUNC(dreg0)
 {
     int reg = opc & 0x07;
-    
+
     operand( FORMAT_DREG, reg );
 }
 
@@ -192,7 +198,7 @@ OPERAND_FUNC(simm16)
  ************************************************************/
 OPERAND_FUNC(simm32)
 {
-    WORD imm = (WORD)nextw( f, addr );
+    LWORD imm = (LWORD)nextw( f, addr );
     imm = ( imm << 16 ) | (UWORD)nextw( f, addr );
     
     operand( "%s#" FORMAT_IMM32, imm < 0 ? "-" : "", abs(imm) );
@@ -215,7 +221,7 @@ OPERAND_FUNC(relX)
             dest = MK_LONG(dest, lo);
         }
     }
-    
+
     dest += *addr;
     
     operand( xref_genwordaddr( NULL, FORMAT_IMM32, dest ) );
@@ -242,10 +248,103 @@ enum {
     EAMODE_SUB_MODE      = 0x07
 };
 
-OPERAND_FUNC(ea)
+static LWORD read_s16( FILE *f, ADDR *addr )
 {
-    int mode = opc & 0x7;
-    int reg  = ( opc >> 3 ) & 0x7;
+    return (WORD)nextw( f, addr );
+}
+
+static LWORD read_s32( FILE *f, ADDR *addr )
+{
+    UWORD hi = nextw( f, addr );
+    UWORD lo = nextw( f, addr );
+
+    return (LWORD)MK_LONG( hi, lo );
+}
+
+static void emit_displacement( LWORD disp, const char *fmt )
+{
+    operand( "%s", disp < 0 ? "-" : "" );
+    operand( fmt, disp < 0 ? -disp : disp );
+}
+
+static void emit_abs_addr( ADDR dest, const char *fmt, XREF_TYPE xtype )
+{
+    operand( xref_genwordaddr( NULL, fmt, dest ) );
+    if ( xtype != X_NONE )
+        xref_addxref( xtype, g_insn_addr, dest );
+}
+
+static void emit_indexed_ea( FILE *f, ADDR *addr, int base_reg, int pc_relative )
+{
+    UWORD extn = nextw( f, addr );
+    int da     = extn & (1 << 15);
+    int ireg   = (extn >> 12) & 0x07;
+    int wl     = extn & (1 << 11);
+    int scale  = (extn >> 9) & 0x03;
+    char base[16];
+
+    if ( pc_relative )
+        sprintf( base, "PC" );
+    else
+        sprintf( base, FORMAT_AREG, base_reg );
+
+    if ( extn & 0x0100 )
+    {
+        int bs      = extn & (1 << 7);
+        int is      = extn & (1 << 6);
+        int bd_size = (extn >> 4) & 0x03;
+        int iis     = extn & 0x07;
+        int od_size = iis & 0x03;
+        LWORD bd    = 0;
+        LWORD od    = 0;
+
+        if ( bd_size == 0x02 )
+            bd = read_s16( f, addr );
+        else if ( bd_size == 0x03 )
+            bd = read_s32( f, addr );
+
+        if ( od_size == 0x02 )
+            od = read_s16( f, addr );
+        else if ( od_size == 0x03 )
+            od = read_s32( f, addr );
+
+        operand( "(" );
+        emit_displacement( bd, FORMAT_IMM32 );
+        if ( !bs )
+            operand( ",%s", base );
+        if ( !is )
+            operand( ",%c%d.%c*%d", da ? 'A' : 'D', ireg, wl ? 'L' : 'W', (1 << scale) );
+        if ( od_size != 0 )
+        {
+            operand( "," );
+            emit_displacement( od, FORMAT_IMM32 );
+        }
+        operand( ")" );
+    }
+    else
+    {
+        BYTE disp = (BYTE)(extn & 0xFF);
+
+        operand( "(" );
+        emit_displacement( disp, FORMAT_IMM8 );
+        operand( ",%s,%c%d.%c*%d)", base, da ? 'A' : 'D', ireg, wl ? 'L' : 'W', (1 << scale) );
+    }
+}
+
+static void emit_imm_ea( FILE *f, ADDR *addr, int size )
+{
+    if ( size == OPSIZE_BYTE )
+        operand( "#" FORMAT_IMM8, (UWORD)nextw( f, addr ) & 0xFF );
+    else if ( size == OPSIZE_LONG )
+        operand( "#" FORMAT_IMM32, (ULWORD)read_s32( f, addr ) );
+    else
+        operand( "#" FORMAT_IMM16, (UWORD)nextw( f, addr ) );
+}
+
+static void emit_ea_field( FILE *f, ADDR *addr, int ea, int size, XREF_TYPE xtype )
+{
+    int mode = (ea >> 3) & 0x7;
+    int reg  = ea & 0x7;
     
     switch( mode )
     {
@@ -258,114 +357,104 @@ OPERAND_FUNC(ea)
         break;
         
     case EAMODE_ADDR_INDIR:                         /* 2.2.3 */
-        operand( "(" FORMAT_ADDR ")", reg );
+        operand( "(" FORMAT_AREG ")", reg );
         break;
         
     case EAMODE_ADDR_POST_INC:                      /* 2.2.4 */
-        operand( "(" FORMAT_ADDR ")+", reg );
+        operand( "(" FORMAT_AREG ")+", reg );
         break;
         
     case EAMODE_ADDR_PRE_DEC:                       /* 2.2.5 */
-        operand( "-(" FORMAT_ADDR ")", reg );
+        operand( "-(" FORMAT_AREG ")", reg );
         break;
         
     case EAMODE_ADDR_IND_DISP:                      /* 2.2.6 */
     {
-        WORD disp = (WORD)nextw( f, addr );
-        operand( "(" "%s#" FORMAT_IMM16 "," FORMAT_ADDR ")", 
-                disp < 0 ? "-" : "", abs(disp), 
-                reg );
+        LWORD disp = read_s16( f, addr );
+        operand( "(" );
+        emit_displacement( disp, FORMAT_IMM16 );
+        operand( "," FORMAT_AREG ")", reg );
         break;
     }
     
     case EAMODE_ADDR_IND_IDX:                       /* 2.2.7 - 2.2.10 */
-    {
-        UWORD extn = nextw( f, addr );
-        int da     = extn & (1 << 15);
-        int ireg   = ( extn >> 12 ) & 0x07;
-        int wl     = extn & (1 << 11);
-        int scale  = ( extn >> 9 ) & 0x03;
-            
-        if ( extn & 0x0100 ) /* check extension format bit */
-        {
-            /* 1 = full extension word format */
-            int bs      = extn & (1 << 7);      /* base register suppress */
-            int is      = extn & (1 << 6);      /* index register suppress */
-            int bd_size = (extn >> 4) & 0x03;   /* base displacement size */
-            int iis     = extn & 0x07;
-            LWORD bd    = 0;                    /* base displacement */
-            LWORD od    = 0;                    /* outer displacement */
-            int od_size = iis & 0x03;           /* outer displacement size */
-            int isiis   = ( is << 1 ) | ( iis >> 2 );
-            
-            /* Gather base displacement from insn stream */
-            if ( bd_size == 0x02 || bd_size == 0x03 )
-            {
-                bd = (LWORD)nextw( f, addr );
-                if ( bd_size == 0x03 )
-                    bd = bd + ((LWORD)nextw( f, addr ) << 16);
-            }
-            
-            /* Gather outer displacement from insn stream */
-            if ( od_size == 0x02 || od_size == 0x03 ) {
-                od = (LWORD)nextw( f, addr );
-                if ( od_size == 0x03 )
-                    od = od + ((LWORD)nextw( f, addr ) << 16);
-            }
-            
-            operand( "( " );
-            
-            if ( isiis == 1 || isiis == 2 )
-                operand( "[ " );
-            
-            operand( "%s" FORMAT_IMM32, bd < 0 ? "-" : "", abs(bd) );
-            if ( !bs )
-                operand( ", " FORMAT_AREG, reg );
-                
-            if ( isiis == 1 )
-                operand( "], " );
-                
-            if ( !is )
-            {
-                operand( "%c%d.%c*%d" ")", 
-                    da ? 'A' : 'D', ireg, wl ? 'L' : 'W', (1 << scale)
-                );            
-            }
-            
-            if ( isiis == 2 )
-                operand( "]" );
-            
-            operand( ", %s" FORMAT_IMM32, od < 0 ? "-" : "", abs(od) );
-            
-            operand( " )" );
-        }
-        else
-        {
-            /* 0 = brief extension word format */
-            WORD disp = extn & 0x00FF;
-            
-            if ( disp > 0x7F )
-                disp -= 0x100;
-                
-            operand( "(%d," FORMAT_AREG "," "%c%d.%c*%d" ")", 
-                disp, 
-                reg, 
-                da ? 'A' : 'D', ireg, wl ? 'L' : 'W', (1 << scale)
-            );            
-        }
-    }
-    
+        emit_indexed_ea( f, addr, reg, 0 );
+        break;
+
     case EAMODE_SUB_MODE:
-    {
-        
-        
-        
-    }
+        switch ( reg )
+        {
+        case 0:
+        {
+            ADDR dest = (ADDR)(WORD)nextw( f, addr );
+            operand( "(" );
+            emit_abs_addr( dest, FORMAT_IMM16, xtype );
+            operand( ").W" );
+            break;
+        }
+        case 1:
+        {
+            ADDR dest = (ADDR)read_s32( f, addr );
+            operand( "(" );
+            emit_abs_addr( dest, FORMAT_IMM32, xtype );
+            operand( ").L" );
+            break;
+        }
+        case 2:
+        {
+            ADDR extaddr = *addr;
+            LWORD disp = read_s16( f, addr );
+            ADDR dest = extaddr + disp;
+            operand( "(" );
+            operand( xref_genwordaddr( NULL, FORMAT_IMM32, dest ) );
+            if ( xtype != X_NONE )
+                xref_addxref( xtype, g_insn_addr, dest );
+            operand( ",PC)" );
+            break;
+        }
+        case 3:
+            emit_indexed_ea( f, addr, 0, 1 );
+            break;
+        case 4:
+            emit_imm_ea( f, addr, size );
+            break;
+        default:
+            operand( "???" );
+            break;
+        }
+        break;
     
     default:
+        operand( "???" );
         break;
     
     }
+}
+
+static int ea_field_is_control( int ea )
+{
+    int mode = (ea >> 3) & 0x7;
+    int reg  = ea & 0x7;
+
+    return mode == EAMODE_ADDR_INDIR
+        || mode == EAMODE_ADDR_IND_DISP
+        || mode == EAMODE_ADDR_IND_IDX
+        || (mode == EAMODE_SUB_MODE && reg <= 3);
+}
+
+OPERAND_FUNC(ea)
+{
+    emit_ea_field( f, addr, opc & 0x3F, OPSIZE_WORD, xtype );
+}
+
+OPERAND_FUNC(ea_control)
+{
+    int ea = opc & 0x3F;
+
+    if ( ea_field_is_control( ea ) )
+        emit_ea_field( f, addr, ea, OPSIZE_LONG, xtype );
+    else
+        operand( "???" );
 }
 
 
@@ -764,6 +853,7 @@ optab_t base_optab[] = {
 
   
     MASK ( "SWAP",      dreg0, 0xFFF8, 0x4840, X_REG )
+    MASK ( "PEA",       ea_control,     0xFFC0, 0x4840, X_NONE )
 
   
   
@@ -771,6 +861,8 @@ optab_t base_optab[] = {
     
     INSN ( "RTR",       none,   0x4E77,         X_NONE )
     INSN ( "RTS",       none,   0x4E75,         X_NONE )
+    MASK ( "JSR",       ea_control,     0xFFC0, 0x4E80, X_CALL )
+    MASK ( "JMP",       ea_control,     0xFFC0, 0x4EC0, X_JMP )
 
   
     MASK ( "BKPT",      vector3, 0xFFF8, 0x4848, X_NONE )

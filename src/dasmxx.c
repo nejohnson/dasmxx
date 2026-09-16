@@ -646,6 +646,16 @@ static void readlist( const char *listfile, struct params *params )
                             dasm_cpu_level = 80386;
                         else if ( !strcmp( cpu, "486" ) || !strcmp( cpu, "80486" ) )
                             dasm_cpu_level = 80486;
+                        else if ( !strcmp( cpu, "68000" ) )
+                            dasm_cpu_level = 68000;
+                        else if ( !strcmp( cpu, "68010" ) )
+                            dasm_cpu_level = 68010;
+                        else if ( !strcmp( cpu, "68020" ) )
+                            dasm_cpu_level = 68020;
+                        else if ( !strcmp( cpu, "68030" ) )
+                            dasm_cpu_level = 68030;
+                        else if ( !strcmp( cpu, "68040" ) )
+                            dasm_cpu_level = 68040;
                         else
                             error( "%s(%u) :: Unsupported CPU option '%s'", listfile, lineno, cpu );
                     }
