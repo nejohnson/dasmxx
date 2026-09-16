@@ -10,8 +10,8 @@ Supported Processors:
   * Atmel AVR
   * Intel 8035, 8048, 8049 (MCS-48)
   * Intel 8031, 8051 (MCS-51)
-  * Intel 8080/8085
-  * Intel 8086/8088
+  * Intel 8080/8085 (MCS-80, MCS-85)
+  * Intel 8086/186/286/386/486 + 87/387/487 FPU
   * Intel 8096 (MCS-96, including 196 variants)
   * Microchip PIC10/12/16/18
   * Mostek 6502
@@ -27,7 +27,6 @@ Supported Processors:
 
 Planned Features:
   * More processors (in no specific order):
-    * Intel 8087 FPU
     * Microchip PIC24/dsPIC33
   * Support for Intel Hex and Motorola SREC input file formats
   * Support for merging multiple ROM files
