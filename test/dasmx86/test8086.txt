@@ -2,3 +2,4 @@
 60 # PUSHA on 80186+
 61 # POPA on 80186+
 66 # operand-size prefix on 80386+
+DF E0 # FNSTSW AX on 80287+

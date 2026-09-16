@@ -1692,7 +1692,7 @@ optab_t base_optab[] = {
     FP_MEM( "FIDIV",  fp_m16int, 0xDE, 0x30 )
     FP_MEM( "FIDIVR", fp_m16int, 0xDE, 0x38 )
 
-    MASK2( "FNSTSW", gobble_AX,   0xDF, 0xFF, 0xE0, X_NONE )
+    MASK2_CPU( "FNSTSW", gobble_AX, 0xDF, 0xFF, 0xE0, X_NONE, 80286 )
     FP_MEM( "FILD",  fp_m16int,  0xDF, 0x00 )
     FP_MEM( "FIST",  fp_m16int,  0xDF, 0x10 )
     FP_MEM( "FISTP", fp_m16int,  0xDF, 0x18 )
