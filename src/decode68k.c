@@ -1464,6 +1464,27 @@ OPERAND_FUNC(cas)
     emit_ea_field( f, addr, ea, size, xtype );
 }
 
+OPERAND_FUNC(muldiv_long)
+{
+    UWORD ext = nextw( f, addr );
+    int ea = opc & 0x3F;
+    int dst_hi = (ext >> 12) & 0x07;
+    int dst_lo = ext & 0x07;
+
+    if ( !ea_field_is_data( ea ) )
+    {
+        emit_bad_operands();
+        return;
+    }
+
+    emit_ea_field( f, addr, ea, OPSIZE_LONG, xtype );
+    operand( ", " );
+    if ( ext & 0x0400 )
+        operand( FORMAT_DREG ":" FORMAT_DREG, dst_lo, dst_hi );
+    else
+        operand( FORMAT_DREG, dst_hi );
+}
+
 OPERAND_FUNC(trapcc)
 {
     /* empty */
@@ -2369,6 +2390,10 @@ optab_t base_optab[] = {
     MASK ( "NBCD",      ea,             0xFFC0, 0x4800, X_NONE )
     MASK ( "TAS",       ea,             0xFFC0, 0x4AC0, X_NONE )
     MASK ( "CHK.W",     ea_word_dreg9,  0xF1C0, 0x4180, X_NONE )
+    MASK_EXT_CPU ( "MULU.L", muldiv_long, 0xFFC0, 0x4C00, 0x0800, 0x0000, X_NONE, 68020 )
+    MASK_EXT_CPU ( "MULS.L", muldiv_long, 0xFFC0, 0x4C00, 0x0800, 0x0800, X_NONE, 68020 )
+    MASK_EXT_CPU ( "DIVU.L", muldiv_long, 0xFFC0, 0x4C40, 0x0800, 0x0000, X_NONE, 68020 )
+    MASK_EXT_CPU ( "DIVS.L", muldiv_long, 0xFFC0, 0x4C40, 0x0800, 0x0800, X_NONE, 68020 )
 
 
 
