@@ -122,6 +122,84 @@ def create_tool_feature_tests():
         description="Test -s flag for stripped output"
     )
 
+    # Input format tests
+    builder.add_test(
+        name="Intel HEX input",
+        processor="z80",
+        command_file="input_formats/test_ihex.dz80",
+        expected_patterns=[
+            r'Processing "test_ihex\.ihx" \([0-9]+ bytes, Intel HEX\)',
+            r'1000:\s+00\s+NOP',
+            r'1001:\s+3E 42\s+LD\s+A, #\$42',
+            r'1003:\s+C3 00 10\s+JP\s+___CL_0001',
+        ],
+        description="Test Intel HEX input records"
+    )
+
+    builder.add_test(
+        name="Intel HEX extended linear address input",
+        processor="z80",
+        command_file="input_formats/test_ihex_linear.dz80",
+        expected_patterns=[
+            r'Processing "test_ihex_linear\.ihx" \([0-9]+ bytes, Intel HEX\)',
+            r'10000:\s+00\s+NOP',
+            r'10001:\s+C9\s+RET',
+        ],
+        description="Test Intel HEX extended linear address records"
+    )
+
+    builder.add_test(
+        name="Motorola S1 input",
+        processor="z80",
+        command_file="input_formats/test_srec_s1.dz80",
+        expected_patterns=[
+            r'Processing "test_srec_s1\.s19" \([0-9]+ bytes, Motorola S-record\)',
+            r'1000:\s+00\s+NOP',
+            r'1001:\s+3E 42\s+LD\s+A, #\$42',
+            r'1003:\s+C3 00 10\s+JP\s+___CL_0001',
+        ],
+        description="Test Motorola S1 records"
+    )
+
+    builder.add_test(
+        name="Motorola S2 input",
+        processor="z80",
+        command_file="input_formats/test_srec_s2.dz80",
+        expected_patterns=[
+            r'Processing "test_srec_s2\.s28" \([0-9]+ bytes, Motorola S-record\)',
+            r'1000:\s+00\s+NOP',
+            r'1001:\s+3E 42\s+LD\s+A, #\$42',
+            r'1003:\s+C3 00 10\s+JP\s+___CL_0001',
+        ],
+        description="Test Motorola S2 records"
+    )
+
+    builder.add_test(
+        name="Motorola S3 input",
+        processor="z80",
+        command_file="input_formats/test_srec_s3.dz80",
+        expected_patterns=[
+            r'Processing "test_srec_s3\.s37" \([0-9]+ bytes, Motorola S-record\)',
+            r'1000:\s+00\s+NOP',
+            r'1001:\s+3E 42\s+LD\s+A, #\$42',
+            r'1003:\s+C3 00 10\s+JP\s+___CL_0001',
+        ],
+        description="Test Motorola S3 records"
+    )
+
+    builder.add_test(
+        name="Binary input file offset",
+        processor="z80",
+        command_file="input_formats/test_binary_offset.dz80",
+        expected_patterns=[
+            r'Processing "../testdata/simple_code\.bin" \(50 bytes\)',
+            r'File offset: 0x0001',
+            r'2000:\s+42\s+LD\s+B, D',
+            r'2001:\s+C3 10 00\s+JP\s+\$0010',
+        ],
+        description="Test binary input still honours the file offset command"
+    )
+
     return builder.build()
 
 

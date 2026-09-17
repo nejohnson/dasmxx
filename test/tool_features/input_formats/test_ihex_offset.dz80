@@ -1,0 +1,5 @@
+# File offsets are binary-only
+ftest_ihex.ihx
+>0001
+c1000
+e1001

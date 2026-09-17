@@ -1,0 +1,4 @@
+# Invalid Motorola S-record checksum should fail during input load
+fbad_checksum.s19
+c1000
+e1001

@@ -1,0 +1,4 @@
+# Invalid Intel HEX checksum should fail during input load
+fbad_checksum.ihx
+c1000
+e1001

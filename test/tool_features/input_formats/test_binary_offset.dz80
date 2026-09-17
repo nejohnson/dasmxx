@@ -1,0 +1,5 @@
+# Binary input still supports file offset
+f../testdata/simple_code.bin
+>0001
+c2000
+e2005

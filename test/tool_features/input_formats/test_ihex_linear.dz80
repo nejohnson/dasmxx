@@ -1,0 +1,4 @@
+# Intel HEX extended linear address input at absolute address 0x10000
+ftest_ihex_linear.ihx
+c10000
+e10002

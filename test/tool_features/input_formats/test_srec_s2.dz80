@@ -1,0 +1,4 @@
+# Motorola S-record S2 input at absolute address 0x1000
+ftest_srec_s2.s28
+c1000
+e1006

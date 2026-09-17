@@ -130,24 +130,7 @@ static OPC next_insn( FILE* fp, ADDR *addr  )
 
 static OPC peek_insn_word( FILE *fp )
 {
-    int lo = fgetc( fp );
-    int hi = fgetc( fp );
-    OPC w;
-
-    if ( hi != EOF )
-        ungetc( hi, fp );
-    if ( lo != EOF )
-        ungetc( lo, fp );
-
-    if ( lo == EOF || hi == EOF )
-        return 0;
-
-    if ( dasm_word_msb_first )
-        SWAP( lo, hi );
-
-    w = ( ( hi & 0xFF ) << 8 ) | ( lo & 0xFF );
-
-    return w;
+    return (OPC)peekw( fp );
 }
 
 static unsigned int fpu_level_order( unsigned int fpu )

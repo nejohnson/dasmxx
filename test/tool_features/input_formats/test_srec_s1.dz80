@@ -1,0 +1,4 @@
+# Motorola S-record S1 input at absolute address 0x1000
+ftest_srec_s1.s19
+c1000
+e1006

@@ -36,9 +36,9 @@ The commands are (where XXXX denotes hexadecimal address):
 
 File commands:
 
-     fName       input file = `Name'
+     fName       input file = `Name' (raw binary, Intel HEX, or Motorola S-record)
      iName       include file `Name' in place of include command
-     >XXXX       fast forward to offset XXXX from start of file
+     >XXXX       fast forward to offset XXXX from start of binary file
 
 Configuration commands:
 

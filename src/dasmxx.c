@@ -119,6 +119,7 @@
 #include <unistd.h> /* for getopt */
 #include <ctype.h>
 #include <stdint.h>
+#include <limits.h>
 
 #include "dasmxx.h"
 
@@ -152,6 +153,20 @@ struct params {
     int want_xref;
     int want_asm_out;
     int want_stripped;
+};
+
+struct input_segment {
+    ADDR addr;
+    unsigned int len;
+    UBYTE *data;
+};
+
+struct input_image {
+    struct input_segment *segments;
+    unsigned int count;
+    unsigned int cap;
+    unsigned long source_size;
+    const char *format;
 };
 
 /* Set various physical limits */
@@ -198,6 +213,8 @@ static char datchars[] = "cbsewapvmuz";
 /* Global instruction byte buffer */
 static UBYTE *insn_byte_buffer = NULL;
 static UBYTE  insn_byte_idx    = 0;
+static ADDR   input_peek_addr  = 0;
+static struct input_image input_image = { 0 };
 
 /* Pagination Formatting */
 static int pagination   = 0;
@@ -205,6 +222,9 @@ static int pagination   = 0;
 #define DEFAULT_LINES_PER_PAGE      ( 60 )
 #define MIN_LINES_PER_PAGE          ( 10 )
 static const char *page_title = NULL;
+
+static void load_input_image( const char *path, ADDR binary_base_addr );
+static void free_input_image( void );
 
 /*****************************************************************************
  *        Private Functions
@@ -872,20 +892,16 @@ static void run_disasm( struct params params )
 { 
     const char *inputfile = params.inputfile;
     struct fmt *clist     = params.cmdlist;
-    FILE *f;
-    long  filelength;
+    FILE *f = NULL;
     ADDR  addr;
     int   mode;
     unsigned int bpl;
     char *name;
     
-    f = fopen( inputfile, "rb" );
-    if ( !f )
-        error( "Failed to open input file" );
-        
-    fseek( f, 0, SEEK_END );
-    filelength = ftell( f );
-    fseek( f, file_offset, SEEK_SET );
+    if ( !clist )
+        error( "No disassembly commands specified" );
+
+    load_input_image( inputfile, clist->addr );
     
     addr  = clist->addr;
     mode  = clist->mode;
@@ -894,7 +910,11 @@ static void run_disasm( struct params params )
     dasm_segment_base = clist->seg;
     clist = clist->n;
     
-    printf( "%s   Processing \"%s\" (%ld bytes)", COMMENT_DELIM, inputfile, filelength ); newline();
+    if ( strcmp( input_image.format, "binary" ) == 0 )
+        printf( "%s   Processing \"%s\" (%lu bytes)", COMMENT_DELIM, inputfile, input_image.source_size );
+    else
+        printf( "%s   Processing \"%s\" (%lu bytes, %s)", COMMENT_DELIM, inputfile, input_image.source_size, input_image.format );
+    newline();
     if ( file_offset )
     {
          printf( "%s   File offset: 0x%04X", COMMENT_DELIM, file_offset ); newline();
@@ -903,7 +923,7 @@ static void run_disasm( struct params params )
     printf( "%s   String terminator: 0x%02x", COMMENT_DELIM, string_terminator );         newline();
     newline();
 
-    while ( !feof( f ) && clist )
+    while ( clist )
     {
         if ( addr >= clist->addr )
         {
@@ -1363,7 +1383,7 @@ static void run_disasm( struct params params )
         }
     } /* while() */
      
-    fclose( f );
+    free_input_image();
 }
 
 /***********************************************************
@@ -1445,6 +1465,306 @@ static void display_banner( struct params params )
     printf( "%s" SPACER, prefix ); 
     newline();
     newline();
+}
+
+static void free_input_image( void )
+{
+    unsigned int i;
+
+    for ( i = 0; i < input_image.count; i++ )
+        free( input_image.segments[i].data );
+    free( input_image.segments );
+    memset( &input_image, 0, sizeof(input_image) );
+}
+
+static UBYTE *read_input_file( const char *path, unsigned long *size )
+{
+    FILE *f = fopen( path, "rb" );
+    UBYTE *data;
+    long len;
+
+    if ( !f )
+        error( "Failed to open input file \"%s\"", path );
+
+    if ( fseek( f, 0, SEEK_END ) != 0 )
+        error( "Failed to seek input file \"%s\"", path );
+    len = ftell( f );
+    if ( len < 0 )
+        error( "Failed to measure input file \"%s\"", path );
+    if ( fseek( f, 0, SEEK_SET ) != 0 )
+        error( "Failed to rewind input file \"%s\"", path );
+
+    data = zalloc( (size_t)len + 1 );
+    if ( len && fread( data, 1, (size_t)len, f ) != (size_t)len )
+        error( "Failed to read input file \"%s\"", path );
+    fclose( f );
+
+    *size = (unsigned long)len;
+    return data;
+}
+
+static int ranges_overlap( ADDR a_start, unsigned int a_len, ADDR b_start, unsigned int b_len )
+{
+    ADDR a_end = a_start + a_len - 1;
+    ADDR b_end = b_start + b_len - 1;
+
+    return a_start <= b_end && b_start <= a_end;
+}
+
+static void input_add_segment( ADDR addr, const UBYTE *data, unsigned int len, const char *path, unsigned int line )
+{
+    struct input_segment *seg;
+    unsigned int i;
+
+    if ( len == 0 )
+        return;
+    if ( addr + len - 1 < addr )
+        error( "%s(%u) :: Input record address range wraps", path, line );
+
+    for ( i = 0; i < input_image.count; i++ )
+        if ( ranges_overlap( addr, len, input_image.segments[i].addr, input_image.segments[i].len ) )
+            error( "%s(%u) :: Input record overlaps existing data at 0x%04X", path, line, addr );
+
+    if ( input_image.count == input_image.cap )
+    {
+        input_image.cap = input_image.cap ? input_image.cap * 2 : 32;
+        input_image.segments = realloc( input_image.segments, input_image.cap * sizeof(*input_image.segments) );
+        if ( !input_image.segments )
+            error( "Out of memory" );
+    }
+
+    seg = &input_image.segments[input_image.count++];
+    seg->addr = addr;
+    seg->len = len;
+    seg->data = zalloc( len );
+    memcpy( seg->data, data, len );
+}
+
+static int input_try_read_at( ADDR addr, UBYTE *out )
+{
+    unsigned int i;
+
+    for ( i = 0; i < input_image.count; i++ )
+    {
+        struct input_segment *seg = &input_image.segments[i];
+        if ( addr >= seg->addr && addr - seg->addr < seg->len )
+        {
+            *out = seg->data[addr - seg->addr];
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static UBYTE input_read_at( ADDR addr )
+{
+    UBYTE byte;
+
+    if ( input_try_read_at( addr, &byte ) )
+        return byte;
+    error( "Input has no byte at address 0x%04X", addr );
+    return 0;
+}
+
+static int hex_value( int c )
+{
+    if ( c >= '0' && c <= '9' )
+        return c - '0';
+    if ( c >= 'a' && c <= 'f' )
+        return c - 'a' + 10;
+    if ( c >= 'A' && c <= 'F' )
+        return c - 'A' + 10;
+    return -1;
+}
+
+static UBYTE parse_hex_byte( const char *path, unsigned int line, const char *p )
+{
+    int hi = hex_value( (unsigned char)p[0] );
+    int lo = hex_value( (unsigned char)p[1] );
+
+    if ( hi < 0 || lo < 0 )
+        error( "%s(%u) :: Invalid hexadecimal digit", path, line );
+    return (UBYTE)((hi << 4) | lo);
+}
+
+static void load_binary_image( const char *path, const UBYTE *data, unsigned long size, ADDR base_addr )
+{
+    if ( file_offset > size )
+        error( "File offset 0x%04X is beyond end of input file", file_offset );
+    if ( size - file_offset > UINT_MAX )
+        error( "Input file \"%s\" is too large", path );
+
+    input_image.format = "binary";
+    input_add_segment( base_addr, data + file_offset, (unsigned int)(size - file_offset), path, 0 );
+}
+
+static void load_ihex_image( const char *path, UBYTE *data )
+{
+    char *saveptr = NULL;
+    char *line = strtok_r( (char *)data, "\n", &saveptr );
+    unsigned int lineno = 0;
+    ULWORD base = 0;
+
+    if ( file_offset )
+        error( "%s :: File offset command is only supported for binary input", path );
+
+    input_image.format = "Intel HEX";
+    while ( line )
+    {
+        char *p = line;
+        UBYTE bytes[256];
+        UBYTE count, type, checksum;
+        unsigned int addr16, i, sum;
+
+        lineno++;
+        while ( isspace( (unsigned char)*p ) )
+            p++;
+        if ( *p == '\0' )
+        {
+            line = strtok_r( NULL, "\n", &saveptr );
+            continue;
+        }
+        if ( *p != ':' )
+            error( "%s(%u) :: Expected Intel HEX record", path, lineno );
+        p++;
+
+        count = parse_hex_byte( path, lineno, p ); p += 2;
+        addr16 = parse_hex_byte( path, lineno, p ) << 8; p += 2;
+        addr16 |= parse_hex_byte( path, lineno, p ); p += 2;
+        type = parse_hex_byte( path, lineno, p ); p += 2;
+        sum = count + ((addr16 >> 8) & 0xFF) + (addr16 & 0xFF) + type;
+
+        for ( i = 0; i < count; i++, p += 2 )
+        {
+            bytes[i] = parse_hex_byte( path, lineno, p );
+            sum += bytes[i];
+        }
+        checksum = parse_hex_byte( path, lineno, p );
+        sum += checksum;
+        if ( (sum & 0xFF) != 0 )
+            error( "%s(%u) :: Bad Intel HEX checksum", path, lineno );
+
+        switch ( type )
+        {
+        case 0x00:
+            input_add_segment( (ADDR)(base + addr16), bytes, count, path, lineno );
+            break;
+        case 0x01:
+            return;
+        case 0x02:
+            if ( count != 2 )
+                error( "%s(%u) :: Bad Intel HEX extended segment record length", path, lineno );
+            base = (((ULWORD)bytes[0] << 8) | bytes[1]) << 4;
+            break;
+        case 0x04:
+            if ( count != 2 )
+                error( "%s(%u) :: Bad Intel HEX extended linear record length", path, lineno );
+            base = (((ULWORD)bytes[0] << 8) | bytes[1]) << 16;
+            break;
+        case 0x03:
+        case 0x05:
+            break;
+        default:
+            error( "%s(%u) :: Unsupported Intel HEX record type %02X", path, lineno, type );
+        }
+
+        line = strtok_r( NULL, "\n", &saveptr );
+    }
+}
+
+static void load_srec_image( const char *path, UBYTE *data )
+{
+    char *saveptr = NULL;
+    char *line = strtok_r( (char *)data, "\n", &saveptr );
+    unsigned int lineno = 0;
+
+    if ( file_offset )
+        error( "%s :: File offset command is only supported for binary input", path );
+
+    input_image.format = "Motorola S-record";
+    while ( line )
+    {
+        char *p = line;
+        int type;
+        int addr_len = 0;
+        UBYTE bytes[256];
+        UBYTE count;
+        ULWORD addr = 0;
+        unsigned int i, data_len, sum;
+
+        lineno++;
+        while ( isspace( (unsigned char)*p ) )
+            p++;
+        if ( *p == '\0' )
+        {
+            line = strtok_r( NULL, "\n", &saveptr );
+            continue;
+        }
+        if ( p[0] != 'S' || !isdigit( (unsigned char)p[1] ) )
+            error( "%s(%u) :: Expected Motorola S-record", path, lineno );
+        type = p[1] - '0';
+        p += 2;
+
+        count = parse_hex_byte( path, lineno, p ); p += 2;
+        sum = count;
+        for ( i = 0; i < count; i++, p += 2 )
+        {
+            bytes[i] = parse_hex_byte( path, lineno, p );
+            sum += bytes[i];
+        }
+        if ( (sum & 0xFF) != 0xFF )
+            error( "%s(%u) :: Bad Motorola S-record checksum", path, lineno );
+
+        if ( type == 1 || type == 9 )
+            addr_len = 2;
+        else if ( type == 2 || type == 8 )
+            addr_len = 3;
+        else if ( type == 3 || type == 7 )
+            addr_len = 4;
+        else if ( type == 0 || type == 5 || type == 6 )
+        {
+            line = strtok_r( NULL, "\n", &saveptr );
+            continue;
+        }
+        else
+            error( "%s(%u) :: Unsupported Motorola S-record type S%d", path, lineno, type );
+
+        if ( count < (unsigned int)addr_len + 1 )
+            error( "%s(%u) :: Bad Motorola S-record byte count", path, lineno );
+        for ( i = 0; i < (unsigned int)addr_len; i++ )
+            addr = (addr << 8) | bytes[i];
+
+        data_len = count - addr_len - 1;
+        if ( type == 1 || type == 2 || type == 3 )
+            input_add_segment( (ADDR)addr, bytes + addr_len, data_len, path, lineno );
+
+        line = strtok_r( NULL, "\n", &saveptr );
+    }
+}
+
+static void load_input_image( const char *path, ADDR binary_base_addr )
+{
+    UBYTE *data;
+    unsigned long size;
+    unsigned long i = 0;
+
+    free_input_image();
+    data = read_input_file( path, &size );
+    input_image.source_size = size;
+
+    while ( i < size && isspace( (unsigned char)data[i] ) )
+        i++;
+
+    if ( i < size && data[i] == ':' )
+        load_ihex_image( path, data );
+    else if ( i + 1 < size && data[i] == 'S' && isdigit( (unsigned char)data[i + 1] ) )
+        load_srec_image( path, data );
+    else
+        load_binary_image( path, data, size, binary_base_addr );
+
+    free( data );
+    if ( input_image.count == 0 )
+        error( "Input file \"%s\" contains no data records", path );
 }
 
 /*****************************************************************************
@@ -1568,17 +1888,17 @@ char * dupstr( const char *s )
 
 UBYTE next( FILE* fp, ADDR *addr )
 {
-    int c;
-    
-    c = fgetc( fp );
-    if ( c == EOF )
-        error( "Ran past end of input file" );
+    UBYTE c;
+
+    (void)fp;
+    c = input_read_at( *addr );
         
     if ( insn_byte_idx < dasm_max_insn_length )
-        insn_byte_buffer[insn_byte_idx++] = (UBYTE)c;
+        insn_byte_buffer[insn_byte_idx++] = c;
     
     (*addr)++;
-    return (UBYTE)c;
+    input_peek_addr = *addr;
+    return c;
 }
 
 /***********************************************************
@@ -1602,14 +1922,10 @@ UWORD nextw( FILE* fp, ADDR *addr )
 {
     int lo, hi;
     UWORD w = 0;
-    
-    lo = fgetc( fp );
-    if ( lo == EOF )
-        error( "Ran past end of input file" );
-        
-    hi = fgetc( fp );
-    if ( hi == EOF )
-        error( "Ran past end of input file" );    
+
+    (void)fp;
+    lo = input_read_at( *addr );
+    hi = input_read_at( *addr + 1 );
         
     if ( insn_byte_idx < dasm_max_insn_length )
         insn_byte_buffer[insn_byte_idx++] = (UBYTE)hi;
@@ -1619,6 +1935,7 @@ UWORD nextw( FILE* fp, ADDR *addr )
     
     (*addr)++;
     (*addr)++;
+    input_peek_addr = *addr;
     
     if ( dasm_word_msb_first )
         SWAP( lo, hi );
@@ -1644,17 +1961,28 @@ UWORD nextw( FILE* fp, ADDR *addr )
 
 UBYTE peek( FILE *fp )
 {
-    int c;
+    UBYTE c;
+
+    (void)fp;
+    c = input_read_at( input_peek_addr );
     
-    c = fgetc( fp );
-    if ( c == EOF )
-        error( "Ran past end of input file" );
-        
-    c = ungetc( c, fp );
-    if ( c == EOF )
-        error( "Unable to peek at input file" );
-    
-    return (UBYTE)c;
+    return c;
+}
+
+UWORD peekw( FILE *fp )
+{
+    UBYTE lo, hi;
+    UWORD w;
+
+    (void)fp;
+    if ( !input_try_read_at( input_peek_addr, &lo ) || !input_try_read_at( input_peek_addr + 1, &hi ) )
+        return 0;
+
+    if ( dasm_word_msb_first )
+        SWAP( lo, hi );
+
+    w = ( ( hi & 0xFF ) << 8 ) | ( lo & 0xFF );
+    return w;
 }
 
 /***********************************************************

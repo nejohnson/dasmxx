@@ -83,6 +83,7 @@ extern unsigned int dasm_fpu_level;
 extern UBYTE next( FILE* fp, ADDR *addr );
 extern UWORD nextw( FILE *fp, ADDR *addr );
 extern UBYTE peek( FILE *fp );
+extern UWORD peekw( FILE *fp );
 extern char * dupstr( const char *s );
 
 /*****************************************************************************/

@@ -3,7 +3,7 @@ dasmxx provides a suite of disassemblers for a variety of popular 8-bit and 16-b
 Features:
   * Fast, retargetable disassembler
   * Script-driven disassembly
-  * Reads raw binary files
+  * Reads raw binary, Intel HEX, and Motorola S-record files
   * Output include verbose listing for analysis and extensive cross-reference
 
 Supported Processors:
@@ -28,7 +28,6 @@ Supported Processors:
 Planned Features:
   * More processors (in no specific order):
     * Microchip PIC24/dsPIC33
-  * Support for Intel Hex and Motorola SREC input file formats
   * Support for merging multiple ROM files
   * Assembler-compatible output for subsequent re-assembly
   
