@@ -31,7 +31,8 @@
  *****************************************************************************/
  
  /*****************************************************************************
- *   68000 INSTRUCTION SET (upto and including the 68030)
+ *   68000 INSTRUCTION SET (up to and including the 68040)
+ *   Includes MC68881/MC68882 and 68040 FPU/MMU instruction decoding.
  * 
  *   As documented in Motorola document M68000PM/AD rev.1
  *****************************************************************************/
