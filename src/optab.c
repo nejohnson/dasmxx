@@ -150,6 +150,23 @@ static OPC peek_insn_word( FILE *fp )
     return w;
 }
 
+static unsigned int fpu_level_order( unsigned int fpu )
+{
+    switch ( fpu )
+    {
+    case 1:     /* none */
+        return 1;
+    case 68881:
+        return 2;
+    case 68882:
+        return 3;
+    case 68040:
+        return 4;
+    default:
+        return fpu;
+    }
+}
+
 #if defined(__GNUC__)
 void __attribute__((weak)) dasm_pre_insn( void )
 {
@@ -203,7 +220,8 @@ static int walk_table( FILE * f, ADDR * addr, optab_t * optab, OPC opc )
             continue;
         }
 
-        if ( optab->min_fpu != 0 && dasm_fpu_level != 0 && dasm_fpu_level < optab->min_fpu )
+        if ( optab->min_fpu != 0 && dasm_fpu_level != 0
+             && fpu_level_order( dasm_fpu_level ) < fpu_level_order( optab->min_fpu ) )
         {
             optab++;
             continue;

@@ -1,0 +1,6 @@
+ftest68040fpu.bin
+ocpu=68040
+ofpu=68040
+c0000 Start
+
+e0004
