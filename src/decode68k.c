@@ -31,7 +31,7 @@
  *****************************************************************************/
  
  /*****************************************************************************
- *   68000 INSTRUCTION SET (upto and including the 68030, i.e. no FP)
+ *   68000 INSTRUCTION SET (upto and including the 68030)
  * 
  *   As documented in Motorola document M68000PM/AD rev.1
  *****************************************************************************/
@@ -48,7 +48,7 @@
  * Globally-visible decoder properties
  *****************************************************************************/
 
-DASM_PROFILE( "dasm68k", "Motorola 68000", 22, 9, 1, 2, 1 )
+DASM_PROFILE( "dasm68k", "Motorola 68000", 22, 10, 1, 2, 1 )
 
 /*****************************************************************************
  * Private data types, macros, constants.
@@ -70,7 +70,9 @@ DASM_PROFILE( "dasm68k", "Motorola 68000", 22, 9, 1, 2, 1 )
 enum {
     OPSIZE_BYTE = 1,
     OPSIZE_WORD = 2,
-    OPSIZE_LONG = 4
+    OPSIZE_LONG = 4,
+    OPSIZE_DOUBLE = 8,
+    OPSIZE_EXTENDED = 12
 };
 
 static LWORD abs_lword( LWORD value )
@@ -359,6 +361,15 @@ static void emit_imm_ea( FILE *f, ADDR *addr, int size )
         operand( "#" FORMAT_IMM8, (UWORD)nextw( f, addr ) & 0xFF );
     else if ( size == OPSIZE_LONG )
         operand( "#" FORMAT_IMM32, (ULWORD)read_s32( f, addr ) );
+    else if ( size == OPSIZE_DOUBLE || size == OPSIZE_EXTENDED )
+    {
+        int words = size / 2;
+        int i;
+
+        operand( "#$" );
+        for ( i = 0; i < words; i++ )
+            operand( "%04X", (UWORD)nextw( f, addr ) );
+    }
     else
         operand( "#" FORMAT_IMM16, (UWORD)nextw( f, addr ) );
 }
@@ -592,6 +603,49 @@ static const char *fpu_condition_name( int cc )
     };
 
     return names[cc & 0x1F];
+}
+
+static int fpu_size_from_format( int fmt )
+{
+    switch ( fmt & 0x07 )
+    {
+    case 0:
+        return OPSIZE_LONG;
+    case 1:
+        return OPSIZE_LONG;
+    case 2:
+        return OPSIZE_EXTENDED;
+    case 3:
+        return OPSIZE_EXTENDED;
+    case 4:
+        return OPSIZE_WORD;
+    case 5:
+        return OPSIZE_DOUBLE;
+    case 6:
+        return OPSIZE_BYTE;
+    case 7:
+        return OPSIZE_EXTENDED;
+    default:
+        return 0;
+    }
+}
+
+static int fpu_ea_is_source( int ea, int fmt )
+{
+    if ( ea_field_is_register( ea ) )
+        return ((ea >> 3) & 0x07) == EAMODE_DATA_DIRECT
+            && (fmt == 0 || fmt == 1 || fmt == 4 || fmt == 6);
+
+    return ea_field_is_data( ea );
+}
+
+static int fpu_ea_is_destination( int ea, int fmt )
+{
+    if ( ea_field_is_register( ea ) )
+        return ((ea >> 3) & 0x07) == EAMODE_DATA_DIRECT
+            && (fmt == 0 || fmt == 1 || fmt == 4 || fmt == 6);
+
+    return ea_field_is_memory_alterable( ea );
 }
 
 static int move_dest_ea( OPC opc )
@@ -1218,6 +1272,52 @@ OPERAND_FUNC(fpreg_fpreg)
     operand( "FP%d, FP%d", (ext >> 10) & 0x07, (ext >> 7) & 0x07 );
 }
 
+OPERAND_FUNC(fpreg)
+{
+    UWORD ext = nextw( f, addr );
+
+    operand( "FP%d", (ext >> 10) & 0x07 );
+}
+
+OPERAND_FUNC(fpu_ea_fpreg)
+{
+    UWORD ext = nextw( f, addr );
+    int fmt = (ext >> 10) & 0x07;
+    int ea = opc & 0x3F;
+
+    if ( !fpu_ea_is_source( ea, fmt ) )
+    {
+        emit_bad_operands();
+        return;
+    }
+
+    emit_ea_field( f, addr, ea, fpu_size_from_format( fmt ), xtype );
+    operand( ", FP%d", (ext >> 7) & 0x07 );
+}
+
+OPERAND_FUNC(fpu_fpreg_ea)
+{
+    UWORD ext = nextw( f, addr );
+    int fmt = (ext >> 10) & 0x07;
+    int ea = opc & 0x3F;
+
+    if ( !fpu_ea_is_destination( ea, fmt ) )
+    {
+        emit_bad_operands();
+        return;
+    }
+
+    operand( "FP%d, ", (ext >> 7) & 0x07 );
+    emit_ea_field( f, addr, ea, fpu_size_from_format( fmt ), xtype );
+}
+
+OPERAND_FUNC(fmovecr)
+{
+    UWORD ext = nextw( f, addr );
+
+    operand( "#" FORMAT_IMM8 ", FP%d", ext & 0x7F, (ext >> 7) & 0x07 );
+}
+
 /******************************************************************************/
 /**                            Opcode Functions                              **/
 /******************************************************************************/
@@ -1364,6 +1464,54 @@ static const char *opcode_shift_mem( OPC opc )
       .u.mask.mask = M_mask,                                              \
       .u.mask.val  = M_val                                                \
     },
+
+#define FPU_OP_X(M_opcode, M_code) \
+    MASK_EXT_FPU ( M_opcode ".X", fpreg_fpreg, 0xFFFF, 0xF200, 0xE07F, M_code, X_REG, 68881 )
+
+#define FPU_TEST_X(M_code) \
+    MASK_EXT_FPU ( "FTST.X", fpreg, 0xFFFF, 0xF200, 0xE07F, M_code, X_REG, 68881 )
+
+#define FPU_OP_EA_FMT(M_opcode, M_suffix, M_fmt, M_code) \
+    MASK_EXT_FPU ( M_opcode M_suffix, fpu_ea_fpreg, 0xFFC0, 0xF200, 0xFC7F, 0x4000 | ((M_fmt) << 10) | (M_code), X_NONE, 68881 )
+
+#define FPU_MOVE_EA_FMT(M_suffix, M_fmt) \
+    FPU_OP_EA_FMT ( "FMOVE", M_suffix, M_fmt, 0x00 )
+
+#define FPU_OP_EA(M_opcode, M_code) \
+    FPU_OP_EA_FMT ( M_opcode, ".L", 0, M_code ) \
+    FPU_OP_EA_FMT ( M_opcode, ".S", 1, M_code ) \
+    FPU_OP_EA_FMT ( M_opcode, ".X", 2, M_code ) \
+    FPU_OP_EA_FMT ( M_opcode, ".P", 3, M_code ) \
+    FPU_OP_EA_FMT ( M_opcode, ".W", 4, M_code ) \
+    FPU_OP_EA_FMT ( M_opcode, ".D", 5, M_code ) \
+    FPU_OP_EA_FMT ( M_opcode, ".B", 6, M_code ) \
+    FPU_OP_EA_FMT ( M_opcode, ".P", 7, M_code )
+
+#define FPU_TEST_EA_FMT(M_suffix, M_fmt, M_code) \
+    MASK_EXT_FPU ( "FTST" M_suffix, fpu_ea_fpreg, 0xFFC0, 0xF200, 0xFC7F, 0x4000 | ((M_fmt) << 10) | (M_code), X_NONE, 68881 )
+
+#define FPU_TEST_EA(M_code) \
+    FPU_TEST_EA_FMT ( ".L", 0, M_code ) \
+    FPU_TEST_EA_FMT ( ".S", 1, M_code ) \
+    FPU_TEST_EA_FMT ( ".X", 2, M_code ) \
+    FPU_TEST_EA_FMT ( ".P", 3, M_code ) \
+    FPU_TEST_EA_FMT ( ".W", 4, M_code ) \
+    FPU_TEST_EA_FMT ( ".D", 5, M_code ) \
+    FPU_TEST_EA_FMT ( ".B", 6, M_code ) \
+    FPU_TEST_EA_FMT ( ".P", 7, M_code )
+
+#define FPU_MOVE_FP_EA_FMT(M_suffix, M_fmt) \
+    MASK_EXT_FPU ( "FMOVE" M_suffix, fpu_fpreg_ea, 0xFFC0, 0xF200, 0xFC7F, 0x6000 | ((M_fmt) << 10), X_NONE, 68881 )
+
+#define FPU_MOVE_FP_EA \
+    FPU_MOVE_FP_EA_FMT ( ".L", 0 ) \
+    FPU_MOVE_FP_EA_FMT ( ".S", 1 ) \
+    FPU_MOVE_FP_EA_FMT ( ".X", 2 ) \
+    FPU_MOVE_FP_EA_FMT ( ".P", 3 ) \
+    FPU_MOVE_FP_EA_FMT ( ".W", 4 ) \
+    FPU_MOVE_FP_EA_FMT ( ".D", 5 ) \
+    FPU_MOVE_FP_EA_FMT ( ".B", 6 ) \
+    FPU_MOVE_FP_EA_FMT ( ".P", 7 )
 
 
 
@@ -1878,13 +2026,85 @@ optab_t base_optab[] = {
 
     MASK_DYN_FPU ( fbcc, fbranch16,      0xFFC0, 0xF280, X_JMP, 68881 )
     MASK_DYN_FPU ( fbcc, fbranch32,      0xFFC0, 0xF2C0, X_JMP, 68881 )
-    MASK_EXT_FPU ( "FMOVE.X", fpreg_fpreg, 0xFFFF, 0xF200, 0x007F, 0x0000, X_REG, 68881 )
-    MASK_EXT_FPU ( "FABS.X",  fpreg_fpreg, 0xFFFF, 0xF200, 0x007F, 0x0018, X_REG, 68881 )
-    MASK_EXT_FPU ( "FNEG.X",  fpreg_fpreg, 0xFFFF, 0xF200, 0x007F, 0x001A, X_REG, 68881 )
-    MASK_EXT_FPU ( "FDIV.X",  fpreg_fpreg, 0xFFFF, 0xF200, 0x007F, 0x0020, X_REG, 68881 )
-    MASK_EXT_FPU ( "FADD.X",  fpreg_fpreg, 0xFFFF, 0xF200, 0x007F, 0x0022, X_REG, 68881 )
-    MASK_EXT_FPU ( "FMUL.X",  fpreg_fpreg, 0xFFFF, 0xF200, 0x007F, 0x0023, X_REG, 68881 )
-    MASK_EXT_FPU ( "FSUB.X",  fpreg_fpreg, 0xFFFF, 0xF200, 0x007F, 0x0028, X_REG, 68881 )
+    MASK_EXT_FPU ( "FMOVECR.X", fmovecr, 0xFFFF, 0xF200, 0xFC00, 0x5C00, X_IMM, 68881 )
+
+    FPU_OP_X ( "FMOVE",   0x00 )
+    FPU_OP_X ( "FINT",    0x01 )
+    FPU_OP_X ( "FSINH",   0x02 )
+    FPU_OP_X ( "FINTRZ",  0x03 )
+    FPU_OP_X ( "FSQRT",   0x04 )
+    FPU_OP_X ( "FLOGNP1", 0x06 )
+    FPU_OP_X ( "FETOXM1", 0x08 )
+    FPU_OP_X ( "FTANH",   0x09 )
+    FPU_OP_X ( "FATAN",   0x0A )
+    FPU_OP_X ( "FASIN",   0x0C )
+    FPU_OP_X ( "FATANH",  0x0D )
+    FPU_OP_X ( "FSIN",    0x0E )
+    FPU_OP_X ( "FTAN",    0x0F )
+    FPU_OP_X ( "FETOX",   0x10 )
+    FPU_OP_X ( "FTWOTOX", 0x11 )
+    FPU_OP_X ( "FTENTOX", 0x12 )
+    FPU_OP_X ( "FLOGN",   0x14 )
+    FPU_OP_X ( "FLOG10",  0x15 )
+    FPU_OP_X ( "FLOG2",   0x16 )
+    FPU_OP_X ( "FABS",    0x18 )
+    FPU_OP_X ( "FCOSH",   0x19 )
+    FPU_OP_X ( "FNEG",    0x1A )
+    FPU_OP_X ( "FACOS",   0x1C )
+    FPU_OP_X ( "FCOS",    0x1D )
+    FPU_OP_X ( "FGETEXP", 0x1E )
+    FPU_OP_X ( "FGETMAN", 0x1F )
+    FPU_OP_X ( "FDIV",    0x20 )
+    FPU_OP_X ( "FMOD",    0x21 )
+    FPU_OP_X ( "FADD",    0x22 )
+    FPU_OP_X ( "FMUL",    0x23 )
+    FPU_OP_X ( "FSGLDIV", 0x24 )
+    FPU_OP_X ( "FREM",    0x25 )
+    FPU_OP_X ( "FSCALE",  0x26 )
+    FPU_OP_X ( "FSGLMUL", 0x27 )
+    FPU_OP_X ( "FSUB",    0x28 )
+    FPU_OP_X ( "FCMP",    0x38 )
+    FPU_TEST_X ( 0x3A )
+
+    FPU_OP_EA ( "FMOVE",   0x00 )
+    FPU_OP_EA ( "FINT",    0x01 )
+    FPU_OP_EA ( "FSINH",   0x02 )
+    FPU_OP_EA ( "FINTRZ",  0x03 )
+    FPU_OP_EA ( "FSQRT",   0x04 )
+    FPU_OP_EA ( "FLOGNP1", 0x06 )
+    FPU_OP_EA ( "FETOXM1", 0x08 )
+    FPU_OP_EA ( "FTANH",   0x09 )
+    FPU_OP_EA ( "FATAN",   0x0A )
+    FPU_OP_EA ( "FASIN",   0x0C )
+    FPU_OP_EA ( "FATANH",  0x0D )
+    FPU_OP_EA ( "FSIN",    0x0E )
+    FPU_OP_EA ( "FTAN",    0x0F )
+    FPU_OP_EA ( "FETOX",   0x10 )
+    FPU_OP_EA ( "FTWOTOX", 0x11 )
+    FPU_OP_EA ( "FTENTOX", 0x12 )
+    FPU_OP_EA ( "FLOGN",   0x14 )
+    FPU_OP_EA ( "FLOG10",  0x15 )
+    FPU_OP_EA ( "FLOG2",   0x16 )
+    FPU_OP_EA ( "FABS",    0x18 )
+    FPU_OP_EA ( "FCOSH",   0x19 )
+    FPU_OP_EA ( "FNEG",    0x1A )
+    FPU_OP_EA ( "FACOS",   0x1C )
+    FPU_OP_EA ( "FCOS",    0x1D )
+    FPU_OP_EA ( "FGETEXP", 0x1E )
+    FPU_OP_EA ( "FGETMAN", 0x1F )
+    FPU_OP_EA ( "FDIV",    0x20 )
+    FPU_OP_EA ( "FMOD",    0x21 )
+    FPU_OP_EA ( "FADD",    0x22 )
+    FPU_OP_EA ( "FMUL",    0x23 )
+    FPU_OP_EA ( "FSGLDIV", 0x24 )
+    FPU_OP_EA ( "FREM",    0x25 )
+    FPU_OP_EA ( "FSCALE",  0x26 )
+    FPU_OP_EA ( "FSGLMUL", 0x27 )
+    FPU_OP_EA ( "FSUB",    0x28 )
+    FPU_OP_EA ( "FCMP",    0x38 )
+    FPU_TEST_EA ( 0x3A )
+
+    FPU_MOVE_FP_EA
     MASK_FPU ( "FRESTORE", ea_control,   0xFFC0, 0xF300, X_NONE, 68881 )
     MASK_FPU ( "FSAVE",    ea_control,   0xFFC0, 0xF340, X_NONE, 68881 )
     
