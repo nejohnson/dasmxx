@@ -901,6 +901,20 @@ OPERAND_FUNC(ea_word_dreg9)
     operand( ", " FORMAT_DREG, (opc >> 9) & 0x07 );
 }
 
+OPERAND_FUNC(ea_long_dreg9)
+{
+    int ea = opc & 0x3F;
+
+    if ( !ea_field_is_data( ea ) )
+    {
+        emit_bad_operands();
+        return;
+    }
+
+    emit_ea_field( f, addr, ea, OPSIZE_LONG, xtype );
+    operand( ", " FORMAT_DREG, (opc >> 9) & 0x07 );
+}
+
 OPERAND_FUNC(ea_long_areg9)
 {
     int ea = opc & 0x3F;
@@ -2499,6 +2513,7 @@ optab_t base_optab[] = {
     MASK_CPU ( "LINK.L", areg0_simm32,  0xFFF8, 0x4808, X_REG, 68020 )
     MASK ( "NBCD",      ea,             0xFFC0, 0x4800, X_NONE )
     MASK ( "TAS",       ea,             0xFFC0, 0x4AC0, X_NONE )
+    MASK_CPU ( "CHK.L", ea_long_dreg9,  0xF1C0, 0x4100, X_NONE, 68020 )
     MASK ( "CHK.W",     ea_word_dreg9,  0xF1C0, 0x4180, X_NONE )
     MASK_EXT_CPU ( "MULU.L", muldiv_long, 0xFFC0, 0x4C00, 0x0800, 0x0000, X_NONE, 68020 )
     MASK_EXT_CPU ( "MULS.L", muldiv_long, 0xFFC0, 0x4C00, 0x0800, 0x0800, X_NONE, 68020 )
