@@ -1166,6 +1166,85 @@ OPERAND_FUNC(moves)
     }
 }
 
+OPERAND_FUNC(move16_postinc_abs)
+{
+    ADDR dest;
+
+    operand( "(" FORMAT_AREG ")+, ", opc & 0x07 );
+    dest = (ADDR)read_s32( f, addr );
+    operand( "(" );
+    emit_abs_addr( dest, FORMAT_IMM32, xtype );
+    operand( ").L" );
+}
+
+OPERAND_FUNC(move16_abs_postinc)
+{
+    ADDR src = (ADDR)read_s32( f, addr );
+
+    operand( "(" );
+    emit_abs_addr( src, FORMAT_IMM32, xtype );
+    operand( ").L, (" FORMAT_AREG ")+", opc & 0x07 );
+}
+
+OPERAND_FUNC(move16_ind_abs)
+{
+    ADDR dest;
+
+    operand( "(" FORMAT_AREG "), ", opc & 0x07 );
+    dest = (ADDR)read_s32( f, addr );
+    operand( "(" );
+    emit_abs_addr( dest, FORMAT_IMM32, xtype );
+    operand( ").L" );
+}
+
+OPERAND_FUNC(move16_abs_ind)
+{
+    ADDR src = (ADDR)read_s32( f, addr );
+
+    operand( "(" );
+    emit_abs_addr( src, FORMAT_IMM32, xtype );
+    operand( ").L, (" FORMAT_AREG ")", opc & 0x07 );
+}
+
+OPERAND_FUNC(move16_postinc_postinc)
+{
+    UWORD ext = nextw( f, addr );
+
+    operand( "(" FORMAT_AREG ")+, (" FORMAT_AREG ")+",
+             opc & 0x07, (ext >> 12) & 0x07 );
+}
+
+static const char *cache_name( int cache )
+{
+    switch ( cache )
+    {
+    case 1:
+        return "IC";
+    case 2:
+        return "DC";
+    case 3:
+        return "BC";
+    default:
+        return NULL;
+    }
+}
+
+OPERAND_FUNC(cache_control)
+{
+    int scope = (opc >> 6) & 0x03;
+    const char *cache = cache_name( (opc >> 3) & 0x03 );
+
+    if ( scope == 0 || cache == NULL )
+    {
+        emit_bad_operands();
+        return;
+    }
+
+    operand( "%s", cache );
+    if ( scope != 3 )
+        operand( ", (" FORMAT_AREG ")", opc & 0x07 );
+}
+
 static void emit_bitfield_spec( UWORD ext )
 {
     int offset = (ext >> 6) & 0x1F;
@@ -1638,6 +1717,16 @@ static const char *opcode_shift_mem( OPC opc )
     int left = opc & 0x0100;
 
     sprintf( text, "%s%c.W", names[kind], left ? 'L' : 'R' );
+    return text;
+}
+
+static const char *opcode_cache_control( OPC opc )
+{
+    static char text[16];
+    static const char *scope_names[] = { "?", "P", "L", "A" };
+
+    sprintf( text, "%s%s", (opc & 0x20) ? "CPUSH" : "CINV",
+             scope_names[(opc >> 6) & 0x03] );
     return text;
 }
 
@@ -2384,6 +2473,13 @@ optab_t base_optab[] = {
     FPU_MOVE_FP_EA
     MASK_FPU ( "FRESTORE", ea_control,   0xFFC0, 0xF300, X_NONE, 68881 )
     MASK_FPU ( "FSAVE",    ea_control,   0xFFC0, 0xF340, X_NONE, 68881 )
+
+    MASK_DYN_CPU ( cache_control, cache_control, 0xFF00, 0xF400, X_NONE, 68040 )
+    MASK_CPU ( "MOVE16", move16_postinc_abs,     0xFFF8, 0xF600, X_PTR, 68040 )
+    MASK_CPU ( "MOVE16", move16_abs_postinc,     0xFFF8, 0xF608, X_PTR, 68040 )
+    MASK_CPU ( "MOVE16", move16_ind_abs,         0xFFF8, 0xF610, X_PTR, 68040 )
+    MASK_CPU ( "MOVE16", move16_abs_ind,         0xFFF8, 0xF618, X_PTR, 68040 )
+    MASK_CPU ( "MOVE16", move16_postinc_postinc, 0xFFF8, 0xF620, X_PTR, 68040 )
     
     
     
