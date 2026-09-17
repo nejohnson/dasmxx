@@ -568,6 +568,36 @@ static int move_size( OPC opc )
     }
 }
 
+static int size_from_bits_109( OPC opc )
+{
+    switch ( (opc >> 9) & 0x03 )
+    {
+    case 0:
+        return OPSIZE_BYTE;
+    case 1:
+        return OPSIZE_WORD;
+    case 2:
+        return OPSIZE_LONG;
+    default:
+        return 0;
+    }
+}
+
+static int cas_size( OPC opc )
+{
+    switch ( (opc >> 9) & 0x03 )
+    {
+    case 1:
+        return OPSIZE_BYTE;
+    case 2:
+        return OPSIZE_WORD;
+    case 3:
+        return OPSIZE_LONG;
+    default:
+        return 0;
+    }
+}
+
 static const char *size_suffix( int size )
 {
     switch ( size )
@@ -1402,6 +1432,38 @@ OPERAND_FUNC(bitfield_dreg_ea)
     emit_bitfield_spec( ext );
 }
 
+OPERAND_FUNC(cmp2_chk2)
+{
+    UWORD ext = nextw( f, addr );
+    int size = size_from_bits_109( opc );
+    int ea = opc & 0x3F;
+
+    if ( size == 0 || !ea_field_is_control( ea ) )
+    {
+        emit_bad_operands();
+        return;
+    }
+
+    emit_ea_field( f, addr, ea, size, xtype );
+    operand( ", %c%d", (ext & 0x8000) ? 'A' : 'D', (ext >> 12) & 0x07 );
+}
+
+OPERAND_FUNC(cas)
+{
+    UWORD ext = nextw( f, addr );
+    int size = cas_size( opc );
+    int ea = opc & 0x3F;
+
+    if ( size == 0 || !ea_field_is_data_alterable( ea ) )
+    {
+        emit_bad_operands();
+        return;
+    }
+
+    operand( FORMAT_DREG ", " FORMAT_DREG ", ", ext & 0x07, (ext >> 6) & 0x07 );
+    emit_ea_field( f, addr, ea, size, xtype );
+}
+
 OPERAND_FUNC(trapcc)
 {
     /* empty */
@@ -1730,6 +1792,14 @@ static const char *opcode_subi( OPC opc ) { return opcode_size76( "SUBI", opc );
 static const char *opcode_addi( OPC opc ) { return opcode_size76( "ADDI", opc ); }
 static const char *opcode_eori( OPC opc ) { return opcode_size76( "EORI", opc ); }
 static const char *opcode_cmpi( OPC opc ) { return opcode_size76( "CMPI", opc ); }
+static const char *opcode_cas( OPC opc )
+{
+    static char text[16];
+
+    sprintf( text, "CAS%s", size_suffix( cas_size( opc ) ) );
+    return text;
+}
+
 static const char *opcode_negx( OPC opc ) { return opcode_size76( "NEGX", opc ); }
 static const char *opcode_clr( OPC opc )  { return opcode_size76( "CLR",  opc ); }
 static const char *opcode_neg( OPC opc )  { return opcode_size76( "NEG",  opc ); }
@@ -2232,6 +2302,13 @@ optab_t base_optab[] = {
     MASK_DYN ( cmpi,    imm_ea_s76,     0xFFC0, 0x0C00, X_IMM )
     MASK_DYN ( cmpi,    imm_ea_s76,     0xFFC0, 0x0C40, X_IMM )
     MASK_DYN ( cmpi,    imm_ea_s76,     0xFFC0, 0x0C80, X_IMM )
+    MASK_EXT_CPU ( "CMP2.B", cmp2_chk2,  0xFFC0, 0x00C0, 0x0800, 0x0000, X_NONE, 68020 )
+    MASK_EXT_CPU ( "CMP2.W", cmp2_chk2,  0xFFC0, 0x02C0, 0x0800, 0x0000, X_NONE, 68020 )
+    MASK_EXT_CPU ( "CMP2.L", cmp2_chk2,  0xFFC0, 0x04C0, 0x0800, 0x0000, X_NONE, 68020 )
+    MASK_EXT_CPU ( "CHK2.B", cmp2_chk2,  0xFFC0, 0x00C0, 0x0800, 0x0800, X_NONE, 68020 )
+    MASK_EXT_CPU ( "CHK2.W", cmp2_chk2,  0xFFC0, 0x02C0, 0x0800, 0x0800, X_NONE, 68020 )
+    MASK_EXT_CPU ( "CHK2.L", cmp2_chk2,  0xFFC0, 0x04C0, 0x0800, 0x0800, X_NONE, 68020 )
+    MASK_DYN_CPU ( cas,  cas,            0xF9C0, 0x08C0, X_NONE, 68020 )
 
     MASK_CPU ( "MOVES.B", moves,        0xFFC0, 0x0E00, X_PTR, 68010 )
     MASK_CPU ( "MOVES.W", moves,        0xFFC0, 0x0E40, X_PTR, 68010 )
