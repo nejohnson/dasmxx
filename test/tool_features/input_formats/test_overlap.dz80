@@ -1,0 +1,5 @@
+# Overlapping mapped ROM images should fail during input load
+f@C000 ../testdata/rom_low.bin
+f@C001 ../testdata/rom_high.bin
+cC000
+eC003

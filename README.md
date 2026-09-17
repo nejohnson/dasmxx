@@ -4,6 +4,7 @@ Features:
   * Fast, retargetable disassembler
   * Script-driven disassembly
   * Reads raw binary, Intel HEX, and Motorola S-record files
+  * Maps multiple ROM images into one address space
   * Output include verbose listing for analysis and extensive cross-reference
 
 Supported Processors:
@@ -28,7 +29,6 @@ Supported Processors:
 Planned Features:
   * More processors (in no specific order):
     * Microchip PIC24/dsPIC33
-  * Support for merging multiple ROM files
   * Assembler-compatible output for subsequent re-assembly
   
 Thanks to:

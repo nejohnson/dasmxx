@@ -200,6 +200,18 @@ def create_tool_feature_tests():
         description="Test binary input still honours the file offset command"
     )
 
+    builder.add_test(
+        name="Mapped binary ROM inputs",
+        processor="z80",
+        command_file="input_formats/test_mapped_roms.dz80",
+        expected_patterns=[
+            r'Processing 2 input files \(3 bytes, binary\)',
+            r'C000:\s+3E 12\s+LD\s+A, #\$12',
+            r'C002:\s+C9\s+RET',
+        ],
+        description="Test multiple raw ROM images mapped at explicit addresses"
+    )
+
     return builder.build()
 
 

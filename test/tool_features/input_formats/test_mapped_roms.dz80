@@ -1,0 +1,5 @@
+# Two raw ROM images mapped into adjacent address ranges
+f@C000 ../testdata/rom_low.bin
+f@C002 ../testdata/rom_high.bin
+cC000
+eC003

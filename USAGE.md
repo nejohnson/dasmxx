@@ -37,8 +37,16 @@ The commands are (where XXXX denotes hexadecimal address):
 File commands:
 
      fName       input file = `Name' (raw binary, Intel HEX, or Motorola S-record)
+     f@XXXX Name input file = `Name', loaded at address XXXX
      iName       include file `Name' in place of include command
-     >XXXX       fast forward to offset XXXX from start of binary file
+     >XXXX       fast forward to offset XXXX from start of binary input files
+
+For raw binary input, `fName' loads the file at the first disassembly address.
+Use `f@XXXX Name' to place a binary ROM image at a specific address.  Multiple
+`f@' commands may be used for split ROM sets.  Intel HEX and Motorola S-record
+input normally use the addresses encoded in the file; with `f@XXXX Name', those
+record addresses are relocated by XXXX.  The `>' offset applies only to binary
+input, and applies to every binary input file in the command list.
 
 Configuration commands:
 

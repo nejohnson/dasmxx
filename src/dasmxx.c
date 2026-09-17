@@ -144,9 +144,18 @@ struct fmt {
     struct fmt      *n;
 };
 
+struct input_file {
+    const char       *path;
+    int               has_base;
+    ADDR              base;
+    struct input_file *next;
+};
+
 struct params {
     const char * listfile;
     const char * inputfile;
+    struct input_file *inputfiles;
+    unsigned int unmapped_input_count;
     const char * outputfile;
     struct fmt * cmdlist;
     
@@ -165,6 +174,7 @@ struct input_image {
     struct input_segment *segments;
     unsigned int count;
     unsigned int cap;
+    unsigned int file_count;
     unsigned long source_size;
     const char *format;
 };
@@ -223,7 +233,7 @@ static int pagination   = 0;
 #define MIN_LINES_PER_PAGE          ( 10 )
 static const char *page_title = NULL;
 
-static void load_input_image( const char *path, ADDR binary_base_addr );
+static void load_input_images( struct input_file *files, ADDR default_binary_base_addr );
 static void free_input_image( void );
 
 /*****************************************************************************
@@ -477,6 +487,51 @@ static void addlist( struct fmt **list, ADDR addr, int mode, unsigned int bytes_
 /***********************************************************
  *
  * FUNCTION
+ *      add_input_file
+ *
+ * DESCRIPTION
+ *      append an input file to the input file list
+ *
+ * RETURNS
+ *      void
+ *
+ ************************************************************/
+
+static void add_input_file( struct params *params, const char *path, int has_base, ADDR base )
+{
+    struct input_file *fnew, *scan;
+
+    if ( !*path )
+        error( "Empty input file name" );
+
+    if ( !has_base )
+    {
+        params->unmapped_input_count++;
+        if ( params->unmapped_input_count > 1 )
+            error( "Multiple unlocated input files specified; use f@XXXX for mapped ROM images" );
+    }
+
+    fnew = (struct input_file *) zalloc( sizeof(*fnew) );
+    fnew->path = dupstr( path );
+    fnew->has_base = has_base;
+    fnew->base = base;
+
+    if ( !params->inputfiles )
+        params->inputfiles = fnew;
+    else
+    {
+        for ( scan = params->inputfiles; scan->next; scan = scan->next )
+            ;
+        scan->next = fnew;
+    }
+
+    if ( !params->inputfile )
+        params->inputfile = fnew->path;
+}
+
+/***********************************************************
+ *
+ * FUNCTION
  *      readlist
  *
  * DESCRIPTION
@@ -626,9 +681,30 @@ static void readlist( const char *listfile, struct params *params )
                 break;
 
             case 'f':  /* inputfile */
-                if ( params->inputfile )
-                    error( "%s(%u) :: Multiple input files specified", listfile, lineno );
-                params->inputfile = (const char *)dupstr( pbuf );
+                {
+                    ADDR image_base = 0;
+                    char *path = pbuf;
+                    int has_base = 0;
+
+                    SKIP_SPACE(path);
+                    if ( *path == '@' )
+                    {
+                        path++;
+                        if ( sscanf( path, "%x%n", &image_base, &n ) != 1 )
+                            error( "%s(%u) :: Bad input image address", listfile, lineno );
+                        path += n;
+                        SKIP_SPACE(path);
+                        if ( !*path )
+                            error( "%s(%u) :: Missing input file name", listfile, lineno );
+                        has_base = 1;
+                    }
+                    else
+                    {
+                        path = pbuf;
+                    }
+
+                    add_input_file( params, path, has_base, image_base );
+                }
                 break;
 
             case 'i':   /* include file */
@@ -901,7 +977,7 @@ static void run_disasm( struct params params )
     if ( !clist )
         error( "No disassembly commands specified" );
 
-    load_input_image( inputfile, clist->addr );
+    load_input_images( params.inputfiles, clist->addr );
     
     addr  = clist->addr;
     mode  = clist->mode;
@@ -910,7 +986,9 @@ static void run_disasm( struct params params )
     dasm_segment_base = clist->seg;
     clist = clist->n;
     
-    if ( strcmp( input_image.format, "binary" ) == 0 )
+    if ( input_image.file_count > 1 )
+        printf( "%s   Processing %u input files (%lu bytes, %s)", COMMENT_DELIM, input_image.file_count, input_image.source_size, input_image.format );
+    else if ( strcmp( input_image.format, "binary" ) == 0 )
         printf( "%s   Processing \"%s\" (%lu bytes)", COMMENT_DELIM, inputfile, input_image.source_size );
     else
         printf( "%s   Processing \"%s\" (%lu bytes, %s)", COMMENT_DELIM, inputfile, input_image.source_size, input_image.format );
@@ -1587,6 +1665,27 @@ static UBYTE parse_hex_byte( const char *path, unsigned int line, const char *p 
     return (UBYTE)((hi << 4) | lo);
 }
 
+static void input_note_file( const char *format, unsigned long size )
+{
+    if ( input_image.file_count == 0 )
+        input_image.format = format;
+    else if ( strcmp( input_image.format, format ) != 0 )
+        input_image.format = "mixed";
+
+    input_image.file_count++;
+    input_image.source_size += size;
+}
+
+static ADDR relocate_record_addr( const char *path, unsigned int line, ADDR base_addr, ADDR record_addr )
+{
+    ADDR addr = base_addr + record_addr;
+
+    if ( addr < base_addr )
+        error( "%s(%u) :: Input record address range wraps", path, line );
+
+    return addr;
+}
+
 static void load_binary_image( const char *path, const UBYTE *data, unsigned long size, ADDR base_addr )
 {
     if ( file_offset > size )
@@ -1594,11 +1693,10 @@ static void load_binary_image( const char *path, const UBYTE *data, unsigned lon
     if ( size - file_offset > UINT_MAX )
         error( "Input file \"%s\" is too large", path );
 
-    input_image.format = "binary";
     input_add_segment( base_addr, data + file_offset, (unsigned int)(size - file_offset), path, 0 );
 }
 
-static void load_ihex_image( const char *path, UBYTE *data )
+static void load_ihex_image( const char *path, UBYTE *data, ADDR base_addr )
 {
     char *saveptr = NULL;
     char *line = strtok_r( (char *)data, "\n", &saveptr );
@@ -1608,7 +1706,6 @@ static void load_ihex_image( const char *path, UBYTE *data )
     if ( file_offset )
         error( "%s :: File offset command is only supported for binary input", path );
 
-    input_image.format = "Intel HEX";
     while ( line )
     {
         char *p = line;
@@ -1647,7 +1744,7 @@ static void load_ihex_image( const char *path, UBYTE *data )
         switch ( type )
         {
         case 0x00:
-            input_add_segment( (ADDR)(base + addr16), bytes, count, path, lineno );
+            input_add_segment( relocate_record_addr( path, lineno, base_addr, (ADDR)(base + addr16) ), bytes, count, path, lineno );
             break;
         case 0x01:
             return;
@@ -1672,7 +1769,7 @@ static void load_ihex_image( const char *path, UBYTE *data )
     }
 }
 
-static void load_srec_image( const char *path, UBYTE *data )
+static void load_srec_image( const char *path, UBYTE *data, ADDR base_addr )
 {
     char *saveptr = NULL;
     char *line = strtok_r( (char *)data, "\n", &saveptr );
@@ -1681,7 +1778,6 @@ static void load_srec_image( const char *path, UBYTE *data )
     if ( file_offset )
         error( "%s :: File offset command is only supported for binary input", path );
 
-    input_image.format = "Motorola S-record";
     while ( line )
     {
         char *p = line;
@@ -1736,35 +1832,58 @@ static void load_srec_image( const char *path, UBYTE *data )
 
         data_len = count - addr_len - 1;
         if ( type == 1 || type == 2 || type == 3 )
-            input_add_segment( (ADDR)addr, bytes + addr_len, data_len, path, lineno );
+            input_add_segment( relocate_record_addr( path, lineno, base_addr, (ADDR)addr ), bytes + addr_len, data_len, path, lineno );
 
         line = strtok_r( NULL, "\n", &saveptr );
     }
 }
 
-static void load_input_image( const char *path, ADDR binary_base_addr )
+static void load_one_input_image( struct input_file *file, ADDR default_binary_base_addr )
 {
+    const char *path = file->path;
     UBYTE *data;
     unsigned long size;
     unsigned long i = 0;
+    unsigned int segment_count;
+    ADDR base_addr = file->has_base ? file->base : 0;
 
-    free_input_image();
     data = read_input_file( path, &size );
-    input_image.source_size = size;
+    segment_count = input_image.count;
 
     while ( i < size && isspace( (unsigned char)data[i] ) )
         i++;
 
     if ( i < size && data[i] == ':' )
-        load_ihex_image( path, data );
+    {
+        input_note_file( "Intel HEX", size );
+        load_ihex_image( path, data, base_addr );
+    }
     else if ( i + 1 < size && data[i] == 'S' && isdigit( (unsigned char)data[i + 1] ) )
-        load_srec_image( path, data );
+    {
+        input_note_file( "Motorola S-record", size );
+        load_srec_image( path, data, base_addr );
+    }
     else
-        load_binary_image( path, data, size, binary_base_addr );
+    {
+        input_note_file( "binary", size );
+        load_binary_image( path, data, size, file->has_base ? file->base : default_binary_base_addr );
+    }
 
     free( data );
-    if ( input_image.count == 0 )
+    if ( input_image.count == segment_count )
         error( "Input file \"%s\" contains no data records", path );
+}
+
+static void load_input_images( struct input_file *files, ADDR default_binary_base_addr )
+{
+    struct input_file *file;
+
+    free_input_image();
+    for ( file = files; file; file = file->next )
+        load_one_input_image( file, default_binary_base_addr );
+
+    if ( input_image.count == 0 )
+        error( "No input data loaded" );
 }
 
 /*****************************************************************************
@@ -2011,7 +2130,7 @@ int main(int argc, char **argv)
     if ( !params.cmdlist )
         error( "Empty list file" );
 
-    if ( !params.inputfile )
+    if ( !params.inputfiles )
         error( "No input file specified" );
         
     /* Prepare then instruction byte buffer */
