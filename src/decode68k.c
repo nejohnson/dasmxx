@@ -887,6 +887,23 @@ OPERAND_FUNC(ea_s76)
     emit_ea_field( f, addr, ea, size, xtype );
 }
 
+OPERAND_FUNC(tst_ea_s76)
+{
+    int size = size_from_bits_76( opc );
+    int ea = opc & 0x3F;
+    int valid = (dasm_cpu_level == 0 || dasm_cpu_level >= 68020)
+              ? ea_field_is_data( ea )
+              : ea_field_is_data_alterable( ea );
+
+    if ( size == 0 || !valid )
+    {
+        emit_bad_operands();
+        return;
+    }
+
+    emit_ea_field( f, addr, ea, size, xtype );
+}
+
 OPERAND_FUNC(ea_word_dreg9)
 {
     int ea = opc & 0x3F;
@@ -2506,9 +2523,9 @@ optab_t base_optab[] = {
     MASK_DYN ( not,     ea_s76,         0xFFC0, 0x4600, X_NONE )
     MASK_DYN ( not,     ea_s76,         0xFFC0, 0x4640, X_NONE )
     MASK_DYN ( not,     ea_s76,         0xFFC0, 0x4680, X_NONE )
-    MASK_DYN ( tst,     ea_s76,         0xFFC0, 0x4A00, X_NONE )
-    MASK_DYN ( tst,     ea_s76,         0xFFC0, 0x4A40, X_NONE )
-    MASK_DYN ( tst,     ea_s76,         0xFFC0, 0x4A80, X_NONE )
+    MASK_DYN ( tst,     tst_ea_s76,     0xFFC0, 0x4A00, X_NONE )
+    MASK_DYN ( tst,     tst_ea_s76,     0xFFC0, 0x4A40, X_NONE )
+    MASK_DYN ( tst,     tst_ea_s76,     0xFFC0, 0x4A80, X_NONE )
 
     MASK_CPU ( "LINK.L", areg0_simm32,  0xFFF8, 0x4808, X_REG, 68020 )
     MASK ( "NBCD",      ea,             0xFFC0, 0x4800, X_NONE )
