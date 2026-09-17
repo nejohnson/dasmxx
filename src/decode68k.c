@@ -1311,6 +1311,11 @@ OPERAND_FUNC(ftrapcc_imm32)
     operand( "#" FORMAT_IMM32, (ULWORD)read_s32( f, addr ) );
 }
 
+OPERAND_FUNC(fext_none)
+{
+    nextw( f, addr );
+}
+
 OPERAND_FUNC(fpreg_fpreg)
 {
     UWORD ext = nextw( f, addr );
@@ -2271,6 +2276,7 @@ optab_t base_optab[] = {
 
     FPU_COND_TABLE ( FPU_COND_ENTRIES )
 
+    MASK_EXT_FPU ( "FNOP", fext_none,    0xFFFF, 0xF280, 0xFFFF, 0x0000, X_NONE, 68881 )
     MASK_DYN_FPU ( fbcc, fbranch16,      0xFFC0, 0xF280, X_JMP, 68881 )
     MASK_DYN_FPU ( fbcc, fbranch32,      0xFFC0, 0xF2C0, X_JMP, 68881 )
     MASK_EXT_FPU ( "FMOVECR.X", fmovecr, 0xFFFF, 0xF200, 0xFC00, 0x5C00, X_IMM, 68881 )
