@@ -41,6 +41,7 @@
 typedef struct optab_s {
     OPC opc;
     unsigned int min_cpu;
+    unsigned int max_cpu;
     unsigned int min_fpu;
     const char * opcode;
     const char * (*opcode_fn)( OPC );

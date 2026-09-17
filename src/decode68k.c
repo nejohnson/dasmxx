@@ -1499,6 +1499,31 @@ OPERAND_FUNC(cas2)
     emit_cas2_indirect_reg( ext2 );
 }
 
+OPERAND_FUNC(callm)
+{
+    UWORD module = nextw( f, addr );
+    int ea = opc & 0x3F;
+
+    if ( (module & 0xFF00) || !ea_field_is_control( ea ) )
+    {
+        emit_bad_operands();
+        return;
+    }
+
+    operand( "#" FORMAT_IMM8 ", ", module & 0xFF );
+    emit_ea_field( f, addr, ea, OPSIZE_WORD, xtype );
+}
+
+OPERAND_FUNC(rtm)
+{
+    int reg = opc & 0x07;
+
+    if ( opc & 0x0008 )
+        operand( FORMAT_AREG, reg );
+    else
+        operand( FORMAT_DREG, reg );
+}
+
 OPERAND_FUNC(muldiv_long)
 {
     UWORD ext = nextw( f, addr );
@@ -1968,6 +1993,17 @@ static const char *opcode_cache_control( OPC opc )
       .u.mask.val  = M_val                                                \
     },
 
+#define MASK_CPU_RANGE(M_opcode, M_ops, M_mask, M_val, M_xt, M_min_cpu, M_max_cpu) \
+    { .type     = OPTAB_MASK,                                                    \
+      .min_cpu  = M_min_cpu,                                                     \
+      .max_cpu  = M_max_cpu,                                                     \
+      .opcode   = M_opcode,                                                      \
+      .operands = operand_ ## M_ops,                                             \
+      .xtype    = M_xt,                                                          \
+      .u.mask.mask = M_mask,                                                     \
+      .u.mask.val  = M_val                                                       \
+    },
+
 #define MASK_EXT_CPU(M_opcode, M_ops, M_mask, M_val, M_ext_mask, M_ext_val, M_xt, M_min_cpu) \
     { .type     = OPTAB_MASK_EXT,                                                       \
       .min_cpu  = M_min_cpu,                                                            \
@@ -2339,6 +2375,9 @@ optab_t base_optab[] = {
     MASK ( "BCHG",      dreg9_ea_bit,   0xF1C0, 0x0140, X_REG )
     MASK ( "BCLR",      dreg9_ea_bit,   0xF1C0, 0x0180, X_REG )
     MASK ( "BSET",      dreg9_ea_bit,   0xF1C0, 0x01C0, X_REG )
+
+    MASK_CPU_RANGE ( "RTM",   rtm,       0xFFF0, 0x06C0, X_REG, 68020, 68020 )
+    MASK_CPU_RANGE ( "CALLM", callm,     0xFFC0, 0x06C0, X_NONE, 68020, 68020 )
 
     MASK_DYN ( ori,     imm_ea_s76,     0xFFC0, 0x0000, X_IMM )
     MASK_DYN ( ori,     imm_ea_s76,     0xFFC0, 0x0040, X_IMM )

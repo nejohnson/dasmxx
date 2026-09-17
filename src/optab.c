@@ -220,6 +220,12 @@ static int walk_table( FILE * f, ADDR * addr, optab_t * optab, OPC opc )
             continue;
         }
 
+        if ( optab->max_cpu != 0 && dasm_cpu_level != 0 && dasm_cpu_level > optab->max_cpu )
+        {
+            optab++;
+            continue;
+        }
+
         if ( optab->min_fpu != 0 && dasm_fpu_level != 0
              && fpu_level_order( dasm_fpu_level ) < fpu_level_order( optab->min_fpu ) )
         {
