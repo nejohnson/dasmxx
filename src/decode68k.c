@@ -1357,6 +1357,32 @@ OPERAND_FUNC(fpu_fpreg_ea)
     emit_ea_field( f, addr, ea, fpu_size_from_format( fmt ), xtype );
 }
 
+OPERAND_FUNC(fpu_fpreg_ea_packed)
+{
+    UWORD ext = nextw( f, addr );
+    int ea = opc & 0x3F;
+    int dynamic = (ext & 0x1C00) == 0x1C00;
+    int k = ext & 0x7F;
+
+    if ( !fpu_ea_is_destination( ea, 3 ) )
+    {
+        emit_bad_operands();
+        return;
+    }
+
+    operand( "FP%d, ", (ext >> 7) & 0x07 );
+    emit_ea_field( f, addr, ea, OPSIZE_EXTENDED, xtype );
+
+    if ( dynamic )
+        operand( ", D%d", (ext >> 4) & 0x07 );
+    else
+    {
+        if ( k & 0x40 )
+            k -= 0x80;
+        operand( "{#%d}", k );
+    }
+}
+
 OPERAND_FUNC(fmovecr)
 {
     UWORD ext = nextw( f, addr );
@@ -1470,6 +1496,29 @@ OPERAND_FUNC(fpu_ea_fpreglist)
         operand( FORMAT_DREG, (ext >> 4) & 0x07 );
     else
         emit_fpu_reglist( ext & 0x00FF, 0 );
+}
+
+OPERAND_FUNC(fsincos_fpreg)
+{
+    UWORD ext = nextw( f, addr );
+
+    operand( "FP%d, FP%d, FP%d", (ext >> 10) & 0x07, ext & 0x07, (ext >> 7) & 0x07 );
+}
+
+OPERAND_FUNC(fsincos_ea)
+{
+    UWORD ext = nextw( f, addr );
+    int fmt = (ext >> 10) & 0x07;
+    int ea = opc & 0x3F;
+
+    if ( !fpu_ea_is_source( ea, fmt ) )
+    {
+        emit_bad_operands();
+        return;
+    }
+
+    emit_ea_field( f, addr, ea, fpu_size_from_format( fmt ), xtype );
+    operand( ", FP%d, FP%d", ext & 0x07, (ext >> 7) & 0x07 );
 }
 
 /******************************************************************************/
@@ -1657,15 +1706,16 @@ static const char *opcode_shift_mem( OPC opc )
 #define FPU_MOVE_FP_EA_FMT(M_suffix, M_fmt) \
     MASK_EXT_FPU ( "FMOVE" M_suffix, fpu_fpreg_ea, 0xFFC0, 0xF200, 0xFC7F, 0x6000 | ((M_fmt) << 10), X_NONE, 68881 )
 
+#define FPU_SINCOS_EA_FMT(M_suffix, M_fmt) \
+    MASK_EXT_FPU ( "FSINCOS" M_suffix, fsincos_ea, 0xFFC0, 0xF200, 0xFC78, 0x4030 | ((M_fmt) << 10), X_NONE, 68881 )
+
 #define FPU_MOVE_FP_EA \
     FPU_MOVE_FP_EA_FMT ( ".L", 0 ) \
     FPU_MOVE_FP_EA_FMT ( ".S", 1 ) \
     FPU_MOVE_FP_EA_FMT ( ".X", 2 ) \
-    FPU_MOVE_FP_EA_FMT ( ".P", 3 ) \
     FPU_MOVE_FP_EA_FMT ( ".W", 4 ) \
     FPU_MOVE_FP_EA_FMT ( ".D", 5 ) \
-    FPU_MOVE_FP_EA_FMT ( ".B", 6 ) \
-    FPU_MOVE_FP_EA_FMT ( ".P", 7 )
+    FPU_MOVE_FP_EA_FMT ( ".B", 6 )
 
 #define FPU_COND_TABLE(M_entry) \
     M_entry ( "F",    0x00 ) \
@@ -2236,6 +2286,9 @@ optab_t base_optab[] = {
     MASK_EXT_FPU ( "FMOVEM.X", fpu_ea_fpreglist, 0xFFC0, 0xF200, 0xF000, 0xD000, X_NONE, 68881 )
     MASK_EXT_FPU ( "FMOVEM.X", fpu_fpreglist_ea, 0xFFC0, 0xF200, 0xF000, 0xE000, X_NONE, 68881 )
     MASK_EXT_FPU ( "FMOVEM.X", fpu_fpreglist_ea, 0xFFC0, 0xF200, 0xF000, 0xF000, X_NONE, 68881 )
+    MASK_EXT_FPU ( "FMOVE.P", fpu_fpreg_ea_packed, 0xFFC0, 0xF200, 0xFC00, 0x6C00, X_NONE, 68881 )
+    MASK_EXT_FPU ( "FMOVE.P", fpu_fpreg_ea_packed, 0xFFC0, 0xF200, 0xFC0F, 0x7C00, X_NONE, 68881 )
+    MASK_EXT_FPU ( "FSINCOS.X", fsincos_fpreg, 0xFFFF, 0xF200, 0xE078, 0x0030, X_REG, 68881 )
 
     FPU_OP_X ( "FMOVE",   0x00 )
     FPU_OP_X ( "FINT",    0x01 )
@@ -2312,6 +2365,15 @@ optab_t base_optab[] = {
     FPU_OP_EA ( "FSUB",    0x28 )
     FPU_OP_EA ( "FCMP",    0x38 )
     FPU_TEST_EA ( 0x3A )
+
+    FPU_SINCOS_EA_FMT ( ".L", 0 )
+    FPU_SINCOS_EA_FMT ( ".S", 1 )
+    FPU_SINCOS_EA_FMT ( ".X", 2 )
+    FPU_SINCOS_EA_FMT ( ".P", 3 )
+    FPU_SINCOS_EA_FMT ( ".W", 4 )
+    FPU_SINCOS_EA_FMT ( ".D", 5 )
+    FPU_SINCOS_EA_FMT ( ".B", 6 )
+    FPU_SINCOS_EA_FMT ( ".P", 7 )
 
     FPU_MOVE_FP_EA
     MASK_FPU ( "FRESTORE", ea_control,   0xFFC0, 0xF300, X_NONE, 68881 )
