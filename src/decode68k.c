@@ -1364,6 +1364,114 @@ OPERAND_FUNC(fmovecr)
     operand( "#" FORMAT_IMM8 ", FP%d", ext & 0x7F, (ext >> 7) & 0x07 );
 }
 
+static void emit_fpu_control_reglist( UWORD mask )
+{
+    int need_comma = 0;
+
+    if ( mask & 0x04 )
+    {
+        operand( "FPCR" );
+        need_comma = 1;
+    }
+    if ( mask & 0x02 )
+    {
+        operand( "%sFPSR", need_comma ? "/" : "" );
+        need_comma = 1;
+    }
+    if ( mask & 0x01 )
+        operand( "%sFPIAR", need_comma ? "/" : "" );
+}
+
+OPERAND_FUNC(fpu_ea_fctrl)
+{
+    UWORD ext = nextw( f, addr );
+    int ea = opc & 0x3F;
+
+    if ( !ea_field_is_data( ea ) )
+    {
+        emit_bad_operands();
+        return;
+    }
+
+    emit_ea_field( f, addr, ea, OPSIZE_LONG, xtype );
+    operand( ", " );
+    emit_fpu_control_reglist( (ext >> 10) & 0x07 );
+}
+
+OPERAND_FUNC(fpu_fctrl_ea)
+{
+    UWORD ext = nextw( f, addr );
+    int ea = opc & 0x3F;
+
+    if ( !ea_field_is_data_alterable( ea ) )
+    {
+        emit_bad_operands();
+        return;
+    }
+
+    emit_fpu_control_reglist( (ext >> 10) & 0x07 );
+    operand( ", " );
+    emit_ea_field( f, addr, ea, OPSIZE_LONG, xtype );
+}
+
+static void emit_fpu_reglist( UWORD mask, int predecrement )
+{
+    int reg;
+    int need_comma = 0;
+
+    for ( reg = 0; reg < 8; reg++ )
+    {
+        int bit = predecrement ? reg : 7 - reg;
+
+        if ( mask & (1 << bit) )
+        {
+            operand( "%sFP%d", need_comma ? "/" : "", reg );
+            need_comma = 1;
+        }
+    }
+}
+
+OPERAND_FUNC(fpu_fpreglist_ea)
+{
+    UWORD ext = nextw( f, addr );
+    int ea = opc & 0x3F;
+    int predecrement = ((ea >> 3) & 0x07) == EAMODE_ADDR_PRE_DEC;
+
+    if ( !ea_field_is_memory_alterable( ea ) )
+    {
+        emit_bad_operands();
+        return;
+    }
+
+    if ( ext & 0x0800 )
+        operand( FORMAT_DREG, (ext >> 4) & 0x07 );
+    else
+        emit_fpu_reglist( ext & 0x00FF, predecrement );
+
+    operand( ", " );
+    emit_ea_field( f, addr, ea, OPSIZE_EXTENDED, xtype );
+}
+
+OPERAND_FUNC(fpu_ea_fpreglist)
+{
+    UWORD ext = nextw( f, addr );
+    int ea = opc & 0x3F;
+
+    if ( !ea_field_is_data( ea ) || ea_field_is_register( ea ) )
+    {
+        emit_bad_operands();
+        return;
+    }
+
+    emit_ea_field( f, addr, ea, OPSIZE_EXTENDED, xtype );
+    operand( ", " );
+
+    if ( ext & 0x0800 )
+        operand( FORMAT_DREG, (ext >> 4) & 0x07 );
+    else
+        emit_fpu_reglist( ext & 0x00FF, 0 );
+}
+
 /******************************************************************************/
 /**                            Opcode Functions                              **/
 /******************************************************************************/
@@ -2116,6 +2224,18 @@ optab_t base_optab[] = {
     MASK_DYN_FPU ( fbcc, fbranch16,      0xFFC0, 0xF280, X_JMP, 68881 )
     MASK_DYN_FPU ( fbcc, fbranch32,      0xFFC0, 0xF2C0, X_JMP, 68881 )
     MASK_EXT_FPU ( "FMOVECR.X", fmovecr, 0xFFFF, 0xF200, 0xFC00, 0x5C00, X_IMM, 68881 )
+
+    MASK_EXT_FPU ( "FMOVE.L", fpu_ea_fctrl, 0xFFC0, 0xF200, 0xFFFF, 0x9000, X_NONE, 68881 )
+    MASK_EXT_FPU ( "FMOVE.L", fpu_ea_fctrl, 0xFFC0, 0xF200, 0xFFFF, 0x8800, X_NONE, 68881 )
+    MASK_EXT_FPU ( "FMOVE.L", fpu_ea_fctrl, 0xFFC0, 0xF200, 0xFFFF, 0x8400, X_NONE, 68881 )
+    MASK_EXT_FPU ( "FMOVE.L", fpu_fctrl_ea, 0xFFC0, 0xF200, 0xFFFF, 0xB000, X_NONE, 68881 )
+    MASK_EXT_FPU ( "FMOVE.L", fpu_fctrl_ea, 0xFFC0, 0xF200, 0xFFFF, 0xA800, X_NONE, 68881 )
+    MASK_EXT_FPU ( "FMOVE.L", fpu_fctrl_ea, 0xFFC0, 0xF200, 0xFFFF, 0xA400, X_NONE, 68881 )
+    MASK_EXT_FPU ( "FMOVEM.L", fpu_ea_fctrl, 0xFFC0, 0xF200, 0xE3FF, 0x8000, X_NONE, 68881 )
+    MASK_EXT_FPU ( "FMOVEM.L", fpu_fctrl_ea, 0xFFC0, 0xF200, 0xE3FF, 0xA000, X_NONE, 68881 )
+    MASK_EXT_FPU ( "FMOVEM.X", fpu_ea_fpreglist, 0xFFC0, 0xF200, 0xF000, 0xD000, X_NONE, 68881 )
+    MASK_EXT_FPU ( "FMOVEM.X", fpu_fpreglist_ea, 0xFFC0, 0xF200, 0xF000, 0xE000, X_NONE, 68881 )
+    MASK_EXT_FPU ( "FMOVEM.X", fpu_fpreglist_ea, 0xFFC0, 0xF200, 0xF000, 0xF000, X_NONE, 68881 )
 
     FPU_OP_X ( "FMOVE",   0x00 )
     FPU_OP_X ( "FINT",    0x01 )
