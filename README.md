@@ -15,15 +15,15 @@ Supported Processors:
   * Intel 8096 (MCS-96, including 196 variants)
   * Microchip PIC10/12/16/18
   * Mostek 6502
+  * Motorola 68000/68010/68020/68030/68040 + 68881/68882/68040 FPU
   * Motorola 6805 family
   * Motorola 6809
   * NEC 78K/III (uPD78310 family)
+  * RCA CDP1802
+  * STMicroelectronics STM8
   * SunPlus µNSP
   * Texas Instruments TMS7000
   * Zilog Z80
-  * RCA CDP1802
-  * Motorola 68000 (WORK IN PROGRESS!)
-  * STMicroelectronics STM8
 
 Planned Features:
   * More processors (in no specific order):
