@@ -1131,12 +1131,28 @@ static const char *control_reg_name( UWORD ctrl )
         return "VBR";
     case 0x002:
         return "CACR";
+    case 0x003:
+        return (dasm_cpu_level == 0 || dasm_cpu_level >= 68040) ? "TC" : NULL;
+    case 0x004:
+        return (dasm_cpu_level == 0 || dasm_cpu_level >= 68040) ? "ITT0" : NULL;
+    case 0x005:
+        return (dasm_cpu_level == 0 || dasm_cpu_level >= 68040) ? "ITT1" : NULL;
+    case 0x006:
+        return (dasm_cpu_level == 0 || dasm_cpu_level >= 68040) ? "DTT0" : NULL;
+    case 0x007:
+        return (dasm_cpu_level == 0 || dasm_cpu_level >= 68040) ? "DTT1" : NULL;
     case 0x802:
         return "CAAR";
     case 0x803:
         return "MSP";
     case 0x804:
         return "ISP";
+    case 0x805:
+        return (dasm_cpu_level == 0 || dasm_cpu_level >= 68040) ? "MMUSR" : NULL;
+    case 0x806:
+        return (dasm_cpu_level == 0 || dasm_cpu_level >= 68040) ? "URP" : NULL;
+    case 0x807:
+        return (dasm_cpu_level == 0 || dasm_cpu_level >= 68040) ? "SRP" : NULL;
     default:
         return NULL;
     }

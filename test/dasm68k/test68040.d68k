@@ -2,4 +2,4 @@ ftest68040.bin
 ocpu=68040
 c0000 Start
 
-e0019
+e002B
