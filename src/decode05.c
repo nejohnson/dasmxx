@@ -90,7 +90,10 @@ OPERAND_FUNC(direct)
 {
     UBYTE a = next( f, addr );
 
-    operand( xref_genwordaddr( NULL, FORMAT_NUM_8BIT, (ADDR)a ));
+    if ( xtype == X_JMP || xtype == X_CALL )
+        operand( xref_genwordaddr( NULL, FORMAT_NUM_8BIT, (ADDR)a ));
+    else
+        operand( FORMAT_NUM_8BIT, a );
     xref_addxref( xtype, g_insn_addr, a);
 }
 
@@ -244,8 +247,16 @@ optab_t base_optab[] = {
     REGMEM_OP( "adc", 0x09 )
     REGMEM_OP( "ora", 0x0A )
     REGMEM_OP( "add", 0x0B )
-    REGMEM_OP( "jmp", 0x0C )
-    REGMEM_OP( "jsr", 0x0D )
+    INSN ( "jmp", direct,   0xBC, X_JMP )
+    INSN ( "jmp", extended, 0xCC, X_JMP )
+    INSN ( "jmp", ix2,      0xDC, X_PTR )
+    INSN ( "jmp", ix1,      0xEC, X_PTR )
+    INSN ( "jmp", ix,       0xFC, X_PTR )
+    INSN ( "jsr", direct,   0xBD, X_CALL )
+    INSN ( "jsr", extended, 0xCD, X_CALL )
+    INSN ( "jsr", ix2,      0xDD, X_PTR )
+    INSN ( "jsr", ix1,      0xED, X_PTR )
+    INSN ( "jsr", ix,       0xFD, X_PTR )
     REGMEM_OP( "ldx", 0x0E )
     REGMEM_OP( "stx", 0x0F )
 
