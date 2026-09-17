@@ -1464,6 +1464,41 @@ OPERAND_FUNC(cas)
     emit_ea_field( f, addr, ea, size, xtype );
 }
 
+OPERAND_FUNC(pack_unpack)
+{
+    UWORD adj = nextw( f, addr );
+
+    if ( opc & 0x0008 )
+        operand( "-(" FORMAT_AREG "), -(" FORMAT_AREG "), #" FORMAT_IMM16,
+                 opc & 0x07, (opc >> 9) & 0x07, adj );
+    else
+        operand( FORMAT_DREG ", " FORMAT_DREG ", #" FORMAT_IMM16,
+                 opc & 0x07, (opc >> 9) & 0x07, adj );
+}
+
+static void emit_cas2_indirect_reg( UWORD ext )
+{
+    operand( "(%c%d)", (ext & 0x8000) ? 'A' : 'D', (ext >> 12) & 0x07 );
+}
+
+OPERAND_FUNC(cas2)
+{
+    UWORD ext1 = nextw( f, addr );
+    UWORD ext2 = nextw( f, addr );
+
+    if ( (ext1 & 0x0E38) || (ext2 & 0x0E38) )
+    {
+        emit_bad_operands();
+        return;
+    }
+
+    operand( FORMAT_DREG ":" FORMAT_DREG ", " FORMAT_DREG ":" FORMAT_DREG ", ",
+             ext1 & 0x07, ext2 & 0x07, (ext1 >> 6) & 0x07, (ext2 >> 6) & 0x07 );
+    emit_cas2_indirect_reg( ext1 );
+    operand( ":" );
+    emit_cas2_indirect_reg( ext2 );
+}
+
 OPERAND_FUNC(muldiv_long)
 {
     UWORD ext = nextw( f, addr );
@@ -2329,6 +2364,8 @@ optab_t base_optab[] = {
     MASK_EXT_CPU ( "CHK2.B", cmp2_chk2,  0xFFC0, 0x00C0, 0x0800, 0x0800, X_NONE, 68020 )
     MASK_EXT_CPU ( "CHK2.W", cmp2_chk2,  0xFFC0, 0x02C0, 0x0800, 0x0800, X_NONE, 68020 )
     MASK_EXT_CPU ( "CHK2.L", cmp2_chk2,  0xFFC0, 0x04C0, 0x0800, 0x0800, X_NONE, 68020 )
+    MASK_CPU ( "CAS2.W",    cas2,        0xFFFF, 0x0CFC, X_NONE, 68020 )
+    MASK_CPU ( "CAS2.L",    cas2,        0xFFFF, 0x0EFC, X_NONE, 68020 )
     MASK_DYN_CPU ( cas,  cas,            0xF9C0, 0x08C0, X_NONE, 68020 )
 
     MASK_CPU ( "MOVES.B", moves,        0xFFC0, 0x0E00, X_PTR, 68010 )
@@ -2456,6 +2493,8 @@ optab_t base_optab[] = {
     MASK ( "DIVS.W",    ea_word_dreg9,  0xF1C0, 0x81C0, X_NONE )
     MASK ( "SBCD",      dreg0_dreg9,    0xF1F8, 0x8100, X_REG )
     MASK ( "SBCD",      predec0_predec9, 0xF1F8, 0x8108, X_REG )
+    MASK_CPU ( "PACK",   pack_unpack,    0xF1F0, 0x8140, X_IMM, 68020 )
+    MASK_CPU ( "UNPK",   pack_unpack,    0xF1F0, 0x8180, X_IMM, 68020 )
 
     MASK_DYN ( or_ea_dreg9, ea_dreg9_s76, 0xF1C0, 0x8000, X_NONE )
     MASK_DYN ( or_ea_dreg9, ea_dreg9_s76, 0xF1C0, 0x8040, X_NONE )
