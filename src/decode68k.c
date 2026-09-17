@@ -112,6 +112,11 @@ OPERAND_FUNC(areg0)
     operand( FORMAT_AREG, reg );
 }
 
+OPERAND_FUNC(areg_indirect0)
+{
+    operand( "(" FORMAT_AREG ")", opc & 0x07 );
+}
+
 /***********************************************************
  * Process address register operands.
  *    register number comes from bits 11:9 in opc
@@ -2004,6 +2009,19 @@ static const char *opcode_cache_control( OPC opc )
       .u.mask.val  = M_val                                                       \
     },
 
+#define MASK_EXT_CPU_RANGE(M_opcode, M_ops, M_mask, M_val, M_ext_mask, M_ext_val, M_xt, M_min_cpu, M_max_cpu) \
+    { .type     = OPTAB_MASK_EXT,                                                       \
+      .min_cpu  = M_min_cpu,                                                            \
+      .max_cpu  = M_max_cpu,                                                            \
+      .opcode   = M_opcode,                                                             \
+      .operands = operand_ ## M_ops,                                                     \
+      .xtype    = M_xt,                                                                  \
+      .u.mask_ext.mask = M_mask,                                                         \
+      .u.mask_ext.val  = M_val,                                                          \
+      .u.mask_ext.ext_mask = M_ext_mask,                                                 \
+      .u.mask_ext.ext_val  = M_ext_val                                                   \
+    },
+
 #define MASK_EXT_CPU(M_opcode, M_ops, M_mask, M_val, M_ext_mask, M_ext_val, M_xt, M_min_cpu) \
     { .type     = OPTAB_MASK_EXT,                                                       \
       .min_cpu  = M_min_cpu,                                                            \
@@ -2118,8 +2136,8 @@ static const char *opcode_cache_control( OPC opc )
     MASK_EXT_FPU ( "FS" M_suffix, fscc_ea, 0xFFC0, 0xF240, 0xFFFF, M_cc, X_NONE, 68881 )
 
 #define PMMU_MOVE_REG(M_ext) \
-    MASK_EXT_CPU ( "PMOVE", pmmu_ea_reg, 0xFFC0, 0xF000, 0xFFFF, M_ext,          X_NONE, 68030 ) \
-    MASK_EXT_CPU ( "PMOVE", pmmu_reg_ea, 0xFFC0, 0xF000, 0xFFFF, (M_ext) | 0x0200, X_NONE, 68030 )
+    MASK_EXT_CPU_RANGE ( "PMOVE", pmmu_ea_reg, 0xFFC0, 0xF000, 0xFFFF, M_ext,          X_NONE, 68030, 68030 ) \
+    MASK_EXT_CPU_RANGE ( "PMOVE", pmmu_reg_ea, 0xFFC0, 0xF000, 0xFFFF, (M_ext) | 0x0200, X_NONE, 68030, 68030 )
 
 
 
@@ -2768,15 +2786,15 @@ optab_t base_optab[] = {
     MASK_CPU ( "MOVE16", move16_abs_ind,         0xFFF8, 0xF618, X_PTR, 68040 )
     MASK_CPU ( "MOVE16", move16_postinc_postinc, 0xFFF8, 0xF620, X_PTR, 68040 )
 
-    MASK_EXT_CPU ( "PFLUSHA", fext_none,  0xFFFF, 0xF000, 0xFFFF, 0x2400, X_NONE, 68030 )
-    MASK_EXT_CPU ( "PFLUSH",  pmmu_pflush, 0xFFFF, 0xF000, 0xFF18, 0x3010, X_NONE, 68030 )
-    MASK_EXT_CPU ( "PFLUSHS", pmmu_pflush, 0xFFFF, 0xF000, 0xFF18, 0x3410, X_NONE, 68030 )
-    MASK_EXT_CPU ( "PFLUSH",  pmmu_pflush, 0xFFC0, 0xF000, 0xFF18, 0x3810, X_NONE, 68030 )
-    MASK_EXT_CPU ( "PFLUSHS", pmmu_pflush, 0xFFC0, 0xF000, 0xFF18, 0x3C10, X_NONE, 68030 )
-    MASK_EXT_CPU ( "PLOADW",  pmmu_pload,  0xFFC0, 0xF000, 0xFFF8, 0x2010, X_NONE, 68030 )
-    MASK_EXT_CPU ( "PLOADR",  pmmu_pload,  0xFFC0, 0xF000, 0xFFF8, 0x2210, X_NONE, 68030 )
-    MASK_EXT_CPU ( "PTESTW",  pmmu_ptest,  0xFFC0, 0xF000, 0xE218, 0x8010, X_NONE, 68030 )
-    MASK_EXT_CPU ( "PTESTR",  pmmu_ptest,  0xFFC0, 0xF000, 0xE218, 0x8210, X_NONE, 68030 )
+    MASK_EXT_CPU_RANGE ( "PFLUSHA", fext_none,  0xFFFF, 0xF000, 0xFFFF, 0x2400, X_NONE, 68030, 68030 )
+    MASK_EXT_CPU_RANGE ( "PFLUSH",  pmmu_pflush, 0xFFFF, 0xF000, 0xFF18, 0x3010, X_NONE, 68030, 68030 )
+    MASK_EXT_CPU_RANGE ( "PFLUSHS", pmmu_pflush, 0xFFFF, 0xF000, 0xFF18, 0x3410, X_NONE, 68030, 68030 )
+    MASK_EXT_CPU_RANGE ( "PFLUSH",  pmmu_pflush, 0xFFC0, 0xF000, 0xFF18, 0x3810, X_NONE, 68030, 68030 )
+    MASK_EXT_CPU_RANGE ( "PFLUSHS", pmmu_pflush, 0xFFC0, 0xF000, 0xFF18, 0x3C10, X_NONE, 68030, 68030 )
+    MASK_EXT_CPU_RANGE ( "PLOADW",  pmmu_pload,  0xFFC0, 0xF000, 0xFFF8, 0x2010, X_NONE, 68030, 68030 )
+    MASK_EXT_CPU_RANGE ( "PLOADR",  pmmu_pload,  0xFFC0, 0xF000, 0xFFF8, 0x2210, X_NONE, 68030, 68030 )
+    MASK_EXT_CPU_RANGE ( "PTESTW",  pmmu_ptest,  0xFFC0, 0xF000, 0xE218, 0x8010, X_NONE, 68030, 68030 )
+    MASK_EXT_CPU_RANGE ( "PTESTR",  pmmu_ptest,  0xFFC0, 0xF000, 0xE218, 0x8210, X_NONE, 68030, 68030 )
     PMMU_MOVE_REG ( 0x4000 )
     PMMU_MOVE_REG ( 0x4400 )
     PMMU_MOVE_REG ( 0x4800 )
@@ -2786,7 +2804,7 @@ optab_t base_optab[] = {
     PMMU_MOVE_REG ( 0x5800 )
     PMMU_MOVE_REG ( 0x5C00 )
     PMMU_MOVE_REG ( 0x6000 )
-    MASK_EXT_CPU ( "PMOVE", pmmu_reg_ea, 0xFFC0, 0xF000, 0xFFFF, 0x6600, X_NONE, 68030 )
+    MASK_EXT_CPU_RANGE ( "PMOVE", pmmu_reg_ea, 0xFFC0, 0xF000, 0xFFFF, 0x6600, X_NONE, 68030, 68030 )
     
     
     
@@ -2857,7 +2875,12 @@ optab_t base_optab[] = {
     INSN ( "TRAPV",     none,   0x4E76,         X_NONE )
 
 
-    INSN_CPU ( "PFLUSHA", none,  0xF518,         X_NONE, 68040 )
+    MASK_CPU ( "PFLUSHN", areg_indirect0, 0xFFF8, 0xF500, X_NONE, 68040 )
+    MASK_CPU ( "PFLUSH",  areg_indirect0, 0xFFF8, 0xF508, X_NONE, 68040 )
+    INSN_CPU ( "PFLUSHAN", none,  0xF510,         X_NONE, 68040 )
+    INSN_CPU ( "PFLUSHA",  none,  0xF518,         X_NONE, 68040 )
+    MASK_CPU ( "PTESTW",  areg_indirect0, 0xFFF8, 0xF548, X_NONE, 68040 )
+    MASK_CPU ( "PTESTR",  areg_indirect0, 0xFFF8, 0xF568, X_NONE, 68040 )
 
 
 
