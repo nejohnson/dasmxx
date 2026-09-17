@@ -1245,6 +1245,97 @@ OPERAND_FUNC(cache_control)
         operand( ", (" FORMAT_AREG ")", opc & 0x07 );
 }
 
+static const char *pmmu_fc_operand( UWORD ext )
+{
+    static char text[8];
+    int fc = ext & 0x07;
+
+    sprintf( text, "#%d", fc );
+    return text;
+}
+
+OPERAND_FUNC(pmmu_pflush)
+{
+    UWORD ext = nextw( f, addr );
+    int ea = opc & 0x3F;
+    int has_ea = ext & 0x0800;
+
+    operand( "%s, #%d", pmmu_fc_operand( ext ), (ext >> 5) & 0x07 );
+    if ( has_ea )
+    {
+        operand( ", " );
+        emit_ea_field( f, addr, ea, OPSIZE_LONG, xtype );
+    }
+}
+
+OPERAND_FUNC(pmmu_pload)
+{
+    UWORD ext = nextw( f, addr );
+    int ea = opc & 0x3F;
+
+    operand( "%s, ", pmmu_fc_operand( ext ) );
+    emit_ea_field( f, addr, ea, OPSIZE_LONG, xtype );
+}
+
+OPERAND_FUNC(pmmu_ptest)
+{
+    UWORD ext = nextw( f, addr );
+    int ea = opc & 0x3F;
+
+    operand( "%s, ", pmmu_fc_operand( ext ) );
+    emit_ea_field( f, addr, ea, OPSIZE_LONG, xtype );
+    operand( ", #%d", (ext >> 10) & 0x07 );
+    if ( ext & 0x0100 )
+        operand( ", " FORMAT_AREG, (ext >> 5) & 0x07 );
+}
+
+static const char *pmmu_reg_name( UWORD ext )
+{
+    switch ( (ext >> 10) & 0x0F )
+    {
+    case 0x0:
+        return "TC";
+    case 0x1:
+        return "DRP";
+    case 0x2:
+        return "SRP";
+    case 0x3:
+        return "CRP";
+    case 0x4:
+        return "CAL";
+    case 0x5:
+        return "VAL";
+    case 0x6:
+        return "SCC";
+    case 0x7:
+        return "AC";
+    case 0x8:
+        return "PSR";
+    case 0x9:
+        return "PCSR";
+    default:
+        return NULL;
+    }
+}
+
+OPERAND_FUNC(pmmu_ea_reg)
+{
+    UWORD ext = nextw( f, addr );
+    const char *reg = pmmu_reg_name( ext );
+
+    emit_ea_field( f, addr, opc & 0x3F, OPSIZE_LONG, xtype );
+    operand( ", %s", reg ? reg : "???" );
+}
+
+OPERAND_FUNC(pmmu_reg_ea)
+{
+    UWORD ext = nextw( f, addr );
+    const char *reg = pmmu_reg_name( ext );
+
+    operand( "%s, ", reg ? reg : "???" );
+    emit_ea_field( f, addr, opc & 0x3F, OPSIZE_LONG, xtype );
+}
+
 static void emit_bitfield_spec( UWORD ext )
 {
     int offset = (ext >> 6) & 0x1F;
@@ -1863,6 +1954,10 @@ static const char *opcode_cache_control( OPC opc )
     MASK_EXT_FPU ( "FTRAP" M_suffix, ftrapcc_imm16, 0xFFFF, 0xF27A, 0xFFFF, M_cc, X_IMM, 68881 ) \
     MASK_EXT_FPU ( "FTRAP" M_suffix, ftrapcc_imm32, 0xFFFF, 0xF27B, 0xFFFF, M_cc, X_IMM, 68881 ) \
     MASK_EXT_FPU ( "FS" M_suffix, fscc_ea, 0xFFC0, 0xF240, 0xFFFF, M_cc, X_NONE, 68881 )
+
+#define PMMU_MOVE_REG(M_ext) \
+    MASK_EXT_CPU ( "PMOVE", pmmu_ea_reg, 0xFFC0, 0xF000, 0xFFFF, M_ext,          X_NONE, 68030 ) \
+    MASK_EXT_CPU ( "PMOVE", pmmu_reg_ea, 0xFFC0, 0xF000, 0xFFFF, (M_ext) | 0x0200, X_NONE, 68030 )
 
 
 
@@ -2492,7 +2587,26 @@ optab_t base_optab[] = {
     MASK_CPU ( "MOVE16", move16_ind_abs,         0xFFF8, 0xF610, X_PTR, 68040 )
     MASK_CPU ( "MOVE16", move16_abs_ind,         0xFFF8, 0xF618, X_PTR, 68040 )
     MASK_CPU ( "MOVE16", move16_postinc_postinc, 0xFFF8, 0xF620, X_PTR, 68040 )
-    MASK_EXT_CPU ( "PFLUSHA", fext_none, 0xFFC0, 0xF000, 0xFFFF, 0x2400, X_NONE, 68030 )
+
+    MASK_EXT_CPU ( "PFLUSHA", fext_none,  0xFFFF, 0xF000, 0xFFFF, 0x2400, X_NONE, 68030 )
+    MASK_EXT_CPU ( "PFLUSH",  pmmu_pflush, 0xFFFF, 0xF000, 0xFF18, 0x3010, X_NONE, 68030 )
+    MASK_EXT_CPU ( "PFLUSHS", pmmu_pflush, 0xFFFF, 0xF000, 0xFF18, 0x3410, X_NONE, 68030 )
+    MASK_EXT_CPU ( "PFLUSH",  pmmu_pflush, 0xFFC0, 0xF000, 0xFF18, 0x3810, X_NONE, 68030 )
+    MASK_EXT_CPU ( "PFLUSHS", pmmu_pflush, 0xFFC0, 0xF000, 0xFF18, 0x3C10, X_NONE, 68030 )
+    MASK_EXT_CPU ( "PLOADW",  pmmu_pload,  0xFFC0, 0xF000, 0xFFF8, 0x2010, X_NONE, 68030 )
+    MASK_EXT_CPU ( "PLOADR",  pmmu_pload,  0xFFC0, 0xF000, 0xFFF8, 0x2210, X_NONE, 68030 )
+    MASK_EXT_CPU ( "PTESTW",  pmmu_ptest,  0xFFC0, 0xF000, 0xE218, 0x8010, X_NONE, 68030 )
+    MASK_EXT_CPU ( "PTESTR",  pmmu_ptest,  0xFFC0, 0xF000, 0xE218, 0x8210, X_NONE, 68030 )
+    PMMU_MOVE_REG ( 0x4000 )
+    PMMU_MOVE_REG ( 0x4400 )
+    PMMU_MOVE_REG ( 0x4800 )
+    PMMU_MOVE_REG ( 0x4C00 )
+    PMMU_MOVE_REG ( 0x5000 )
+    PMMU_MOVE_REG ( 0x5400 )
+    PMMU_MOVE_REG ( 0x5800 )
+    PMMU_MOVE_REG ( 0x5C00 )
+    PMMU_MOVE_REG ( 0x6000 )
+    MASK_EXT_CPU ( "PMOVE", pmmu_reg_ea, 0xFFC0, 0xF000, 0xFFFF, 0x6600, X_NONE, 68030 )
     
     
     
