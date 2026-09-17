@@ -1265,6 +1265,52 @@ OPERAND_FUNC(fbranch32)
     xref_addxref( xtype, g_insn_addr, dest );
 }
 
+OPERAND_FUNC(fscc_ea)
+{
+    int ea = opc & 0x3F;
+
+    nextw( f, addr );
+
+    if ( !ea_field_is_data_alterable( ea ) )
+    {
+        emit_bad_operands();
+        return;
+    }
+
+    emit_ea_field( f, addr, ea, OPSIZE_BYTE, xtype );
+}
+
+OPERAND_FUNC(fdbcc)
+{
+    WORD disp;
+    ADDR dest;
+
+    nextw( f, addr );
+    disp = (WORD)nextw( f, addr );
+    dest = *addr + disp;
+
+    operand( FORMAT_DREG ", ", opc & 0x07 );
+    operand( xref_genwordaddr( NULL, FORMAT_IMM32, dest ) );
+    xref_addxref( xtype, g_insn_addr, dest );
+}
+
+OPERAND_FUNC(ftrapcc)
+{
+    nextw( f, addr );
+}
+
+OPERAND_FUNC(ftrapcc_imm16)
+{
+    nextw( f, addr );
+    operand( "#" FORMAT_IMM16, (UWORD)nextw( f, addr ) );
+}
+
+OPERAND_FUNC(ftrapcc_imm32)
+{
+    nextw( f, addr );
+    operand( "#" FORMAT_IMM32, (ULWORD)read_s32( f, addr ) );
+}
+
 OPERAND_FUNC(fpreg_fpreg)
 {
     UWORD ext = nextw( f, addr );
@@ -1512,6 +1558,47 @@ static const char *opcode_shift_mem( OPC opc )
     FPU_MOVE_FP_EA_FMT ( ".D", 5 ) \
     FPU_MOVE_FP_EA_FMT ( ".B", 6 ) \
     FPU_MOVE_FP_EA_FMT ( ".P", 7 )
+
+#define FPU_COND_TABLE(M_entry) \
+    M_entry ( "F",    0x00 ) \
+    M_entry ( "EQ",   0x01 ) \
+    M_entry ( "OGT",  0x02 ) \
+    M_entry ( "OGE",  0x03 ) \
+    M_entry ( "OLT",  0x04 ) \
+    M_entry ( "OLE",  0x05 ) \
+    M_entry ( "OGL",  0x06 ) \
+    M_entry ( "OR",   0x07 ) \
+    M_entry ( "UN",   0x08 ) \
+    M_entry ( "UEQ",  0x09 ) \
+    M_entry ( "UGT",  0x0A ) \
+    M_entry ( "UGE",  0x0B ) \
+    M_entry ( "ULT",  0x0C ) \
+    M_entry ( "ULE",  0x0D ) \
+    M_entry ( "NE",   0x0E ) \
+    M_entry ( "T",    0x0F ) \
+    M_entry ( "SF",   0x10 ) \
+    M_entry ( "SEQ",  0x11 ) \
+    M_entry ( "GT",   0x12 ) \
+    M_entry ( "GE",   0x13 ) \
+    M_entry ( "LT",   0x14 ) \
+    M_entry ( "LE",   0x15 ) \
+    M_entry ( "GL",   0x16 ) \
+    M_entry ( "GLE",  0x17 ) \
+    M_entry ( "NGLE", 0x18 ) \
+    M_entry ( "NGL",  0x19 ) \
+    M_entry ( "NLE",  0x1A ) \
+    M_entry ( "NLT",  0x1B ) \
+    M_entry ( "NGE",  0x1C ) \
+    M_entry ( "NGT",  0x1D ) \
+    M_entry ( "SNE",  0x1E ) \
+    M_entry ( "ST",   0x1F )
+
+#define FPU_COND_ENTRIES(M_suffix, M_cc) \
+    MASK_EXT_FPU ( "FDB" M_suffix, fdbcc, 0xFFF8, 0xF248, 0xFFFF, M_cc, X_JMP, 68881 ) \
+    MASK_EXT_FPU ( "FTRAP" M_suffix, ftrapcc, 0xFFFF, 0xF27C, 0xFFFF, M_cc, X_NONE, 68881 ) \
+    MASK_EXT_FPU ( "FTRAP" M_suffix, ftrapcc_imm16, 0xFFFF, 0xF27A, 0xFFFF, M_cc, X_IMM, 68881 ) \
+    MASK_EXT_FPU ( "FTRAP" M_suffix, ftrapcc_imm32, 0xFFFF, 0xF27B, 0xFFFF, M_cc, X_IMM, 68881 ) \
+    MASK_EXT_FPU ( "FS" M_suffix, fscc_ea, 0xFFC0, 0xF240, 0xFFFF, M_cc, X_NONE, 68881 )
 
 
 
@@ -2023,6 +2110,8 @@ optab_t base_optab[] = {
 /*----------------------------------------------------------------------------
   1111 - Coprocessor
   ----------------------------------------------------------------------------*/
+
+    FPU_COND_TABLE ( FPU_COND_ENTRIES )
 
     MASK_DYN_FPU ( fbcc, fbranch16,      0xFFC0, 0xF280, X_JMP, 68881 )
     MASK_DYN_FPU ( fbcc, fbranch32,      0xFFC0, 0xF2C0, X_JMP, 68881 )
