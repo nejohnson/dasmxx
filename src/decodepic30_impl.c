@@ -52,6 +52,16 @@ DASM_PROFILE( PIC30_DASM_NAME, PIC30_DASM_DESC, 4, 9, 0, 4, 2 )
 #define FORMAT_NUM_16BIT        "$%04X"
 #define FORMAT_NUM_24BIT        "$%06X"
 
+static OPC next_slot( FILE *f, ADDR *addr )
+{
+    UBYTE lo = next( f, addr );
+    UBYTE mid = next( f, addr );
+    UBYTE hi = next( f, addr );
+
+    (void)next( f, addr );
+    return ((OPC)hi << 16) | ((OPC)mid << 8) | lo;
+}
+
 OPERAND_FUNC(none)
 {
     /* empty */
@@ -163,6 +173,15 @@ OPERAND_FUNC(rel16)
     xref_addxref( xtype, g_insn_addr, dest );
 }
 
+OPERAND_FUNC(addr23)
+{
+    OPC ext = next_slot( f, addr );
+    ADDR dest = ( opc & 0xFFFF ) | ( ( ext & 0x007F ) << 16 );
+
+    operand( xref_genwordaddr( NULL, FORMAT_NUM_24BIT, dest ) );
+    xref_addxref( xtype, g_insn_addr, dest );
+}
+
 static void operand_cond_rel( OPC opc, const char *cond, XREF_TYPE xtype )
 {
     WORD disp = sign_extend_16( opc & 0xFFFF );
@@ -248,6 +267,8 @@ optab_t base_optab[] = {
 
     MASK ( "BRA",    rel16,         0xFF0000, 0x370000, X_JMP )
     MASK ( "RCALL",  rel16,         0xFF0000, 0x070000, X_CALL )
+    MASK ( "GOTO",   addr23,        0xFF0000, 0x040000, X_JMP )
+    MASK ( "CALL",   addr23,        0xFF0000, 0x020000, X_CALL )
     MASK ( "BRA",    z_rel16,       0xFF0000, 0x320000, X_JMP )
     MASK ( "BRA",    nz_rel16,      0xFF0000, 0x3A0000, X_JMP )
     MASK ( "BRA",    c_rel16,       0xFF0000, 0x310000, X_JMP )

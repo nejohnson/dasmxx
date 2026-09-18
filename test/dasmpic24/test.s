@@ -27,6 +27,10 @@
         nop
         .pword  0x370001
         .pword  0x07fffe
+        .pword  0x040040
+        .pword  0x000000
+        .pword  0x020044
+        .pword  0x000000
         return
         reset
         break

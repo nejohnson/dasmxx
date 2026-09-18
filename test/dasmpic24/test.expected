@@ -27,6 +27,8 @@ ___CL_0001:
    NOP      
    BRA      $0038
    RCALL    $0034
+   GOTO     $000040
+   CALL     $000044
    RETURN   
    RESET    
    BREAK    
