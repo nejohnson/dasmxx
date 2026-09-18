@@ -1,6 +1,13 @@
+DIFF ?= diff -u
 
-test:
-	../../src/dasm05 test.d51
+test: test.out
+	$(DIFF) test.expected test.out
+
+test.out: test.hex test.d51 ../../src/dasm51
+	../../src/dasm51 -s test.d51 | sed '$${/^$$/d;}' > test.out
+
+legacy:
+	../../src/dasm51 legacy.d51
 
 clean:
-	echo Done.
+	rm -f test.out

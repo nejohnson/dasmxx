@@ -1,13 +1,5 @@
-ftest.bin
+ftest.hex
 i8051regs.inc
 
 c0000
-
-
-
-l0001 IRAM_0001
-
-
-
-e1f00
-
+e006B

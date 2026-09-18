@@ -1,0 +1,68 @@
+   dasm51 -- Intel 8051 Disassembler --
+-----------------------------------------------------------------
+
+;   Processing "test.hex" (310 bytes, Intel HEX)
+;   Disassembly start address: 0x0000
+;   String terminator: 0x00
+
+___CL_0001:
+   NOP      
+   MOV      A, #012H
+   MOV      020H, #034H
+   MOV      R0, #056H
+   MOV      A, @R0
+   MOV      @R1, A
+   MOV      DPTR, #01234H
+   MOVC     A, @A+DPTR
+   INC      DPTR
+   ADD      A, #010H
+   ADDC     A, #001H
+   SUBB     A, #002H
+   DA       A
+   DIV      AB
+   MUL      AB
+   ORL      020H, A
+   ORL      020H, #00FH
+   ANL      020H, A
+   ANL      020H, #0F0H
+   XRL      020H, A
+   XRL      020H, #0AAH
+   CPL      PSW.7
+   CLR      PSW.7
+   SETB     PSW.7
+   RR       A
+   RRC      A
+   RL       A
+   RLC      A
+   XCH      A, 020H
+   XCHD     A, @R0
+   SWAP     A
+   PUSH     ACC
+   POP      ACC
+   JMP      @A+DPTR
+   SJMP     0003EH
+   AJMP     00044H
+   LJMP     01234H
+   ACALL    00046H
+   LCALL    01234H
+   RET      
+   RETI     
+   CJNE     A, #012H, 0004DH
+   DJNZ     020H, 00050H
+   JBC      PSW.7, 00053H
+   JC       00055H
+   JNC      00057H
+   JZ       00059H
+   JNZ      0005BH
+   MOVX     A, @DPTR
+   MOVX     @DPTR, A
+   MOV      C, PSW.7
+   MOV      PSW.7, C
+   CPL      C
+   CLR      C
+   SETB     C
+   MOV      R7, A
+   MOV      R7, 020H
+   MOV      020H, R0
+   MOV      020H, @R0
+   MOV      @R0, 020H
