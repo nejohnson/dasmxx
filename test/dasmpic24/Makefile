@@ -1,7 +1,6 @@
 DIFF ?= diff -u
-XC16_BINDIR ?= /opt/microchip/xc16/v2.10/bin
-XC16_AS = $(XC16_BINDIR)/xc16-as
-XC16_OBJCOPY = $(XC16_BINDIR)/xc16-objcopy
+XC16_AS ?= xc16-as
+XC16_OBJCOPY ?= xc16-objcopy
 
 test: test.out
 	$(DIFF) test.expected test.out
