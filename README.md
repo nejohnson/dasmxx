@@ -14,7 +14,9 @@ Supported Processors:
   * Intel 8080/8085 (MCS-80, MCS-85)
   * Intel 8086/186/286/386/486 + 87/387/487 FPU
   * Intel 8096 (MCS-96, including 196 variants)
-  * Microchip PIC10/12/16/18/24 and dsPIC33
+  * Microchip dsPIC33
+  * Microchip PIC10/12/16/18
+  * Microchip PIC24
   * Mostek 6502
   * Motorola 68000/68010/68020/68030/68040 + 68881/68882/68040 FPU
   * Motorola 6805 family
