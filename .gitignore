@@ -27,6 +27,11 @@ test/*/output/
 test/*/generated/*.bin
 test/tool_features/testdata/*.bin
 test/*/test.bin
+test/dasmpic*/*.cod
+test/dasmpic*/*.err
+test/dasmpic*/*.hex
+test/dasmpic*/*.lst
+test/dasmpic*/*.out
 *.pyc
 __pycache__/
 

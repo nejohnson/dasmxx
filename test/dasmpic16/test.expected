@@ -1,0 +1,12 @@
+___CL_0001:
+   ADDWF    12, 0
+   DECF     76, 1
+   MOVF     127, 0
+   BTFSC    34, 5
+   CALL     $0156
+   GOTO     $02AB
+   ADDLW    $11
+   SUBLW    $22
+   RETFIE   
+   RETURN   
+

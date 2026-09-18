@@ -1,0 +1,13 @@
+___CL_0001:
+   ADDWF    12, 0
+   ANDWF    13, 1
+   BCF      6, 3
+   BTFSS    6, 2
+   CALL     $55
+   GOTO     $0123
+   MOVLW    $AA
+   RETLW    $5A
+   TRIS     6
+   OPTION   
+   SLEEP    
+

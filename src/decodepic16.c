@@ -83,7 +83,7 @@ OPERAND_FUNC(none)
  ************************************************************/
 OPERAND_FUNC(f)
 {
-    BYTE reg = opc & 0x003F;
+    UBYTE reg = opc & 0x007F;
     
     operand( FORMAT_REG, reg );
 }
@@ -95,7 +95,7 @@ OPERAND_FUNC(f)
  ************************************************************/
 OPERAND_FUNC(imm8)
 {
-    BYTE imm8 = opc & 0x00FF;
+    UBYTE imm8 = opc & 0x00FF;
     
     operand( FORMAT_NUM_8BIT, imm8 );
 }
@@ -107,7 +107,7 @@ OPERAND_FUNC(imm8)
  ************************************************************/
 OPERAND_FUNC(addr11)
 {
-    UWORD addr11 = opc & 0x03FF;
+    UWORD addr11 = opc & 0x07FF;
     
     operand( "%s", xref_genwordaddr( NULL, FORMAT_NUM_16BIT, addr11 ) );
     xref_addxref( xtype, g_insn_addr, addr11 );
@@ -155,7 +155,7 @@ optab_t base_optab[] = {
     MASK ( "NOP",    none,          0x3F9F, 0x0000, X_NONE )
     
     /* Byte-Oriented Operations */
-    MASK ( "ADDWF",  f_d,           0x3F00, 0x0300, X_NONE )
+    MASK ( "ADDWF",  f_d,           0x3F00, 0x0700, X_NONE )
     MASK ( "ANDWF",  f_d,           0x3F00, 0x0500, X_NONE )
     MASK ( "COMF",   f_d,           0x3F00, 0x0900, X_NONE )
     MASK ( "DECF",   f_d,           0x3F00, 0x0300, X_NONE )

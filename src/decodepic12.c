@@ -108,7 +108,7 @@ OPERAND_FUNC(f3)
  ************************************************************/
 OPERAND_FUNC(imm8)
 {
-    BYTE imm8 = opc & 0x00FF;
+    UBYTE imm8 = opc & 0x00FF;
     
     operand( FORMAT_NUM_8BIT, imm8 );
 }
@@ -129,7 +129,7 @@ OPERAND_FUNC(imm8)
  ************************************************************/
 OPERAND_FUNC(addr8)
 {
-    BYTE addr8 = opc & 0x00FF;
+    UBYTE addr8 = opc & 0x00FF;
     
     operand( FORMAT_NUM_8BIT, addr8 );
 }
@@ -231,10 +231,10 @@ optab_t base_optab[] = {
     MASK ( "RETLW",  imm8,          0x0F00, 0x0800, X_NONE )
     MASK ( "XORLW",  imm8,          0x0F00, 0x0F00, X_NONE )
     
-    MASK ( "TRIS",   f3,            0x0FF8, 0x0000, X_NONE )
     INSN ( "CLRWDT", none,          0x0004,         X_NONE )
     INSN ( "OPTION", none,          0x0002,         X_NONE )
     INSN ( "SLEEP",  none,          0x0003,         X_NONE )
+    MASK ( "TRIS",   f3,            0x0FF8, 0x0000, X_NONE )
 
 /*----------------------------------------------------------------------------*/  
     

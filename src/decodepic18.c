@@ -84,7 +84,7 @@ OPERAND_FUNC(none)
  ************************************************************/
 OPERAND_FUNC(f)
 {
-    BYTE reg = opc & 0x00FF;
+    UBYTE reg = opc & 0x00FF;
     
     operand( FORMAT_REG, reg );
 }
@@ -96,7 +96,7 @@ OPERAND_FUNC(f)
  ************************************************************/
 OPERAND_FUNC(imm4)
 {
-    BYTE imm4 = opc & 0x000F;
+    UBYTE imm4 = opc & 0x000F;
     
     operand( FORMAT_NUM_8BIT, imm4 );
 }
@@ -108,7 +108,7 @@ OPERAND_FUNC(imm4)
  ************************************************************/
 OPERAND_FUNC(imm8)
 {
-    BYTE imm8 = opc & 0x00FF;
+    UBYTE imm8 = opc & 0x00FF;
     
     operand( FORMAT_NUM_8BIT, imm8 );
 }
@@ -169,7 +169,7 @@ OPERAND_FUNC(s0)
 OPERAND_FUNC(rel8)
 {
     BYTE disp = opc & 0xFF;
-    ADDR dest = *addr + disp;
+    ADDR dest = *addr + ((WORD)(BYTE)disp * 2);
     
     operand( xref_genwordaddr( NULL, FORMAT_NUM_16BIT, dest ) );
     xref_addxref( xtype, g_insn_addr, dest );
@@ -220,6 +220,7 @@ OPERAND_FUNC(addr20)
 	hi &= 0x0FFF;
 	hi <<= 8;
 	hi |= lo;
+	hi <<= 1;
 	
 	operand( xref_genwordaddr( NULL, FORMAT_NUM_24BIT, hi ) );
     xref_addxref( xtype, g_insn_addr, hi );
@@ -239,6 +240,7 @@ OPERAND_FUNC(addr20_s8)
 	hi &= 0x0FFF;
 	hi <<= 8;
 	hi |= lo;
+	hi <<= 1;
 	
 	operand( xref_genwordaddr( NULL, FORMAT_NUM_24BIT, hi ) );
     xref_addxref( xtype, g_insn_addr, hi );
@@ -253,8 +255,12 @@ OPERAND_FUNC(addr20_s8)
  ************************************************************/
 OPERAND_FUNC(rel11)
 {
-    WORD disp = opc & 0x3FF;
-    ADDR dest = *addr + disp;
+    WORD disp = opc & 0x07FF;
+    ADDR dest;
+
+    if ( disp & 0x0400 )
+        disp |= 0xF800;
+    dest = *addr + (disp * 2);
     
     operand( xref_genwordaddr( NULL, FORMAT_NUM_16BIT, dest ) );
     xref_addxref( xtype, g_insn_addr, dest );
@@ -312,7 +318,7 @@ optab_t base_optab[] = {
     MASK ( "IORWF",  f_d_a,         0xFC00, 0x1000, X_NONE )
     MASK ( "MOVF",   f_d_a,         0xFC00, 0x5000, X_NONE )
     MASK ( "MOVFF",  fs_fd,         0xF000, 0xC000, X_NONE )
-    MASK ( "MOVWF",  f_a,           0xFC00, 0x6C00, X_NONE )
+    MASK ( "MOVWF",  f_a,           0xFE00, 0x6E00, X_NONE )
     MASK ( "MULWF",  f_a,           0xFC00, 0x0200, X_NONE )
     MASK ( "NEGF",   f_a,           0xFC00, 0x6C00, X_NONE )
     MASK ( "RLCF",   f_d_a,         0xFC00, 0x3400, X_NONE )
@@ -321,7 +327,7 @@ optab_t base_optab[] = {
     MASK ( "RRNCF",  f_d_a,         0xFC00, 0x4000, X_NONE )
     MASK ( "SETF",   f_a,           0xFE00, 0x6800, X_NONE )
     MASK ( "SUBFWB", f_d_a,         0xFC00, 0x5400, X_NONE )
-    MASK ( "SUBFW",  f_d_a,         0xFC00, 0x5C00, X_NONE )
+    MASK ( "SUBWF",  f_d_a,         0xFC00, 0x5C00, X_NONE )
     MASK ( "SUBWFB", f_d_a,         0xFC00, 0x5800, X_NONE )
     MASK ( "SWAPF",  f_d_a,         0xFC00, 0x3800, X_NONE )
     MASK ( "TSTFSZ", f_a,           0xFE00, 0x6600, X_NONE )

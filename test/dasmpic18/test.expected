@@ -1,0 +1,17 @@
+___CL_0001:
+   NOP      
+   ADDWF    18, W, A
+   MOVWF    52, B
+   NEGF     86, A
+   SUBWF    120, F, B
+   MOVFF    $0123, $0456
+   LFSR     1, $000ABC
+   BCF      34, 3, A
+   BRA      $0018
+   NOP      
+   NOP      
+   RCALL    ___CL_0001
+   CALL     $012344, 0
+   GOTO     $023456
+   RETURN   1
+
