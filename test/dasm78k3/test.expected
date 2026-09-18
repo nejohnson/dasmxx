@@ -1,0 +1,74 @@
+   dasm78k3 -- NEC 78K/III Disassembler --
+-----------------------------------------------------------------
+
+;   Processing "test.hex" (396 bytes, Intel HEX)
+;   Disassembly start address: 0x0000
+;   String terminator: 0x00
+
+___CL_0001:
+   nop      
+   di       
+   ei       
+   swrs     
+   mov      A, #012H
+   mov      0FE20H, #034H
+   mov      PSWL, #055H
+   mov      A, C
+   mov      A, 0FE20H
+   mov      0FE20H, A
+   mov      A, PSWL
+   mov      PSWL, A
+   mov      A, [DE+]
+   mov      [DE+], A
+   movw     AX, #01234H
+   movw     0FE20H, #05678H
+   movw     AX, 0FE20H
+   movw     0FE20H, AX
+   movw     SP, #09ABCH
+   movw     AX, SP
+   movw     SP, AX
+   add      A, #001H
+   add      0FE20H, #002H
+   add      A, 0FE20H
+   add      0FE21H, 0FE20H
+   inc      A
+   inc      0FE20H
+   incw     VP
+   decw     VP
+   ror      A, 1
+   shl      A, 1
+   set1     0FE20H.0
+   clr1     0FE20H.0
+   set1     CY
+   clr1     CY
+   not1     CY
+   call     !01234H
+   callf    !00034H
+   callt    [00040H]
+   brk      
+   ret      
+   reti     
+   push     AX,BC,RP2,RP3,VP,UP,DE,HL
+   pop      AX,BC,RP2,RP3,VP,UP,DE,HL
+   push     PSW
+   pop      PSW
+   pushu    AX,BC
+   br       !01234H
+   br       $0005CH
+   bc       $0005EH
+   bnz      $0005CH
+   bt       0FE20H.0, $00063H
+   dbnz     C, $00065H
+   dbnz     0FE20H, $00068H
+   retcs    !01234H
+   movm     [DE+], A
+   movbk    [DE+], [HL+]
+   add      PSWL, #012H
+   mov1     CY, PSWL.0
+   incw     0FE20H
+   mulu     X
+   bgt      $0007DH
+   mov1     CY, 0FE20H.0
+   mov      A, !01234H
+   mov      !01234H, A
+   mov      STBC, #080H
