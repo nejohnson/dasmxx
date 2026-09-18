@@ -356,9 +356,9 @@ static void do_middle( int addr, unsigned char *buf, int n, int isSigned )
         operand( "%s", ( buf[0] & 0x10 ) ? "ldbse " : "ldbze " );
     else
     {
-        if ( isSigned )
-            operand( "%s%s%c", opcodes[op], 
-                    ( isSigned ) ? "" : "u", 
+        if ( op == 0x03 || op == 0x0B )
+            operand( "%s%s%c", opcodes[op],
+                    ( isSigned ) ? "" : "u",
                     ( buf[0] & 0x10 ) ? 'b' : ' ' );
         else
             operand( "%s%c", opcodes[op], ( buf[0] & 0x10 ) ? 'b' : ' ' );
