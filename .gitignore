@@ -32,6 +32,9 @@ test/*/test.bin
 test/dasmpic*/*.cod
 test/dasmpic*/*.err
 test/dasmpic*/*.hex
+!test/dasmpic12/test.hex
+!test/dasmpic16/test.hex
+!test/dasmpic18/test.hex
 !test/dasmpic24/test.hex
 test/dasmpic*/*.lst
 test/dasmpic*/*.o
