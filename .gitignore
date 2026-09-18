@@ -17,6 +17,8 @@ src/dasmm8
 src/dasmpic12
 src/dasmpic16
 src/dasmpic18
+src/dasmpic24
+src/dasmdspic33
 src/dasmunsp
 src/dasmx86
 src/dasmz80
@@ -31,7 +33,13 @@ test/dasmpic*/*.cod
 test/dasmpic*/*.err
 test/dasmpic*/*.hex
 test/dasmpic*/*.lst
+test/dasmpic*/*.o
 test/dasmpic*/*.out
+test/dasmdspic*/*.err
+test/dasmdspic*/*.hex
+test/dasmdspic*/*.lst
+test/dasmdspic*/*.o
+test/dasmdspic*/*.out
 *.pyc
 __pycache__/
 

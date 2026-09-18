@@ -123,6 +123,15 @@ static OPC next_insn( FILE* fp, ADDR *addr  )
         return (OPC)next( fp, addr );
     else if ( dasm_insn_width_bytes == 2 )
         return (OPC)nextw( fp, addr );
+    else if ( dasm_insn_width_bytes == 4 )
+    {
+        UBYTE lo = next( fp, addr );
+        UBYTE mid = next( fp, addr );
+        UBYTE hi = next( fp, addr );
+
+        (void)next( fp, addr );
+        return ((OPC)hi << 16) | ((OPC)mid << 8) | lo;
+    }
     else
         error( "INTERNAL ERROR: unsupported instruction size.\n" );
     return 0; /* unreachable, error() exits */

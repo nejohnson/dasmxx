@@ -54,7 +54,7 @@ typedef signed int         LWORD;
 typedef unsigned int       ULWORD;
 
 /* Derived types */
-typedef UWORD              OPC;
+typedef ULWORD             OPC;
 
 /* Universal address format */
 #define FORMAT_ADDR		"%04X"
@@ -129,7 +129,7 @@ extern const int    dasm_word_width_bytes;
     const int    dasm_max_opcode_width = opwid;   /* Max chars insn name   */ \
     const int    dasm_word_msb_first = msb;       /* 1 if word is MSB first*/ \
     const int    dasm_insn_width_bytes = iwid;    /* Num bytes per opcode  */ \
-    const int    dasm_word_width_bytes = iwid;    /* Num bytes per word    */
+    const int    dasm_word_width_bytes = wwid;    /* Num bytes per address unit */
 
 /*****************************************************************************/
 

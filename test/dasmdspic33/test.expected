@@ -1,0 +1,11 @@
+___CL_0001:
+   NOP      
+   MOV.W    #$1234, W0
+   ADD.W    W0, W1, W2
+   REPEAT   #$3
+   NOP      
+   REPEAT   W2
+   NOP      
+   MAC      W4 * W5, A
+   MAC      W6 * W7, B
+   RETURN   

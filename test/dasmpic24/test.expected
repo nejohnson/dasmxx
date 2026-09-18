@@ -1,0 +1,19 @@
+___CL_0001:
+   NOP      
+   MOV.W    #$1234, W0
+   ADD.W    W0, W1, W2
+   SUB.W    W3, W4, W5
+   AND.W    W3, W4, W5
+   IOR.W    W3, W4, W5
+   XOR.W    W3, W4, W5
+   CP.W     W1, W2
+   MOV.W    W1, W2
+   MOV.W    [W1], W2
+   MOV.W    W1, [W2]
+   REPEAT   #$3
+   NOP      
+   BRA      $001E
+   RCALL    $001A
+   RETURN   
+   RESET    
+   BREAK    

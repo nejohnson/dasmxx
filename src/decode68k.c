@@ -49,7 +49,7 @@
  * Globally-visible decoder properties
  *****************************************************************************/
 
-DASM_PROFILE( "dasm68k", "Motorola 68000", 22, 10, 1, 2, 1 )
+DASM_PROFILE( "dasm68k", "Motorola 68000", 22, 10, 1, 2, 2 )
 
 /*****************************************************************************
  * Private data types, macros, constants.
