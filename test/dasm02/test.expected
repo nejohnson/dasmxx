@@ -1,0 +1,109 @@
+   dasm02 -- MOS Technology 6502 Disassembler --
+-----------------------------------------------------------------
+
+;   Processing "test.hex" (566 bytes, Intel HEX)
+;   Disassembly start address: 0x8000
+;   String terminator: 0x00
+
+___CL_0001:
+   lda      #$12
+   lda      $20
+   lda      $21, X
+   lda      $1234
+   lda      $1234, X
+   lda      $1234, Y
+   lda      ($22, X)
+   lda      ($23), Y
+   ldx      #$56
+   ldx      $24, Y
+   ldx      $5678, Y
+   ldy      #$78
+   ldy      $25, X
+   ldy      $569A, X
+   sta      $30
+   sta      $31, X
+   sta      $2000
+   sta      $2002, X
+   sta      $2004, Y
+   sta      ($32, X)
+   sta      ($33), Y
+   stx      $34
+   stx      $35, Y
+   stx      $2006
+   sty      $36
+   sty      $37, X
+   sty      $2008
+   tax      
+   tay      
+   txa      
+   tya      
+   tsx      
+   txs      
+   pha      
+   php      
+   pla      
+   plp      
+   and      #$0F
+   eor      #$F0
+   ora      #$55
+   bit      $38
+   bit      $200A
+   adc      #$01
+   sbc      #$02
+   cmp      #$03
+   cpx      #$04
+   cpy      #$05
+   inc      $39
+   inc      $3A, X
+   inc      $200C
+   inc      $200E, X
+   inx      
+   iny      
+   dec      $3B
+   dec      $3C, X
+   dec      $2010
+   dec      $2012, X
+   dex      
+   dey      
+   asl      
+   asl      $3D
+   asl      $3E, X
+   asl      $2014
+   asl      $2016, X
+   lsr      
+   lsr      $3F
+   lsr      $40, X
+   lsr      $2018
+   lsr      $201A, X
+   rol      
+   rol      $41
+   rol      $42, X
+   rol      $201C
+   rol      $201E, X
+   ror      
+   ror      $43
+   ror      $44, X
+   ror      $2020
+   ror      $2022, X
+   jmp      ___CL_0001
+   jmp      ($FFFE)
+   jsr      $8050
+   rts      
+   bcc      $80B1
+   bcs      $80AF
+   beq      $80B3
+   bmi      $80B7
+   bne      $80B5
+   bpl      $80B9
+   bvc      $80BD
+   bvs      $80BB
+   clc      
+   cld      
+   cli      
+   clv      
+   sec      
+   sed      
+   sei      
+   brk      
+   nop      
+   rti      
