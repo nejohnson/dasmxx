@@ -113,6 +113,26 @@ OPERAND_FUNC(wsrc_wdst)
         operand_wreg( dst );
 }
 
+OPERAND_FUNC(wb)
+{
+    operand_wreg( opc & 0x0F );
+}
+
+OPERAND_FUNC(wd)
+{
+    operand_wreg( ( opc >> 7 ) & 0x0F );
+}
+
+OPERAND_FUNC(wb_wd)
+{
+    unsigned int wb = opc & 0x0F;
+    unsigned int wd = ( opc >> 7 ) & 0x0F;
+
+    operand_wreg( wb );
+    COMMA;
+    operand_wreg( wd );
+}
+
 OPERAND_FUNC(cp_wb_ws)
 {
     unsigned int wb = opc & 0x0F;
@@ -143,6 +163,48 @@ OPERAND_FUNC(rel16)
     xref_addxref( xtype, g_insn_addr, dest );
 }
 
+static void operand_cond_rel( OPC opc, const char *cond, XREF_TYPE xtype )
+{
+    WORD disp = sign_extend_16( opc & 0xFFFF );
+    ADDR pc = g_insn_addr / dasm_word_width_bytes;
+    ADDR dest = pc + 2 + ( disp * 2 );
+
+    operand( "%s", cond );
+    COMMA;
+    operand( xref_genwordaddr( NULL, FORMAT_NUM_16BIT, dest ) );
+    xref_addxref( xtype, g_insn_addr, dest );
+}
+
+OPERAND_FUNC(z_rel16)
+{
+    operand_cond_rel( opc, "Z", xtype );
+}
+
+OPERAND_FUNC(nz_rel16)
+{
+    operand_cond_rel( opc, "NZ", xtype );
+}
+
+OPERAND_FUNC(c_rel16)
+{
+    operand_cond_rel( opc, "C", xtype );
+}
+
+OPERAND_FUNC(nc_rel16)
+{
+    operand_cond_rel( opc, "NC", xtype );
+}
+
+OPERAND_FUNC(bit_wb)
+{
+    unsigned int bit = ( opc >> 12 ) & 0x0F;
+    unsigned int wb = opc & 0x0F;
+
+    operand_wreg( wb );
+    COMMA;
+    operand( "#$%X", bit );
+}
+
 OPERAND_FUNC(mac45_a)
 {
     operand( "W4 * W5, A" );
@@ -159,6 +221,16 @@ optab_t base_optab[] = {
     INSN ( "RESET",  none,          0xFE0000,       X_NONE )
     INSN ( "BREAK",  none,          0xDA4000,       X_NONE )
 
+    MASK ( "CLR.W",  wd,            0xFFF87F, 0xEB0000, X_NONE )
+    MASK ( "CLR.B",  wd,            0xFFF87F, 0xEB4000, X_NONE )
+    MASK ( "COM.W",  wb_wd,         0xFFF070, 0xEA8000, X_NONE )
+    MASK ( "NEG.W",  wb_wd,         0xFFF070, 0xEA0000, X_NONE )
+    MASK ( "INC.W",  wb_wd,         0xFF7070, 0xE80000, X_NONE )
+    MASK ( "DEC.W",  wb_wd,         0xFF7070, 0xE90000, X_NONE )
+    MASK ( "SL.W",   wb_wd,         0xFF7070, 0xD00000, X_NONE )
+    MASK ( "LSR.W",  wb_wd,         0xFFF070, 0xD10000, X_NONE )
+    MASK ( "ASR.W",  wb_wd,         0xFFF070, 0xD18000, X_NONE )
+
     MASK ( "MOV.W",  lit16_wd,      0xF00000, 0x200000, X_NONE )
     MASK ( "MOV.W",  wsrc_wdst,     0xFFF060, 0x780000, X_NONE )
 
@@ -169,8 +241,17 @@ optab_t base_optab[] = {
     MASK ( "IOR.W",  wb_ws_wd,      0xF80000, 0x700000, X_NONE )
     MASK ( "CP.W",   cp_wb_ws,      0xFF77F0, 0xE10000, X_NONE )
 
+    MASK ( "BSET.W", bit_wb,        0xFF0000, 0xA00000, X_NONE )
+    MASK ( "BCLR.W", bit_wb,        0xFF0000, 0xA10000, X_NONE )
+    MASK ( "BTG.W",  bit_wb,        0xFF0000, 0xA20000, X_NONE )
+    MASK ( "BTST.Z", bit_wb,        0xFF0000, 0xA30000, X_NONE )
+
     MASK ( "BRA",    rel16,         0xFF0000, 0x370000, X_JMP )
     MASK ( "RCALL",  rel16,         0xFF0000, 0x070000, X_CALL )
+    MASK ( "BRA",    z_rel16,       0xFF0000, 0x320000, X_JMP )
+    MASK ( "BRA",    nz_rel16,      0xFF0000, 0x3A0000, X_JMP )
+    MASK ( "BRA",    c_rel16,       0xFF0000, 0x310000, X_JMP )
+    MASK ( "BRA",    nc_rel16,      0xFF0000, 0x390000, X_JMP )
     MASK ( "REPEAT", repeat_wb,     0xFFFFF0, 0x098000, X_NONE )
     MASK ( "REPEAT", repeat_lit14,  0xFF8000, 0x090000, X_NONE )
 

@@ -7,13 +7,26 @@ ___CL_0001:
    IOR.W    W3, W4, W5
    XOR.W    W3, W4, W5
    CP.W     W1, W2
+   CLR.W    W0
+   CLR.B    W1
+   COM.W    W2, W3
+   NEG.W    W4, W5
+   INC.W    W6, W7
+   DEC.W    W8, W9
+   SL.W     W1, W2
+   LSR.W    W3, W4
+   ASR.W    W5, W6
    MOV.W    W1, W2
    MOV.W    [W1], W2
    MOV.W    W1, [W2]
+   BSET.W   W2, #$3
+   BCLR.W   W3, #$4
+   BTG.W    W4, #$5
+   BTST.Z   W5, #$6
    REPEAT   #$3
    NOP      
-   BRA      $001E
-   RCALL    $001A
+   BRA      $0038
+   RCALL    $0034
    RETURN   
    RESET    
    BREAK    
