@@ -99,8 +99,7 @@ OPERAND_FUNC(imm16)
     UBYTE lsb   = next( f, addr );
     UWORD imm16 = MK_WORD( lsb, msb );
 
-    operand( xref_genwordaddr( NULL, FORMAT_NUM_16BIT, imm16 ) );
-    xref_addxref( xtype, g_insn_addr, imm16 );
+    operand( "#" FORMAT_NUM_16BIT, imm16 );
 }
 
 /***********************************************************
@@ -143,11 +142,11 @@ OPERAND_FUNC(indexed)
     UBYTE rr = ( postbyte >> 5 ) & 0x03;
     static const char * rrtab[] = { "X", "Y", "U", "S" };
     
-    if ( postbyte & BIT(7) )
+    if ( !( postbyte & BIT(7) ) )
     {
         BYTE offset = ((BYTE)( ( postbyte & 0x1F ) << 3 )) >> 3;
         
-        operand( "%d, %s", offset, rrtab[rr] );    
+        operand( "%d, %s", offset, rrtab[rr] );
     }
     else
     {
@@ -227,8 +226,8 @@ OPERAND_FUNC(indexed)
             {
                 UBYTE msb = next( f, addr );
                 UBYTE lsb = next( f, addr );
-                WORD  ea  = MK_WORD( lsb, msb );
-                operand( "%d", ea );
+                UWORD ea  = MK_WORD( lsb, msb );
+                operand( FORMAT_NUM_16BIT, ea );
             }
             break;
             
@@ -305,12 +304,44 @@ OPERAND_FUNC(r1_r2)
         "A",
         "B",
         "CCR",
-        "DPR"
+        "DP"
     };
     
-    operand( "%s", rtab[dst] );
-    COMMA;
     operand( "%s", rtab[src] );
+    COMMA;
+    operand( "%s", rtab[dst] );
+}
+
+/***********************************************************
+ * Process PSH/PUL register list operands.
+ ************************************************************/
+
+OPERAND_FUNC(stackregs)
+{
+    UBYTE mask = next( f, addr );
+    const char *sp_pair = ( opc == 0x34 || opc == 0x35 ) ? "U" : "S";
+    const char *regs[8];
+    int i;
+    int n = 0;
+
+    regs[0] = "CC";
+    regs[1] = "A";
+    regs[2] = "B";
+    regs[3] = "DP";
+    regs[4] = "X";
+    regs[5] = "Y";
+    regs[6] = sp_pair;
+    regs[7] = "PC";
+
+    for ( i = 7; i >= 0; i-- )
+    {
+        if ( mask & BIT(i) )
+        {
+            if ( n++ )
+                COMMA;
+            operand( "%s", regs[i] );
+        }
+    }
 }
 
 /******************************************************************************/
@@ -505,10 +536,10 @@ optab_t base_optab[] = {
     ACC_ARGS_OPD( "LDU",  0x0E )
     ACC_ARGS_OP( "LDX",  0x0E )
   
-    INSN ( "PSHS", imm8, 0x34, X_NONE )
-    INSN ( "PULS", imm8, 0x35, X_NONE )
-    INSN ( "PSHU", imm8, 0x36, X_NONE )
-    INSN ( "PULU", imm8, 0x37, X_NONE )
+    INSN ( "PSHS", stackregs, 0x34, X_NONE )
+    INSN ( "PULS", stackregs, 0x35, X_NONE )
+    INSN ( "PSHU", stackregs, 0x36, X_NONE )
+    INSN ( "PULU", stackregs, 0x37, X_NONE )
   
     ACC_ARGS_OP_NOIMM( "STU", 0x4F, X_PTR )
     ACC_ARGS_OP_NOIMM( "STX", 0x0F, X_PTR )

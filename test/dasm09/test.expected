@@ -1,0 +1,50 @@
+   dasm09 -- Motorola 6809 Disassembler --
+-----------------------------------------------------------------
+
+;   Processing "test.hex" (276 bytes, Intel HEX)
+;   Disassembly start address: 0x0000
+;   String terminator: 0x00
+
+___CL_0001:
+   LDA      #$01
+   LDB      $0020
+   LDA      $1234
+   LDA      ,X
+   LDA      0, X
+   LDA      -1, X
+   LDA      8, X
+   LDA      16, X
+   LDA      2, PCR
+   LDA      32, PCR
+   LDA      [$1234]
+   STA      $2000
+   LDD      #$1234
+   LDY      #$5678
+   STY      $0022
+   CMPU     #$0001
+   EXG      X, Y
+   TFR      B, A
+   PSHS     PC, U, Y, X, DP, B, A, CC
+   PULS     PC, CC
+   PSHU     S
+   PULU     S
+   JMP      $1234
+   JSR      $1234
+   BRA      $0046
+   BNE      $0044
+   LBRA     $004D
+   LBNE     $0049
+   ABX      
+   DAA      
+   MUL      
+   SEX      
+   ANDCC    #$FE
+   ORCC     #$01
+   CWAI     #$FF
+   NOP      
+   SYNC     
+   RTS      
+   RTI      
+   SWI      
+   SWI2     
+   SWI3     
