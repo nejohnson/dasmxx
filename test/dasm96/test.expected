@@ -1,36 +1,36 @@
    dasm96 -- Intel 8096 Disassembler --
 -----------------------------------------------------------------
 
-;   Processing "test.hex" (272 bytes, Intel HEX)
+;   Processing "test.hex" (388 bytes, Intel HEX)
 ;   Disassembly start address: 0x0000
 ;   String terminator: 0x00
 
 ___CL_0001:
-   skip    R10
-   inc     R11
-   shr     R12, #02
-   sjmp    000B
-   scall   000D
-   jbc     R10,0, 0010
-   jbs     R11,0, 000F
-   and     R22, R20, #1234
-   add     R26, R24, #5678
+   skip     R10
+   inc      R11
+   shr      R12, #02
+   sjmp     000B
+   scall    000D
+   jbc      R10,0, 0010
+   jbs      R11,0, 000F
+   and      R22, R20, #1234
+   add      R26, R24, #5678
    mulu     R2A, R28, #0002
-   mul     R2E, R2C, #0002
+   mul      R2E, R2C, #0002
    divu     R30, #0004
-   div     R32, #0004
-   st      R52, R50
-   bmov    R54, R56
-   cmpl    R58, R5A
-   push    #1234
-   push    10[R60]
-   djnz    R70, 003F
-   djnzw   R72, 0046
-   br      [R74]
-   ljmp    004B
-   lcall   004A
-   jnst    0050
-   je      004E
+   div      R32, #0004
+   st       R52, R50
+   bmov     R54, R56
+   cmpl     R58, R5A
+   push     #1234
+   push     10[R60]
+   djnz     R70, 003F
+   djnzw    R72, 0046
+   br       [R74]
+   ljmp     004B
+   lcall    004A
+   jnst     0050
+   je       004E
    ret
    pushf
    popf
@@ -44,3 +44,12 @@ ___CL_0001:
    clrvt
    nop
    rst
+   and      R14, R12, R10
+   and      R18, R16, [R20]+
+   and      R1C, R1A, 08[R20]
+   and      R20, R1E, 5678[R20]
+   and      R40, [R20]+
+   and      R42, 08[R20]
+   and      R44, 1234[R20]
+   st       R62, 5678[R20]
+   pop      5678[R20]

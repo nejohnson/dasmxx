@@ -38,9 +38,6 @@ TARGETS = dasm78k3$(X) \
 
 CORE_OBJS = dasmxx.o xref.o optab.o
 
-# Special-case the 8096 until it is re-written.
-CORE96_OBJS = dasmxx.o xref.o
-
 CFLAGS = -g
 
 all:	$(subst $(X),,${TARGETS})
@@ -54,7 +51,7 @@ dasm78k3: ${D78K3_OBJS}
 
 #################################################
 
-D96_OBJS = ${CORE96_OBJS} decode96.o
+D96_OBJS = ${CORE_OBJS} decode96.o
 
 dasm96: ${D96_OBJS}
 	$(CC) ${D96_OBJS} -o ${@}

@@ -188,6 +188,16 @@ typedef struct optab_s {
       .u.range.max = M_max                          \
     },
 
+#define RANGE_DYN(M_opcode_fn, M_ops, M_min, M_max, M_xt)  \
+    { .type      = OPTAB_RANGE,                            \
+      .opcode    = "DYNAMIC",                              \
+      .opcode_fn = opcode_ ## M_opcode_fn,                 \
+      .operands  = operand_ ## M_ops,                      \
+      .xtype     = M_xt,                                   \
+      .u.range.min = M_min,                                \
+      .u.range.max = M_max                                 \
+    },
+
 /**
     A MASK matches a set of instruction bytes described by a bit mask and a
     value to match against applied to the first search byte.

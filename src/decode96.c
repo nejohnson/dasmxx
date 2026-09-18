@@ -32,672 +32,495 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <stdlib.h>
-#include <stdarg.h>
 
 #include "dasmxx.h"
-
+#include "optab.h"
 
 DASM_PROFILE( "dasm96", "Intel 8096", 8, 9, 0, 1, 1 )
 
-
-static char * output_buffer = NULL;
-
-
-#define ADDR_DIRECT     0
-#define ADDR_IMMED      1
-#define ADDR_INDIR      2
-#define ADDR_INDEX      3
-
-
 #define FORMAT_NUM_16BIT        "%04X"
 
-
-/*****************************************************************************
- *        Instruction Decoding Tables
- *****************************************************************************/
-
-char instrlen[] = {
-/* 0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f  */
-   2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3,   /* 0 */
-   0, 2, 2, 2, 0, 2, 2, 2, 3, 3, 3, 0, 0, 0, 0, 0,   /* 1 */
-   2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,   /* 2 */
-   3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,   /* 3 */
-   4, 5, 4,-5, 4, 5, 4,-5, 4, 5, 4,-5, 4, 5, 4,-5,   /* 4 */
-   4, 4, 4,-5, 4, 4, 4,-5, 4, 4, 4,-5, 4, 4, 4,-5,   /* 5 */
-   3, 4, 3,-4, 3, 4, 3,-4, 3, 4, 3,-4, 3, 4, 3,-4,   /* 6 */
-   3, 3, 3,-4, 3, 3, 3,-4, 3, 3, 3,-4, 3, 3, 3,-4,   /* 7 */
-   3, 4, 3,-4, 3, 4, 3,-4, 3, 4, 3,-4, 3, 4, 3,-4,   /* 8 */
-   3, 3, 3,-4, 3, 3, 3,-4, 3, 3, 3,-4, 3, 3, 3,-4,   /* 9 */
-   3, 4, 3,-4, 3, 4, 3,-4, 3, 4, 3,-4, 3, 3, 3,-4,   /* a */
-   3, 3, 3,-4, 3, 3, 3,-4, 3, 3, 3,-4, 3, 3, 3,-4,   /* b */
-   3, 3, 3,-4, 3, 3, 3,-4, 2, 3, 2,-3, 2, 0, 2,-3,   /* c */
-   2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,   /* d */
-   3, 3, 0, 2, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 3,   /* e */
-   1, 0, 1, 1, 1, 1, 2, 0, 1, 1, 1, 1, 1, 1,-7, 1    /* f */
+enum {
+    ADDR_DIRECT = 0,
+    ADDR_IMMED  = 1,
+    ADDR_INDIR  = 2,
+    ADDR_INDEX  = 3
 };
-/*
 
-00100bbb xxxxxxxx    -> sjmp  bbbxxxxxxxx
-00101bbb xxxxxxxx    -> scall bbbxxxxxxxx
-00110bbb src ofs     -> jbc src, bb, ofs
-00111bbb src ofs     -> jbs src, bb, ofs
-010....0   b0 b1 b2
-010...01   b0 b1 b2 b3
-010...11   b0 b1 b2 b3 b4  (b4 als b0&1)
-0110...0   b0 b1
-0110..01   b0 b1 b2
-0110..11   b0 b1 b2 b3  (b3 als b0&1)
-0111...0   b0 b1
-0111..01   b0 b1
-0111..11   b0 b1 b2 b3  (b3 als b0&1)
-10.0...0   b0 b1
-10.0..01   b0 b1 b2
-10.0..11   b0 b1 b2 b3  (b3 als b0&1)
-10.1...0   b0 b1
-10.1..01   b0 b1
-10.1..11   b0 b1 b2 b3  (b3 als b0&1)
-11001..0   b0
-11000..0   b0 b1
-11001001   b0 b1
-11001.11   b0 b1 b2   (b2 als b0&1)
-11000.11   b0 b1 b2 b3  (b3 als b0&1)
-1101....   ofs      j.. ofs
-*/
+static int signed_prefix = 0;
 
-/*
-   0 = unknown opcode
-   >0 = # bytes
-   <0 : +1 if 2nd byte odd
-   -7 : extended opcode
-*/
-
-
-/*****************************************************************************
- *        Private Functions
- *****************************************************************************/
- 
-static void opcode( const char *opcode )
+static UWORD make_word( UBYTE low, UBYTE high )
 {
-	int n = sprintf( output_buffer, "%-*s", dasm_max_opcode_width, opcode );
-	output_buffer += n;
+    return (UWORD)( low | ( high << 8 ) );
 }
 
-static void operand( const char *operand, ... )
+static UWORD next_word( FILE *f, ADDR *addr )
 {
-	va_list ap;
-	int n;
-	
-	va_start( ap, operand );
-	n = vsprintf( output_buffer, operand, ap );
-	va_end( ap );
-	
-	output_buffer += n;
+    UBYTE low  = next( f, addr );
+    UBYTE high = next( f, addr );
+
+    return make_word( low, high );
 }
 
-/***********************************************************
- *
- ***********************************************************/
-
-union {
-	struct {
-#ifdef __BIG_ENDIAN__	
-		unsigned char hibyte;
-		unsigned char lobyte;
-#else
-		unsigned char lobyte;
-		unsigned char hibyte;
-#endif		
-	} s;
-	unsigned short us_val;
-	signed   short s_val;
-} u;
-
-static unsigned short getAddress( unsigned char * buf )
+static WORD next_offset( FILE *f, ADDR *addr )
 {
-	u.s.lobyte = buf[0];
-	u.s.hibyte = buf[1];
-		
-	return u.us_val;
+    return (WORD)next_word( f, addr );
 }
 
-static short getOffset( unsigned char * buf )
+static int middle_op( OPC opc )
 {
-	u.s.lobyte = buf[0];
-	u.s.hibyte = buf[1];
-	
-	return u.s_val;
+    int op = 0;
+
+    if ( opc & 0x80 )
+        op |= 8;
+    if ( opc & 0x20 )
+        op |= 4;
+    if ( opc & 0x08 )
+        op |= 2;
+    if ( opc & 0x04 )
+        op |= 1;
+
+    return op;
 }
 
-/***********************************************************
- *
- * FUNCTION
- *      do_sjmp
- *
- * DESCRIPTION
- *      Handle sjmp (short jump) instructions
- *
- * RETURNS
- *      void
- *
- ************************************************************/
-
-static void do_sjmp( int addr, unsigned char *buf, int n )
+static int middle_is_three_operand( OPC opc )
 {
-    short offset;
-    
-    offset = ( ( buf[0] & 0x03 ) << 8 ) | buf[1];
-    
-    if ( buf[0] & 4 )
-        offset |= 0xFC00;
-    
-    operand( "sjmp    %s", xref_genwordaddr( NULL, FORMAT_NUM_16BIT, addr + offset ) );
-    xref_addxref( X_JMP, addr - n, addr + offset );
+    return ( opc & 0xE0 ) == 0x40;
 }
 
-/***********************************************************
- *
- * FUNCTION
- *      do_scall
- *
- * DESCRIPTION
- *      Handle scall (short call) instructions
- *
- * RETURNS
- *      void
- *
- ************************************************************/
-
-static void do_scall( int addr, unsigned char *buf, int n )
+static ADDR rel8_target( ADDR next_addr, UBYTE disp )
 {
-    short offset;
-    
-    offset = ( ( buf[0] & 0x03 ) << 8 ) | buf[1];
-    
-    if ( buf[0] & 4 )
-        offset |= 0xFC00;
-    
-    operand( "scall   %s", xref_genwordaddr( NULL, FORMAT_NUM_16BIT, addr + offset ) );
-    xref_addxref( X_CALL, addr - n, addr + offset );
+    return next_addr + (BYTE)disp;
 }
 
-/***********************************************************
- *
- * FUNCTION
- *      do_jbc
- *
- * DESCRIPTION
- *      Handle jbc (jump if bit clear) instruction
- *
- * RETURNS
- *      void
- *
- ************************************************************/
-
-static void do_jbc( int addr, unsigned char *buf, int n )
+static ADDR rel16_target( ADDR next_addr, WORD disp )
 {
-    operand( "jbc     R%02X,%d, %s", buf[1], buf[0] & 0x07, xref_genwordaddr( NULL, FORMAT_NUM_16BIT, addr + (char)buf[2] ) );
-    xref_addxref( X_JMP, addr - n, addr + (char)buf[2] );
+    return next_addr + disp;
 }
 
-/***********************************************************
- *
- * FUNCTION
- *      do_jbs
- *
- * DESCRIPTION
- *      Handle jbs (jump if bit set) instruction
- *
- * RETURNS
- *      void
- *
- ************************************************************/
-
-static void do_jbs( int addr, unsigned char *buf, int n )
+void dasm_pre_insn( void )
 {
-    operand( "jbs     R%02X,%d, %s", buf[1], buf[0] & 0x07, xref_genwordaddr( NULL, FORMAT_NUM_16BIT, addr + (char)buf[2] ) );
-    xref_addxref( X_JMP, addr - n, addr + (char)buf[2] );
+    signed_prefix = 0;
 }
 
-/***********************************************************
- *
- * FUNCTION
- *      do_condjump
- *
- * DESCRIPTION
- *      Handle conditional jumps
- *
- * RETURNS
- *      void
- *
- ************************************************************/
-
-static void do_condjmp( int addr, unsigned char *buf, int n )
+PREFIX_FUNC(signed)
 {
-    char *opcodes[] = { "jnst",     "jnh",      "jgt",      "jnc",
-                        "jnvt",     "jnv",      "jge",      "jne",
-                        "jst",      "jh",       "jle",      "jc", 
-                        "jvt",      "jv",       "jlt",      "je" };
+    (void)f;
+    (void)addr;
+    (void)opc;
+    (void)xtype;
 
-    operand( "%-6s  %s", opcodes[buf[0] & 0x0F], xref_genwordaddr( NULL, FORMAT_NUM_16BIT, addr + (char)buf[1] ) );
-    xref_addxref( X_JMP, addr - n, addr + (char)buf[1] );
+    signed_prefix = 1;
 }
 
-/***********************************************************
- *
- * FUNCTION
- *      do_f0
- *
- * DESCRIPTION
- *      Handle instructions in the opcode group Fx
- *
- * RETURNS
- *      void
- *
- ************************************************************/
-
-static void do_f0( int addr, unsigned char *buf, int n )
+OPERAND_FUNC(none)
 {
-    char *opcodes[] = { "ret",      "",         "pushf",    "popf",
-                        "pusha",    "popa",     "idlpd",    "trap",
-                        "clrc",     "setc",     "di",       "ei",
-                        "clrvt",    "nop",      "",         "rst" };
-
-    operand( "%s", opcodes[buf[0] & 0x0F] );
+    (void)f;
+    (void)addr;
+    (void)opc;
+    (void)xtype;
 }
 
-/***********************************************************
- *
- * FUNCTION
- *      do_middle
- *
- * DESCRIPTION
- *      Handles 4x .. Bx instruction groups (the middle of the
- *       instruction table).
- *
- * RETURNS
- *      void
- *
- ************************************************************/
-
-static void do_middle( int addr, unsigned char *buf, int n, int isSigned )
+OPERAND_FUNC(ignore8)
 {
-    char *opcodes[] = { "and",      "add",      "sub",      "mul",
-                        "and",      "add",      "sub",      "mul",
-                        "or",       "xor",      "cmp",      "div",
-                        "ld",       "addc",     "subc",     "ldbse" };
+    (void)opc;
+    (void)xtype;
 
-    int op;
-    int i;
-    
-    op = 0;
-    
-        /*
-        01.t00..  and     b
-        01.t01..  add     b
-        01.t10..  sbb     b
-        01.t11..  mulu    b
-        100t00..  or      b
-        100t01..  xor     b
-        100t10..  cmp     b
-        100t11..  divu    b
-        101t00..  ld      b
-        101t01..  addc    b
-        101t10..  subc    b
-        101t11..  ldbse  /ze
-        */
-    
-    if ( buf[0] & 0x80 ) op |= 8;
-    if ( buf[0] & 0x20 ) op |= 4;
-    if ( buf[0] & 0x08 ) op |= 2;
-    if ( buf[0] & 0x04 ) op |= 1;
-    
-    if ( op == 0x0F )   /* Handle ldb{s|z}e */
-        operand( "%s", ( buf[0] & 0x10 ) ? "ldbse " : "ldbze " );
+    (void)next( f, addr );
+}
+
+OPERAND_FUNC(reg)
+{
+    UBYTE reg = next( f, addr );
+
+    operand( "R%02X", reg );
+}
+
+OPERAND_FUNC(reg_ind)
+{
+    UBYTE reg = next( f, addr );
+
+    operand( "[R%02X]", reg );
+}
+
+OPERAND_FUNC(reg_reg_80196)
+{
+    UBYTE dst = next( f, addr );
+    UBYTE src = next( f, addr );
+
+    operand( "R%02X, R%02X", dst, src );
+}
+
+OPERAND_FUNC(sjmp)
+{
+    UBYTE disp = next( f, addr );
+    WORD offset = (WORD)( ( ( opc & 0x03 ) << 8 ) | disp );
+    ADDR target;
+
+    if ( opc & 0x04 )
+        offset |= (WORD)0xFC00;
+
+    target = *addr + offset;
+    operand( "%s", xref_genwordaddr( NULL, FORMAT_NUM_16BIT, target ) );
+    xref_addxref( xtype, g_insn_addr, target );
+}
+
+OPERAND_FUNC(bit_rel)
+{
+    UBYTE src = next( f, addr );
+    UBYTE disp = next( f, addr );
+    ADDR target = rel8_target( *addr, disp );
+
+    operand( "R%02X,%d, %s", src, opc & 0x07,
+             xref_genwordaddr( NULL, FORMAT_NUM_16BIT, target ) );
+    xref_addxref( xtype, g_insn_addr, target );
+}
+
+OPERAND_FUNC(rel8)
+{
+    UBYTE disp = next( f, addr );
+    ADDR target = rel8_target( *addr, disp );
+
+    operand( "%s", xref_genwordaddr( NULL, FORMAT_NUM_16BIT, target ) );
+    xref_addxref( xtype, g_insn_addr, target );
+}
+
+OPERAND_FUNC(reg_rel8)
+{
+    UBYTE reg = next( f, addr );
+    UBYTE disp = next( f, addr );
+    ADDR target = rel8_target( *addr, disp );
+
+    operand( "R%02X, %s", reg, xref_genwordaddr( NULL, FORMAT_NUM_16BIT, target ) );
+    xref_addxref( xtype, g_insn_addr, target );
+}
+
+OPERAND_FUNC(rel16)
+{
+    WORD disp = next_offset( f, addr );
+    ADDR target = rel16_target( *addr, disp );
+
+    operand( "%s", xref_genwordaddr( NULL, FORMAT_NUM_16BIT, target ) );
+    xref_addxref( xtype, g_insn_addr, target );
+}
+
+OPERAND_FUNC(op00)
+{
+    UBYTE arg1 = next( f, addr );
+
+    if ( opc & 0x08 )
+    {
+        UBYTE dst = next( f, addr );
+
+        operand( "R%02X, ", dst );
+        if ( opc != 0x0F && arg1 < 0x10 )
+            operand( "#%02X", arg1 );
+        else
+            operand( "R%02X", arg1 );
+    }
     else
     {
-        if ( op == 0x03 || op == 0x0B )
-            operand( "%s%s%c", opcodes[op],
-                    ( isSigned ) ? "" : "u",
-                    ( buf[0] & 0x10 ) ? 'b' : ' ' );
-        else
-            operand( "%s%c", opcodes[op], ( buf[0] & 0x10 ) ? 'b' : ' ' );
-    }
-    
-    for ( i = strlen( opcodes[op] ); i < 7; i++ )
-        operand( " " );;
-    
-    switch( buf[0] & 0x3 )
-    {
-        case ADDR_DIRECT:
-            if ( n == 3 )
-                operand( "R%02X, R%02X", buf[2], buf[1] );
-            else
-                operand( "R%02X, R%02X, R%02X", buf[3], buf[2], buf[1] );
-            break;
-            
-        case ADDR_IMMED:
-            if ( buf[0] & 0x10 || op == 0x0F)
-            {
-                /* byte const */
-                
-                if ( n == 4 )
-                    operand( "R%02X, ", buf[3] );
-                
-                operand( "R%02X, #%02X", buf[2], buf[1] );
-            }
-            else
-            {
-                /* word const */
-                if ( n == 5 )
-                    operand( "R%02X, ", buf[4] );
-                operand( "R%02X, #%s", buf[3], 
-                        xref_genwordaddr( NULL, FORMAT_NUM_16BIT, getAddress(&buf[1]) ) );
-                xref_addxref( X_DATA, addr - n, getAddress(&buf[1]) );
-            }
-            break;
-
-        case ADDR_INDIR:
-            if ( n == 4 )
-                operand( "R%02X, ", buf[3] );
-            
-            if ( n >= 3 )
-                operand( "R%02X, ", buf[2] );
-            
-            operand( "[R%02X]", buf[1] & 0xFE );
-            if ( buf[1] & 0x01 )
-                operand( "+" );
-
-            break;
-
-        case ADDR_INDEX:
-            if ( ( buf[0] & 0xE0 ) == 0x40 )
-            {
-                /* three-op instruction */
-                if ( buf[1] & 0x01 )
-                {
-                    /* word offset */
-                    operand( "R%02X, R%02X, %s[R%02X]", buf[5], buf[4], 
-                            xref_genwordaddr( NULL, FORMAT_NUM_16BIT, getAddress(&buf[2]) ), buf[1] & 0xFE );
-                    xref_addxref( X_PTR, addr - n, getAddress( &buf[2] ) );
-                }
-                else
-                {
-                    /* byte offset */
-                    operand( "R%02X, R%02X, %02X[R%02X]", buf[4], buf[3], buf[2], buf[1] & 0xFE );
-                }
-            }
-            else
-            {
-                /* two-op instruction */                
-                if ( buf[1] & 0x01 )
-                {
-                    /* word offset */
-                    operand( "R%02X, %s[R%02X]", buf[4], xref_genwordaddr( NULL, FORMAT_NUM_16BIT, getAddress(&buf[2]) ),
-                            buf[1] & 0xFE );
-                    xref_addxref( X_PTR, addr - n, getAddress(&buf[2]) );                    
-                }
-                else
-                {
-                    /* byte offset */
-                    operand( "R%02X, %02X[R%02X]", buf[3], buf[2], buf[1] & 0xFE );
-                }
-            }
-            break;
+        operand( "R%02X", arg1 );
     }
 }
 
-/***********************************************************
- *
- * FUNCTION
- *      do_00
- *
- * DESCRIPTION
- *      Handle instructions in the opcode group 0x
- *
- * RETURNS
- *      void
- *
- ************************************************************/
-
-static void do_00( int addr, unsigned char *buf, int n )
+OPERAND_FUNC(middle)
 {
-    char *opcodes[] = { "skip",     "clr",      "not",      "neg",
-                        "",         "dec",      "ext",      "inc",
-                        "shr",      "shl",      "shra",     "",
-                        "shrl",     "shll",     "shral",    "norml",
-            
-                        "",         "clrb",     "notb",     "negb",
-                        "",         "decb",     "extb",     "incb",
-                        "shrb",     "shlb",     "shrab",    "",
-                        "",         "",         "",         "" };
-    
-    operand( "%-6s  ", opcodes[buf[0] & 0x1F] );
-    
-    if ( buf[0] & 0x08 )
-    {
-        operand( "R%02X, ", buf[2] );
-        if ( buf[0] != 0x0F && buf[1] < 0x10 )
-            operand( "#%02X", buf[1] );
-        else
-            operand( "R%02X", buf[1] );
-    }
-    else
-        operand( "R%02X", buf[1] );
-}
+    int op = middle_op( opc );
+    int three_op = middle_is_three_operand( opc );
 
-/***********************************************************
- *
- * FUNCTION
- *      do_c0
- *
- * DESCRIPTION
- *      Handle instructions in the opcode group Cx
- *       store, push and pop
- *
- * RETURNS
- *      void
- *
- ************************************************************/
-
-static void do_c0( int addr, unsigned char *buf, int n )
-{
-    char *opcodes[] = { "st",       "bmov",     "st",       "st",
-                        "stb",      "cmpl",     "stb",      "stb",
-                        "push",     "push",     "push",     "push", 
-                        "pop",      "",         "pop",      "pop" };
-
-    if ( buf[0] == 0xC1 )
+    switch ( opc & 0x03 )
     {
-        /* 80196 -- bmov */
-        
-        operand( "bmov    R%02X, R%02X", buf[1], buf[2] );
-    }
-    else if ( buf[0] == 0xC5 )
-    {
-        /* 80196 -- cmpl */
-        
-        operand( "cmpl    R%02X, R%02X", buf[1], buf[2] );        
-    }
-    else 
-    {
-        operand( "%-6s  ", opcodes[buf[0] & 0x0F] );
-        
-        switch( buf[0] & 0x03 )
+    case ADDR_DIRECT:
         {
-            case ADDR_DIRECT:
-                if ( n == 3 )
-                    operand( "R%02X, ", buf[2] );
-                operand( "R%02X", buf[1] );
-                break;
-                
-            case ADDR_IMMED:    /* only PUSH words on to stack */
-                operand( "#%s", xref_genwordaddr( NULL, FORMAT_NUM_16BIT, getAddress(&buf[1]) ) );
-                break;
-                
-            case ADDR_INDIR:
-                if ( n == 3 )
-                    operand( "R%02X, ", buf[2] );
-                operand( "[R%02X]", buf[1] & 0xFE );
-                if ( buf[1] & 0x01 )
-                    operand( "+" );
-                break;
-                
-            case ADDR_INDEX:
-                if ( buf[0] & 0x08 )
+            UBYTE src = next( f, addr );
+            UBYTE dst_or_src2 = next( f, addr );
+
+            if ( three_op )
+            {
+                UBYTE dst = next( f, addr );
+                operand( "R%02X, R%02X, R%02X", dst, dst_or_src2, src );
+            }
+            else
+            {
+                operand( "R%02X, R%02X", dst_or_src2, src );
+            }
+        }
+        break;
+
+    case ADDR_IMMED:
+        if ( ( opc & 0x10 ) || op == 0x0F )
+        {
+            UBYTE imm = next( f, addr );
+            UBYTE dst_or_src = next( f, addr );
+
+            if ( three_op )
+            {
+                UBYTE dst = next( f, addr );
+                operand( "R%02X, ", dst );
+            }
+
+            operand( "R%02X, #%02X", dst_or_src, imm );
+        }
+        else
+        {
+            UWORD imm = next_word( f, addr );
+            UBYTE dst_or_src = next( f, addr );
+
+            if ( three_op )
+            {
+                UBYTE dst = next( f, addr );
+                operand( "R%02X, ", dst );
+            }
+
+            operand( "R%02X, #%s", dst_or_src,
+                     xref_genwordaddr( NULL, FORMAT_NUM_16BIT, imm ) );
+            xref_addxref( X_DATA, g_insn_addr, imm );
+        }
+        break;
+
+    case ADDR_INDIR:
+        {
+            UBYTE ptr = next( f, addr );
+            UBYTE dst_or_src = next( f, addr );
+
+            if ( three_op )
+            {
+                UBYTE dst = next( f, addr );
+                operand( "R%02X, ", dst );
+            }
+
+            operand( "R%02X, [R%02X]", dst_or_src, ptr & 0xFE );
+            if ( ptr & 0x01 )
+                operand( "+" );
+        }
+        break;
+
+    case ADDR_INDEX:
+        {
+            UBYTE ptr = next( f, addr );
+
+            if ( ptr & 0x01 )
+            {
+                UWORD disp = next_word( f, addr );
+                UBYTE dst_or_src = next( f, addr );
+
+                if ( three_op )
                 {
-                    /* push/pop */
-                    if ( n == 3 )
-                        operand( "%02X[R%02X]", buf[2], buf[1] & 0xFE );
-                    else
-                    {
-                        operand( "%s[R%02X]", xref_genwordaddr( NULL, FORMAT_NUM_16BIT, getAddress(&buf[2]) ), buf[1] & 0xFE );
-                        xref_addxref( X_PTR, addr - n, getAddress(&buf[2]) );
-                    }
+                    UBYTE dst = next( f, addr );
+                    operand( "R%02X, R%02X, ", dst, dst_or_src );
                 }
                 else
                 {
-                    /* st(b) */
-                    if ( n == 4 )
-                        operand( "R%02X, %02X[R%02X]", buf[3], buf[2], buf[1] & 0xFE );
-                    else
-                    {
-                        operand( "R%02X, %s[R%02X]", buf[4], xref_genwordaddr( NULL, FORMAT_NUM_16BIT, getAddress(&buf[2]) ),
-                                buf[1] & 0xFE);
-                        xref_addxref( X_PTR, addr - n, getAddress(&buf[2]) );
-                    }
+                    operand( "R%02X, ", dst_or_src );
                 }
-                break;
+
+                operand( "%s[R%02X]", xref_genwordaddr( NULL, FORMAT_NUM_16BIT, disp ),
+                         ptr & 0xFE );
+                xref_addxref( X_PTR, g_insn_addr, disp );
+            }
+            else
+            {
+                UBYTE disp = next( f, addr );
+                UBYTE dst_or_src = next( f, addr );
+
+                if ( three_op )
+                {
+                    UBYTE dst = next( f, addr );
+                    operand( "R%02X, R%02X, ", dst, dst_or_src );
+                }
+                else
+                {
+                    operand( "R%02X, ", dst_or_src );
+                }
+
+                operand( "%02X[R%02X]", disp, ptr & 0xFE );
+            }
         }
+        break;
     }
 }
 
-/***********************************************************
- *
- * FUNCTION
- *      do_e0
- *
- * DESCRIPTION
- *      Handle instructions in the opcode group Ex
- *       djnz, br, ljmp, lcall
- *
- * RETURNS
- *      void
- *
- ************************************************************/
- 
-#define OP_DJNZ     0xE0
-#define OP_DJNZW    0xE1
-#define OP_BR       0xE3
-#define OP_LJMP     0xE7
-#define OP_LCALL    0xEF
-
-static void do_e0( int addr, unsigned char *buf, int n )
+OPERAND_FUNC(store_direct)
 {
-    switch(buf[0])
+    UBYTE src = next( f, addr );
+    UBYTE dst = next( f, addr );
+
+    operand( "R%02X, R%02X", dst, src );
+}
+
+OPERAND_FUNC(store_indir)
+{
+    UBYTE ptr = next( f, addr );
+
+    operand( "[R%02X]", ptr & 0xFE );
+    if ( ptr & 0x01 )
+        operand( "+" );
+}
+
+OPERAND_FUNC(store_index)
+{
+    UBYTE ptr = next( f, addr );
+
+    if ( ptr & 0x01 )
     {
-        case OP_DJNZ:
-            operand( "djnz    R%02X, %s", buf[1], xref_genwordaddr( NULL, FORMAT_NUM_16BIT, addr + (char)buf[2] ) );
-            xref_addxref( X_JMP, addr - n, addr + (char)buf[2] );
-            break;
+        UWORD disp = next_word( f, addr );
+        UBYTE src = next( f, addr );
 
-        case OP_DJNZW:
-            /* 80196 */
-            operand( "djnzw   R%02X, %s", buf[1], xref_genwordaddr( NULL, FORMAT_NUM_16BIT, addr + (char)buf[2] ) );
-            xref_addxref( X_JMP, addr - n, addr + (char)buf[2] );
-            break;
-            
-        case OP_BR:
-            operand( "br      [R%02X]", buf[1] );
-            break;
-            
-        case OP_LJMP:
-            operand( "ljmp    %s", xref_genwordaddr( NULL, FORMAT_NUM_16BIT, addr + getOffset(buf + 1) ) );
-            xref_addxref( X_JMP, addr - n, addr + getOffset(buf + 1) );
-            break;
-        
-        case OP_LCALL:
-            operand( "lcall   %s", xref_genwordaddr( NULL, FORMAT_NUM_16BIT, addr + getOffset(buf + 1) ) );
-            xref_addxref( X_CALL, addr - n, addr + getOffset(buf + 1) );
-            break;
-        
-        default:
-            operand("???");
+        operand( "R%02X, %s[R%02X]", src,
+                 xref_genwordaddr( NULL, FORMAT_NUM_16BIT, disp ), ptr & 0xFE );
+        xref_addxref( X_PTR, g_insn_addr, disp );
+    }
+    else
+    {
+        UBYTE disp = next( f, addr );
+        UBYTE src = next( f, addr );
+
+        operand( "R%02X, %02X[R%02X]", src, disp, ptr & 0xFE );
     }
 }
 
-/*****************************************************************************
- *        Public Functions
- *****************************************************************************/
-
-/***********************************************************
- *
- * FUNCTION
- *      dasm_insn
- *
- * DESCRIPTION
- *      Disassembles the next instruction in the input stream.
- *
- * RETURNS
- *      address of next input byte
- *
- ************************************************************/
-ADDR dasm_insn( FILE *f, char * outbuf, ADDR addr )
+OPERAND_FUNC(push_imm16)
 {
-	int isSigned = 0;
-	int opc;
-	int n;
-	unsigned char buf[8];
-	int i;
-	
-	output_buffer = outbuf;
-            
-   opc = next( f, &addr );
-   if ( opc == 0xFE )
-   {
-      isSigned = 1;
-      opc = next( f, &addr );
-   }
+    UWORD imm = next_word( f, addr );
 
-   n = instrlen[opc];
-   buf[0] = opc;
-            
-   if ( n < 0 )
-   {
-      n = -n;
-      buf[1] = next( f, &addr );
-      if ( buf[1] & 1 ) 
-         n++;
-      for ( i = 2; i < n; i++ )
-         buf[i] = next( f, &addr );
-   }
-   else
-      for ( i = 1; i < n; i++ )
-         buf[i] = next( f, &addr );
-
-   if ( n == 0 )
-   {
-      /* Unknown instruction */
-      operand( "???" );
-   }
-	else
-	{
-
-            if      ( ( opc & 0xf8 ) == 0x20 )  do_sjmp   ( addr, buf, n );
-            else if ( ( opc & 0xf8 ) == 0x28 )  do_scall  ( addr, buf, n );
-            else if ( ( opc & 0xf8 ) == 0x30 )  do_jbc    ( addr, buf, n );
-            else if ( ( opc & 0xf8 ) == 0x38 )  do_jbs    ( addr, buf, n );
-            else if ( ( opc & 0xf0 ) == 0xd0 )  do_condjmp( addr, buf, n );
-            else if ( ( opc & 0xf0 ) == 0xf0 )  do_f0     ( addr, buf, n );
-            else if ( ( opc & 0xf0 ) == 0xe0 )  do_e0     ( addr, buf, n );
-            else if ( ( opc & 0xf0 ) == 0xc0 )  do_c0     ( addr, buf, n );
-            else if ( ( opc & 0xe0 ) == 0 )     do_00     ( addr, buf, n );
-            else                                do_middle ( addr, buf, n, isSigned );
-	}
-
-   return addr;
+    operand( "#%s", xref_genwordaddr( NULL, FORMAT_NUM_16BIT, imm ) );
 }
 
-/******************************************************************************/
-/******************************************************************************/
-/******************************************************************************/
+OPERAND_FUNC(pushpop_index)
+{
+    UBYTE ptr = next( f, addr );
+
+    if ( ptr & 0x01 )
+    {
+        UWORD disp = next_word( f, addr );
+
+        operand( "%s[R%02X]", xref_genwordaddr( NULL, FORMAT_NUM_16BIT, disp ), ptr & 0xFE );
+        xref_addxref( X_PTR, g_insn_addr, disp );
+    }
+    else
+    {
+        UBYTE disp = next( f, addr );
+
+        operand( "%02X[R%02X]", disp, ptr & 0xFE );
+    }
+}
+
+static const char *opcode_00( OPC opc )
+{
+    static const char *opcodes[] = {
+        "skip",     "clr",      "not",      "neg",
+        "",         "dec",      "ext",      "inc",
+        "shr",      "shl",      "shra",     "",
+        "shrl",     "shll",     "shral",    "norml",
+
+        "",         "clrb",     "notb",     "negb",
+        "",         "decb",     "extb",     "incb",
+        "shrb",     "shlb",     "shrab",    "",
+        "",         "",         "",         ""
+    };
+
+    return opcodes[opc & 0x1F];
+}
+
+static const char *opcode_middle( OPC opc )
+{
+    static char buf[16];
+    static const char *opcodes[] = {
+        "and",      "add",      "sub",      "mul",
+        "and",      "add",      "sub",      "mul",
+        "or",       "xor",      "cmp",      "div",
+        "ld",       "addc",     "subc",     "ldbse"
+    };
+    int op = middle_op( opc );
+
+    if ( op == 0x0F )
+        return ( opc & 0x10 ) ? "ldbse" : "ldbze";
+
+    if ( op == 0x03 || op == 0x0B )
+    {
+        snprintf( buf, sizeof(buf), "%s%s%s",
+                  opcodes[op],
+                  signed_prefix ? "" : "u",
+                  ( opc & 0x10 ) ? "b" : "" );
+    }
+    else
+    {
+        snprintf( buf, sizeof(buf), "%s%s", opcodes[op], ( opc & 0x10 ) ? "b" : "" );
+    }
+
+    return buf;
+}
+
+static const char *opcode_condjmp( OPC opc )
+{
+    static const char *opcodes[] = {
+        "jnst",     "jnh",      "jgt",      "jnc",
+        "jnvt",     "jnv",      "jge",      "jne",
+        "jst",      "jh",       "jle",      "jc",
+        "jvt",      "jv",       "jlt",      "je"
+    };
+
+    return opcodes[opc & 0x0F];
+}
+
+optab_t base_optab[] = {
+
+    PREFIX( signed, 0xFE )
+
+    UNDEF( 0x10 )
+    UNDEF( 0x14 )
+    UNDEF( 0x1B )
+    UNDEF( 0x1C )
+    UNDEF( 0x1D )
+    UNDEF( 0x1E )
+    UNDEF( 0x1F )
+    RANGE_DYN( 00, op00, 0x00, 0x1F, X_NONE )
+
+    RANGE( "sjmp",  sjmp,    0x20, 0x27, X_JMP )
+    RANGE( "scall", sjmp,    0x28, 0x2F, X_CALL )
+    RANGE( "jbc",   bit_rel, 0x30, 0x37, X_JMP )
+    RANGE( "jbs",   bit_rel, 0x38, 0x3F, X_JMP )
+
+    RANGE_DYN( middle, middle, 0x40, 0xBF, X_NONE )
+
+    INSN( "st",   store_direct,  0xC0, X_NONE )
+    INSN( "bmov", reg_reg_80196, 0xC1, X_NONE )
+    INSN( "st",   store_indir,   0xC2, X_NONE )
+    INSN( "st",   store_index,   0xC3, X_NONE )
+    INSN( "stb",  store_direct,  0xC4, X_NONE )
+    INSN( "cmpl", reg_reg_80196, 0xC5, X_NONE )
+    INSN( "stb",  store_indir,   0xC6, X_NONE )
+    INSN( "stb",  store_index,   0xC7, X_NONE )
+    INSN( "push", reg,           0xC8, X_NONE )
+    INSN( "push", push_imm16,    0xC9, X_NONE )
+    INSN( "push", store_indir,   0xCA, X_NONE )
+    INSN( "push", pushpop_index, 0xCB, X_NONE )
+    INSN( "pop",  reg,           0xCC, X_NONE )
+    INSN( "pop",  store_indir,   0xCE, X_NONE )
+    INSN( "pop",  pushpop_index, 0xCF, X_NONE )
+
+    RANGE_DYN( condjmp, rel8, 0xD0, 0xDF, X_JMP )
+
+    INSN( "djnz",  reg_rel8, 0xE0, X_JMP )
+    INSN( "djnzw", reg_rel8, 0xE1, X_JMP )
+    INSN( "br",    reg_ind,  0xE3, X_NONE )
+    INSN( "ljmp",  rel16,    0xE7, X_JMP )
+    INSN( "lcall", rel16,    0xEF, X_CALL )
+
+    INSN( "ret",   none,    0xF0, X_NONE )
+    INSN( "pushf", none,    0xF2, X_NONE )
+    INSN( "popf",  none,    0xF3, X_NONE )
+    INSN( "pusha", none,    0xF4, X_NONE )
+    INSN( "popa",  none,    0xF5, X_NONE )
+    INSN( "idlpd", ignore8, 0xF6, X_NONE )
+    INSN( "clrc",  none,    0xF8, X_NONE )
+    INSN( "setc",  none,    0xF9, X_NONE )
+    INSN( "di",    none,    0xFA, X_NONE )
+    INSN( "ei",    none,    0xFB, X_NONE )
+    INSN( "clrvt", none,    0xFC, X_NONE )
+    INSN( "nop",   none,    0xFD, X_NONE )
+    INSN( "rst",   none,    0xFF, X_NONE )
+
+    END
+};
