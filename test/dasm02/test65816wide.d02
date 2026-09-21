@@ -1,0 +1,6 @@
+ocpu=65816
+oacc=16
+oidx=16
+ftest65816wide.bin
+c8000
+e8011

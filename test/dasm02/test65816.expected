@@ -1,0 +1,48 @@
+   dasm02 -- MOS Technology 6502 / WDC 65C02 / WDC 65816 Disassembler --
+-----------------------------------------------------------------
+
+;   Processing "test65816.bin" (83 bytes)
+;   Disassembly start address: 0x8000
+;   String terminator: 0x00
+
+___CL_0001:
+   ora      $10, S
+   ora      ($11, S), Y
+   ora      [$12]
+   ora      [$13], Y
+   ora      $123456
+   ora      $345678, X
+   lda      $14, S
+   lda      ($15, S), Y
+   lda      [$16]
+   lda      [$17], Y
+   lda      $ABCDEF
+   lda      $ABCDEF, X
+   jml      $001234
+   jml      [___CL_0001]
+   jsl      $345678
+   jsr      (___CL_0001, X)
+   rtl      
+   brl      $8034
+   nop      
+   nop      
+   pea      #$1234
+   pei      ($18)
+   per      $8038
+   mvp      $01, $02
+   mvn      $03, $04
+   rep      #$30
+   sep      #$20
+   phb      
+   phd      
+   phk      
+   plb      
+   pld      
+   tcd      
+   tcs      
+   tdc      
+   tsc      
+   txy      
+   tyx      
+   xba      
+   xce      

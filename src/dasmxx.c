@@ -205,6 +205,8 @@ unsigned int    file_offset = 0;
 ADDR            dasm_segment_base = 0;
 unsigned int    dasm_cpu_level = 0;
 unsigned int    dasm_fpu_level = 0;
+unsigned int    dasm_acc_width = 8;
+unsigned int    dasm_idx_width = 8;
 
 /* List of display modes.  Defines must match entry position. */
 static char datchars[] = "cbsewapvmuz";
@@ -737,6 +739,8 @@ static void readlist( const char *listfile, struct params *params )
                             dasm_cpu_level = CPU_6502;
                         else if ( !strcmp( cpu, "65c02" ) || !strcmp( cpu, "65C02" ) )
                             dasm_cpu_level = CPU_65C02;
+                        else if ( !strcmp( cpu, "65816" ) || !strcmp( cpu, "65c816" ) || !strcmp( cpu, "65C816" ) )
+                            dasm_cpu_level = CPU_65816;
                         else if ( !strcmp( cpu, "86" ) || !strcmp( cpu, "8086" ) || !strcmp( cpu, "8088" ) )
                             dasm_cpu_level = 8086;
                         else if ( !strcmp( cpu, "186" ) || !strcmp( cpu, "80186" ) || !strcmp( cpu, "80188" ) )
@@ -776,6 +780,28 @@ static void readlist( const char *listfile, struct params *params )
                             dasm_fpu_level = 68040;
                         else
                             error( "%s(%u) :: Unsupported FPU option '%s'", listfile, lineno, fpu );
+                    }
+                    else if ( !strncmp( pbuf, "acc=", 4 ) )
+                    {
+                        char *width = pbuf + 4;
+
+                        if ( !strcmp( width, "8" ) )
+                            dasm_acc_width = 8;
+                        else if ( !strcmp( width, "16" ) )
+                            dasm_acc_width = 16;
+                        else
+                            error( "%s(%u) :: Unsupported accumulator width '%s'", listfile, lineno, width );
+                    }
+                    else if ( !strncmp( pbuf, "idx=", 4 ) )
+                    {
+                        char *width = pbuf + 4;
+
+                        if ( !strcmp( width, "8" ) )
+                            dasm_idx_width = 8;
+                        else if ( !strcmp( width, "16" ) )
+                            dasm_idx_width = 16;
+                        else
+                            error( "%s(%u) :: Unsupported index width '%s'", listfile, lineno, width );
                     }
                     else
                     {

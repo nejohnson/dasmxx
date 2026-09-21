@@ -1,0 +1,42 @@
+# 65816 extension coverage using default 8-bit accumulator/index immediates.
+
+03 10		# ORA dp,S
+13 11		# ORA (dp,S),Y
+07 12		# ORA [dp]
+17 13		# ORA [dp],Y
+0F 56 34 12	# ORA long
+1F 78 56 34	# ORA long,X
+A3 14		# LDA dp,S
+B3 15		# LDA (dp,S),Y
+A7 16		# LDA [dp]
+B7 17		# LDA [dp],Y
+AF EF CD AB	# LDA long
+BF EF CD AB	# LDA long,X
+5C 34 12 00	# JML long
+DC 00 80	# JML [abs]
+22 78 56 34	# JSL long
+FC 00 80	# JSR (abs,X)
+6B		# RTL
+82 02 00	# BRL
+EA
+EA
+F4 34 12	# PEA
+D4 18		# PEI
+62 FC FF	# PER
+44 01 02	# MVP
+54 03 04	# MVN
+C2 30		# REP
+E2 20		# SEP
+8B		# PHB
+0B		# PHD
+4B		# PHK
+AB		# PLB
+2B		# PLD
+5B		# TCD
+1B		# TCS
+7B		# TDC
+3B		# TSC
+9B		# TXY
+BB		# TYX
+EB		# XBA
+FB		# XCE

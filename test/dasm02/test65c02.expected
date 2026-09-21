@@ -1,4 +1,4 @@
-   dasm02 -- MOS Technology 6502 / WDC 65C02 Disassembler --
+   dasm02 -- MOS Technology 6502 / WDC 65C02 / WDC 65816 Disassembler --
 -----------------------------------------------------------------
 
 ;   Processing "test65c02.bin" (68 bytes)

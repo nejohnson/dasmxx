@@ -42,7 +42,7 @@
  * Globally-visible decoder properties
  *****************************************************************************/
 
-DASM_PROFILE( "dasm02", "MOS Technology 6502 / WDC 65C02", 3, 9, 0, 1, 1 )
+DASM_PROFILE( "dasm02", "MOS Technology 6502 / WDC 65C02 / WDC 65816", 4, 9, 0, 1, 1 )
 
 /*****************************************************************************
  * Private data types, macros, constants.
@@ -87,6 +87,31 @@ OPERAND_FUNC(imm8)
     UBYTE byte = next( f, addr );
     
     operand( "#" FORMAT_NUM_8BIT, byte );
+}
+
+OPERAND_FUNC(imm16)
+{
+    UBYTE low  = next( f, addr );
+    UBYTE high = next( f, addr );
+    UWORD word = MK_WORD( low, high );
+    
+    operand( "#" FORMAT_NUM_16BIT, word );
+}
+
+OPERAND_FUNC(imm_acc)
+{
+    if ( dasm_acc_width == 16 )
+        operand_imm16( f, addr, opc, xtype );
+    else
+        operand_imm8( f, addr, opc, xtype );
+}
+
+OPERAND_FUNC(imm_idx)
+{
+    if ( dasm_idx_width == 16 )
+        operand_imm16( f, addr, opc, xtype );
+    else
+        operand_imm8( f, addr, opc, xtype );
 }
 
 /***********************************************************
@@ -172,6 +197,50 @@ OPERAND_FUNC(abs16_Y)
 }
 
 /***********************************************************
+ * Process "abs24" operand.
+ ************************************************************/
+
+OPERAND_FUNC(abs24)
+{
+    UBYTE low_addr  = next( f, addr );
+    UBYTE mid_addr  = next( f, addr );
+    UBYTE high_addr = next( f, addr );
+    ADDR addr24     = (ADDR)low_addr | ( (ADDR)mid_addr << 8 ) | ( (ADDR)high_addr << 16 );
+
+    operand( xref_genwordaddr( NULL, "$%06X", addr24 ) );
+    xref_addxref( xtype, g_insn_addr, addr24 );
+}
+
+/***********************************************************
+ * Process "abs24_X" operand.
+ ************************************************************/
+
+OPERAND_FUNC(abs24_X)
+{
+    UBYTE low_addr  = next( f, addr );
+    UBYTE mid_addr  = next( f, addr );
+    UBYTE high_addr = next( f, addr );
+    ADDR addr24     = (ADDR)low_addr | ( (ADDR)mid_addr << 8 ) | ( (ADDR)high_addr << 16 );
+
+    operand( xref_genwordaddr( NULL, "$%06X", addr24 ) );
+    COMMA;
+    operand( "X" );
+    
+    xref_addxref( xtype, g_insn_addr, addr24 );
+}
+
+/***********************************************************
+ * Process "zeropage,S" operands.
+ ************************************************************/
+
+OPERAND_FUNC(stackrel)
+{
+    operand_zeropage( f, addr, opc, xtype );
+    COMMA;
+    operand( "S" );
+}
+
+/***********************************************************
  * Process "(ind8,X)" operands.
  ************************************************************/
 
@@ -197,6 +266,18 @@ OPERAND_FUNC(ind8_Y)
 }
 
 /***********************************************************
+ * Process "(ind8,S),Y" operands.
+ ************************************************************/
+
+OPERAND_FUNC(ind8_S_Y)
+{
+    operand( "(" );
+    operand_zeropage( f, addr, opc, xtype );
+    COMMA;
+    operand( "S), Y" );
+}
+
+/***********************************************************
  * Process "(ind8)" operands.
  ************************************************************/
 
@@ -205,6 +286,30 @@ OPERAND_FUNC(ind8)
     operand( "(" );
     operand_zeropage( f, addr, opc, xtype );
     operand( ")" );
+}
+
+/***********************************************************
+ * Process "[ind8]" operands.
+ ************************************************************/
+
+OPERAND_FUNC(ind8_long)
+{
+    operand( "[" );
+    operand_zeropage( f, addr, opc, xtype );
+    operand( "]" );
+}
+
+/***********************************************************
+ * Process "[ind8],Y" operands.
+ ************************************************************/
+
+OPERAND_FUNC(ind8_long_Y)
+{
+    operand( "[" );
+    operand_zeropage( f, addr, opc, xtype );
+    operand( "]" );
+    COMMA;
+    operand( "Y" );
 }
 
 /***********************************************************
@@ -240,6 +345,21 @@ OPERAND_FUNC(ind16_X)
 }
 
 /***********************************************************
+ * Process "[abs16]" operand.
+ ************************************************************/
+
+OPERAND_FUNC(ind16_long)
+{
+    UBYTE low_addr  = next( f, addr );
+    UBYTE high_addr = next( f, addr );
+    UWORD addr16    = MK_WORD( low_addr, high_addr );
+
+    operand( "[%s]", xref_genwordaddr( NULL, FORMAT_NUM_16BIT, addr16 ) );
+    
+    xref_addxref( xtype, g_insn_addr, addr16 );
+}
+
+/***********************************************************
  * Process "rel8" operands.
  ************************************************************/
 
@@ -250,6 +370,35 @@ OPERAND_FUNC(rel8)
     
     operand( xref_genwordaddr( NULL, FORMAT_NUM_16BIT, dest ) );
     xref_addxref( xtype, g_insn_addr, dest );
+}
+
+/***********************************************************
+ * Process "rel16" operands.
+ ************************************************************/
+
+OPERAND_FUNC(rel16)
+{
+    UBYTE low  = next( f, addr );
+    UBYTE high = next( f, addr );
+    WORD disp = (WORD)MK_WORD( low, high );
+    ADDR dest = *addr + disp;
+    
+    operand( xref_genwordaddr( NULL, FORMAT_NUM_16BIT, dest ) );
+    xref_addxref( xtype, g_insn_addr, dest );
+}
+
+/***********************************************************
+ * Process two 8-bit immediate operands.
+ ************************************************************/
+
+OPERAND_FUNC(imm8_imm8)
+{
+    UBYTE left  = next( f, addr );
+    UBYTE right = next( f, addr );
+    
+    operand( FORMAT_NUM_8BIT, left );
+    COMMA;
+    operand( FORMAT_NUM_8BIT, right );
 }
 
 /***********************************************************
@@ -310,14 +459,20 @@ optab_t base_optab[] = {
 
 #undef ACC_OP
 #define ACC_OP(M_name, M_base) \
-    INSN ( M_name, imm8,       ( 0x09 | M_base ), X_NONE ) \
+    INSN ( M_name, imm_acc,    ( 0x09 | M_base ), X_NONE ) \
     INSN ( M_name, zeropage,   ( 0x05 | M_base ), X_PTR  ) \
     INSN ( M_name, zeropage_X, ( 0x15 | M_base ), X_PTR  ) \
     INSN ( M_name, abs16,      ( 0x0D | M_base ), X_PTR  ) \
     INSN ( M_name, abs16_X,    ( 0x1D | M_base ), X_PTR  ) \
     INSN ( M_name, abs16_Y,    ( 0x19 | M_base ), X_PTR  ) \
     INSN ( M_name, ind8_X,     ( 0x01 | M_base ), X_PTR  ) \
-    INSN ( M_name, ind8_Y,     ( 0x11 | M_base ), X_PTR  )
+    INSN ( M_name, ind8_Y,     ( 0x11 | M_base ), X_PTR  ) \
+    INSN_CPU ( M_name, stackrel,    ( 0x03 | M_base ), X_PTR, CPU_65816 ) \
+    INSN_CPU ( M_name, ind8_S_Y,    ( 0x13 | M_base ), X_PTR, CPU_65816 ) \
+    INSN_CPU ( M_name, ind8_long,   ( 0x07 | M_base ), X_PTR, CPU_65816 ) \
+    INSN_CPU ( M_name, ind8_long_Y, ( 0x17 | M_base ), X_PTR, CPU_65816 ) \
+    INSN_CPU ( M_name, abs24,       ( 0x0F | M_base ), X_PTR, CPU_65816 ) \
+    INSN_CPU ( M_name, abs24_X,     ( 0x1F | M_base ), X_PTR, CPU_65816 )
 
 /*----------------------------------------------------------------------------
   Load/Store
@@ -326,13 +481,13 @@ optab_t base_optab[] = {
     ACC_OP( "lda", 0xA0 )
     INSN_CPU ( "lda", ind8,   0xB2, X_PTR, CPU_65C02 )
     
-    INSN ( "ldx", imm8,       0xA2, X_NONE )
+    INSN ( "ldx", imm_idx,    0xA2, X_NONE )
     INSN ( "ldx", zeropage,   0xA6, X_PTR  )
     INSN ( "ldx", zeropage_Y, 0xB6, X_PTR  )
     INSN ( "ldx", abs16,      0xAE, X_PTR  )
     INSN ( "ldx", abs16_Y,    0xBE, X_PTR  )
     
-    INSN ( "ldy", imm8,       0xA0, X_NONE )
+    INSN ( "ldy", imm_idx,    0xA0, X_NONE )
     INSN ( "ldy", zeropage,   0xA4, X_PTR  )
     INSN ( "ldy", zeropage_X, 0xB4, X_PTR  )
     INSN ( "ldy", abs16,      0xAC, X_PTR  )
@@ -417,11 +572,11 @@ optab_t base_optab[] = {
     INSN_CPU ( "sbc", ind8,   0xF2, X_PTR, CPU_65C02 )
     INSN_CPU ( "cmp", ind8,   0xD2, X_PTR, CPU_65C02 )
     
-    INSN ( "cpx", imm8,       0xE0, X_NONE )
+    INSN ( "cpx", imm_idx,    0xE0, X_NONE )
     INSN ( "cpx", zeropage,   0xE4, X_PTR  )
     INSN ( "cpx", abs16,      0xEC, X_PTR  )
     
-    INSN ( "cpy", imm8,       0xC0, X_NONE )
+    INSN ( "cpy", imm_idx,    0xC0, X_NONE )
     INSN ( "cpy", zeropage,   0xC4, X_PTR  )
     INSN ( "cpy", abs16,      0xCC, X_PTR  )
     
@@ -471,8 +626,13 @@ optab_t base_optab[] = {
     INSN ( "jmp", abs16,      0x4C, X_JMP  )
     INSN ( "jmp", ind16,      0x6C, X_PTR  )
     INSN_CPU ( "jmp", ind16_X,0x7C, X_PTR, CPU_65C02 )
+    INSN_CPU ( "jml", abs24,  0x5C, X_JMP, CPU_65816 )
+    INSN_CPU ( "jml", ind16_long, 0xDC, X_PTR, CPU_65816 )
     INSN ( "jsr", abs16,      0x20, X_CALL )
+    INSN_CPU ( "jsl", abs24,  0x22, X_CALL, CPU_65816 )
+    INSN_CPU ( "jsr", ind16_X,0xFC, X_PTR, CPU_65816 )
     INSN ( "rts", none,       0x60, X_NONE )
+    INSN_CPU ( "rtl", none,   0x6B, X_NONE, CPU_65816 )
     
 /*----------------------------------------------------------------------------
   Conditional Branch
@@ -487,39 +647,40 @@ optab_t base_optab[] = {
     INSN  ( "bvc",    rel8, 0x50, X_JMP )
     INSN  ( "bvs",    rel8, 0x70, X_JMP )
     INSN_CPU ( "bra", rel8, 0x80, X_JMP, CPU_65C02 )
+    INSN_CPU ( "brl", rel16, 0x82, X_JMP, CPU_65816 )
 
-    INSN_DYN_CPU ( rmb, zeropage,      0x07, X_PTR, CPU_65C02 )
-    INSN_DYN_CPU ( rmb, zeropage,      0x17, X_PTR, CPU_65C02 )
-    INSN_DYN_CPU ( rmb, zeropage,      0x27, X_PTR, CPU_65C02 )
-    INSN_DYN_CPU ( rmb, zeropage,      0x37, X_PTR, CPU_65C02 )
-    INSN_DYN_CPU ( rmb, zeropage,      0x47, X_PTR, CPU_65C02 )
-    INSN_DYN_CPU ( rmb, zeropage,      0x57, X_PTR, CPU_65C02 )
-    INSN_DYN_CPU ( rmb, zeropage,      0x67, X_PTR, CPU_65C02 )
-    INSN_DYN_CPU ( rmb, zeropage,      0x77, X_PTR, CPU_65C02 )
-    INSN_DYN_CPU ( smb, zeropage,      0x87, X_PTR, CPU_65C02 )
-    INSN_DYN_CPU ( smb, zeropage,      0x97, X_PTR, CPU_65C02 )
-    INSN_DYN_CPU ( smb, zeropage,      0xA7, X_PTR, CPU_65C02 )
-    INSN_DYN_CPU ( smb, zeropage,      0xB7, X_PTR, CPU_65C02 )
-    INSN_DYN_CPU ( smb, zeropage,      0xC7, X_PTR, CPU_65C02 )
-    INSN_DYN_CPU ( smb, zeropage,      0xD7, X_PTR, CPU_65C02 )
-    INSN_DYN_CPU ( smb, zeropage,      0xE7, X_PTR, CPU_65C02 )
-    INSN_DYN_CPU ( smb, zeropage,      0xF7, X_PTR, CPU_65C02 )
-    INSN_DYN_CPU ( bbr, zeropage_rel8, 0x0F, X_JMP, CPU_65C02 )
-    INSN_DYN_CPU ( bbr, zeropage_rel8, 0x1F, X_JMP, CPU_65C02 )
-    INSN_DYN_CPU ( bbr, zeropage_rel8, 0x2F, X_JMP, CPU_65C02 )
-    INSN_DYN_CPU ( bbr, zeropage_rel8, 0x3F, X_JMP, CPU_65C02 )
-    INSN_DYN_CPU ( bbr, zeropage_rel8, 0x4F, X_JMP, CPU_65C02 )
-    INSN_DYN_CPU ( bbr, zeropage_rel8, 0x5F, X_JMP, CPU_65C02 )
-    INSN_DYN_CPU ( bbr, zeropage_rel8, 0x6F, X_JMP, CPU_65C02 )
-    INSN_DYN_CPU ( bbr, zeropage_rel8, 0x7F, X_JMP, CPU_65C02 )
-    INSN_DYN_CPU ( bbs, zeropage_rel8, 0x8F, X_JMP, CPU_65C02 )
-    INSN_DYN_CPU ( bbs, zeropage_rel8, 0x9F, X_JMP, CPU_65C02 )
-    INSN_DYN_CPU ( bbs, zeropage_rel8, 0xAF, X_JMP, CPU_65C02 )
-    INSN_DYN_CPU ( bbs, zeropage_rel8, 0xBF, X_JMP, CPU_65C02 )
-    INSN_DYN_CPU ( bbs, zeropage_rel8, 0xCF, X_JMP, CPU_65C02 )
-    INSN_DYN_CPU ( bbs, zeropage_rel8, 0xDF, X_JMP, CPU_65C02 )
-    INSN_DYN_CPU ( bbs, zeropage_rel8, 0xEF, X_JMP, CPU_65C02 )
-    INSN_DYN_CPU ( bbs, zeropage_rel8, 0xFF, X_JMP, CPU_65C02 )
+    INSN_DYN_CPU_RANGE ( rmb, zeropage,      0x07, X_PTR, CPU_65C02, CPU_65C02 )
+    INSN_DYN_CPU_RANGE ( rmb, zeropage,      0x17, X_PTR, CPU_65C02, CPU_65C02 )
+    INSN_DYN_CPU_RANGE ( rmb, zeropage,      0x27, X_PTR, CPU_65C02, CPU_65C02 )
+    INSN_DYN_CPU_RANGE ( rmb, zeropage,      0x37, X_PTR, CPU_65C02, CPU_65C02 )
+    INSN_DYN_CPU_RANGE ( rmb, zeropage,      0x47, X_PTR, CPU_65C02, CPU_65C02 )
+    INSN_DYN_CPU_RANGE ( rmb, zeropage,      0x57, X_PTR, CPU_65C02, CPU_65C02 )
+    INSN_DYN_CPU_RANGE ( rmb, zeropage,      0x67, X_PTR, CPU_65C02, CPU_65C02 )
+    INSN_DYN_CPU_RANGE ( rmb, zeropage,      0x77, X_PTR, CPU_65C02, CPU_65C02 )
+    INSN_DYN_CPU_RANGE ( smb, zeropage,      0x87, X_PTR, CPU_65C02, CPU_65C02 )
+    INSN_DYN_CPU_RANGE ( smb, zeropage,      0x97, X_PTR, CPU_65C02, CPU_65C02 )
+    INSN_DYN_CPU_RANGE ( smb, zeropage,      0xA7, X_PTR, CPU_65C02, CPU_65C02 )
+    INSN_DYN_CPU_RANGE ( smb, zeropage,      0xB7, X_PTR, CPU_65C02, CPU_65C02 )
+    INSN_DYN_CPU_RANGE ( smb, zeropage,      0xC7, X_PTR, CPU_65C02, CPU_65C02 )
+    INSN_DYN_CPU_RANGE ( smb, zeropage,      0xD7, X_PTR, CPU_65C02, CPU_65C02 )
+    INSN_DYN_CPU_RANGE ( smb, zeropage,      0xE7, X_PTR, CPU_65C02, CPU_65C02 )
+    INSN_DYN_CPU_RANGE ( smb, zeropage,      0xF7, X_PTR, CPU_65C02, CPU_65C02 )
+    INSN_DYN_CPU_RANGE ( bbr, zeropage_rel8, 0x0F, X_JMP, CPU_65C02, CPU_65C02 )
+    INSN_DYN_CPU_RANGE ( bbr, zeropage_rel8, 0x1F, X_JMP, CPU_65C02, CPU_65C02 )
+    INSN_DYN_CPU_RANGE ( bbr, zeropage_rel8, 0x2F, X_JMP, CPU_65C02, CPU_65C02 )
+    INSN_DYN_CPU_RANGE ( bbr, zeropage_rel8, 0x3F, X_JMP, CPU_65C02, CPU_65C02 )
+    INSN_DYN_CPU_RANGE ( bbr, zeropage_rel8, 0x4F, X_JMP, CPU_65C02, CPU_65C02 )
+    INSN_DYN_CPU_RANGE ( bbr, zeropage_rel8, 0x5F, X_JMP, CPU_65C02, CPU_65C02 )
+    INSN_DYN_CPU_RANGE ( bbr, zeropage_rel8, 0x6F, X_JMP, CPU_65C02, CPU_65C02 )
+    INSN_DYN_CPU_RANGE ( bbr, zeropage_rel8, 0x7F, X_JMP, CPU_65C02, CPU_65C02 )
+    INSN_DYN_CPU_RANGE ( bbs, zeropage_rel8, 0x8F, X_JMP, CPU_65C02, CPU_65C02 )
+    INSN_DYN_CPU_RANGE ( bbs, zeropage_rel8, 0x9F, X_JMP, CPU_65C02, CPU_65C02 )
+    INSN_DYN_CPU_RANGE ( bbs, zeropage_rel8, 0xAF, X_JMP, CPU_65C02, CPU_65C02 )
+    INSN_DYN_CPU_RANGE ( bbs, zeropage_rel8, 0xBF, X_JMP, CPU_65C02, CPU_65C02 )
+    INSN_DYN_CPU_RANGE ( bbs, zeropage_rel8, 0xCF, X_JMP, CPU_65C02, CPU_65C02 )
+    INSN_DYN_CPU_RANGE ( bbs, zeropage_rel8, 0xDF, X_JMP, CPU_65C02, CPU_65C02 )
+    INSN_DYN_CPU_RANGE ( bbs, zeropage_rel8, 0xEF, X_JMP, CPU_65C02, CPU_65C02 )
+    INSN_DYN_CPU_RANGE ( bbs, zeropage_rel8, 0xFF, X_JMP, CPU_65C02, CPU_65C02 )
     
 /*----------------------------------------------------------------------------
   Status Flag Changes
@@ -542,6 +703,27 @@ optab_t base_optab[] = {
     INSN ( "rti",     none, 0x40, X_NONE )
     INSN_CPU ( "wai", none, 0xCB, X_NONE, CPU_65C02 )
     INSN_CPU ( "stp", none, 0xDB, X_NONE, CPU_65C02 )
+    INSN_CPU ( "cop", imm8, 0x02, X_NONE, CPU_65816 )
+    INSN_CPU ( "mvn", imm8_imm8, 0x54, X_NONE, CPU_65816 )
+    INSN_CPU ( "mvp", imm8_imm8, 0x44, X_NONE, CPU_65816 )
+    INSN_CPU ( "pea", imm16, 0xF4, X_IMM, CPU_65816 )
+    INSN_CPU ( "pei", ind8, 0xD4, X_PTR, CPU_65816 )
+    INSN_CPU ( "per", rel16, 0x62, X_IMM, CPU_65816 )
+    INSN_CPU ( "phb", none, 0x8B, X_NONE, CPU_65816 )
+    INSN_CPU ( "phd", none, 0x0B, X_NONE, CPU_65816 )
+    INSN_CPU ( "phk", none, 0x4B, X_NONE, CPU_65816 )
+    INSN_CPU ( "plb", none, 0xAB, X_NONE, CPU_65816 )
+    INSN_CPU ( "pld", none, 0x2B, X_NONE, CPU_65816 )
+    INSN_CPU ( "rep", imm8, 0xC2, X_NONE, CPU_65816 )
+    INSN_CPU ( "sep", imm8, 0xE2, X_NONE, CPU_65816 )
+    INSN_CPU ( "tcd", none, 0x5B, X_NONE, CPU_65816 )
+    INSN_CPU ( "tcs", none, 0x1B, X_NONE, CPU_65816 )
+    INSN_CPU ( "tdc", none, 0x7B, X_NONE, CPU_65816 )
+    INSN_CPU ( "tsc", none, 0x3B, X_NONE, CPU_65816 )
+    INSN_CPU ( "txy", none, 0x9B, X_NONE, CPU_65816 )
+    INSN_CPU ( "tyx", none, 0xBB, X_NONE, CPU_65816 )
+    INSN_CPU ( "xba", none, 0xEB, X_NONE, CPU_65816 )
+    INSN_CPU ( "xce", none, 0xFB, X_NONE, CPU_65816 )
 
     END
 };

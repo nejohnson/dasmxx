@@ -17,7 +17,7 @@ Supported Processors:
   * Microchip dsPIC33
   * Microchip PIC10/12/16/18
   * Microchip PIC24
-  * MOS Technology 6502 / WDC 65C02
+  * MOS Technology 6502 / WDC 65C02 / WDC 65816
   * Motorola 68000/68010/68020/68030/68040 + 68881/68882/68040 FPU
   * Motorola 6805 family
   * Motorola 6809

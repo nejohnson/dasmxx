@@ -1,0 +1,8 @@
+# 65816 immediate widths selected by command-file options.
+
+A9 34 12	# LDA #imm16
+69 78 56	# ADC #imm16
+C9 BC 9A	# CMP #imm16
+A2 11 22	# LDX #imm16
+A0 33 44	# LDY #imm16
+E0 55 66	# CPX #imm16
