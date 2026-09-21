@@ -1,0 +1,9 @@
+ocpu=msp430x
+ftestx.bin
+c0000 Start
+e0048
+
+l23456 Abs23456
+l3ABCD Abs3ABCD
+l81234 CallAbs
+l9ABCD CallImm

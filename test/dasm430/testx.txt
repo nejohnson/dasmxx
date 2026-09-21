@@ -1,0 +1,16 @@
+# TI MSP430X address-instruction coverage.  Words are little-endian.
+
+# Multiple-register and address rotate forms.
+2A 14 19 15 39 16 0F 17
+45 00 56 05 47 0A 58 0F
+
+# 20-bit ALU address instructions.
+A6 01 45 23 D6 05 B7 0A DE BC
+
+# MOVA 20-bit address forms.
+06 05 16 05 27 02 56 34 39 08 10 00
+63 0A CD AB 7C 0B 20 00 8D 04 78 56 CF 0E
+
+# CALLA forms and RETA.
+44 13 55 13 10 00 66 13 77 13
+88 13 34 12 B9 13 CD AB 10 01

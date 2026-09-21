@@ -6,37 +6,37 @@
 ;   String terminator: 0x00
 
 Start:
-   MOV    #0x1234,R5
-   MOV.B  @R6+,R7
-   ADD    R5,R6
-   ADDC   #4,R8
-   SUBC   #8,R9
-   SUB    #0,R10
-   CMP    #1,R11
-   DADD   #2,R12
-   BIT    #-1,R13
-   BIC    R4,0x0010(R5)
-   BIS    &Abs2000,R6
-   XOR    0x0004(R7),R8
-   AND    R9,&Abs3000
-   MOV    DataLabel,R10
-   MOV    R10,DataLabel
-   RRC    R5
-   RRC.B  R6
-   SWPB   R7
-   RRA    R8
-   RRA.B  R9
-   SXT    R10
-   PUSH   R11
-   PUSH.B @R12+
-   CALL   #CallTarget
+   MOV     #0x1234,R5
+   MOV.B   @R6+,R7
+   ADD     R5,R6
+   ADDC    #4,R8
+   SUBC    #8,R9
+   SUB     #0,R10
+   CMP     #1,R11
+   DADD    #2,R12
+   BIT     #-1,R13
+   BIC     R4,0x0010(R5)
+   BIS     &Abs2000,R6
+   XOR     0x0004(R7),R8
+   AND     R9,&Abs3000
+   MOV     DataLabel,R10
+   MOV     R10,DataLabel
+   RRC     R5
+   RRC.B   R6
+   SWPB    R7
+   RRA     R8
+   RRA.B   R9
+   SXT     R10
+   PUSH    R11
+   PUSH.B  @R12+
+   CALL    #CallTarget
 DataLabel:
-   RETI   
-   JNE    0x0048
-   JEQ    0x0042
-   JNC    0x004C
-   JC     0x0046
-   JN     0x0050
-   JGE    0x004A
-   JL     0x0054
-   JMP    0x004E
+   RETI    
+   JNE     0x0048
+   JEQ     0x0042
+   JNC     0x004C
+   JC      0x0046
+   JN      0x0050
+   JGE     0x004A
+   JL      0x0054
+   JMP     0x004E

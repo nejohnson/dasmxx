@@ -39,13 +39,14 @@
  * Globally-visible decoder properties
  *****************************************************************************/
 
-DASM_PROFILE( "dasm430", "TI MSP430", 6, 7, 0, 2, 1 )
+DASM_PROFILE( "dasm430", "TI MSP430", 6, 8, 0, 2, 1 )
 
 /*****************************************************************************
  * Private data types, macros, constants.
  *****************************************************************************/
 
 #define FORMAT_NUM_16BIT        "0x%04X"
+#define FORMAT_NUM_20BIT        "0x%05X"
 
 static const char *regs[] = {
     "PC", "SP", "SR", "CG",
@@ -72,6 +73,13 @@ static void addr16( UWORD a, XREF_TYPE xtype )
     xref_addxref( xtype, g_insn_addr, a );
 }
 
+static void addr20( ADDR a, XREF_TYPE xtype )
+{
+    a &= 0xFFFFF;
+    operand( xref_genwordaddr( NULL, FORMAT_NUM_20BIT, a ) );
+    xref_addxref( xtype, g_insn_addr, a );
+}
+
 static int sign_extend10( unsigned int v )
 {
     v &= 0x03FF;
@@ -91,6 +99,11 @@ static UWORD next_word( FILE *f, ADDR *addr )
     return nextw( f, addr );
 }
 
+static WORD next_signed_word( FILE *f, ADDR *addr )
+{
+    return (WORD)next_word( f, addr );
+}
+
 static void indexed_addr( FILE *f, ADDR *addr, unsigned int r, XREF_TYPE xtype )
 {
     UWORD disp = next_word( f, addr );
@@ -108,6 +121,28 @@ static void indexed_addr( FILE *f, ADDR *addr, unsigned int r, XREF_TYPE xtype )
     else
     {
         operand( FORMAT_NUM_16BIT "(%s)", disp, regs[r & 0x0F] );
+    }
+}
+
+static void indexed_addr20( FILE *f, ADDR *addr, unsigned int r, unsigned int ext,
+                            XREF_TYPE xtype )
+{
+    WORD disp = next_signed_word( f, addr );
+    ADDR a = ( ( ext & 0x0F ) << 16 ) | ( (UWORD)disp );
+
+    if ( r == 0 )
+    {
+        ADDR target = *addr + disp + ( ( ext & 0x0F ) << 16 );
+        addr20( target, xtype );
+    }
+    else if ( r == 2 )
+    {
+        operand( "&" );
+        addr20( a, xtype );
+    }
+    else
+    {
+        operand( FORMAT_NUM_16BIT "(%s)", (UWORD)disp, regs[r & 0x0F] );
     }
 }
 
@@ -200,6 +235,36 @@ static const char *opcode_rra( OPC opc )  { return opcode_with_size( "RRA",  opc
 static const char *opcode_push( OPC opc ) { return opcode_with_size( "PUSH", opc ); }
 static const char *opcode_jump( OPC opc ) { return jump_ops[( opc >> 10 ) & 0x07]; }
 
+static const char *opcode_rrxm( OPC opc )
+{
+    static const char *names[] = { "RRCM", "RRAM", "RLAM", "RRUM" };
+    static char text[16];
+
+    sprintf( text, "%s.%c", names[( opc >> 8 ) & 0x03], ( opc & 0x0010 ) ? 'W' : 'A' );
+    return text;
+}
+
+static const char *opcode_pushm( OPC opc )
+{
+    return ( opc & 0x0100 ) ? "PUSHM.W" : "PUSHM.A";
+}
+
+static const char *opcode_popm( OPC opc )
+{
+    return ( opc & 0x0100 ) ? "POPM.W" : "POPM.A";
+}
+
+static const char *opcode_alu_a( OPC opc )
+{
+    switch ( opc & 0x00B0 )
+    {
+    case 0x0090: return "CMPA";
+    case 0x00A0: return "ADDA";
+    case 0x00B0: return "SUBA";
+    default:     return "???";
+    }
+}
+
 #define MASK_DYN(M_opcode_fn, M_ops, M_mask, M_val, M_xt) \
     { .type      = OPTAB_MASK,                            \
       .opcode    = "DYNAMIC",                             \
@@ -208,6 +273,17 @@ static const char *opcode_jump( OPC opc ) { return jump_ops[( opc >> 10 ) & 0x07
       .xtype     = M_xt,                                   \
       .u.mask.mask = M_mask,                               \
       .u.mask.val  = M_val                                 \
+    },
+
+#define MASK_DYN_CPU(M_opcode_fn, M_ops, M_mask, M_val, M_xt, M_min_cpu) \
+    { .type      = OPTAB_MASK,                                           \
+      .min_cpu   = M_min_cpu,                                            \
+      .opcode    = "DYNAMIC",                                            \
+      .opcode_fn = opcode_ ## M_opcode_fn,                                \
+      .operands  = operand_ ## M_ops,                                     \
+      .xtype     = M_xt,                                                  \
+      .u.mask.mask = M_mask,                                              \
+      .u.mask.val  = M_val                                                \
     },
 
 /*****************************************************************************
@@ -246,11 +322,170 @@ OPERAND_FUNC(dual)
     dst_operand( f, addr, dst, ad, xtype );
 }
 
+OPERAND_FUNC(rrxm)
+{
+    unsigned int count = ( ( opc >> 10 ) & 0x03 ) + 1;
+    unsigned int dst = opc & 0x0F;
+
+    operand( "#%u,", count );
+    reg( dst );
+}
+
+OPERAND_FUNC(pushm)
+{
+    unsigned int count = ( ( opc >> 4 ) & 0x0F ) + 1;
+    unsigned int src = opc & 0x0F;
+
+    operand( "#%u,", count );
+    reg( src );
+}
+
+OPERAND_FUNC(popm)
+{
+    unsigned int count = ( ( opc >> 4 ) & 0x0F ) + 1;
+    unsigned int dst = ( opc & 0x0F ) + count - 1;
+
+    operand( "#%u,", count );
+    reg( dst );
+}
+
+OPERAND_FUNC(alu_a)
+{
+    unsigned int src = ( opc >> 8 ) & 0x0F;
+    unsigned int dst = opc & 0x0F;
+
+    if ( opc & 0x0040 )
+        reg( src );
+    else
+    {
+        ADDR imm = ( src << 16 ) | next_word( f, addr );
+        operand( "#" FORMAT_NUM_20BIT, imm );
+    }
+
+    operand( "," );
+    reg( dst );
+}
+
+OPERAND_FUNC(mova)
+{
+    unsigned int src = ( opc >> 8 ) & 0x0F;
+    unsigned int mode = ( opc >> 4 ) & 0x0F;
+    unsigned int dst = opc & 0x0F;
+
+    switch ( mode )
+    {
+    case 0:
+        operand( "@%s", regs[src] );
+        operand( "," );
+        reg( dst );
+        break;
+    case 1:
+        operand( "@%s+", regs[src] );
+        operand( "," );
+        reg( dst );
+        break;
+    case 2:
+        operand( "&" );
+        addr20( ( src << 16 ) | next_word( f, addr ), xtype );
+        operand( "," );
+        reg( dst );
+        break;
+    case 3:
+        indexed_addr20( f, addr, src, 0, xtype );
+        operand( "," );
+        reg( dst );
+        break;
+    case 6:
+        reg( src );
+        operand( ",&" );
+        addr20( ( dst << 16 ) | next_word( f, addr ), xtype );
+        break;
+    case 7:
+        reg( src );
+        operand( "," );
+        indexed_addr20( f, addr, dst, 0, xtype );
+        break;
+    case 8:
+        operand( "#" FORMAT_NUM_20BIT, ( src << 16 ) | next_word( f, addr ) );
+        operand( "," );
+        reg( dst );
+        break;
+    case 12:
+        reg( src );
+        operand( "," );
+        reg( dst );
+        break;
+    }
+}
+
+OPERAND_FUNC(calla)
+{
+    unsigned int mode = ( opc >> 4 ) & 0x0F;
+    unsigned int regnum = opc & 0x0F;
+
+    switch ( mode )
+    {
+    case 4:
+        reg( regnum );
+        break;
+    case 5:
+        indexed_addr20( f, addr, regnum, 0, X_CALL );
+        break;
+    case 6:
+        operand( "@%s", regs[regnum] );
+        break;
+    case 7:
+        operand( "@%s+", regs[regnum] );
+        break;
+    case 8:
+        operand( "&" );
+        addr20( ( regnum << 16 ) | next_word( f, addr ), X_CALL );
+        break;
+    case 9:
+        {
+            WORD disp = next_signed_word( f, addr );
+            ADDR target = *addr + disp + ( regnum << 16 );
+            addr20( target, X_CALL );
+        }
+        break;
+    case 11:
+        operand( "#" );
+        addr20( ( regnum << 16 ) | next_word( f, addr ), X_CALL );
+        break;
+    default:
+        operand( "?" );
+        break;
+    }
+}
+
 /*****************************************************************************
  * Instruction Decoding Tables
  *****************************************************************************/
 
 optab_t base_optab[] = {
+    /*
+     * MSP430X address instructions that do not use the extension word.
+     */
+    MASK_CPU ( "RETA",  none,  0xFFFF, 0x0110, X_NONE, CPU_MSP430X )
+    MASK_DYN_CPU ( rrxm,  rrxm,  0xF3E0, 0x0040, X_NONE, CPU_MSP430X )
+    MASK_DYN_CPU ( rrxm,  rrxm,  0xF3E0, 0x0140, X_NONE, CPU_MSP430X )
+    MASK_DYN_CPU ( rrxm,  rrxm,  0xF3E0, 0x0240, X_NONE, CPU_MSP430X )
+    MASK_DYN_CPU ( rrxm,  rrxm,  0xF3E0, 0x0340, X_NONE, CPU_MSP430X )
+    MASK_DYN_CPU ( alu_a, alu_a, 0xF0B0, 0x0090, X_IMM,  CPU_MSP430X )
+    MASK_DYN_CPU ( alu_a, alu_a, 0xF0B0, 0x00A0, X_IMM,  CPU_MSP430X )
+    MASK_DYN_CPU ( alu_a, alu_a, 0xF0B0, 0x00B0, X_IMM,  CPU_MSP430X )
+    MASK_CPU     ( "MOVA", mova,  0xF0E0, 0x0000, X_PTR,  CPU_MSP430X )
+    MASK_CPU     ( "MOVA", mova,  0xF0E0, 0x0020, X_PTR,  CPU_MSP430X )
+    MASK_CPU     ( "MOVA", mova,  0xF0E0, 0x0060, X_PTR,  CPU_MSP430X )
+    MASK_CPU     ( "MOVA", mova,  0xF0F0, 0x0080, X_IMM,  CPU_MSP430X )
+    MASK_CPU     ( "MOVA", mova,  0xF0F0, 0x00C0, X_REG,  CPU_MSP430X )
+    MASK_CPU     ( "CALLA", calla, 0xFFC0, 0x1340, X_CALL, CPU_MSP430X )
+    MASK_CPU     ( "CALLA", calla, 0xFFF0, 0x1380, X_CALL, CPU_MSP430X )
+    MASK_CPU     ( "CALLA", calla, 0xFFF0, 0x1390, X_CALL, CPU_MSP430X )
+    MASK_CPU     ( "CALLA", calla, 0xFFF0, 0x13B0, X_CALL, CPU_MSP430X )
+    MASK_DYN_CPU ( pushm, pushm, 0xFE00, 0x1400, X_NONE, CPU_MSP430X )
+    MASK_DYN_CPU ( popm,  popm,  0xFE00, 0x1600, X_NONE, CPU_MSP430X )
+
     /*
      * Format II: single-operand instructions.
      */

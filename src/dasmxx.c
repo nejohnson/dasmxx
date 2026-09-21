@@ -745,6 +745,10 @@ static void readlist( const char *listfile, struct params *params )
                             dasm_cpu_level = CPU_Z80;
                         else if ( !strcmp( cpu, "z180" ) || !strcmp( cpu, "Z180" ) || !strcmp( cpu, "hd64180" ) || !strcmp( cpu, "HD64180" ) )
                             dasm_cpu_level = CPU_Z180;
+                        else if ( !strcmp( cpu, "msp430" ) || !strcmp( cpu, "MSP430" ) )
+                            dasm_cpu_level = CPU_MSP430;
+                        else if ( !strcmp( cpu, "msp430x" ) || !strcmp( cpu, "MSP430X" ) || !strcmp( cpu, "cpux" ) || !strcmp( cpu, "CPUX" ) )
+                            dasm_cpu_level = CPU_MSP430X;
                         else if ( !strcmp( cpu, "86" ) || !strcmp( cpu, "8086" ) || !strcmp( cpu, "8088" ) )
                             dasm_cpu_level = 8086;
                         else if ( !strcmp( cpu, "186" ) || !strcmp( cpu, "80186" ) || !strcmp( cpu, "80188" ) )
