@@ -16,6 +16,7 @@ endif
 TARGETS = dasm78k3$(X) \
           dasm96$(X)   \
           dasm9900$(X) \
+          dasm430$(X)  \
           dasm02$(X)   \
           dasm6800$(X) \
           dasm6811$(X) \
@@ -66,6 +67,13 @@ D9900_OBJS = ${CORE_OBJS} decode9900.o
 
 dasm9900: ${D9900_OBJS}
 	$(CC) ${D9900_OBJS} -o ${@}
+
+#################################################
+
+D430_OBJS = ${CORE_OBJS} decode430.o
+
+dasm430: ${D430_OBJS}
+	$(CC) ${D430_OBJS} -o ${@}
 
 #################################################
 
@@ -246,6 +254,7 @@ what:
 	@echo "     dasm78k3   -- NEC 78K3"
 	@echo "     dasm96     -- Intel 8096"
 	@echo "     dasm9900   -- TI TMS9900, TMS9995"
+	@echo "     dasm430    -- TI MSP430"
 	@echo "     dasm02     -- MOS 6502"
 	@echo "     dasm6800   -- Motorola 6800, 6801, 6803"
 	@echo "     dasm6811   -- Motorola 68HC11"

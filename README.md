@@ -27,6 +27,7 @@ Supported Processors:
   * RCA CDP1802
   * STMicroelectronics STM8
   * SunPlus µNSP
+  * Texas Instruments MSP430
   * Texas Instruments TMS7000
   * Texas Instruments TMS9900/TMS9995
   * Zilog Z8

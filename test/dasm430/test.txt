@@ -1,0 +1,15 @@
+# TI MSP430 core instruction-form coverage.  Words are little-endian.
+
+# Format I dual-operand instructions.
+35 40 34 12 77 46 06 55
+28 62 39 72 0A 83 1B 93 2C A3 3D B3
+85 C4 10 00 16 D2 00 20 18 E7 04 00 82 F9 00 30
+1A 40 18 00 80 4A 14 00
+
+# Format II single-operand instructions.
+05 10 46 10 87 10 08 11 49 11 8A 11
+0B 12 7C 12 B0 12 34 12 00 13
+
+# Format III jumps.
+02 20 FE 27 02 28 FE 2F
+02 30 FE 37 02 38 FE 3F

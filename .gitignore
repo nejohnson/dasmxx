@@ -15,6 +15,7 @@ src/dasm68k
 src/dasm85
 src/dasm96
 src/dasm9900
+src/dasm430
 src/dasmavr
 src/dasmm8
 src/dasmz8

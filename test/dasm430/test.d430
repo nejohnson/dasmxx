@@ -1,0 +1,8 @@
+ftest.bin
+c0000 Start
+e0052
+
+l0040 DataLabel
+l1234 CallTarget
+l2000 Abs2000
+l3000 Abs3000
