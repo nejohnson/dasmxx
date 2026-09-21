@@ -16,6 +16,7 @@ src/dasm85
 src/dasm96
 src/dasmavr
 src/dasmm8
+src/dasmz8
 src/dasmpic12
 src/dasmpic16
 src/dasmpic18

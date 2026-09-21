@@ -28,6 +28,7 @@ Supported Processors:
   * STMicroelectronics STM8
   * SunPlus µNSP
   * Texas Instruments TMS7000
+  * Zilog Z8
   * Zilog Z80 / Z180 / Hitachi HD64180
 
 Planned Features:

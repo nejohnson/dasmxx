@@ -1,0 +1,63 @@
+   dasmz8 -- Zilog Z8 Disassembler --
+-----------------------------------------------------------------
+
+;   Processing "test.bin" (115 bytes)
+;   Disassembly start address: 0x0000
+;   String terminator: 0x00
+
+Start:
+   dec   r0
+   dec   @r1
+   ld    r2,#$55
+   inc   r3
+   add   r1,r2
+   adc   r3,@r4
+   sub   r5,r6
+   sbc   r7,@r8
+   or    r9,rA
+   and   rB,@rC
+   tcm   rD,rE
+   tm    rF,@r0
+   cp    r2,r1
+   xor   r4,@r3
+   add   r2,r1
+   adc   @r4,r3
+   sub   r6,r5
+   sbc   @r8,r7
+   or    rA,r9
+   and   @rC,rB
+   tcm   rE,rD
+   tm    @r0,rF
+   cp    r1,r2
+   xor   @r3,r4
+   add   $20,#$01
+   adc   @$21,#$02
+   sub   $22,#$03
+   sbc   @$23,#$04
+   or    $24,#$05
+   and   @$25,#$06
+   tcm   $26,#$07
+   tm    @$27,#$08
+   cp    $2A,#$09
+   xor   @$2B,#$0A
+   ld    r1,r2
+   ld    r4,r3
+   djnz  r2,$0053
+   jr    ule,$0051
+   jp    ov,TestAddr
+   inc   r5
+   stop  
+   halt  
+   decw  $20
+   da    $21
+   pop   $22
+   com   $23
+   push  $24
+   decw  @$25
+   rl    $26
+   incw  @$27
+   clr   $28
+   rrc   $29
+   sra   $2A
+   rr    $2B
+   swap  $2C

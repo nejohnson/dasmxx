@@ -1,0 +1,21 @@
+# Zilog Z8 instruction-form coverage.
+
+# Register/indirect register decrement and immediate load.
+00 11 2C 55 3E
+
+# ALU register/register and register/indirect register forms.
+02 12 13 34 22 56 33 78 42 9A 53 BC 62 DE 73 F0 A2 21 B3 43
+
+# ALU register/working-register and indirect/working-register forms.
+04 12 15 34 24 56 35 78 44 9A 55 BC 64 DE 75 F0 A4 21 B5 43
+
+# ALU register/immediate and indirect-register/immediate forms.
+06 20 01 17 21 02 26 22 03 37 23 04 46 24 05 57 25 06
+66 26 07 77 27 08 A6 2A 09 B7 2B 0A
+
+# Load, DJNZ, JR, JP, and INC forms.
+08 12 19 34 2A 02 3B FE 4D 12 34 5E
+
+# Unary/control 0x?F forms.
+0F 1F 2F 20 4F 21 5F 22 6F 23 7F 24 8F 25
+9F 26 AF 27 BF 28 CF 29 DF 2A EF 2B FF 2C

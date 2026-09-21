@@ -23,6 +23,7 @@ TARGETS = dasm78k3$(X) \
           dasm09$(X)   \
           dasmavr$(X)  \
           dasm51$(X)   \
+          dasmz8$(X)   \
           dasmz80$(X)  \
           dasm48$(X)   \
           dasmx86$(X)  \
@@ -107,6 +108,13 @@ D51_OBJS = ${CORE_OBJS} decode51.o
 dasm51: ${D51_OBJS}
 	$(CC) ${D51_OBJS} -o ${@}
 	
+#################################################
+
+DZ8_OBJS = ${CORE_OBJS} decodez8.o
+
+dasmz8: ${DZ8_OBJS}
+	$(CC) ${DZ8_OBJS} -o ${@}
+
 #################################################
 
 DZ80_OBJS = ${CORE_OBJS} decodez80.o
@@ -237,6 +245,7 @@ what:
 	@echo "     dasm09     -- Motorola 6809"
 	@echo "     dasmavr    -- Atmel AVR"
 	@echo "     dasm51     -- Intel 8051"
+	@echo "     dasmz8     -- Zilog Z8"
 	@echo "     dasmz80    -- Zilog Z80"
 	@echo "     dasm48     -- Intel 8048, 8049"
 	@echo "     dasmx86    -- Intel 8086/8088"
