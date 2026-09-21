@@ -22,6 +22,7 @@ Supported Processors:
   * Motorola 68000/68010/68020/68030/68040 + 68881/68882/68040 FPU
   * Motorola 6805 family
   * Motorola 6809
+  * Motorola 68HC11
   * NEC 78K/III (uPD78310 family)
   * RCA CDP1802
   * STMicroelectronics STM8

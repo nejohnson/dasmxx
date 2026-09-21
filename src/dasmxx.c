@@ -761,6 +761,8 @@ static void readlist( const char *listfile, struct params *params )
                             dasm_cpu_level = 6801;
                         else if ( !strcmp( cpu, "6803" ) )
                             dasm_cpu_level = 6803;
+                        else if ( !strcmp( cpu, "68hc11" ) || !strcmp( cpu, "68HC11" ) || !strcmp( cpu, "6811" ) )
+                            dasm_cpu_level = 6811;
                         else if ( !strcmp( cpu, "68000" ) )
                             dasm_cpu_level = 68000;
                         else if ( !strcmp( cpu, "68010" ) )

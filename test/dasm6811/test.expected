@@ -1,0 +1,126 @@
+   dasm6811 -- Motorola 68HC11 Disassembler --
+-----------------------------------------------------------------
+
+;   Processing "test.bin" (255 bytes)
+;   Disassembly start address: 0x0000
+;   String terminator: 0x00
+
+Start:
+   test    
+   nop     
+   idiv    
+   fdiv    
+   lsrd    
+   asld    
+   tap     
+   tpa     
+   inx     
+   dex     
+   clv     
+   sev     
+   clc     
+   sec     
+   cli     
+   sei     
+   sba     
+   cba     
+   brset   $10,#$80,$0018
+   brclr   $11,#$40,$0016
+   bset    $12,#$20
+   bclr    $13,#$10
+   tab     
+   tba     
+   daa     
+   cpd     #$1234
+   cpd     $10
+   cpd     $20,x
+   cpd     TestAddr
+   aba     
+   bset    $21,x,#$01
+   bclr    $22,x,#$02
+   brset   $23,x,#$04,$003E
+   brclr   $24,x,#$08,$003C
+   bra     $0042
+   brn     $0044
+   bhi     $0046
+   bls     $0048
+   bcc     $004A
+   bcs     $004C
+   bne     $004E
+   beq     $0050
+   bvc     $0052
+   bvs     $0054
+   bpl     $0056
+   bmi     $0058
+   bge     $005A
+   blt     $005C
+   bgt     $005E
+   ble     $0060
+   tsx     
+   ins     
+   pula    
+   pulb    
+   des     
+   txs     
+   psha    
+   pshb    
+   pulx    
+   rts     
+   abx     
+   rti     
+   pshx    
+   mul     
+   wai     
+   swi     
+   bsr     $0072
+   lds     #$1234
+   xgdx    
+   jsr     $10
+   ldaa    $20,x
+   staa    $21,x
+   jsr     $22,x
+   subd    #$1234
+   subd    $10
+   subd    $20,x
+   subd    TestAddr
+   addd    #$1234
+   addd    $10
+   addd    $20,x
+   addd    TestAddr
+   ldd     #$1234
+   cpd     $20,y
+   stop    
+   ldd     $10
+   std     $11
+   ldd     $20,x
+   std     $21,x
+   ldd     TestAddr
+   std     TestAddr
+   iny     
+   dey     
+   bset    $20,y,#$01
+   bclr    $21,y,#$02
+   brset   $22,y,#$04,$00BA
+   brclr   $23,y,#$08,$00B9
+   tsy     
+   tys     
+   aby     
+   jmp     $20,y
+   cpy     #$1234
+   xgdy    
+   cpy     $10
+   ldaa    $20,y
+   staa    $21,y
+   cpy     $22,y
+   jsr     $23,y
+   ldy     #$1234
+   ldy     $10
+   sty     $11
+   ldab    $20,y
+   stab    $21,y
+   ldd     $22,y
+   std     $23,y
+   ldy     $24,y
+   sty     $25,y
+   ldy     TestAddr
+   sty     TestAddr
