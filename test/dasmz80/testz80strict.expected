@@ -1,0 +1,9 @@
+   dasmz80 -- Zilog Z80 Disassembler --
+-----------------------------------------------------------------
+
+;   Processing "testz80strict.bin" (2 bytes)
+;   Disassembly start address: 0x0000
+;   String terminator: 0x00
+
+___CL_0001:
+   ???      

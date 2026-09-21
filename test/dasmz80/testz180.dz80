@@ -1,0 +1,4 @@
+ocpu=z180
+ftestz180.bin
+c0000
+e0030

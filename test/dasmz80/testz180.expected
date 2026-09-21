@@ -1,0 +1,28 @@
+   dasmz80 -- Zilog Z80 Disassembler --
+-----------------------------------------------------------------
+
+;   Processing "testz180.bin" (48 bytes)
+;   Disassembly start address: 0x0000
+;   String terminator: 0x00
+
+___CL_0001:
+   IN0      B, ($12)
+   IN0      C, ($13)
+   IN0      A, ($14)
+   OUT0     ($15), B
+   OUT0     ($16), C
+   OUT0     ($17), A
+   TST      B
+   TST      (HL)
+   TST      A
+   TST      #$55
+   TSTIO    ($66)
+   MLT      BC
+   MLT      DE
+   MLT      HL
+   MLT      SP
+   SLP      
+   OTIM     
+   OTDM     
+   OTIMR    
+   OTDMR    

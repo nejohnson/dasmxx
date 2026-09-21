@@ -1,0 +1,4 @@
+ocpu=z80
+ftestz80strict.bin
+c0000
+e0002

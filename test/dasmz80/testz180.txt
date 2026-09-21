@@ -1,0 +1,22 @@
+# Z180/HD64180 ED-prefixed extension coverage
+
+ED 00 12	# IN0 B,($12)
+ED 08 13	# IN0 C,($13)
+ED 38 14	# IN0 A,($14)
+ED 01 15	# OUT0 ($15),B
+ED 09 16	# OUT0 ($16),C
+ED 39 17	# OUT0 ($17),A
+ED 04		# TST B
+ED 34		# TST (HL)
+ED 3C		# TST A
+ED 64 55	# TST #$55
+ED 74 66	# TSTIO ($66)
+ED 4C		# MLT BC
+ED 5C		# MLT DE
+ED 6C		# MLT HL
+ED 7C		# MLT SP
+ED 76		# SLP
+ED 83		# OTIM
+ED 8B		# OTDM
+ED 93		# OTIMR
+ED 9B		# OTDMR

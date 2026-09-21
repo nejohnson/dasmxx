@@ -565,6 +565,34 @@ optab_t pageBITS[] = {
 
 optab_t pageEXTD[] = {
 
+    INSN_CPU ( "IN0",  reg2_mem8, 0x00, X_IO, CPU_Z180 )
+    INSN_CPU ( "IN0",  reg2_mem8, 0x08, X_IO, CPU_Z180 )
+    INSN_CPU ( "IN0",  reg2_mem8, 0x10, X_IO, CPU_Z180 )
+    INSN_CPU ( "IN0",  reg2_mem8, 0x18, X_IO, CPU_Z180 )
+    INSN_CPU ( "IN0",  reg2_mem8, 0x20, X_IO, CPU_Z180 )
+    INSN_CPU ( "IN0",  reg2_mem8, 0x28, X_IO, CPU_Z180 )
+    INSN_CPU ( "IN0",  reg2_mem8, 0x38, X_IO, CPU_Z180 )
+
+    INSN_CPU ( "OUT0", mem8_reg2, 0x01, X_IO, CPU_Z180 )
+    INSN_CPU ( "OUT0", mem8_reg2, 0x09, X_IO, CPU_Z180 )
+    INSN_CPU ( "OUT0", mem8_reg2, 0x11, X_IO, CPU_Z180 )
+    INSN_CPU ( "OUT0", mem8_reg2, 0x19, X_IO, CPU_Z180 )
+    INSN_CPU ( "OUT0", mem8_reg2, 0x21, X_IO, CPU_Z180 )
+    INSN_CPU ( "OUT0", mem8_reg2, 0x29, X_IO, CPU_Z180 )
+    INSN_CPU ( "OUT0", mem8_reg2, 0x39, X_IO, CPU_Z180 )
+
+    MASK_CPU ( "TST", reg2, 0xC7, 0x04, X_REG, CPU_Z180 )
+    INSN_CPU ( "TST",   imm8, 0x64, X_IMM, CPU_Z180 )
+    INSN_CPU ( "TSTIO", mem8, 0x74, X_IO,  CPU_Z180 )
+
+    MASK_CPU ( "MLT", rpair, 0xCF, 0x4C, X_REG, CPU_Z180 )
+    INSN_CPU ( "SLP", none, 0x76, X_NONE, CPU_Z180 )
+
+    INSN_CPU ( "OTIM",  none, 0x83, X_NONE, CPU_Z180 )
+    INSN_CPU ( "OTDM",  none, 0x8B, X_NONE, CPU_Z180 )
+    INSN_CPU ( "OTIMR", none, 0x93, X_NONE, CPU_Z180 )
+    INSN_CPU ( "OTDMR", none, 0x9B, X_NONE, CPU_Z180 )
+
     MASK ( "ADC", hl_rpair, 0xCF, 0x4A, X_NONE )
     MASK ( "SBC", hl_rpair, 0xCF, 0x42, X_NONE )
     INSN ( "NEG", none,     0x44, X_NONE )

@@ -1,0 +1,3 @@
+# ED 76 is SLP on Z180/HD64180, undefined on plain Z80.
+
+ED 76

@@ -60,6 +60,8 @@ typedef ULWORD             OPC;
 #define CPU_6502            6502
 #define CPU_65C02           6503
 #define CPU_65816           6504
+#define CPU_Z80             80
+#define CPU_Z180            180
 
 /* Universal address format */
 #define FORMAT_ADDR		"%04X"

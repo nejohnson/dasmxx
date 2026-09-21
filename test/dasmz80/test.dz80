@@ -1,5 +1,6 @@
 
 ftest.bin
+ocpu=z80
 c0000
 e0ADC
 
@@ -8,4 +9,3 @@ l5678  JumpDest1
 l6678  JumpDest2
 
 l05E0  UndocInsn
-
