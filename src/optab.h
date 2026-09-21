@@ -57,7 +57,8 @@ typedef struct optab_s {
         OPTAB_MEMMOD,
         OPTAB_TABLE,
         OPTAB_PUSHTBL,
-        OPTAB_PREFIX
+        OPTAB_PREFIX,
+        OPTAB_MASK_PREFIX
     } type;
     union {
         struct {
@@ -95,6 +96,15 @@ typedef struct optab_s {
       .min_cpu  = M_min_cpu,                \
       .opcode   = "PREFIX",                 \
       .operands = prefix_ ## M_pfx,         \
+    },
+
+#define MASK_PREFIX_CPU(M_pfx, M_mask, M_val, M_min_cpu) \
+    { .type     = OPTAB_MASK_PREFIX,                     \
+      .min_cpu  = M_min_cpu,                             \
+      .opcode   = "PREFIX",                              \
+      .operands = prefix_ ## M_pfx,                       \
+      .u.mask.mask = M_mask,                              \
+      .u.mask.val  = M_val                                \
     },
 
 /**

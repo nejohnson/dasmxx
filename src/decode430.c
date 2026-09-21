@@ -39,7 +39,7 @@
  * Globally-visible decoder properties
  *****************************************************************************/
 
-DASM_PROFILE( "dasm430", "TI MSP430", 6, 8, 0, 2, 1 )
+DASM_PROFILE( "dasm430", "TI MSP430", 8, 8, 0, 2, 1 )
 
 /*****************************************************************************
  * Private data types, macros, constants.
@@ -66,6 +66,12 @@ static const char *jump_ops[] = {
     "JNE", "JEQ", "JNC", "JC",
     "JN",  "JGE", "JL",  "JMP"
 };
+
+static int ext_active = 0;
+static unsigned int ext_src = 0;
+static unsigned int ext_dst = 0;
+static unsigned int ext_al = 0;
+static unsigned int ext_zc = 0;
 
 static void addr16( UWORD a, XREF_TYPE xtype )
 {
@@ -103,6 +109,11 @@ static WORD next_signed_word( FILE *f, ADDR *addr )
 {
     return (WORD)next_word( f, addr );
 }
+
+static void src_operand( FILE *f, ADDR *addr, unsigned int r, unsigned int mode,
+                         XREF_TYPE xtype );
+static void dst_operand( FILE *f, ADDR *addr, unsigned int r, unsigned int mode,
+                         XREF_TYPE xtype );
 
 static void indexed_addr( FILE *f, ADDR *addr, unsigned int r, XREF_TYPE xtype )
 {
@@ -144,6 +155,100 @@ static void indexed_addr20( FILE *f, ADDR *addr, unsigned int r, unsigned int ex
     {
         operand( FORMAT_NUM_16BIT "(%s)", (UWORD)disp, regs[r & 0x0F] );
     }
+}
+
+static void emit_indexed_disp20( FILE *f, ADDR *addr, unsigned int r,
+                                 unsigned int ext, XREF_TYPE xtype )
+{
+    WORD disp = next_signed_word( f, addr );
+    ADDR value = ( ( ext & 0x0F ) << 16 ) | ( (UWORD)disp );
+
+    if ( r == 0 )
+    {
+        ADDR target = *addr + ( ext_active ? -2 : 0 ) + (LWORD)value;
+        addr20( target, xtype );
+    }
+    else if ( r == 2 )
+    {
+        operand( "&" );
+        addr20( value, xtype );
+    }
+    else
+    {
+        if ( ext && ( value & 0x80000 ) )
+            value |= ~0xFFFFF;
+        operand( "0x%05X(%s)", value & 0xFFFFF, regs[r & 0x0F] );
+    }
+}
+
+static void src_operand_ext_hi( FILE *f, ADDR *addr, unsigned int r,
+                                unsigned int mode, unsigned int ext_hi,
+                                XREF_TYPE xtype )
+{
+    if ( !ext_active || r == 3 || ( r == 2 && mode >= 2 ) )
+    {
+        src_operand( f, addr, r, mode, xtype );
+        return;
+    }
+
+    if ( r == 2 && mode == 1 )
+    {
+        emit_indexed_disp20( f, addr, r, ext_hi, xtype );
+        return;
+    }
+
+    switch ( mode & 0x03 )
+    {
+    case 0:
+        reg( r );
+        break;
+    case 1:
+        emit_indexed_disp20( f, addr, r, ext_hi, xtype );
+        break;
+    case 2:
+        operand( "@%s", regs[r & 0x0F] );
+        break;
+    case 3:
+        if ( r == 0 )
+        {
+            ADDR imm = ( ext_hi << 16 ) | next_word( f, addr );
+            if ( xtype == X_CALL || xtype == X_JMP )
+            {
+                operand( "#" );
+                addr20( imm, xtype );
+            }
+            else
+            {
+                operand( "#" FORMAT_NUM_20BIT, imm & 0xFFFFF );
+            }
+        }
+        else
+        {
+            operand( "@%s+", regs[r & 0x0F] );
+        }
+        break;
+    }
+}
+
+static void src_operand_ext( FILE *f, ADDR *addr, unsigned int r,
+                             unsigned int mode, XREF_TYPE xtype )
+{
+    src_operand_ext_hi( f, addr, r, mode, ext_src, xtype );
+}
+
+static void dst_operand_ext( FILE *f, ADDR *addr, unsigned int r,
+                             unsigned int mode, XREF_TYPE xtype )
+{
+    if ( !ext_active )
+    {
+        dst_operand( f, addr, r, mode, xtype );
+        return;
+    }
+
+    if ( mode == 0 )
+        reg( r );
+    else
+        emit_indexed_disp20( f, addr, r, ext_dst, xtype );
 }
 
 static void src_operand( FILE *f, ADDR *addr, unsigned int r, unsigned int mode,
@@ -225,14 +330,45 @@ static const char *opcode_with_size( const char *base, OPC opc )
     return text;
 }
 
-static const char *opcode_dual( OPC opc )
+static const char *ext_suffix( OPC opc )
 {
-    return opcode_with_size( dual_ops[( opc >> 12 ) & 0x0F], opc );
+    if ( !ext_active )
+        return ( opc & 0x0040 ) ? ".B" : "";
+
+    if ( !ext_al )
+        return ".A";
+
+    return ( opc & 0x0040 ) ? ".B" : ".W";
 }
 
-static const char *opcode_rrc( OPC opc )  { return opcode_with_size( "RRC",  opc ); }
-static const char *opcode_rra( OPC opc )  { return opcode_with_size( "RRA",  opc ); }
-static const char *opcode_push( OPC opc ) { return opcode_with_size( "PUSH", opc ); }
+static const char *opcode_with_ext_size( const char *base, OPC opc )
+{
+    static char text[16];
+
+    if ( ext_active )
+        sprintf( text, "%sX%s", base, ext_suffix( opc ) );
+    else
+        sprintf( text, "%s%s", base, ( opc & 0x0040 ) ? ".B" : "" );
+    return text;
+}
+
+static const char *opcode_dual( OPC opc )
+{
+    return opcode_with_ext_size( dual_ops[( opc >> 12 ) & 0x0F], opc );
+}
+
+static const char *opcode_rrc( OPC opc )
+{
+    if ( ext_active && ext_zc )
+        return opcode_with_ext_size( "RRU", opc );
+    return opcode_with_ext_size( "RRC",  opc );
+}
+
+static const char *opcode_rra( OPC opc )  { return opcode_with_ext_size( "RRA",  opc ); }
+static const char *opcode_push( OPC opc ) { return opcode_with_ext_size( "PUSH", opc ); }
+static const char *opcode_swpb( OPC opc ) { return opcode_with_ext_size( "SWPB", opc ); }
+static const char *opcode_sxt( OPC opc )  { return opcode_with_ext_size( "SXT",  opc ); }
+static const char *opcode_call( OPC opc ) { return ext_active ? "CALLX.A" : "CALL"; }
 static const char *opcode_jump( OPC opc ) { return jump_ops[( opc >> 10 ) & 0x07]; }
 
 static const char *opcode_rrxm( OPC opc )
@@ -290,6 +426,28 @@ static const char *opcode_alu_a( OPC opc )
  *        Private Functions
  *****************************************************************************/
 
+void dasm_pre_insn( void )
+{
+    ext_active = 0;
+    ext_src = 0;
+    ext_dst = 0;
+    ext_al = 0;
+    ext_zc = 0;
+}
+
+PREFIX_FUNC(ext)
+{
+    (void)f;
+    (void)addr;
+    (void)xtype;
+
+    ext_active = 1;
+    ext_src = ( opc >> 7 ) & 0x0F;
+    ext_al = ( opc >> 6 ) & 0x01;
+    ext_zc = ( opc >> 8 ) & 0x01;
+    ext_dst = opc & 0x0F;
+}
+
 OPERAND_FUNC(none)
 {
     /* empty */
@@ -300,7 +458,7 @@ OPERAND_FUNC(single)
     unsigned int r = opc & 0x0F;
     unsigned int as = ( opc >> 4 ) & 0x03;
 
-    src_operand( f, addr, r, as, xtype );
+    src_operand_ext_hi( f, addr, r, as, ext_dst, xtype );
 }
 
 OPERAND_FUNC(jump)
@@ -317,9 +475,9 @@ OPERAND_FUNC(dual)
     unsigned int ad  = ( opc >> 7 ) & 0x01;
     unsigned int dst = opc & 0x0F;
 
-    src_operand( f, addr, src, as, xtype );
+    src_operand_ext( f, addr, src, as, xtype );
     operand( "," );
-    dst_operand( f, addr, dst, ad, xtype );
+    dst_operand_ext( f, addr, dst, ad, xtype );
 }
 
 OPERAND_FUNC(rrxm)
@@ -463,6 +621,8 @@ OPERAND_FUNC(calla)
  *****************************************************************************/
 
 optab_t base_optab[] = {
+    MASK_PREFIX_CPU ( ext, 0xF800, 0x1800, CPU_MSP430X )
+
     /*
      * MSP430X address instructions that do not use the extension word.
      */
@@ -491,11 +651,11 @@ optab_t base_optab[] = {
      */
     INSN ( "RETI", none,   0x1300, X_NONE )
     MASK_DYN ( rrc,  single, 0xFF80, 0x1000, X_NONE )
-    MASK     ( "SWPB", single, 0xFF80, 0x1080, X_NONE )
+    MASK_DYN ( swpb, single, 0xFF80, 0x1080, X_NONE )
     MASK_DYN ( rra,  single, 0xFF80, 0x1100, X_NONE )
-    MASK     ( "SXT",  single, 0xFF80, 0x1180, X_NONE )
+    MASK_DYN ( sxt,  single, 0xFF80, 0x1180, X_NONE )
     MASK_DYN ( push, single, 0xFF80, 0x1200, X_NONE )
-    MASK     ( "CALL", single, 0xFF80, 0x1280, X_CALL )
+    MASK_DYN ( call, single, 0xFF80, 0x1280, X_CALL )
 
     /*
      * Format III: PC-relative conditional and unconditional jumps.

@@ -301,6 +301,13 @@ static int walk_table( FILE * f, ADDR * addr, optab_t * optab, OPC opc )
             opc = next_insn( f, addr );
             optab = origin - 1;
         }
+        else if ( optab->type == OPTAB_MASK_PREFIX
+                  && ( ( opc & optab->u.mask.mask ) == optab->u.mask.val ) )
+        {
+            optab->operands( f, addr, opc, optab->xtype );
+            opc = next_insn( f, addr );
+            optab = origin - 1;
+        }
         
         optab++;
     }
