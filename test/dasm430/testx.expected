@@ -1,7 +1,7 @@
    dasm430 -- TI MSP430 Disassembler --
 -----------------------------------------------------------------
 
-;   Processing "testx.bin" (130 bytes)
+;   Processing "testx.bin" (146 bytes)
 ;   Disassembly start address: 0x0000
 ;   String terminator: 0x00
 
@@ -42,3 +42,7 @@ Start:
    RRUX.A  R5
    PUSHX.A #0x12345
    CALLX.A #Ext12345
+   RPT #2 { MOVX.W R5,R6 }
+   RPT R5 { ADDX.W R6,R7 }
+   RPT #3 { RRCX.A R5 }
+   RPT R4 { RRAX.W R7 }

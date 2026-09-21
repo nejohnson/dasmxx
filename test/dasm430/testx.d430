@@ -1,7 +1,7 @@
 ocpu=msp430x
 ftestx.bin
 c0000 Start
-e0082
+e0092
 
 l12345 Ext12345
 l23456 Abs23456

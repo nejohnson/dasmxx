@@ -72,6 +72,7 @@ static unsigned int ext_src = 0;
 static unsigned int ext_dst = 0;
 static unsigned int ext_al = 0;
 static unsigned int ext_zc = 0;
+static int repeat_tail = 0;
 
 static void addr16( UWORD a, XREF_TYPE xtype )
 {
@@ -341,14 +342,60 @@ static const char *ext_suffix( OPC opc )
     return ( opc & 0x0040 ) ? ".B" : ".W";
 }
 
+static int repeat_applies( OPC opc )
+{
+    if ( !ext_active || ext_dst == 0 )
+        return 0;
+
+    if ( ( opc & 0xF000 ) >= 0x4000 )
+    {
+        unsigned int as = ( opc >> 4 ) & 0x03;
+        unsigned int ad = ( opc >> 7 ) & 0x01;
+
+        return as == 0 && ad == 0;
+    }
+
+    if ( ( opc & 0xFC00 ) == 0x1000 )
+    {
+        unsigned int as = ( opc >> 4 ) & 0x03;
+
+        return as == 0;
+    }
+
+    return 0;
+}
+
+static const char *repeat_operand( void )
+{
+    static char text[8];
+
+    if ( ext_src & 1 )
+        sprintf( text, "R%u", ext_dst );
+    else
+        sprintf( text, "#%u", ext_dst + 1 );
+    return text;
+}
+
 static const char *opcode_with_ext_size( const char *base, OPC opc )
 {
-    static char text[16];
+    static char text[32];
 
     if ( ext_active )
-        sprintf( text, "%sX%s", base, ext_suffix( opc ) );
+    {
+        if ( repeat_applies( opc ) )
+        {
+            sprintf( text, "RPT %s { %sX%s ", repeat_operand(), base, ext_suffix( opc ) );
+            repeat_tail = 1;
+        }
+        else
+        {
+            sprintf( text, "%sX%s", base, ext_suffix( opc ) );
+        }
+    }
     else
+    {
         sprintf( text, "%s%s", base, ( opc & 0x0040 ) ? ".B" : "" );
+    }
     return text;
 }
 
@@ -368,7 +415,22 @@ static const char *opcode_rra( OPC opc )  { return opcode_with_ext_size( "RRA", 
 static const char *opcode_push( OPC opc ) { return opcode_with_ext_size( "PUSH", opc ); }
 static const char *opcode_swpb( OPC opc ) { return opcode_with_ext_size( "SWPB", opc ); }
 static const char *opcode_sxt( OPC opc )  { return opcode_with_ext_size( "SXT",  opc ); }
-static const char *opcode_call( OPC opc ) { return ext_active ? "CALLX.A" : "CALL"; }
+static const char *opcode_call( OPC opc )
+{
+    static char text[32];
+
+    if ( !ext_active )
+        return "CALL";
+
+    if ( repeat_applies( opc ) )
+    {
+        sprintf( text, "RPT %s { CALLX.A ", repeat_operand() );
+        repeat_tail = 1;
+        return text;
+    }
+
+    return "CALLX.A";
+}
 static const char *opcode_jump( OPC opc ) { return jump_ops[( opc >> 10 ) & 0x07]; }
 
 static const char *opcode_rrxm( OPC opc )
@@ -433,6 +495,7 @@ void dasm_pre_insn( void )
     ext_dst = 0;
     ext_al = 0;
     ext_zc = 0;
+    repeat_tail = 0;
 }
 
 PREFIX_FUNC(ext)
@@ -453,12 +516,19 @@ OPERAND_FUNC(none)
     /* empty */
 }
 
+static void close_repeat( void )
+{
+    if ( repeat_tail )
+        operand( " }" );
+}
+
 OPERAND_FUNC(single)
 {
     unsigned int r = opc & 0x0F;
     unsigned int as = ( opc >> 4 ) & 0x03;
 
     src_operand_ext_hi( f, addr, r, as, ext_dst, xtype );
+    close_repeat();
 }
 
 OPERAND_FUNC(jump)
@@ -478,6 +548,7 @@ OPERAND_FUNC(dual)
     src_operand_ext( f, addr, src, as, xtype );
     operand( "," );
     dst_operand_ext( f, addr, dst, ad, xtype );
+    close_repeat();
 }
 
 OPERAND_FUNC(rrxm)
