@@ -56,6 +56,9 @@ Configuration commands:
      eXXXX       end of disassembly
      q[,N]["title"]  pagination, N lines (default=60), optional title
 
+Supported `ocpu` values include `6502`, `65c02`, `8086`, `80186`,
+`80286`, `80386`, `80486`, `68000`, `68010`, `68020`, `68030`, and `68040`.
+
 Dump commands:
 
      aXXXX       alphanumeric dump

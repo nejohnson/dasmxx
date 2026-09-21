@@ -42,7 +42,7 @@
  * Globally-visible decoder properties
  *****************************************************************************/
 
-DASM_PROFILE( "dasm02", "MOS Technology 6502", 3, 9, 0, 1, 1 )
+DASM_PROFILE( "dasm02", "MOS Technology 6502 / WDC 65C02", 3, 9, 0, 1, 1 )
 
 /*****************************************************************************
  * Private data types, macros, constants.
@@ -197,6 +197,17 @@ OPERAND_FUNC(ind8_Y)
 }
 
 /***********************************************************
+ * Process "(ind8)" operands.
+ ************************************************************/
+
+OPERAND_FUNC(ind8)
+{
+    operand( "(" );
+    operand_zeropage( f, addr, opc, xtype );
+    operand( ")" );
+}
+
+/***********************************************************
  * Process "ind16" operand.
  ************************************************************/
 
@@ -212,6 +223,23 @@ OPERAND_FUNC(ind16)
 }
 
 /***********************************************************
+ * Process "(abs16,X)" operand.
+ ************************************************************/
+
+OPERAND_FUNC(ind16_X)
+{
+    UBYTE low_addr  = next( f, addr );
+    UBYTE high_addr = next( f, addr );
+    UWORD addr16    = MK_WORD( low_addr, high_addr );
+
+    operand( "(%s", xref_genwordaddr( NULL, FORMAT_NUM_16BIT, addr16 ) );
+    COMMA;
+    operand( "X)" );
+    
+    xref_addxref( xtype, g_insn_addr, addr16 );
+}
+
+/***********************************************************
  * Process "rel8" operands.
  ************************************************************/
 
@@ -222,6 +250,55 @@ OPERAND_FUNC(rel8)
     
     operand( xref_genwordaddr( NULL, FORMAT_NUM_16BIT, dest ) );
     xref_addxref( xtype, g_insn_addr, dest );
+}
+
+/***********************************************************
+ * Process "zeropage, rel8" bit-branch operands.
+ ************************************************************/
+
+OPERAND_FUNC(zeropage_rel8)
+{
+    UBYTE zp = next( f, addr );
+    BYTE disp = (BYTE)next( f, addr );
+    ADDR dest = *addr + disp;
+    
+    operand( "%s", xref_genwordaddr( NULL, FORMAT_NUM_8BIT, (ADDR)zp ) );
+    COMMA;
+    operand( xref_genwordaddr( NULL, FORMAT_NUM_16BIT, dest ) );
+    xref_addxref( X_PTR, g_insn_addr, zp );
+    xref_addxref( xtype, g_insn_addr, dest );
+}
+
+/******************************************************************************/
+/**                            Dynamic Opcodes                               **/
+/******************************************************************************/
+
+static const char *opcode_rmb( OPC opc )
+{
+    static char name[] = "rmb0";
+    name[3] = '0' + (char)( ( opc >> 4 ) & 0x07 );
+    return name;
+}
+
+static const char *opcode_smb( OPC opc )
+{
+    static char name[] = "smb0";
+    name[3] = '0' + (char)( ( opc >> 4 ) & 0x07 );
+    return name;
+}
+
+static const char *opcode_bbr( OPC opc )
+{
+    static char name[] = "bbr0";
+    name[3] = '0' + (char)( ( opc >> 4 ) & 0x07 );
+    return name;
+}
+
+static const char *opcode_bbs( OPC opc )
+{
+    static char name[] = "bbs0";
+    name[3] = '0' + (char)( ( opc >> 4 ) & 0x07 );
+    return name;
 }
 
 /******************************************************************************/
@@ -247,6 +324,7 @@ optab_t base_optab[] = {
   ----------------------------------------------------------------------------*/
 
     ACC_OP( "lda", 0xA0 )
+    INSN_CPU ( "lda", ind8,   0xB2, X_PTR, CPU_65C02 )
     
     INSN ( "ldx", imm8,       0xA2, X_NONE )
     INSN ( "ldx", zeropage,   0xA6, X_PTR  )
@@ -267,6 +345,7 @@ optab_t base_optab[] = {
     INSN ( "sta", abs16_Y,    0x99, X_PTR  )
     INSN ( "sta", ind8_X,     0x81, X_PTR  )
     INSN ( "sta", ind8_Y,     0x91, X_PTR  )
+    INSN_CPU ( "sta", ind8,   0x92, X_PTR, CPU_65C02 )
     
     INSN ( "stx", zeropage,   0x86, X_PTR  )
     INSN ( "stx", zeropage_Y, 0x96, X_PTR  )
@@ -275,6 +354,11 @@ optab_t base_optab[] = {
     INSN ( "sty", zeropage,   0x84, X_PTR  )
     INSN ( "sty", zeropage_X, 0x94, X_PTR  )
     INSN ( "sty", abs16,      0x8C, X_PTR  )
+
+    INSN_CPU ( "stz", zeropage,   0x64, X_PTR, CPU_65C02 )
+    INSN_CPU ( "stz", zeropage_X, 0x74, X_PTR, CPU_65C02 )
+    INSN_CPU ( "stz", abs16,      0x9C, X_PTR, CPU_65C02 )
+    INSN_CPU ( "stz", abs16_X,    0x9E, X_PTR, CPU_65C02 )
     
 /*----------------------------------------------------------------------------
   Register Transfers
@@ -295,6 +379,10 @@ optab_t base_optab[] = {
     INSN ( "php",  none,      0x08, X_NONE )
     INSN ( "pla",  none,      0x68, X_NONE )
     INSN ( "plp",  none,      0x28, X_NONE )
+    INSN_CPU ( "phx",  none,  0xDA, X_NONE, CPU_65C02 )
+    INSN_CPU ( "phy",  none,  0x5A, X_NONE, CPU_65C02 )
+    INSN_CPU ( "plx",  none,  0xFA, X_NONE, CPU_65C02 )
+    INSN_CPU ( "ply",  none,  0x7A, X_NONE, CPU_65C02 )
     
 /*----------------------------------------------------------------------------
   Logical
@@ -303,9 +391,20 @@ optab_t base_optab[] = {
     ACC_OP( "and", 0x20 )
     ACC_OP( "eor", 0x40 )
     ACC_OP( "ora", 0x00 )
+    INSN_CPU ( "and", ind8,   0x32, X_PTR, CPU_65C02 )
+    INSN_CPU ( "eor", ind8,   0x52, X_PTR, CPU_65C02 )
+    INSN_CPU ( "ora", ind8,   0x12, X_PTR, CPU_65C02 )
     
     INSN ( "bit", zeropage,   0x24, X_PTR  )
     INSN ( "bit", abs16,      0x2C, X_PTR  )
+    INSN_CPU ( "bit", imm8,       0x89, X_NONE, CPU_65C02 )
+    INSN_CPU ( "bit", zeropage_X, 0x34, X_PTR,  CPU_65C02 )
+    INSN_CPU ( "bit", abs16_X,    0x3C, X_PTR,  CPU_65C02 )
+
+    INSN_CPU ( "trb", zeropage,   0x14, X_PTR, CPU_65C02 )
+    INSN_CPU ( "trb", abs16,      0x1C, X_PTR, CPU_65C02 )
+    INSN_CPU ( "tsb", zeropage,   0x04, X_PTR, CPU_65C02 )
+    INSN_CPU ( "tsb", abs16,      0x0C, X_PTR, CPU_65C02 )
     
 /*----------------------------------------------------------------------------
   Arithmetic
@@ -314,6 +413,9 @@ optab_t base_optab[] = {
     ACC_OP( "adc", 0x60 )
     ACC_OP( "sbc", 0xE0 )
     ACC_OP( "cmp", 0xC0 )
+    INSN_CPU ( "adc", ind8,   0x72, X_PTR, CPU_65C02 )
+    INSN_CPU ( "sbc", ind8,   0xF2, X_PTR, CPU_65C02 )
+    INSN_CPU ( "cmp", ind8,   0xD2, X_PTR, CPU_65C02 )
     
     INSN ( "cpx", imm8,       0xE0, X_NONE )
     INSN ( "cpx", zeropage,   0xE4, X_PTR  )
@@ -331,6 +433,7 @@ optab_t base_optab[] = {
     INSN ( "inc", zeropage_X, 0xF6, X_PTR  )
     INSN ( "inc", abs16,      0xEE, X_PTR  )
     INSN ( "inc", abs16_X,    0xFE, X_PTR  )
+    INSN_CPU ( "inc", none,   0x1A, X_NONE, CPU_65C02 )
     
     INSN ( "inx", none,       0xE8, X_NONE )
     INSN ( "iny", none,       0xC8, X_NONE )
@@ -339,6 +442,7 @@ optab_t base_optab[] = {
     INSN ( "dec", zeropage_X, 0xD6, X_PTR  )
     INSN ( "dec", abs16,      0xCE, X_PTR  )
     INSN ( "dec", abs16_X,    0xDE, X_PTR  )
+    INSN_CPU ( "dec", none,   0x3A, X_NONE, CPU_65C02 )
     
     INSN ( "dex", none,       0xCA, X_NONE )
     INSN ( "dey", none,       0x88, X_NONE )
@@ -366,6 +470,7 @@ optab_t base_optab[] = {
   
     INSN ( "jmp", abs16,      0x4C, X_JMP  )
     INSN ( "jmp", ind16,      0x6C, X_PTR  )
+    INSN_CPU ( "jmp", ind16_X,0x7C, X_PTR, CPU_65C02 )
     INSN ( "jsr", abs16,      0x20, X_CALL )
     INSN ( "rts", none,       0x60, X_NONE )
     
@@ -381,6 +486,40 @@ optab_t base_optab[] = {
     INSN  ( "bpl",    rel8, 0x10, X_JMP )
     INSN  ( "bvc",    rel8, 0x50, X_JMP )
     INSN  ( "bvs",    rel8, 0x70, X_JMP )
+    INSN_CPU ( "bra", rel8, 0x80, X_JMP, CPU_65C02 )
+
+    INSN_DYN_CPU ( rmb, zeropage,      0x07, X_PTR, CPU_65C02 )
+    INSN_DYN_CPU ( rmb, zeropage,      0x17, X_PTR, CPU_65C02 )
+    INSN_DYN_CPU ( rmb, zeropage,      0x27, X_PTR, CPU_65C02 )
+    INSN_DYN_CPU ( rmb, zeropage,      0x37, X_PTR, CPU_65C02 )
+    INSN_DYN_CPU ( rmb, zeropage,      0x47, X_PTR, CPU_65C02 )
+    INSN_DYN_CPU ( rmb, zeropage,      0x57, X_PTR, CPU_65C02 )
+    INSN_DYN_CPU ( rmb, zeropage,      0x67, X_PTR, CPU_65C02 )
+    INSN_DYN_CPU ( rmb, zeropage,      0x77, X_PTR, CPU_65C02 )
+    INSN_DYN_CPU ( smb, zeropage,      0x87, X_PTR, CPU_65C02 )
+    INSN_DYN_CPU ( smb, zeropage,      0x97, X_PTR, CPU_65C02 )
+    INSN_DYN_CPU ( smb, zeropage,      0xA7, X_PTR, CPU_65C02 )
+    INSN_DYN_CPU ( smb, zeropage,      0xB7, X_PTR, CPU_65C02 )
+    INSN_DYN_CPU ( smb, zeropage,      0xC7, X_PTR, CPU_65C02 )
+    INSN_DYN_CPU ( smb, zeropage,      0xD7, X_PTR, CPU_65C02 )
+    INSN_DYN_CPU ( smb, zeropage,      0xE7, X_PTR, CPU_65C02 )
+    INSN_DYN_CPU ( smb, zeropage,      0xF7, X_PTR, CPU_65C02 )
+    INSN_DYN_CPU ( bbr, zeropage_rel8, 0x0F, X_JMP, CPU_65C02 )
+    INSN_DYN_CPU ( bbr, zeropage_rel8, 0x1F, X_JMP, CPU_65C02 )
+    INSN_DYN_CPU ( bbr, zeropage_rel8, 0x2F, X_JMP, CPU_65C02 )
+    INSN_DYN_CPU ( bbr, zeropage_rel8, 0x3F, X_JMP, CPU_65C02 )
+    INSN_DYN_CPU ( bbr, zeropage_rel8, 0x4F, X_JMP, CPU_65C02 )
+    INSN_DYN_CPU ( bbr, zeropage_rel8, 0x5F, X_JMP, CPU_65C02 )
+    INSN_DYN_CPU ( bbr, zeropage_rel8, 0x6F, X_JMP, CPU_65C02 )
+    INSN_DYN_CPU ( bbr, zeropage_rel8, 0x7F, X_JMP, CPU_65C02 )
+    INSN_DYN_CPU ( bbs, zeropage_rel8, 0x8F, X_JMP, CPU_65C02 )
+    INSN_DYN_CPU ( bbs, zeropage_rel8, 0x9F, X_JMP, CPU_65C02 )
+    INSN_DYN_CPU ( bbs, zeropage_rel8, 0xAF, X_JMP, CPU_65C02 )
+    INSN_DYN_CPU ( bbs, zeropage_rel8, 0xBF, X_JMP, CPU_65C02 )
+    INSN_DYN_CPU ( bbs, zeropage_rel8, 0xCF, X_JMP, CPU_65C02 )
+    INSN_DYN_CPU ( bbs, zeropage_rel8, 0xDF, X_JMP, CPU_65C02 )
+    INSN_DYN_CPU ( bbs, zeropage_rel8, 0xEF, X_JMP, CPU_65C02 )
+    INSN_DYN_CPU ( bbs, zeropage_rel8, 0xFF, X_JMP, CPU_65C02 )
     
 /*----------------------------------------------------------------------------
   Status Flag Changes
@@ -401,6 +540,8 @@ optab_t base_optab[] = {
     INSN ( "brk",     none, 0x00, X_NONE )
     INSN ( "nop",     none, 0xEA, X_NONE )
     INSN ( "rti",     none, 0x40, X_NONE )
+    INSN_CPU ( "wai", none, 0xCB, X_NONE, CPU_65C02 )
+    INSN_CPU ( "stp", none, 0xDB, X_NONE, CPU_65C02 )
 
     END
 };

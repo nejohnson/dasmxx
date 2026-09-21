@@ -1,0 +1,37 @@
+# 65C02 extension coverage
+
+12 20		# ORA (zp)
+32 21		# AND (zp)
+52 22		# EOR (zp)
+72 23		# ADC (zp)
+92 24		# STA (zp)
+B2 25		# LDA (zp)
+D2 26		# CMP (zp)
+F2 27		# SBC (zp)
+80 02		# BRA
+EA		# skipped by BRA target
+EA
+64 30		# STZ zp
+74 31		# STZ zp,X
+9C 34 12	# STZ abs
+9E 36 12	# STZ abs,X
+04 40		# TSB zp
+0C 38 12	# TSB abs
+14 41		# TRB zp
+1C 3A 12	# TRB abs
+89 55		# BIT #imm
+34 42		# BIT zp,X
+3C 3C 12	# BIT abs,X
+DA		# PHX
+5A		# PHY
+FA		# PLX
+7A		# PLY
+1A		# INC A
+3A		# DEC A
+7C 00 80	# JMP (abs,X)
+07 50		# RMB0 zp
+97 51		# SMB1 zp
+2F 52 02	# BBR2 zp, rel
+BF 53 FE	# BBS3 zp, rel
+CB		# WAI
+DB		# STP

@@ -1,0 +1,4 @@
+# Opcode 80 is BRA on 65C02, but undefined on original 6502.
+
+80
+00

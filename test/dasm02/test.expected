@@ -1,4 +1,4 @@
-   dasm02 -- MOS Technology 6502 Disassembler --
+   dasm02 -- MOS Technology 6502 / WDC 65C02 Disassembler --
 -----------------------------------------------------------------
 
 ;   Processing "test.hex" (566 bytes, Intel HEX)

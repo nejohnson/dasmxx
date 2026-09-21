@@ -1,0 +1,43 @@
+   dasm02 -- MOS Technology 6502 / WDC 65C02 Disassembler --
+-----------------------------------------------------------------
+
+;   Processing "test65c02.bin" (68 bytes)
+;   Disassembly start address: 0x8000
+;   String terminator: 0x00
+
+___CL_0001:
+   ora      ($20)
+   and      ($21)
+   eor      ($22)
+   adc      ($23)
+   sta      ($24)
+   lda      ($25)
+   cmp      ($26)
+   sbc      ($27)
+   bra      $8014
+   nop      
+   nop      
+   stz      $30
+   stz      $31, X
+   stz      $1234
+   stz      $1236, X
+   tsb      $40
+   tsb      $1238
+   trb      $41
+   trb      $123A
+   bit      #$55
+   bit      $42, X
+   bit      $123C, X
+   phx      
+   phy      
+   plx      
+   ply      
+   inc      
+   dec      
+   jmp      (___CL_0001, X)
+   rmb0     $50
+   smb1     $51
+   bbr2     $52, $8041
+   bbs3     $53, $8040
+   wai      
+   stp      

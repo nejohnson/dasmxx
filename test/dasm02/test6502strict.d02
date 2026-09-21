@@ -1,0 +1,4 @@
+ocpu=6502
+ftest6502strict.bin
+c8000
+e8002

@@ -56,6 +56,10 @@ typedef unsigned int       ULWORD;
 /* Derived types */
 typedef ULWORD             OPC;
 
+/* CPU option levels for families that do not have numeric model names. */
+#define CPU_6502            6502
+#define CPU_65C02           6503
+
 /* Universal address format */
 #define FORMAT_ADDR		"%04X"
 
