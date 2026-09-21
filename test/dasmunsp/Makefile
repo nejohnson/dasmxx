@@ -1,9 +1,12 @@
 
+DIFF ?= diff -u
 
-test:
-	echo Done.
+test: test.out
+	$(DIFF) test.expected test.out
+
+test.out: test.hex test.dunsp ../../src/dasmunsp
+	../../src/dasmunsp -s test.dunsp | sed '$${/^$$/d;}' | sed 's/[[:space:]]*$$//' > test.out
 
 clean:
-	echo Done.
-
+	rm -f test.out
 

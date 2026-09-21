@@ -1,0 +1,43 @@
+   dasmunsp -- SunPlus µnSP Disassembler --
+-----------------------------------------------------------------
+
+;   Processing "test.hex" (260 bytes, Intel HEX)
+;   Disassembly start address: 0x0000
+;   String terminator: 0x00
+
+___CL_0001:
+   ADD     SP, [BP+0]
+   JCC     0004
+   JCC     0001
+   JNZ     0006
+   JZ      0007
+   JMI     0008
+   JA      0009
+   JG      000a
+   JMP     000b
+   RETF
+   RETI
+   PUSH    R1-R2, [SP]
+   POP     R1-R2, [SP]
+   LJMP    00001234
+   ADD     R1, [BP+5]
+   ADC     R2, #12
+   SUB     R3, [R4++]
+   SBC     R4, BP, #1234
+   CMP     R4, BP
+   CMP     BP, #1234
+   NEG     R1, R3 LSL 3
+   XOR     R1, [2000]
+   LD      R2, [2002]
+   TEST    BP, #1234
+   ST      R4, [2004]
+   INT     OFF
+   INT     IRQ
+   INT     IRQ,FIQ
+   FIR_MOV ON
+   FIR_MOV OFF
+   CALL    00023456
+   GOTO    00011234
+   MULU    R2, R3
+   MACU    R2, R3, 5
+   MACS    R2, R3, 5

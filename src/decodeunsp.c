@@ -214,6 +214,14 @@ TWO_OPERAND(op1, op3)
 TWO_OPERAND(pushset, stack)
 TWO_OPERAND(popset, stack)
 
+OPERAND_FUNC(cmp)
+{
+	if (OP1 == 4 && OPN == 1)
+		operand_op3(f, addr, opc, xtype);
+	else
+		operand_op1_op2(f, addr, opc, xtype);
+}
+
 optab_t base_optab[] = {
 
 	// Jumps
@@ -236,7 +244,7 @@ optab_t base_optab[] = {
 	MASK( "ADC",  op1_op3, 0xF000, 0x1000, X_NONE)
 	MASK( "SUB",  op1_op3, 0xF000, 0x2000, X_NONE)
 	MASK( "SBC",  op1_op3, 0xF000, 0x3000, X_NONE)
-	MASK( "CMP",  op1_op3, 0xF000, 0x4000, X_NONE) // TODO should be only op3 for 3-operand variants?
+	MASK( "CMP",  cmp,     0xF000, 0x4000, X_NONE)
 	MASK( "NEG",  op1_op2, 0xF000, 0x6000, X_NONE)
 	MASK( "XOR",  op1_op3, 0xF000, 0x8000, X_NONE)
 	MASK( "LD",   op1_op2, 0xF000, 0x9000, X_NONE)
