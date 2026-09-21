@@ -386,6 +386,16 @@ OPERAND_FUNC(r_Zpm)
 }
 
 /***********************************************************
+ * LPM/ELPM register from Z, optionally post-incrementing.
+ ************************************************************/
+OPERAND_FUNC(r_Z_lpm)
+{
+    operand_rD5( f, addr, opc, xtype );
+    COMMA;
+    operand( ( opc & 0x01 ) ? "Z+" : "Z" );
+}
+
+/***********************************************************
  * Load full register from Y
  *    Encoding:
  *  15       8 7       0
@@ -643,11 +653,11 @@ optab_t base_optab[] = {
     MASK ( "ST",     YZ_r,          0xFE07, 0x8200, X_NONE )
     MASK ( "STD",    YZ_r,          0xD200, 0x8200, X_NONE )
     
-    MASK ( "LPM",    r_Zpm,         0xFE0F, 0x9004, X_NONE )
-    MASK ( "LPM",    r_Zpm,         0xFE0F, 0x9005, X_NONE )
+    MASK ( "LPM",    r_Z_lpm,       0xFE0F, 0x9004, X_NONE )
+    MASK ( "LPM",    r_Z_lpm,       0xFE0F, 0x9005, X_NONE )
     
-    MASK ( "ELPM",   r_Zpm,         0xFE0F, 0x9006, X_NONE )
-    MASK ( "ELPM",   r_Zpm,         0xFE0F, 0x9007, X_NONE )
+    MASK ( "ELPM",   r_Z_lpm,       0xFE0F, 0x9006, X_NONE )
+    MASK ( "ELPM",   r_Z_lpm,       0xFE0F, 0x9007, X_NONE )
     
     MASK ( "POP",    rD5,           0xFE0F, 0x900F, X_NONE )
     MASK ( "PUSH",   rD5,           0xFE0F, 0x920F, X_NONE )
@@ -670,9 +680,6 @@ optab_t base_optab[] = {
     
     MASK ( "LDS",    r_k16,         0xFE0F, 0x9000, X_PTR  )
     MASK ( "STS",    k16_r,         0xFE0F, 0x9200, X_PTR  )
-    
-    MASK ( "BCLR",   bit,           0xFF8F, 0x9488, X_NONE )
-    MASK ( "BSET",   bit,           0xFF8F, 0x9408, X_NONE )
     
     MASK ( "COM",    rD5,           0xFE0F, 0x9400, X_NONE )
     MASK ( "NEG",    rD5,           0xFE0F, 0x9401, X_NONE )
@@ -700,7 +707,10 @@ optab_t base_optab[] = {
     INSN ( "CLH",    none,          0x94D8,         X_NONE )
     INSN ( "CLT",    none,          0x94E8,         X_NONE )
     INSN ( "CLI",    none,          0x94F8,         X_NONE )
-    
+
+    MASK ( "BCLR",   bit,           0xFF8F, 0x9488, X_NONE )
+    MASK ( "BSET",   bit,           0xFF8F, 0x9408, X_NONE )
+
     INSN ( "IJMP",   none,          0x9409,         X_NONE )
     INSN ( "EIJMP",  none,          0x9419,         X_NONE )
     INSN ( "RET",    none,          0x9508,         X_NONE )
@@ -722,10 +732,10 @@ optab_t base_optab[] = {
     MASK ( "ADIW",   rphigh_k6,     0xFF00, 0x9600, X_IMM )
     MASK ( "SBIW",   rphigh_k6,     0xFF00, 0x9700, X_IMM )
     
-    MASK ( "CBI",    A_b,           0xFC00, 0x9800, X_NONE )
-    MASK ( "SBIC",   A_b,           0xFC00, 0x9900, X_NONE )
-    MASK ( "SBI",    A_b,           0xFC00, 0x9A00, X_NONE )
-    MASK ( "SBIS",   A_b,           0xFC00, 0x9B00, X_NONE )
+    MASK ( "CBI",    A_b,           0xFF00, 0x9800, X_NONE )
+    MASK ( "SBIC",   A_b,           0xFF00, 0x9900, X_NONE )
+    MASK ( "SBI",    A_b,           0xFF00, 0x9A00, X_NONE )
+    MASK ( "SBIS",   A_b,           0xFF00, 0x9B00, X_NONE )
     
     MASK ( "MUL",    r_r,           0xFC00, 0x9C00, X_NONE )
     
