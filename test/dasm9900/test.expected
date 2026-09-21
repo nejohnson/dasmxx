@@ -1,0 +1,77 @@
+   dasm9900 -- TI TMS9900/TMS9995 Disassembler --
+-----------------------------------------------------------------
+
+;   Processing "test.bin" (162 bytes)
+;   Disassembly start address: 0x0000
+;   String terminator: 0x00
+
+Start:
+   LI   R1,#>1234
+   AI   R2,#>0010
+   ANDI R3,#>FF00
+   ORI  R4,#>00FF
+   CI   R5,#>1234
+   STWP R6
+   STST R7
+   LWPI #>2000
+   LIMI #>0002
+   IDLE 
+   RSET 
+   RTWP 
+   CKON 
+   CKOF 
+   LREX 
+   BLWP R0
+   B    *R1
+   X    @TestAddr(R2)
+   CLR  *R3+
+   NEG  R4
+   INV  *R5
+   INC  @TestAddr(R6)
+   INCT *R7+
+   DEC  R8
+   DECT *R9
+   BL   @TestAddr(R10)
+   SWPB *R11+
+   SETO R12
+   ABS  *R13
+   SRA  R1,2
+   SRL  R2,R0
+   SLA  R3,15
+   SRC  R4,4
+   JMP  >005C
+   JLT  >0056
+   JLE  >0060
+   JEQ  >005A
+   JHE  >0064
+   JGT  >005E
+   JNE  >0068
+   JNC  >0062
+   JOC  >006C
+   JNO  >0066
+   JL   >0070
+   JH   >006A
+   JOP  >0074
+   SBO  >05
+   SBZ  >06
+   TB   >07
+   COC  R1,R0
+   CZC  *R1,R1
+   XOR  @TestAddr(R2),R2
+   XOP  *R3+,R3
+   LDCR R1,2
+   STCR @TestAddr(R2),3
+   MPY  R3,R0
+   DIV  *R4,R1
+   SZC  R1,R1
+   SZCB R2,R6
+   S    R3,R3
+   SB   *R4+,R3
+   C    R5,*R0
+   CB   R6,*R1
+   A    R7,*R2
+   AB   R8,*R3
+   MOV  R9,*R4
+   MOVB R10,*R5
+   SOC  R11,*R6
+   SOCB R12,*R7

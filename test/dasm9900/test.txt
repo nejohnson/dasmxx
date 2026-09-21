@@ -1,0 +1,25 @@
+# TI TMS9900/TMS9995 common instruction-form coverage.
+
+# Immediate, workspace, and status/control.
+02 01 12 34 02 22 00 10 02 43 FF 00 02 64 00 FF 02 85 12 34
+02 A6 02 C7 02 E0 20 00 03 00 00 02
+03 40 03 60 03 80 03 A0 03 C0 03 E0
+
+# Single-address instructions.
+04 00 04 51 04 A2 12 34 04 F3 05 04 05 55 05 A6 12 34
+05 F7 06 08 06 59 06 AA 12 34 06 FB 07 0C 07 5D
+
+# Shifts.
+08 21 09 02 0A F3 0B 44
+
+# Jumps and CRU single-bit operations.
+10 02 11 FE 12 02 13 FE 14 02 15 FE 16 02 17 FE
+18 02 19 FE 1A 02 1B FE 1C 02 1D 05 1E 06 1F 07
+
+# Source/register, CRU multi-bit, multiply/divide, and XOP.
+20 01 24 51 28 A2 12 34 2C F3
+30 81 34 E2 12 34 38 03 3C 54
+
+# Two-address instructions.
+40 41 51 82 60 C3 70 F4
+84 05 94 46 A4 87 B4 C8 C5 09 D5 4A E5 8B F5 CC
