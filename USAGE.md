@@ -58,7 +58,7 @@ Configuration commands:
 
 Supported `ocpu` values include `6502`, `65c02`, `65816`, `65c816`,
 `z80`, `z180`, `hd64180`, `8086`, `80186`, `80286`, `80386`, `80486`,
-`68000`, `68010`, `68020`, `68030`, and `68040`.
+`6800`, `6801`, `6803`, `68000`, `68010`, `68020`, `68030`, and `68040`.
 For 65816 immediate operands, use `oacc=8` or `oacc=16` for accumulator
 width and `oidx=8` or `oidx=16` for index-register width.
 

@@ -1,0 +1,18 @@
+   dasm6800 -- Motorola 6800/6801/6803 Disassembler --
+-----------------------------------------------------------------
+
+;   Processing "test6800strict.bin" (10 bytes)
+;   Disassembly start address: 0x0000
+;   String terminator: 0x00
+
+Start:
+   ???     
+   ???     
+   ???     
+   ???     
+   ???     
+   ???     
+   ???     
+   ???     
+   ???     
+   ???     

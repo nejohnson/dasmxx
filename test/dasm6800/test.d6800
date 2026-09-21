@@ -1,0 +1,6 @@
+ocpu=6800
+ftest.bin
+c0000 Start
+e017D
+
+l1234 TestAddr

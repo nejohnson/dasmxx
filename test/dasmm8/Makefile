@@ -4,5 +4,4 @@ test:
 	../../src/dasmm8 test.dm8
 
 clean:
-	rm test.bin
-
+	rm -f test.bin

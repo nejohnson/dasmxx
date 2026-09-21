@@ -4,5 +4,4 @@ test:
 	../../src/dasm7000 test.d7000
 
 clean:
-	rm test.bin
-
+	rm -f test.bin

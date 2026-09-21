@@ -3,6 +3,7 @@ src/*.o
 src/txt2bin
 src/dasm02
 src/dasm05
+src/dasm6800
 src/dasm09
 src/dasm48
 src/dasm51

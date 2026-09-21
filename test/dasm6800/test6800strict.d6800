@@ -1,0 +1,4 @@
+ocpu=6800
+ftest6800strict.bin
+c0000 Start
+e000A

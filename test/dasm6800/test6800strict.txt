@@ -1,0 +1,2 @@
+# Opcodes which are only decoded for 6801/6803.
+04 05 1A 38 3A 3C 3D 8F 83 C3

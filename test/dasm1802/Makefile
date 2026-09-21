@@ -4,5 +4,4 @@ test:
 	../../src/dasm1802 test.d1802
 
 clean:
-	rm test.bin
-
+	rm -f test.bin

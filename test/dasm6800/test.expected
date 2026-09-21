@@ -1,0 +1,203 @@
+   dasm6800 -- Motorola 6800/6801/6803 Disassembler --
+-----------------------------------------------------------------
+
+;   Processing "test.bin" (381 bytes)
+;   Disassembly start address: 0x0000
+;   String terminator: 0x00
+
+Start:
+   nop     
+   tap     
+   tpa     
+   inx     
+   dex     
+   clv     
+   sev     
+   clc     
+   sec     
+   cli     
+   sei     
+   sba     
+   cba     
+   tab     
+   tba     
+   daa     
+   aba     
+   tsx     
+   ins     
+   pula    
+   pulb    
+   des     
+   txs     
+   psha    
+   pshb    
+   rts     
+   rti     
+   wai     
+   swi     
+   bra     $001F
+   bhi     $0022
+   bls     $0021
+   bcc     $0028
+   bcs     $0023
+   bne     $002E
+   beq     $0025
+   bvc     $0034
+   bvs     $0027
+   bpl     $003A
+   bmi     $0029
+   bge     $0040
+   blt     $002B
+   bgt     $0046
+   ble     $002D
+   nega    
+   coma    
+   lsra    
+   rora    
+   asra    
+   asla    
+   rola    
+   deca    
+   inca    
+   tsta    
+   clra    
+   negb    
+   comb    
+   lsrb    
+   rorb    
+   asrb    
+   aslb    
+   rolb    
+   decb    
+   incb    
+   tstb    
+   clrb    
+   neg     $10,x
+   com     $11,x
+   lsr     $12,x
+   ror     $13,x
+   asr     $14,x
+   asl     $15,x
+   rol     $16,x
+   dec     $17,x
+   tst     $18,x
+   jmp     $19,x
+   clr     $1A,x
+   neg     TestAddr
+   com     TestAddr
+   lsr     TestAddr
+   ror     TestAddr
+   asr     TestAddr
+   asl     TestAddr
+   rol     TestAddr
+   dec     TestAddr
+   tst     TestAddr
+   jmp     TestAddr
+   clr     TestAddr
+   suba    #$01
+   cmpa    #$02
+   sbca    #$03
+   anda    #$04
+   bita    #$05
+   ldaa    #$06
+   eora    #$08
+   adca    #$09
+   oraa    #$0A
+   adda    #$0B
+   suba    $10
+   cmpa    $11
+   sbca    $12
+   anda    $14
+   bita    $15
+   ldaa    $16
+   staa    $17
+   eora    $18
+   adca    $19
+   oraa    $1A
+   adda    $1B
+   suba    $20,x
+   cmpa    $21,x
+   sbca    $22,x
+   anda    $24,x
+   bita    $25,x
+   ldaa    $26,x
+   staa    $27,x
+   eora    $28,x
+   adca    $29,x
+   oraa    $2A,x
+   adda    $2B,x
+   suba    TestAddr
+   cmpa    TestAddr
+   sbca    TestAddr
+   anda    TestAddr
+   bita    TestAddr
+   ldaa    TestAddr
+   staa    TestAddr
+   eora    TestAddr
+   adca    TestAddr
+   oraa    TestAddr
+   adda    TestAddr
+   cpx     #$1234
+   bsr     $00EE
+   lds     #$1234
+   cpx     $10
+   lds     $11
+   sts     $12
+   cpx     $20,x
+   jsr     $21,x
+   lds     $22,x
+   sts     $23,x
+   cpx     TestAddr
+   jsr     TestAddr
+   lds     TestAddr
+   sts     TestAddr
+   subb    #$01
+   cmpb    #$02
+   sbcb    #$03
+   andb    #$04
+   bitb    #$05
+   ldab    #$06
+   eorb    #$08
+   adcb    #$09
+   orab    #$0A
+   addb    #$0B
+   subb    $10
+   cmpb    $11
+   sbcb    $12
+   andb    $14
+   bitb    $15
+   ldab    $16
+   stab    $17
+   eorb    $18
+   adcb    $19
+   orab    $1A
+   addb    $1B
+   subb    $20,x
+   cmpb    $21,x
+   sbcb    $22,x
+   andb    $24,x
+   bitb    $25,x
+   ldab    $26,x
+   stab    $27,x
+   eorb    $28,x
+   adcb    $29,x
+   orab    $2A,x
+   addb    $2B,x
+   subb    TestAddr
+   cmpb    TestAddr
+   sbcb    TestAddr
+   andb    TestAddr
+   bitb    TestAddr
+   ldab    TestAddr
+   stab    TestAddr
+   eorb    TestAddr
+   adcb    TestAddr
+   orab    TestAddr
+   addb    TestAddr
+   ldx     #$1234
+   ldx     $10
+   stx     $11
+   ldx     $20,x
+   stx     $21,x
+   ldx     TestAddr
+   stx     TestAddr
