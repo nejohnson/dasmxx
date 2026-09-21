@@ -246,7 +246,8 @@ OPERAND_FUNC(addrbit)
 
 OPERAND_FUNC(addr8)
 {
-   UBYTE addr8 = (UBYTE)next( f, addr );
+   UBYTE lsb_addr = (UBYTE)next( f, addr );
+   UWORD addr8    = (UWORD)( ( g_insn_addr & 0xFF00 ) | lsb_addr );
    
    operand( xref_genwordaddr( NULL, FORMAT_NUM_16BIT, addr8 ) );
    xref_addxref( xtype, g_insn_addr, addr8 );
@@ -259,7 +260,7 @@ OPERAND_FUNC(addr8)
  
 OPERAND_FUNC(addr11)
 {
-   UBYTE msb_addr  = ( opc >> 5) & 0x07;
+   UBYTE msb_addr  = (UBYTE)( ( ( g_insn_addr >> 8 ) & 0xF8 ) | ( ( opc >> 5 ) & 0x07 ) );
    UBYTE lsb_addr  = next( f, addr );
    UWORD addr11    = MK_WORD( lsb_addr, msb_addr );
 

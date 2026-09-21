@@ -1,0 +1,11 @@
+# MCS-48 page/block-relative jump regression coverage
+#
+# Issue #20 reported that an opcode at 0FF7:
+#   E4 A0
+# was decoded as JMP 007A0H instead of JMP 00FA0H.
+
+E4 A0	# JMP 00FA0H
+F6 40	# JC 00F40H
+34 12	# CALL 00912H
+12 80	# JB0 00F80H
+E8 20	# DJNZ R0, 00F20H

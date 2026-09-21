@@ -1,0 +1,10 @@
+f@0FF7 test_page.bin
+c0FF7 PageTest
+e1001
+
+# LABELS
+l0F20  PageDJNZ
+l0F40  PageJC
+l0F80  PageJB0
+l0912  PageCall
+l0FA0  PageJump
