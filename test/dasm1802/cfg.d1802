@@ -1,0 +1,12 @@
+fcfg.bin
+c0000 Reset
+p0005 IdleFlow
+p0010 ReturnFlow
+p0018 LongBranch
+p0020 LongSkip
+l0008 BranchTarget
+l0012 SkipFlow
+l0014 SepFlow
+l001E LongSkipTarget
+l0023 LongSkipReturn
+e0024

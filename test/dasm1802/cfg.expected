@@ -1,0 +1,71 @@
+cfg format=debug target=dasm1802
+root addr=0000 kind=code label="Reset"
+root addr=0005 kind=proc label="IdleFlow"
+root addr=0010 kind=proc label="ReturnFlow"
+root addr=0018 kind=proc label="LongBranch"
+root addr=0020 kind=proc label="LongSkip"
+block start=0000 end=0003 label="Reset"
+block_insn block=0000 addr=0000 text="NOP      "
+block_insn block=0000 addr=0001 text="BNZ      BranchTarget"
+block start=0003 end=0005
+block_insn block=0003 addr=0003 text="BR       SkipFlow"
+block start=0005 end=0006 label="IdleFlow"
+block_insn block=0005 addr=0005 text="IDL      "
+block start=0006 end=0008
+block_insn block=0006 addr=0006 text="NOP      "
+block_insn block=0006 addr=0007 text="NOP      "
+block start=0008 end=000B label="BranchTarget"
+block_insn block=0008 addr=0008 text="LBR      LongBranch"
+block start=0010 end=0011 label="ReturnFlow"
+block_insn block=0010 addr=0010 text="RET      "
+block start=0012 end=0013 label="SkipFlow"
+block_insn block=0012 addr=0012 text="SKP      "
+block start=0014 end=0015 label="SepFlow"
+block_insn block=0014 addr=0014 text="SEP      1"
+block start=0018 end=001B label="LongBranch"
+block_insn block=0018 addr=0018 text="LBQ      LongBranch"
+block start=001B end=001C
+block_insn block=001B addr=001B text="LSNQ     "
+block start=001C end=001D
+block_insn block=001C addr=001C text="RET      "
+block start=001E end=001F label="LongSkipTarget"
+block_insn block=001E addr=001E text="DIS      "
+block start=0020 end=0021 label="LongSkip"
+block_insn block=0020 addr=0020 text="LSKP     "
+block start=0023 end=0024 label="LongSkipReturn"
+block_insn block=0023 addr=0023 text="RET      "
+insn addr=0000 next=0001 flow=normal text="NOP      "
+insn addr=0001 next=0003 flow=cond_jump text="BNZ      BranchTarget" target0=0008
+insn addr=0003 next=0005 flow=jump text="BR       SkipFlow" target0=0012
+insn addr=0005 next=0006 flow=halt text="IDL      "
+insn addr=0006 next=0007 flow=normal text="NOP      "
+insn addr=0007 next=0008 flow=normal text="NOP      "
+insn addr=0008 next=000B flow=jump text="LBR      LongBranch" target0=0018
+insn addr=0010 next=0011 flow=return text="RET      "
+insn addr=0012 next=0013 flow=jump text="SKP      " target0=0014
+insn addr=0014 next=0015 flow=indirect_jump text="SEP      1"
+insn addr=0018 next=001B flow=cond_jump text="LBQ      LongBranch" target0=0018
+insn addr=001B next=001C flow=cond_jump text="LSNQ     " target0=001E
+insn addr=001C next=001D flow=return text="RET      "
+insn addr=001E next=001F flow=return text="DIS      "
+insn addr=0020 next=0021 flow=jump text="LSKP     " target0=0023
+insn addr=0023 next=0024 flow=return text="RET      "
+edge from=0000 to=0001 kind=fallthrough
+edge from=0001 to=0003 kind=fallthrough
+edge from=0001 to=0008 kind=branch
+edge from=0003 to=0012 kind=branch
+edge from=0005 to=0006 kind=resume
+edge from=0006 to=0007 kind=fallthrough
+edge from=0007 to=0008 kind=fallthrough
+edge from=0008 to=0018 kind=branch
+edge from=0010 kind=return
+edge from=0012 to=0014 kind=branch
+edge from=0014 kind=indirect
+edge from=0018 to=0018 kind=branch
+edge from=0018 to=001B kind=fallthrough
+edge from=001B to=001C kind=fallthrough
+edge from=001B to=001E kind=branch
+edge from=001C kind=return
+edge from=001E kind=return
+edge from=0020 to=0023 kind=branch
+edge from=0023 kind=return

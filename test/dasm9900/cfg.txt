@@ -1,0 +1,20 @@
+# TI TMS9900 CFG fixture. Comments use byte offsets.
+10 02       # 0000: JMP 0006
+00 00       # 0002: filler
+00 00       # 0004: filler
+16 FC       # 0006: JNE 0000
+03 80       # 0008: RTWP
+00 00       # 000A: filler
+03 80       # 000C: RTWP
+00 00       # 000E: filler
+04 40       # 0010: B R0
+06 A0 00 0C # 0012: BL @000C
+03 80       # 0016: RTWP
+06 A0 00 0C # 0018: BL @000C
+04 60       # 001C: B R0
+00 00       # 001E: filler
+04 00       # 0020: BLWP R0
+03 80       # 0022: RTWP
+2C 00       # 0024: XOP R0,0
+03 80       # 0026: RTWP
+03 40       # 0028: IDLE

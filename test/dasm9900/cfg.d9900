@@ -1,0 +1,12 @@
+fcfg.bin
+c0000 Reset
+p0008 ReturnFlow
+p0010 BranchFlow
+p0018 CallFlow
+p0028 HaltFlow
+l0006 BranchTarget
+p000C SubFunc
+l0014 Dispatch
+p0020 BlwpFlow
+p0024 XopFlow
+e002A

@@ -1,0 +1,61 @@
+cfg format=debug target=dasm9900
+root addr=0000 kind=code label="Reset"
+root addr=0008 kind=proc label="ReturnFlow"
+root addr=000C kind=proc label="SubFunc"
+root addr=0010 kind=proc label="BranchFlow"
+root addr=0018 kind=proc label="CallFlow"
+root addr=0020 kind=proc label="BlwpFlow"
+root addr=0024 kind=proc label="XopFlow"
+root addr=0028 kind=proc label="HaltFlow"
+block start=0000 end=0002 label="Reset"
+block_insn block=0000 addr=0000 text="JMP  BranchTarget"
+block start=0006 end=0008 label="BranchTarget"
+block_insn block=0006 addr=0006 text="JNE  Reset"
+block start=0008 end=000A label="ReturnFlow"
+block_insn block=0008 addr=0008 text="RTWP "
+block start=000C end=000E label="SubFunc"
+block_insn block=000C addr=000C text="RTWP "
+block start=0010 end=0012 label="BranchFlow"
+block_insn block=0010 addr=0010 text="B    R0"
+block start=0018 end=001C label="CallFlow"
+block_insn block=0018 addr=0018 text="BL   @SubFunc"
+block start=001C end=0020
+block_insn block=001C addr=001C text="B    @Reset"
+block start=0020 end=0022 label="BlwpFlow"
+block_insn block=0020 addr=0020 text="BLWP R0"
+block start=0022 end=0024
+block_insn block=0022 addr=0022 text="RTWP "
+block start=0024 end=0026 label="XopFlow"
+block_insn block=0024 addr=0024 text="XOP  R0,R0"
+block start=0026 end=0028
+block_insn block=0026 addr=0026 text="RTWP "
+block start=0028 end=002A label="HaltFlow"
+block_insn block=0028 addr=0028 text="IDLE "
+insn addr=0000 next=0002 flow=jump text="JMP  BranchTarget" target0=0006
+insn addr=0006 next=0008 flow=cond_jump text="JNE  Reset" target0=0000
+insn addr=0008 next=000A flow=return text="RTWP "
+insn addr=000C next=000E flow=return text="RTWP "
+insn addr=0010 next=0012 flow=jump text="B    R0"
+insn addr=0018 next=001C flow=call text="BL   @SubFunc" target0=000C
+insn addr=001C next=0020 flow=jump text="B    @Reset" target0=0000
+insn addr=0020 next=0022 flow=indirect_call text="BLWP R0"
+insn addr=0022 next=0024 flow=return text="RTWP "
+insn addr=0024 next=0026 flow=indirect_call text="XOP  R0,R0"
+insn addr=0026 next=0028 flow=return text="RTWP "
+insn addr=0028 next=002A flow=halt text="IDLE "
+edge from=0000 to=0006 kind=branch
+edge from=0006 to=0000 kind=branch
+edge from=0006 to=0008 kind=fallthrough
+edge from=0008 kind=return
+edge from=000C kind=return
+edge from=0010 kind=indirect
+edge from=0018 to=000C kind=call
+edge from=0018 to=001C kind=fallthrough
+edge from=001C to=0000 kind=branch
+edge from=0020 kind=indirect
+edge from=0020 to=0022 kind=fallthrough
+edge from=0022 kind=return
+edge from=0024 kind=indirect
+edge from=0024 to=0026 kind=fallthrough
+edge from=0026 kind=return
+edge from=0028 to=002A kind=resume

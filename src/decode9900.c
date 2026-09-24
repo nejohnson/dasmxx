@@ -61,6 +61,39 @@ static void addr16( UWORD a, XREF_TYPE xtype )
     xref_addxref( xtype, g_insn_addr, a );
 }
 
+int dasm_cfg_supported( void )
+{
+    return 1;
+}
+
+static int read_opcode_word( ADDR addr, UWORD *out )
+{
+    return dasm_input_read_word_at( addr, out );
+}
+
+void dasm_post_insn( void )
+{
+    UWORD op0;
+
+    if ( !read_opcode_word( g_insn_addr, &op0 ) )
+        return;
+
+    if ( op0 == 0x0340 )
+        dasm_cfg_set_flow( CFG_FLOW_HALT );
+    else if ( op0 == 0x0380 )
+        dasm_cfg_set_flow( CFG_FLOW_RETURN );
+    else if ( (op0 & 0xFFC0) == 0x0400 || (op0 & 0xFC00) == 0x2C00 )
+        dasm_cfg_set_flow( CFG_FLOW_INDIRECT_CALL );
+    else if ( (op0 & 0xFFC0) == 0x0440 )
+        dasm_cfg_set_flow( CFG_FLOW_JUMP );
+    else if ( (op0 & 0xFFC0) == 0x0680 )
+        dasm_cfg_set_flow( CFG_FLOW_CALL );
+    else if ( (op0 & 0xFF00) == 0x1000 )
+        dasm_cfg_set_flow( CFG_FLOW_JUMP );
+    else if ( (op0 & 0xF000) == 0x1000 )
+        dasm_cfg_set_flow( CFG_FLOW_COND_JUMP );
+}
+
 static UWORD next_word( FILE *f, ADDR *addr )
 {
     (void)f;

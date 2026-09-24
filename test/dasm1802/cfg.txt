@@ -1,0 +1,31 @@
+# RCA CDP1802 CFG fixture
+C4          # 0000: NOP
+3A 08       # 0001: BNZ 0008
+30 12       # 0003: BR 0012
+00          # 0005: IDL
+C4          # 0006: filler
+C4          # 0007: filler
+C0 00 18    # 0008: LBR 0018
+C4          # 000B: filler
+C4          # 000C: filler
+C4          # 000D: filler
+C4          # 000E: filler
+C4          # 000F: filler
+70          # 0010: RET
+C4          # 0011: filler
+38          # 0012: SKP
+C4          # 0013: skipped byte
+D1          # 0014: SEP 1
+C4          # 0015: filler
+C4          # 0016: filler
+C4          # 0017: filler
+C1 00 18    # 0018: LBQ 0018
+C5          # 001B: LSNQ
+70          # 001C: RET
+C4          # 001D: skipped byte
+71          # 001E: DIS
+C4          # 001F: filler
+C8          # 0020: LSKP
+C4          # 0021: skipped byte
+C4          # 0022: skipped byte
+70          # 0023: RET
