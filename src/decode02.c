@@ -56,6 +56,60 @@ DASM_PROFILE( "dasm02", "MOS Technology 6502 / WDC 65C02 / WDC 65816", 4, 9, 0, 
 /* Construct a 16-bit word out of low and high bytes */
 #define MK_WORD(l,h)            ( ((l) & 0xFF) | (((h) & 0xFF) << 8) )
 
+int dasm_cfg_supported( void )
+{
+    return 1;
+}
+
+static int read_opcode_byte( ADDR addr, UBYTE *out )
+{
+    return dasm_input_read_byte_at( addr, out );
+}
+
+static int cfg_cpu_at_least( unsigned int cpu )
+{
+    return dasm_cpu_level == 0 || dasm_cpu_level >= cpu;
+}
+
+static int cfg_cpu_exact( unsigned int cpu )
+{
+    return dasm_cpu_level == cpu;
+}
+
+void dasm_post_insn( void )
+{
+    UBYTE op0;
+
+    if ( !read_opcode_byte( g_insn_addr, &op0 ) )
+        return;
+
+    if ( op0 == 0x00 || (op0 == 0x02 && cfg_cpu_at_least( CPU_65816 )) )
+        dasm_cfg_set_flow( CFG_FLOW_INDIRECT_CALL );
+    else if ( op0 == 0x40 || op0 == 0x60
+              || (op0 == 0x6B && cfg_cpu_at_least( CPU_65816 )) )
+        dasm_cfg_set_flow( CFG_FLOW_RETURN );
+    else if ( op0 == 0x4C
+              || (op0 == 0x5C && cfg_cpu_at_least( CPU_65816 ))
+              || (op0 == 0x80 && cfg_cpu_at_least( CPU_65C02 ))
+              || (op0 == 0x82 && cfg_cpu_at_least( CPU_65816 )) )
+        dasm_cfg_set_flow( CFG_FLOW_JUMP );
+    else if ( op0 == 0x6C
+              || (op0 == 0x7C && cfg_cpu_at_least( CPU_65C02 ))
+              || (op0 == 0xDC && cfg_cpu_at_least( CPU_65816 )) )
+        dasm_cfg_set_flow( CFG_FLOW_INDIRECT_JUMP );
+    else if ( op0 == 0x20 || (op0 == 0x22 && cfg_cpu_at_least( CPU_65816 )) )
+        dasm_cfg_set_flow( CFG_FLOW_CALL );
+    else if ( op0 == 0xFC && cfg_cpu_at_least( CPU_65816 ) )
+        dasm_cfg_set_flow( CFG_FLOW_INDIRECT_CALL );
+    else if ( (op0 & 0x1F) == 0x10
+              || ((op0 & 0x0F) == 0x0F && cfg_cpu_exact( CPU_65C02 )) )
+        dasm_cfg_set_flow( CFG_FLOW_COND_JUMP );
+    else if ( op0 == 0xCB && cfg_cpu_at_least( CPU_65C02 ) )
+        dasm_cfg_set_flow( CFG_FLOW_HALT );
+    else if ( op0 == 0xDB && cfg_cpu_at_least( CPU_65C02 ) )
+        dasm_cfg_set_flow( CFG_FLOW_STOP );
+}
+
 /*****************************************************************************
  *        Private Functions
  *****************************************************************************/

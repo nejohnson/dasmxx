@@ -1,0 +1,11 @@
+fcfg.bin
+ocpu=65c02
+c0000 Reset
+p0015 BrkFlow
+p0020 BraFlow
+l0008 BranchTarget
+p0010 SubFunc
+l0012 Dispatch
+l0025 BitBranch
+l002A WaitPath
+e0030

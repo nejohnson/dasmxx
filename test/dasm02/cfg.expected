@@ -1,0 +1,71 @@
+cfg format=debug target=dasm02
+root addr=0000 kind=code label="Reset"
+root addr=0010 kind=proc label="SubFunc"
+root addr=0015 kind=proc label="BrkFlow"
+root addr=0020 kind=proc label="BraFlow"
+block start=0000 end=0003 label="Reset"
+block_insn block=0000 addr=0000 text="nop      "
+block_insn block=0000 addr=0001 text="bne      BranchTarget"
+block start=0003 end=0006
+block_insn block=0003 addr=0003 text="jsr      SubFunc"
+block start=0006 end=0007
+block_insn block=0006 addr=0006 text="wai      "
+block start=0007 end=0008
+block_insn block=0007 addr=0007 text="nop      "
+block start=0008 end=000B label="BranchTarget"
+block_insn block=0008 addr=0008 text="jmp      Dispatch"
+block start=0010 end=0011 label="SubFunc"
+block_insn block=0010 addr=0010 text="rts      "
+block start=0012 end=0015 label="Dispatch"
+block_insn block=0012 addr=0012 text="jmp      (BraFlow)"
+block start=0015 end=0016 label="BrkFlow"
+block_insn block=0015 addr=0015 text="brk      "
+block start=0016 end=0017
+block_insn block=0016 addr=0016 text="rti      "
+block start=0020 end=0022 label="BraFlow"
+block_insn block=0020 addr=0020 text="bra      BitBranch"
+block start=0025 end=0028 label="BitBranch"
+block_insn block=0025 addr=0025 text="bbr0     $30, WaitPath"
+block start=0028 end=0029
+block_insn block=0028 addr=0028 text="stp      "
+block start=002A end=002B label="WaitPath"
+block_insn block=002A addr=002A text="wai      "
+block start=002B end=002F
+block_insn block=002B addr=002B text="nop      "
+block_insn block=002B addr=002C text="jmp      ($0040, X)"
+insn addr=0000 next=0001 flow=normal text="nop      "
+insn addr=0001 next=0003 flow=cond_jump text="bne      BranchTarget" target0=0008
+insn addr=0003 next=0006 flow=call text="jsr      SubFunc" target0=0010
+insn addr=0006 next=0007 flow=halt text="wai      "
+insn addr=0007 next=0008 flow=normal text="nop      "
+insn addr=0008 next=000B flow=jump text="jmp      Dispatch" target0=0012
+insn addr=0010 next=0011 flow=return text="rts      "
+insn addr=0012 next=0015 flow=indirect_jump text="jmp      (BraFlow)"
+insn addr=0015 next=0016 flow=indirect_call text="brk      "
+insn addr=0016 next=0017 flow=return text="rti      "
+insn addr=0020 next=0022 flow=jump text="bra      BitBranch" target0=0025
+insn addr=0025 next=0028 flow=cond_jump text="bbr0     $30, WaitPath" target0=002A
+insn addr=0028 next=0029 flow=stop text="stp      "
+insn addr=002A next=002B flow=halt text="wai      "
+insn addr=002B next=002C flow=normal text="nop      "
+insn addr=002C next=002F flow=indirect_jump text="jmp      ($0040, X)"
+edge from=0000 to=0001 kind=fallthrough
+edge from=0001 to=0003 kind=fallthrough
+edge from=0001 to=0008 kind=branch
+edge from=0003 to=0006 kind=fallthrough
+edge from=0003 to=0010 kind=call
+edge from=0006 to=0007 kind=resume
+edge from=0007 to=0008 kind=fallthrough
+edge from=0008 to=0012 kind=branch
+edge from=0010 kind=return
+edge from=0012 kind=indirect
+edge from=0015 kind=indirect
+edge from=0015 to=0016 kind=fallthrough
+edge from=0016 kind=return
+edge from=0020 to=0025 kind=branch
+edge from=0025 to=0028 kind=fallthrough
+edge from=0025 to=002A kind=branch
+edge from=0028 kind=stop
+edge from=002A to=002B kind=resume
+edge from=002B to=002C kind=fallthrough
+edge from=002C kind=indirect

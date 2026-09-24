@@ -1,0 +1,37 @@
+# 6502/65C02/65816 CFG fixture
+EA              # 0000: NOP
+D0 05           # 0001: BNE 0008
+20 10 00        # 0003: JSR 0010
+CB              # 0006: WAI
+EA              # 0007: NOP
+4C 12 00        # 0008: JMP 0012
+EA              # 000B: filler
+EA              # 000C: filler
+EA              # 000D: filler
+EA              # 000E: filler
+EA              # 000F: filler
+60              # 0010: RTS
+EA              # 0011: filler
+6C 20 00        # 0012: JMP (0020)
+00              # 0015: BRK
+40              # 0016: RTI
+EA              # 0017: filler
+EA              # 0018: filler
+EA              # 0019: filler
+EA              # 001A: filler
+EA              # 001B: filler
+EA              # 001C: filler
+EA              # 001D: filler
+EA              # 001E: filler
+EA              # 001F: filler
+80 03           # 0020: BRA 0025
+EA              # 0022: filler
+EA              # 0023: filler
+EA              # 0024: filler
+0F 30 02        # 0025: BBR0 30,002A
+DB              # 0028: STP
+EA              # 0029: filler
+CB              # 002A: WAI
+EA              # 002B: NOP
+7C 40 00        # 002C: JMP (0040,X)
+EA              # 002F: filler

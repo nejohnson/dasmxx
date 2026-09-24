@@ -1,0 +1,43 @@
+cfg format=debug target=dasm02
+root addr=0000 kind=code label="Reset"
+root addr=0010 kind=proc label="LongSub"
+root addr=0020 kind=proc label="LongDispatch"
+root addr=0030 kind=proc label="LongIndirect"
+block start=0000 end=0005 label="Reset"
+block_insn block=0000 addr=0000 text="nop      "
+block_insn block=0000 addr=0001 text="jsl      LongSub"
+block start=0005 end=0008
+block_insn block=0005 addr=0005 text="brl      LongJump"
+block start=000C end=0010 label="LongJump"
+block_insn block=000C addr=000C text="jml      LongDispatch"
+block start=0010 end=0011 label="LongSub"
+block_insn block=0010 addr=0010 text="rtl      "
+block start=0020 end=0023 label="LongDispatch"
+block_insn block=0020 addr=0020 text="jsr      (LongIndirect, X)"
+block start=0023 end=0025
+block_insn block=0023 addr=0023 text="cop      #$55"
+block start=0025 end=0026
+block_insn block=0025 addr=0025 text="rtl      "
+block start=0030 end=0033 label="LongIndirect"
+block_insn block=0030 addr=0030 text="jml      [$0040]"
+insn addr=0000 next=0001 flow=normal text="nop      "
+insn addr=0001 next=0005 flow=call text="jsl      LongSub" target0=0010
+insn addr=0005 next=0008 flow=jump text="brl      LongJump" target0=000C
+insn addr=000C next=0010 flow=jump text="jml      LongDispatch" target0=0020
+insn addr=0010 next=0011 flow=return text="rtl      "
+insn addr=0020 next=0023 flow=indirect_call text="jsr      (LongIndirect, X)"
+insn addr=0023 next=0025 flow=indirect_call text="cop      #$55"
+insn addr=0025 next=0026 flow=return text="rtl      "
+insn addr=0030 next=0033 flow=indirect_jump text="jml      [$0040]"
+edge from=0000 to=0001 kind=fallthrough
+edge from=0001 to=0005 kind=fallthrough
+edge from=0001 to=0010 kind=call
+edge from=0005 to=000C kind=branch
+edge from=000C to=0020 kind=branch
+edge from=0010 kind=return
+edge from=0020 kind=indirect
+edge from=0020 to=0023 kind=fallthrough
+edge from=0023 kind=indirect
+edge from=0023 to=0025 kind=fallthrough
+edge from=0025 kind=return
+edge from=0030 kind=indirect

@@ -1,0 +1,39 @@
+# 65816 CFG fixture
+EA              # 0000: NOP
+22 10 00 00     # 0001: JSL 0010
+82 04 00        # 0005: BRL 000C
+EA              # 0008: filler
+EA              # 0009: filler
+EA              # 000A: filler
+EA              # 000B: filler
+5C 20 00 00     # 000C: JML 0020
+6B              # 0010: RTL
+EA              # 0011: filler
+EA              # 0012: filler
+EA              # 0013: filler
+EA              # 0014: filler
+EA              # 0015: filler
+EA              # 0016: filler
+EA              # 0017: filler
+EA              # 0018: filler
+EA              # 0019: filler
+EA              # 001A: filler
+EA              # 001B: filler
+EA              # 001C: filler
+EA              # 001D: filler
+EA              # 001E: filler
+EA              # 001F: filler
+FC 30 00        # 0020: JSR (0030,X)
+02 55           # 0023: COP 55
+6B              # 0025: RTL
+EA              # 0026: filler
+EA              # 0027: filler
+EA              # 0028: filler
+EA              # 0029: filler
+EA              # 002A: filler
+EA              # 002B: filler
+EA              # 002C: filler
+EA              # 002D: filler
+EA              # 002E: filler
+EA              # 002F: filler
+DC 40 00        # 0030: JML [0040]

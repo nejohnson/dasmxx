@@ -1,0 +1,8 @@
+fcfg65816.bin
+ocpu=65816
+c0000 Reset
+p0010 LongSub
+p0020 LongDispatch
+p0030 LongIndirect
+l000C LongJump
+e0033
