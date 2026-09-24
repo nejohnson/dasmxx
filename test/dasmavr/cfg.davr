@@ -1,0 +1,13 @@
+fcfg.bin
+c0000 Reset
+p0008 ReturnFlow
+p0009 Dispatch
+p000A SkipFlow
+p000D IndirectCall
+p000F StopFlow
+p0010 LongJump
+p0012 LongCall
+l0005 BranchTarget
+l0014 LongTarget
+p0016 LongSub
+e0017

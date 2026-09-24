@@ -63,6 +63,63 @@ DASM_PROFILE( "dasmavr", "Atmel AVR", 4, 9, 0, 2, 2 )
 /* Construct a 16-bit word out of low and high bytes */
 #define MK_WORD(l,h)            ( ((l) & 0xFF) | (((UWORD)((h) & 0xFF)) << 8) )
 
+int dasm_cfg_supported( void )
+{
+    return 1;
+}
+
+static int read_opcode_word( ADDR addr, UWORD *out )
+{
+    return dasm_input_read_word_at( addr, out );
+}
+
+static int cfg_is_32bit_insn( UWORD op )
+{
+    return ( (op & 0xFE0F) == 0x9000 )
+           || ( (op & 0xFE0F) == 0x9200 )
+           || ( (op & 0xFE0E) == 0x940C )
+           || ( (op & 0xFE0E) == 0x940E );
+}
+
+void dasm_post_insn( void )
+{
+    UWORD op0, op1;
+
+    if ( !read_opcode_word( g_insn_addr, &op0 ) )
+        return;
+
+    if ( op0 == 0x9409 || op0 == 0x9419 )
+        dasm_cfg_set_flow( CFG_FLOW_INDIRECT_JUMP );
+    else if ( op0 == 0x9508 || op0 == 0x9518 )
+        dasm_cfg_set_flow( CFG_FLOW_RETURN );
+    else if ( op0 == 0x9509 || op0 == 0x9519 )
+        dasm_cfg_set_flow( CFG_FLOW_INDIRECT_CALL );
+    else if ( op0 == 0x9588 )
+        dasm_cfg_set_flow( CFG_FLOW_HALT );
+    else if ( op0 == 0x9598 )
+        dasm_cfg_set_flow( CFG_FLOW_STOP );
+    else if ( (op0 & 0xFE0E) == 0x940E )
+        dasm_cfg_set_flow( CFG_FLOW_CALL );
+    else if ( (op0 & 0xFE0E) == 0x940C )
+        dasm_cfg_set_flow( CFG_FLOW_JUMP );
+    else if ( (op0 & 0xF000) == 0xC000 )
+        dasm_cfg_set_flow( CFG_FLOW_JUMP );
+    else if ( (op0 & 0xF000) == 0xD000 )
+        dasm_cfg_set_flow( CFG_FLOW_CALL );
+    else if ( (op0 & 0xF800) == 0xF000 )
+        dasm_cfg_set_flow( CFG_FLOW_COND_JUMP );
+    else if ( (op0 & 0xFC00) == 0x1000
+              || (op0 & 0xFF00) == 0x9900
+              || (op0 & 0xFF00) == 0x9B00
+              || (op0 & 0xFE08) == 0xFC00
+              || (op0 & 0xFE08) == 0xFE00 )
+    {
+        dasm_cfg_set_flow( CFG_FLOW_COND_JUMP );
+        if ( read_opcode_word( g_insn_addr + 2, &op1 ) )
+            dasm_cfg_add_target( g_insn_addr + 2 + (cfg_is_32bit_insn( op1 ) ? 4 : 2) );
+    }
+}
+
 /******************************************************************************/
 /**                            Operand Functions                             **/
 /******************************************************************************/
@@ -106,7 +163,7 @@ OPERAND_FUNC(bra7)
     BYTE disp = ((BYTE)(opc >> 2 )) / 2; /* SIGNED arithmetic! */
     ADDR dest = *addr + ( 2 * disp );
     
-    operand( xref_genwordaddr( NULL, FORMAT_NUM_16BIT, dest ) );
+    operand( xref_genwordaddr( NULL, FORMAT_NUM_16BIT, dest / dasm_word_width_bytes ) );
     xref_addxref( xtype, g_insn_addr, dest );
 }
 
@@ -123,7 +180,7 @@ OPERAND_FUNC(rel_k12)
     
     ADDR dest = *addr + ( k * 2 );
     
-    operand( xref_genwordaddr( NULL, FORMAT_NUM_16BIT, dest ) );
+    operand( xref_genwordaddr( NULL, FORMAT_NUM_16BIT, dest / dasm_word_width_bytes ) );
     xref_addxref( xtype, g_insn_addr, dest ); 
 }
 
@@ -139,7 +196,7 @@ OPERAND_FUNC(long_addr)
     dest |= ( opc & 0x01F0 ) << 13;
     
     operand( xref_genwordaddr( NULL, FORMAT_NUM_16BIT, dest ) );
-    xref_addxref( xtype, g_insn_addr, dest ); 
+    xref_addxref( xtype, g_insn_addr, dest * dasm_word_width_bytes );
 }
 
 /***********************************************************

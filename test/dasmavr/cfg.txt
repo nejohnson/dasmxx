@@ -1,0 +1,22 @@
+# AVR CFG fixture. Comments use byte offsets.
+00 00       # 0000: NOP
+19 F4       # 0002: BRNE 000A
+05 D0       # 0004: RCALL 0010
+88 95       # 0006: SLEEP
+00 00       # 0008: filler
+03 C0       # 000A: RJMP 0012
+00 00       # 000C: filler
+00 00       # 000E: filler
+08 95       # 0010: RET
+09 94       # 0012: IJMP
+00 10       # 0014: CPSE R0,R0
+00 00       # 0016: skipped NOP
+08 95       # 0018: RET
+09 95       # 001A: ICALL
+08 95       # 001C: RET
+98 95       # 001E: BREAK
+0C 94 14 00 # 0020: JMP 0028
+0E 94 16 00 # 0024: CALL 002C
+00 00       # 0028: NOP
+08 95       # 002A: RET
+08 95       # 002C: RET

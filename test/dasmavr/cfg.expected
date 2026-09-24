@@ -1,0 +1,89 @@
+cfg format=debug target=dasmavr
+root addr=0000 kind=code label="Reset"
+root addr=0010 kind=proc label="ReturnFlow"
+root addr=0012 kind=proc label="Dispatch"
+root addr=0014 kind=proc label="SkipFlow"
+root addr=001A kind=proc label="IndirectCall"
+root addr=001E kind=proc label="StopFlow"
+root addr=0020 kind=proc label="LongJump"
+root addr=0024 kind=proc label="LongCall"
+root addr=002C kind=proc label="LongSub"
+block start=0000 end=0004 label="Reset"
+block_insn block=0000 addr=0000 text="NOP      "
+block_insn block=0000 addr=0002 text="BRNE     BranchTarget"
+block start=0004 end=0006
+block_insn block=0004 addr=0004 text="RCALL    ReturnFlow"
+block start=0006 end=0008
+block_insn block=0006 addr=0006 text="SLEEP    "
+block start=0008 end=000A
+block_insn block=0008 addr=0008 text="NOP      "
+block start=000A end=000C label="BranchTarget"
+block_insn block=000A addr=000A text="RJMP     Dispatch"
+block start=0010 end=0012 label="ReturnFlow"
+block_insn block=0010 addr=0010 text="RET      "
+block start=0012 end=0014 label="Dispatch"
+block_insn block=0012 addr=0012 text="IJMP     "
+block start=0014 end=0016 label="SkipFlow"
+block_insn block=0014 addr=0014 text="CPSE     R0, R0"
+block start=0016 end=0018
+block_insn block=0016 addr=0016 text="NOP      "
+block start=0018 end=001A
+block_insn block=0018 addr=0018 text="RET      "
+block start=001A end=001C label="IndirectCall"
+block_insn block=001A addr=001A text="ICALL    "
+block start=001C end=001E
+block_insn block=001C addr=001C text="RET      "
+block start=001E end=0020 label="StopFlow"
+block_insn block=001E addr=001E text="BREAK    "
+block start=0020 end=0024 label="LongJump"
+block_insn block=0020 addr=0020 text="JMP      LongTarget"
+block start=0024 end=0028 label="LongCall"
+block_insn block=0024 addr=0024 text="CALL     LongSub"
+block start=0028 end=002C label="LongTarget"
+block_insn block=0028 addr=0028 text="NOP      "
+block_insn block=0028 addr=002A text="RET      "
+block start=002C end=002E label="LongSub"
+block_insn block=002C addr=002C text="RET      "
+insn addr=0000 next=0002 flow=normal text="NOP      "
+insn addr=0002 next=0004 flow=cond_jump text="BRNE     BranchTarget" target0=000A
+insn addr=0004 next=0006 flow=call text="RCALL    ReturnFlow" target0=0010
+insn addr=0006 next=0008 flow=halt text="SLEEP    "
+insn addr=0008 next=000A flow=normal text="NOP      "
+insn addr=000A next=000C flow=jump text="RJMP     Dispatch" target0=0012
+insn addr=0010 next=0012 flow=return text="RET      "
+insn addr=0012 next=0014 flow=indirect_jump text="IJMP     "
+insn addr=0014 next=0016 flow=cond_jump text="CPSE     R0, R0" target0=0018
+insn addr=0016 next=0018 flow=normal text="NOP      "
+insn addr=0018 next=001A flow=return text="RET      "
+insn addr=001A next=001C flow=indirect_call text="ICALL    "
+insn addr=001C next=001E flow=return text="RET      "
+insn addr=001E next=0020 flow=stop text="BREAK    "
+insn addr=0020 next=0024 flow=jump text="JMP      LongTarget" target0=0028
+insn addr=0024 next=0028 flow=call text="CALL     LongSub" target0=002C
+insn addr=0028 next=002A flow=normal text="NOP      "
+insn addr=002A next=002C flow=return text="RET      "
+insn addr=002C next=002E flow=return text="RET      "
+edge from=0000 to=0002 kind=fallthrough
+edge from=0002 to=0004 kind=fallthrough
+edge from=0002 to=000A kind=branch
+edge from=0004 to=0006 kind=fallthrough
+edge from=0004 to=0010 kind=call
+edge from=0006 to=0008 kind=resume
+edge from=0008 to=000A kind=fallthrough
+edge from=000A to=0012 kind=branch
+edge from=0010 kind=return
+edge from=0012 kind=indirect
+edge from=0014 to=0016 kind=fallthrough
+edge from=0014 to=0018 kind=branch
+edge from=0016 to=0018 kind=fallthrough
+edge from=0018 kind=return
+edge from=001A kind=indirect
+edge from=001A to=001C kind=fallthrough
+edge from=001C kind=return
+edge from=001E kind=stop
+edge from=0020 to=0028 kind=branch
+edge from=0024 to=0028 kind=fallthrough
+edge from=0024 to=002C kind=call
+edge from=0028 to=002A kind=fallthrough
+edge from=002A kind=return
+edge from=002C kind=return
