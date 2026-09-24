@@ -554,8 +554,8 @@ void cfg_emit_dot( const struct cfg *cfg, FILE *out )
         const struct dasm_insn_info *last = block_last_insn( cfg, &cfg->blocks[i] );
         unsigned int j;
 
-        fprintf( out, "  \"B_%04X\" [shape=box, label=\"%04X..%04X\\l",
-                 cfg->blocks[i].start, cfg->blocks[i].start, cfg->blocks[i].end );
+        fprintf( out, "  \"B_%04X\" [shape=box, label=\"",
+                 cfg->blocks[i].start );
         for ( j = 0; j < cfg->insn_count; j++ )
             if ( insn_in_block( &cfg->insns[j], &cfg->blocks[i] )
                  && !(last == &cfg->insns[j].info && flow_is_conditional( last->flow )) )
