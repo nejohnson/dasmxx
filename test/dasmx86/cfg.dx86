@@ -1,0 +1,13 @@
+fcfg.bin
+ocpu=80386
+c0000 Reset
+p0010 SubFunc
+p0011 IretFlow
+p0012 TrapFlow
+p0014 IndirectJump
+p0016 IndirectCall
+p0020 Call32
+l0008 BranchTarget
+l0018 Dispatch
+l0028 Call32Target
+e0029

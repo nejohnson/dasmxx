@@ -1,0 +1,81 @@
+cfg format=debug target=dasmx86
+root addr=0000 kind=code label="Reset"
+root addr=0010 kind=proc label="SubFunc"
+root addr=0011 kind=proc label="IretFlow"
+root addr=0012 kind=proc label="TrapFlow"
+root addr=0014 kind=proc label="IndirectJump"
+root addr=0016 kind=proc label="IndirectCall"
+root addr=0020 kind=proc label="Call32"
+block start=0000 end=0003 label="Reset"
+block_insn block=0000 addr=0000 text="NOP      "
+block_insn block=0000 addr=0001 text="JE       BranchTarget"
+block start=0003 end=0006
+block_insn block=0003 addr=0003 text="CALL     SubFunc"
+block start=0006 end=0007
+block_insn block=0006 addr=0006 text="HLT      "
+block start=0007 end=0008
+block_insn block=0007 addr=0007 text="NOP      "
+block start=0008 end=000A label="BranchTarget"
+block_insn block=0008 addr=0008 text="JMP      Dispatch"
+block start=0010 end=0011 label="SubFunc"
+block_insn block=0010 addr=0010 text="RETN     "
+block start=0011 end=0012 label="IretFlow"
+block_insn block=0011 addr=0011 text="IRET     "
+block start=0012 end=0013 label="TrapFlow"
+block_insn block=0012 addr=0012 text="INT3     "
+block start=0013 end=0014
+block_insn block=0013 addr=0013 text="RETN     "
+block start=0014 end=0016 label="IndirectJump"
+block_insn block=0014 addr=0014 text="JMP      W[BX + SI]"
+block start=0016 end=0018 label="IndirectCall"
+block_insn block=0016 addr=0016 text="CALL     W[BX + SI]"
+block start=0018 end=001C label="Dispatch"
+block_insn block=0018 addr=0018 text="JE       Call32"
+block start=001C end=001D
+block_insn block=001C addr=001C text="RETN     "
+block start=0020 end=0026 label="Call32"
+block_insn block=0020 addr=0020 text="CALL     Call32Target"
+block start=0026 end=0027
+block_insn block=0026 addr=0026 text="RETN     "
+block start=0028 end=0029 label="Call32Target"
+block_insn block=0028 addr=0028 text="RETN     "
+insn addr=0000 next=0001 flow=normal text="NOP      "
+insn addr=0001 next=0003 flow=cond_jump text="JE       BranchTarget" target0=0008
+insn addr=0003 next=0006 flow=call text="CALL     SubFunc" target0=0010
+insn addr=0006 next=0007 flow=halt text="HLT      "
+insn addr=0007 next=0008 flow=normal text="NOP      "
+insn addr=0008 next=000A flow=jump text="JMP      Dispatch" target0=0018
+insn addr=0010 next=0011 flow=return text="RETN     "
+insn addr=0011 next=0012 flow=return text="IRET     "
+insn addr=0012 next=0013 flow=indirect_call text="INT3     "
+insn addr=0013 next=0014 flow=return text="RETN     "
+insn addr=0014 next=0016 flow=indirect_jump text="JMP      W[BX + SI]"
+insn addr=0016 next=0018 flow=indirect_call text="CALL     W[BX + SI]"
+insn addr=0018 next=001C flow=cond_jump text="JE       Call32" target0=0020
+insn addr=001C next=001D flow=return text="RETN     "
+insn addr=0020 next=0026 flow=call text="CALL     Call32Target" target0=0028
+insn addr=0026 next=0027 flow=return text="RETN     "
+insn addr=0028 next=0029 flow=return text="RETN     "
+edge from=0000 to=0001 kind=fallthrough
+edge from=0001 to=0003 kind=fallthrough
+edge from=0001 to=0008 kind=branch
+edge from=0003 to=0006 kind=fallthrough
+edge from=0003 to=0010 kind=call
+edge from=0006 to=0007 kind=resume
+edge from=0007 to=0008 kind=fallthrough
+edge from=0008 to=0018 kind=branch
+edge from=0010 kind=return
+edge from=0011 kind=return
+edge from=0012 kind=indirect
+edge from=0012 to=0013 kind=fallthrough
+edge from=0013 kind=return
+edge from=0014 kind=indirect
+edge from=0016 kind=indirect
+edge from=0016 to=0018 kind=fallthrough
+edge from=0018 to=001C kind=fallthrough
+edge from=0018 to=0020 kind=branch
+edge from=001C kind=return
+edge from=0020 to=0026 kind=fallthrough
+edge from=0020 to=0028 kind=call
+edge from=0026 kind=return
+edge from=0028 kind=return

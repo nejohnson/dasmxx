@@ -83,6 +83,24 @@ static int segpfx = NOSEGPFX;
 static int op32 = 0;
 static int addr32 = 0;
 
+int dasm_cfg_supported( void )
+{
+    return 1;
+}
+
+static int read_opcode_byte( ADDR addr, UBYTE *out )
+{
+    return dasm_input_read_byte_at( addr, out );
+}
+
+static int cfg_is_prefix( UBYTE op )
+{
+    return op == 0x26 || op == 0x2E || op == 0x36 || op == 0x3E
+           || op == 0x64 || op == 0x65
+           || op == 0x66 || op == 0x67
+           || op == 0xF0 || op == 0xF2 || op == 0xF3;
+}
+
 void dasm_pre_insn( void )
 {
     segpfx = NOSEGPFX;
@@ -92,6 +110,47 @@ void dasm_pre_insn( void )
 
 void dasm_post_insn( void )
 {
+    ADDR opaddr = g_insn_addr;
+    UBYTE op0, op1;
+
+    while ( read_opcode_byte( opaddr, &op0 ) && cfg_is_prefix( op0 ) )
+        opaddr++;
+
+    if ( !read_opcode_byte( opaddr, &op0 ) )
+        goto done;
+
+    if ( op0 == 0x0F )
+    {
+        if ( read_opcode_byte( opaddr + 1, &op1 ) && op1 >= 0x80 && op1 <= 0x8F )
+            dasm_cfg_set_flow( CFG_FLOW_COND_JUMP );
+        goto done;
+    }
+
+    if ( op0 >= 0x70 && op0 <= 0x7F )
+        dasm_cfg_set_flow( CFG_FLOW_COND_JUMP );
+    else if ( op0 == 0xE0 || op0 == 0xE1 || op0 == 0xE2 || op0 == 0xE3 )
+        dasm_cfg_set_flow( CFG_FLOW_COND_JUMP );
+    else if ( op0 == 0xE8 || op0 == 0x9A )
+        dasm_cfg_set_flow( CFG_FLOW_CALL );
+    else if ( op0 == 0xE9 || op0 == 0xEA || op0 == 0xEB )
+        dasm_cfg_set_flow( CFG_FLOW_JUMP );
+    else if ( op0 == 0xC2 || op0 == 0xC3 || op0 == 0xCA || op0 == 0xCB || op0 == 0xCF )
+        dasm_cfg_set_flow( CFG_FLOW_RETURN );
+    else if ( op0 == 0xCC || op0 == 0xCD || op0 == 0xCE )
+        dasm_cfg_set_flow( CFG_FLOW_INDIRECT_CALL );
+    else if ( op0 == 0xF4 )
+        dasm_cfg_set_flow( CFG_FLOW_HALT );
+    else if ( op0 == 0xFF && read_opcode_byte( opaddr + 1, &op1 ) )
+    {
+        unsigned int ext = (op1 >> 3) & 0x07;
+
+        if ( ext == 2 || ext == 3 )
+            dasm_cfg_set_flow( CFG_FLOW_INDIRECT_CALL );
+        else if ( ext == 4 || ext == 5 )
+            dasm_cfg_set_flow( CFG_FLOW_INDIRECT_JUMP );
+    }
+
+done:
     segpfx = NOSEGPFX;
     op32 = 0;
     addr32 = 0;
@@ -432,7 +491,8 @@ OPERAND_FUNC(disp16)
     }
     else
     {
-        dest = NEAR_TARGET( *addr, (ADDR)read_u16( f, addr ) );
+        WORD disp = (WORD)read_u16( f, addr );
+        dest = NEAR_TARGET( *addr, (ADDR)(LWORD)disp );
     }
 
     EMIT_SEG_PFX;
