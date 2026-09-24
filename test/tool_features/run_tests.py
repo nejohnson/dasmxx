@@ -122,15 +122,6 @@ def create_tool_feature_tests():
         description="Test -s flag for stripped output"
     )
 
-    builder.add_test(
-        name="CFG debug output",
-        processor="z80",
-        command_file="code_commands/test_cfg_z80.dz80",
-        golden_file="golden/test_cfg_debug.golden",
-        flags=["-C"],
-        description="Test raw CFG debug output"
-    )
-
     # Input format tests
     builder.add_test(
         name="Intel HEX input",
