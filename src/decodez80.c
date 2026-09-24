@@ -59,6 +59,67 @@ DASM_PROFILE( "dasmz80", "Zilog Z80", 4, 9, 0, 1, 1 )
 /* Construct a 16-bit word out of low and high bytes */
 #define MK_WORD(l,h)            ( ((l) & 0xFF) | (((h) & 0xFF) << 8) )
 
+int dasm_cfg_supported( void )
+{
+    return 1;
+}
+
+static int read_opcode_byte( ADDR addr, UBYTE *out )
+{
+    return dasm_input_read_byte_at( addr, out );
+}
+
+void dasm_post_insn( void )
+{
+    UBYTE op0, op1;
+
+    if ( !read_opcode_byte( g_insn_addr, &op0 ) )
+        return;
+
+    if ( op0 == 0xDD || op0 == 0xFD )
+    {
+        if ( read_opcode_byte( g_insn_addr + 1, &op1 ) && op1 == 0xE9 )
+            dasm_cfg_set_flow( CFG_FLOW_INDIRECT_JUMP );
+        return;
+    }
+
+    if ( op0 == 0xED )
+    {
+        if ( read_opcode_byte( g_insn_addr + 1, &op1 ) )
+        {
+            if ( op1 == 0x45 || op1 == 0x4D )
+                dasm_cfg_set_flow( CFG_FLOW_RETURN );
+            else if ( op1 == 0x76 )
+                dasm_cfg_set_flow( CFG_FLOW_STOP );
+        }
+        return;
+    }
+
+    if ( op0 == 0x76 )
+        dasm_cfg_set_flow( CFG_FLOW_STOP );
+    else if ( op0 == 0xC9 )
+        dasm_cfg_set_flow( CFG_FLOW_RETURN );
+    else if ( (op0 & 0xC7) == 0xC0 )
+        dasm_cfg_set_flow( CFG_FLOW_COND_RETURN );
+    else if ( op0 == 0x10 )
+        dasm_cfg_set_flow( CFG_FLOW_COND_JUMP );
+    else if ( op0 == 0xC3 || op0 == 0x18 )
+        dasm_cfg_set_flow( CFG_FLOW_JUMP );
+    else if ( (op0 & 0xC7) == 0xC2 || (op0 & 0xE7) == 0x20 )
+        dasm_cfg_set_flow( CFG_FLOW_COND_JUMP );
+    else if ( op0 == 0xE9 )
+        dasm_cfg_set_flow( CFG_FLOW_INDIRECT_JUMP );
+    else if ( op0 == 0xCD )
+        dasm_cfg_set_flow( CFG_FLOW_CALL );
+    else if ( (op0 & 0xC7) == 0xC4 )
+        dasm_cfg_set_flow( CFG_FLOW_COND_CALL );
+    else if ( (op0 & 0xC7) == 0xC7 )
+    {
+        dasm_cfg_set_flow( CFG_FLOW_CALL );
+        dasm_cfg_add_target( op0 & 0x38 );
+    }
+}
+
 /*****************************************************************************
  *        Private Functions
  *****************************************************************************/
