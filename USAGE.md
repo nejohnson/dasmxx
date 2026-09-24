@@ -23,7 +23,13 @@ Supported command line options are:
      -x         - generate cross-reference list at end of disassembly
      -a         - generate assembler source output
      -s         - generate stripped assembler output (forces -a)
+     -g fmt     - write CFG output, fmt is cmd, dot, or json
+     -G foo     - write CFG output to "foo"
      -o foo     - write output to file "foo" (default is stdout)
+
+If `-g` is used without `-G`, the CFG output filename is derived from the
+command-file name. For example, `firmware.dz80` produces `firmware.dot` with
+`-g dot`, `firmware.json` with `-g json`, and `firmware.cfg.dz80` with `-g cmd`.
 
 Command list file
 =================

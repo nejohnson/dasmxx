@@ -59,6 +59,7 @@ struct xref {
  *****************************************************************************/
 
 struct xref *xref = NULL;
+static int xref_suppressed = 0;
 
 /*****************************************************************************
  *        Public Functions
@@ -84,6 +85,11 @@ struct xref *xref = NULL;
     struct addrlist *new;
     
     if ( type == X_NONE )
+        return;
+
+    dasm_cfg_record_xref( type, addr, ref );
+
+    if ( xref_suppressed )
         return;
     
     /* Create new address reference entry */
@@ -127,6 +133,11 @@ struct xref *xref = NULL;
         q->label= NULL;
         q->ref  = ref;
     }
+}
+
+void xref_set_suppressed( int suppressed )
+{
+    xref_suppressed = suppressed;
 }
 
 /***********************************************************

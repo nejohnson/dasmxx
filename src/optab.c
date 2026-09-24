@@ -61,6 +61,8 @@ extern optab_t base_optab[];
 /* Start address of each instruction as it is decoded. */
 ADDR g_insn_addr = 0;
 
+static struct dasm_insn_info *current_insn_info = NULL;
+
 /*****************************************************************************
  * Private data.
  *****************************************************************************/
@@ -160,6 +162,11 @@ static unsigned int fpu_level_order( unsigned int fpu )
 }
 
 #if defined(__GNUC__)
+int __attribute__((weak)) dasm_cfg_supported( void )
+{
+    return 0;
+}
+
 void __attribute__((weak)) dasm_pre_insn( void )
 {
 }
@@ -168,6 +175,11 @@ void __attribute__((weak)) dasm_post_insn( void )
 {
 }
 #else
+int dasm_cfg_supported( void )
+{
+    return 0;
+}
+
 void dasm_pre_insn( void )
 {
 }
@@ -176,6 +188,59 @@ void dasm_post_insn( void )
 {
 }
 #endif
+
+void dasm_set_insn_info( struct dasm_insn_info *info )
+{
+    current_insn_info = info;
+}
+
+void dasm_cfg_set_flow( CFG_FLOW flow )
+{
+    if ( current_insn_info )
+        current_insn_info->flow = flow;
+}
+
+void dasm_cfg_add_target( ADDR target )
+{
+    unsigned int i;
+
+    if ( !current_insn_info )
+        return;
+
+    for ( i = 0; i < current_insn_info->target_count; i++ )
+        if ( current_insn_info->targets[i] == target )
+            return;
+
+    if ( current_insn_info->target_count < CFG_MAX_TARGETS )
+        current_insn_info->targets[current_insn_info->target_count++] = target;
+}
+
+void dasm_cfg_record_xref( XREF_TYPE type, ADDR addr, ADDR ref )
+{
+    if ( !current_insn_info || addr != current_insn_info->addr )
+        return;
+
+    if ( type == X_JMP || type == X_CALL )
+        dasm_cfg_add_target( ref );
+}
+
+const char *dasm_cfg_flow_name( CFG_FLOW flow )
+{
+    switch ( flow )
+    {
+    case CFG_FLOW_NORMAL:        return "normal";
+    case CFG_FLOW_JUMP:          return "jump";
+    case CFG_FLOW_COND_JUMP:     return "cond_jump";
+    case CFG_FLOW_CALL:          return "call";
+    case CFG_FLOW_COND_CALL:     return "cond_call";
+    case CFG_FLOW_RETURN:        return "return";
+    case CFG_FLOW_COND_RETURN:   return "cond_return";
+    case CFG_FLOW_STOP:          return "stop";
+    case CFG_FLOW_INDIRECT_JUMP: return "indirect_jump";
+    case CFG_FLOW_INDIRECT_CALL: return "indirect_call";
+    }
+    return "unknown";
+}
 
 /***********************************************************
  *
@@ -427,9 +492,16 @@ ADDR dasm_insn( FILE *f, char *outbuf, ADDR addr )
     
     /* If we didn't find a match, indicate this to the output */
     if ( found != INSN_FOUND )
+    {
         opcode( "???" );
+        if ( current_insn_info )
+            current_insn_info->flow = CFG_FLOW_STOP;
+    }
 
     dasm_post_insn();
+
+    if ( current_insn_info )
+        current_insn_info->next = addr;
     
     return addr;
 }

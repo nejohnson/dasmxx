@@ -41,7 +41,7 @@ TARGETS = dasm78k3$(X) \
           dasmm8$(X)   \
           txt2bin$(X)
 
-CORE_OBJS = dasmxx.o xref.o optab.o
+CORE_OBJS = dasmxx.o xref.o optab.o cfg.o
 
 CFLAGS = -g
 

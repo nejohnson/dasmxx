@@ -118,7 +118,47 @@ extern void xref_addxref( XREF_TYPE type, ADDR addr, ADDR ref );
 extern void xref_addxreflabel( ADDR ref, char *label );
 extern char * xref_findaddrlabel( ADDR addr );
 extern char * xref_genwordaddr( char * buf, const char * format, ADDR addr );
+extern void xref_set_suppressed( int suppressed );
 extern void xref_dump( void );
+
+/*****************************************************************************/
+/*                              CFG Tracing                                  */
+/*****************************************************************************/
+
+typedef enum {
+   CFG_FLOW_NORMAL,
+   CFG_FLOW_JUMP,
+   CFG_FLOW_COND_JUMP,
+   CFG_FLOW_CALL,
+   CFG_FLOW_COND_CALL,
+   CFG_FLOW_RETURN,
+   CFG_FLOW_COND_RETURN,
+   CFG_FLOW_STOP,
+   CFG_FLOW_INDIRECT_JUMP,
+   CFG_FLOW_INDIRECT_CALL
+} CFG_FLOW;
+
+#define CFG_MAX_TARGETS 2
+
+struct dasm_insn_info {
+   ADDR     addr;
+   ADDR     next;
+   CFG_FLOW flow;
+   unsigned target_count;
+   ADDR     targets[CFG_MAX_TARGETS];
+   char     text[256];
+};
+
+extern void dasm_set_insn_info( struct dasm_insn_info *info );
+extern void dasm_cfg_set_flow( CFG_FLOW flow );
+extern void dasm_cfg_add_target( ADDR target );
+extern void dasm_cfg_record_xref( XREF_TYPE type, ADDR addr, ADDR ref );
+extern const char *dasm_cfg_flow_name( CFG_FLOW flow );
+extern int dasm_cfg_supported( void );
+
+extern int dasm_input_mapped( ADDR addr );
+extern int dasm_input_read_byte_at( ADDR addr, UBYTE *out );
+extern int dasm_input_read_word_at( ADDR addr, UWORD *out );
 
 /*****************************************************************************/
 /*                              Disassembler                                 */

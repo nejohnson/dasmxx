@@ -51,6 +51,8 @@
  *      -x         - generate cross-reference list at end of disassembly
  *      -a         - generate assembler source output
  *      -s         - generate stripped assembler output (forces -a)
+ *      -g fmt     - write CFG output, fmt is cmd, dot, or json
+ *      -G foo     - write CFG output to file "foo"
  *      -o foo     - write output to file "foo" (default is stdout)
  *
  * The command list file contains a list of memory segment definitions, used during
@@ -122,6 +124,7 @@
 #include <limits.h>
 
 #include "dasmxx.h"
+#include "cfg.h"
 
 /*****************************************************************************
  *        Data Types, Macros, Constants
@@ -162,6 +165,9 @@ struct params {
     int want_xref;
     int want_asm_out;
     int want_stripped;
+    int want_cfg_debug;
+    const char *cfg_format;
+    const char *cfg_outputfile;
 };
 
 struct input_segment {
@@ -992,9 +998,71 @@ static void usage( void )
             "     -x        with cross-reference list\n"
             "     -a        output in assembler format\n"
             "     -s        stripped assembler output (forces -a)\n"
+            "     -g fmt    write CFG output, fmt is cmd, dot, or json\n"
+            "     -G foo    write CFG output to `foo'\n"
             "     -o foo    write output to `foo' (stdout is default)\n",
             dasm_name, dasm_description, dasm_name );
     exit(EXIT_FAILURE);
+}
+
+static void cfg_seed_from_cmdlist( struct cfg *cfg, struct fmt *cmdlist )
+{
+    struct fmt *cur;
+
+    for ( cur = cmdlist; cur; cur = cur->n )
+    {
+        if ( cur->mode == CODE )
+            cfg_add_root( cfg, cur->addr, CFG_ROOT_CODE );
+        else if ( cur->mode == PROCS )
+            cfg_add_root( cfg, cur->addr, CFG_ROOT_PROC );
+        else if ( cur->mode == VECTORS && cur->n )
+        {
+            ADDR addr;
+
+            for ( addr = cur->addr; addr + 1 < cur->n->addr; addr += 2 )
+            {
+                UWORD vector;
+
+                if ( dasm_input_read_word_at( addr, &vector ) )
+                    cfg_add_root( cfg, (ADDR)vector * dasm_word_width_bytes, CFG_ROOT_VECTOR );
+            }
+        }
+    }
+}
+
+static void run_cfg( struct params *params )
+{
+    struct cfg *cfg;
+    FILE *out;
+
+    load_input_images( params->inputfiles, params->cmdlist->addr );
+
+    cfg = cfg_create();
+    cfg_seed_from_cmdlist( cfg, params->cmdlist );
+    cfg_trace( cfg );
+
+    if ( params->want_cfg_debug )
+    {
+        cfg_emit_debug( cfg, stdout );
+    }
+    if ( params->cfg_format )
+    {
+        out = fopen( params->cfg_outputfile, "w" );
+        if ( !out )
+            error( "Failed to open CFG output file \"%s\"", params->cfg_outputfile );
+
+        if ( !strcmp( params->cfg_format, "cmd" ) )
+            cfg_emit_cmd( cfg, out );
+        else if ( !strcmp( params->cfg_format, "dot" ) )
+            cfg_emit_dot( cfg, out );
+        else if ( !strcmp( params->cfg_format, "json" ) )
+            cfg_emit_json( cfg, out );
+
+        fclose( out );
+    }
+
+    cfg_free( cfg );
+    free_input_image();
 }
 
 /***********************************************************
@@ -1524,7 +1592,7 @@ static void run_disasm( struct params params )
  *
  ************************************************************/
 
-#define OPTSTRING        "asxho:"
+#define OPTSTRING        "Casxho:g:G:"
 
 static struct params process_args( int argc, char **argv )
 {
@@ -1537,6 +1605,20 @@ static struct params process_args( int argc, char **argv )
     {
         switch (opt)
         {
+        case 'C':
+            params.want_cfg_debug = 1;
+            break;
+
+        case 'g':
+            if ( strcmp( optarg, "cmd" ) && strcmp( optarg, "dot" ) && strcmp( optarg, "json" ) )
+                error( "Unsupported CFG output format `%s'. Use cmd, dot, or json", optarg );
+            params.cfg_format = (const char*)dupstr(optarg);
+            break;
+
+        case 'G':
+            params.cfg_outputfile = (const char*)dupstr(optarg);
+            break;
+
         case 's':
             params.want_stripped = 1;
             /* fall through */
@@ -1678,6 +1760,32 @@ static int input_try_read_at( ADDR addr, UBYTE *out )
         }
     }
     return 0;
+}
+
+int dasm_input_mapped( ADDR addr )
+{
+    UBYTE byte;
+
+    return input_try_read_at( addr, &byte );
+}
+
+int dasm_input_read_byte_at( ADDR addr, UBYTE *out )
+{
+    return input_try_read_at( addr, out );
+}
+
+int dasm_input_read_word_at( ADDR addr, UWORD *out )
+{
+    UBYTE lo, hi;
+
+    if ( !input_try_read_at( addr, &lo ) || !input_try_read_at( addr + 1, &hi ) )
+        return 0;
+
+    if ( dasm_word_msb_first )
+        SWAP( lo, hi );
+
+    *out = (UWORD)(((hi & 0xFF) << 8) | (lo & 0xFF));
+    return 1;
 }
 
 static UBYTE input_read_at( ADDR addr )
@@ -2178,10 +2286,23 @@ int main(int argc, char **argv)
 
     if ( !params.inputfiles )
         error( "No input file specified" );
+
+    if ( params.cfg_outputfile && !params.cfg_format )
+        error( "-G requires -g cmd, -g dot, or -g json" );
+
+    if ( params.cfg_format && !params.cfg_outputfile )
+        params.cfg_outputfile = cfg_default_output_path( params.listfile, params.cfg_format );
         
     /* Prepare then instruction byte buffer */
     insn_byte_buffer = zalloc( dasm_max_insn_length );
     insn_byte_idx = 0;
+
+    if ( params.want_cfg_debug || params.cfg_format )
+    {
+        run_cfg( &params );
+        if ( params.want_cfg_debug && !params.cfg_format )
+            return EXIT_SUCCESS;
+    }
     
     if ( params.outputfile && !freopen( params.outputfile, "w", stdout ) )
         error( "Failed to open output file \"%s\"", params.outputfile );
