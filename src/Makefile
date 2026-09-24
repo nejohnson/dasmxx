@@ -43,7 +43,7 @@ TARGETS = dasm78k3$(X) \
 
 CORE_OBJS = dasmxx.o xref.o optab.o cfg.o
 
-CFLAGS = -g
+CFLAGS = -g -MMD -MP
 
 all:	$(subst $(X),,${TARGETS})
 
@@ -235,13 +235,45 @@ dasmm8: ${DM8_OBJS}
 
 #################################################
 
+ALL_OBJS = ${CORE_OBJS}   \
+           ${D78K3_OBJS}  \
+           ${D96_OBJS}    \
+           ${D9900_OBJS}  \
+           ${D430_OBJS}   \
+           ${D02_OBJS}    \
+           ${D6800_OBJS}  \
+           ${D6811_OBJS}  \
+           ${D09_OBJS}    \
+           ${D7000_OBJS}  \
+           ${DAVR_OBJS}   \
+           ${D51_OBJS}    \
+           ${DZ8_OBJS}    \
+           ${DZ80_OBJS}   \
+           ${D48_OBJS}    \
+           ${D05_OBJS}    \
+           ${DX86_OBJS}   \
+           ${D85_OBJS}    \
+           ${D1802_OBJS}  \
+           ${D68K_OBJS}   \
+           ${DPIC12_OBJS} \
+           ${DPIC16_OBJS} \
+           ${DPIC18_OBJS} \
+           ${DPIC24_OBJS} \
+           ${DDSPIC33_OBJS} \
+           ${DUNSP_OBJS}  \
+           ${DM8_OBJS}
+
+-include $(sort $(ALL_OBJS:.o=.d))
+
+#################################################
+
 txt2bin: txt2bin.c
 	$(CC) $< -o $@
 
 #################################################
 	
 clean:
-	rm -f ${TARGETS} *.o
+	rm -f ${TARGETS} *.o *.d
 
 #################################################
 
