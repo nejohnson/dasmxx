@@ -50,6 +50,9 @@ DASM_PROFILE( "dasmz8", "Zilog Z8", 4, 6, 1, 1, 1 )
 
 #define MK_WORD(l,h)            ( ((l) & 0xFF) | (((h) & 0xFF) << 8) )
 
+#define Z8_CC_F                 0x0
+#define Z8_CC_T                 0x8
+
 static const char *alu_ops[16] = {
     "add", "adc", "sub", "sbc", "or", "and", "tcm", "tm",
     NULL,  NULL,  "cp",  "xor", NULL, NULL,  NULL,  NULL
@@ -64,6 +67,54 @@ static const char *ext_ops[16] = {
     "stop", "halt", "decw", NULL, "da", "pop", "com", "push",
     "decw", "rl",   "incw", "clr", "rrc", "sra", "rr",  "swap"
 };
+
+int dasm_cfg_supported( void )
+{
+    return 1;
+}
+
+static int read_opcode_byte( ADDR addr, UBYTE *out )
+{
+    return dasm_input_read_byte_at( addr, out );
+}
+
+static void z8_cfg_set_cond_jump_flow( UBYTE cc )
+{
+    if ( cc == Z8_CC_F )
+        return;
+
+    if ( cc == Z8_CC_T )
+        dasm_cfg_set_flow( CFG_FLOW_JUMP );
+    else
+        dasm_cfg_set_flow( CFG_FLOW_COND_JUMP );
+}
+
+void dasm_post_insn( void )
+{
+    UBYTE op0;
+
+    if ( !read_opcode_byte( g_insn_addr, &op0 ) )
+        return;
+
+    switch ( op0 & 0x0F )
+    {
+    case 0x0A:
+        dasm_cfg_set_flow( CFG_FLOW_COND_JUMP );
+        break;
+
+    case 0x0B:
+    case 0x0D:
+        z8_cfg_set_cond_jump_flow( (op0 >> 4) & 0x0F );
+        break;
+
+    case 0x0F:
+        if ( op0 == 0x0F )
+            dasm_cfg_set_flow( CFG_FLOW_STOP );
+        else if ( op0 == 0x1F )
+            dasm_cfg_set_flow( CFG_FLOW_HALT );
+        break;
+    }
+}
 
 static void reg4( unsigned int r )
 {

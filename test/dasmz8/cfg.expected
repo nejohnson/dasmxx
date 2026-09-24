@@ -1,0 +1,38 @@
+cfg format=debug target=dasmz8
+root addr=0000 kind=code label="Reset"
+block start=0000 end=0003 label="Reset"
+block_insn block=0000 addr=0000 text="inc   r0"
+block_insn block=0000 addr=0001 text="djnz  r2,HaltPath"
+block start=0003 end=0005
+block_insn block=0003 addr=0003 text="jr    z,LoopBack"
+block start=0005 end=0008
+block_insn block=0005 addr=0005 text="jp    t,StopPath"
+block start=0008 end=0009 label="HaltPath"
+block_insn block=0008 addr=0008 text="halt  "
+block start=0009 end=000B
+block_insn block=0009 addr=0009 text="inc   r0"
+block_insn block=0009 addr=000A text="stop  "
+block start=000C end=000E label="LoopBack"
+block_insn block=000C addr=000C text="jr    t,Reset"
+block start=0010 end=0011 label="StopPath"
+block_insn block=0010 addr=0010 text="stop  "
+insn addr=0000 next=0001 flow=normal text="inc   r0"
+insn addr=0001 next=0003 flow=cond_jump text="djnz  r2,HaltPath" target0=0008
+insn addr=0003 next=0005 flow=cond_jump text="jr    z,LoopBack" target0=000C
+insn addr=0005 next=0008 flow=jump text="jp    t,StopPath" target0=0010
+insn addr=0008 next=0009 flow=halt text="halt  "
+insn addr=0009 next=000A flow=normal text="inc   r0"
+insn addr=000A next=000B flow=stop text="stop  "
+insn addr=000C next=000E flow=jump text="jr    t,Reset" target0=0000
+insn addr=0010 next=0011 flow=stop text="stop  "
+edge from=0000 to=0001 kind=fallthrough
+edge from=0001 to=0003 kind=fallthrough
+edge from=0001 to=0008 kind=branch
+edge from=0003 to=0005 kind=fallthrough
+edge from=0003 to=000C kind=branch
+edge from=0005 to=0010 kind=branch
+edge from=0008 to=0009 kind=resume
+edge from=0009 to=000A kind=fallthrough
+edge from=000A kind=stop
+edge from=000C to=0000 kind=branch
+edge from=0010 kind=stop

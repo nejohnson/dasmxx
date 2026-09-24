@@ -1,0 +1,6 @@
+fcfg.bin
+c0000 Reset
+l0008 HaltPath
+l000C LoopBack
+l0010 StopPath
+e0011
