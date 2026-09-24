@@ -1,0 +1,10 @@
+# Stress CFG reconstruction with vector roots, mapped ROMs, trap calls, and computed exits.
+f@0000 ../testdata/cfg_stress_vectors.bin
+f@C000 ../testdata/cfg_stress_bank.bin
+v0000 ResetVectors
+e0004
+l0008 Trap08
+l0020 Trap20
+lC000 BankedReset
+lC008 ComputedDispatch
+lC010 InterruptVector

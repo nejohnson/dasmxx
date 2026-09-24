@@ -1,0 +1,9 @@
+# CFG stress fixture low ROM: vector table and trap handlers.
+00 C0   # 0000: vector -> C000
+10 C0   # 0002: vector -> C010
+00 00 00 00
+C9      # 0008: ret
+00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+C9      # 0020: ret

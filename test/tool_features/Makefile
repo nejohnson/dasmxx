@@ -1,7 +1,7 @@
 # Makefile for tool features tests
 
 TXT2BIN = ../../src/txt2bin
-TESTDATA = testdata/simple_code.bin testdata/rom_low.bin testdata/rom_high.bin testdata/cfg_z80.bin
+TESTDATA = testdata/simple_code.bin testdata/rom_low.bin testdata/rom_high.bin testdata/cfg_z80.bin testdata/cfg_stress_vectors.bin testdata/cfg_stress_bank.bin
 
 .PHONY: all test clean
 
@@ -28,6 +28,8 @@ test: $(TESTDATA)
 	@diff -u golden/test_cfg_cmd.golden output/test_cfg_cmd.out
 	@cd code_commands && ../../../src/dasmz80 -g json -G ../output/test_cfg_json.out test_cfg_z80.dz80 > ../output/test_cfg_json_listing.out
 	@diff -u golden/test_cfg_json.golden output/test_cfg_json.out
+	@cd code_commands && ../../../src/dasmz80 -g json -G ../output/test_cfg_stress_json.out test_cfg_stress.dz80 > ../output/test_cfg_stress_listing.out
+	@diff -u golden/test_cfg_stress_json.golden output/test_cfg_stress_json.out
 	@mkdir -p output
 	@cd input_formats && if ../../../src/dasmz80 test_bad_ihex.dz80 > ../output/test_bad_ihex.out 2>&1; then echo "Expected bad Intel HEX checksum to fail"; exit 1; fi
 	@grep -q "Bad Intel HEX checksum" output/test_bad_ihex.out

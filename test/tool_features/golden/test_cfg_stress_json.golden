@@ -1,0 +1,38 @@
+{
+  "target": "dasmz80",
+  "roots": [
+    {"addr": 49152, "addr_hex": "C000", "kind": "vector", "label": "BankedReset"},
+    {"addr": 49168, "addr_hex": "C010", "kind": "vector", "label": "InterruptVector"}
+  ],
+  "blocks": [
+    {"start": 8, "start_hex": "0008", "end": 9, "end_hex": "0009", "label": "Trap08", "instructions": [{"addr": 8, "addr_hex": "0008", "text": "RET      "}]},
+    {"start": 32, "start_hex": "0020", "end": 33, "end_hex": "0021", "label": "Trap20", "instructions": [{"addr": 32, "addr_hex": "0020", "text": "RET      "}]},
+    {"start": 49152, "start_hex": "C000", "end": 49155, "end_hex": "C003", "label": "BankedReset", "instructions": [{"addr": 49152, "addr_hex": "C000", "text": "CALL     Trap08"}]},
+    {"start": 49155, "start_hex": "C003", "end": 49156, "end_hex": "C004", "instructions": [{"addr": 49155, "addr_hex": "C003", "text": "RST      $20"}]},
+    {"start": 49156, "start_hex": "C004", "end": 49159, "end_hex": "C007", "instructions": [{"addr": 49156, "addr_hex": "C004", "text": "JP       ComputedDispatch"}]},
+    {"start": 49160, "start_hex": "C008", "end": 49161, "end_hex": "C009", "label": "ComputedDispatch", "instructions": [{"addr": 49160, "addr_hex": "C008", "text": "JP       (HL)"}]},
+    {"start": 49168, "start_hex": "C010", "end": 49170, "end_hex": "C012", "label": "InterruptVector", "instructions": [{"addr": 49168, "addr_hex": "C010", "text": "NOP      "}, {"addr": 49169, "addr_hex": "C011", "text": "RET      "}]}
+  ],
+  "instructions": [
+    {"addr": 8, "addr_hex": "0008", "next": 9, "next_hex": "0009", "flow": "return", "text": "RET      ", "targets": []},
+    {"addr": 32, "addr_hex": "0020", "next": 33, "next_hex": "0021", "flow": "return", "text": "RET      ", "targets": []},
+    {"addr": 49152, "addr_hex": "C000", "next": 49155, "next_hex": "C003", "flow": "call", "text": "CALL     Trap08", "targets": [{"addr": 8, "addr_hex": "0008"}]},
+    {"addr": 49155, "addr_hex": "C003", "next": 49156, "next_hex": "C004", "flow": "call", "text": "RST      $20", "targets": [{"addr": 32, "addr_hex": "0020"}]},
+    {"addr": 49156, "addr_hex": "C004", "next": 49159, "next_hex": "C007", "flow": "jump", "text": "JP       ComputedDispatch", "targets": [{"addr": 49160, "addr_hex": "C008"}]},
+    {"addr": 49160, "addr_hex": "C008", "next": 49161, "next_hex": "C009", "flow": "indirect_jump", "text": "JP       (HL)", "targets": []},
+    {"addr": 49168, "addr_hex": "C010", "next": 49169, "next_hex": "C011", "flow": "normal", "text": "NOP      ", "targets": []},
+    {"addr": 49169, "addr_hex": "C011", "next": 49170, "next_hex": "C012", "flow": "return", "text": "RET      ", "targets": []}
+  ],
+  "edges": [
+    {"from": 8, "from_hex": "0008", "kind": "return"},
+    {"from": 32, "from_hex": "0020", "kind": "return"},
+    {"from": 49152, "from_hex": "C000", "kind": "call", "to": 8, "to_hex": "0008"},
+    {"from": 49152, "from_hex": "C000", "kind": "fallthrough", "to": 49155, "to_hex": "C003"},
+    {"from": 49155, "from_hex": "C003", "kind": "call", "to": 32, "to_hex": "0020"},
+    {"from": 49155, "from_hex": "C003", "kind": "fallthrough", "to": 49156, "to_hex": "C004"},
+    {"from": 49156, "from_hex": "C004", "kind": "branch", "to": 49160, "to_hex": "C008"},
+    {"from": 49160, "from_hex": "C008", "kind": "indirect"},
+    {"from": 49168, "from_hex": "C010", "kind": "fallthrough", "to": 49169, "to_hex": "C011"},
+    {"from": 49169, "from_hex": "C011", "kind": "return"}
+  ]
+}

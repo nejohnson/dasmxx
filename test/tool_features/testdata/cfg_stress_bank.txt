@@ -1,0 +1,9 @@
+# CFG stress fixture high ROM: direct calls, RST trap, and computed jump.
+CD 08 00    # C000: call 0008
+E7          # C003: rst 20h
+C3 08 C0    # C004: jp C008
+00          # C007: filler
+E9          # C008: jp (hl)
+00 00 00 00 00 00 00
+00          # C010: nop
+C9          # C011: ret
