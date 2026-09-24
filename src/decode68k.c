@@ -68,6 +68,8 @@ DASM_PROFILE( "dasm68k", "Motorola 68000", 22, 10, 1, 2, 2 )
 #define MK_LONG(h,l)            ( ( (l) & 0xFFFF)        \
                                 | (((h) & 0xFFFF) << 16) )
 
+#define MK_WORD(l,h)            ( ((l) & 0xFF) | (((h) & 0xFF) << 8) )
+
 enum {
     OPSIZE_BYTE = 1,
     OPSIZE_WORD = 2,
@@ -79,6 +81,78 @@ enum {
 static LWORD abs_lword( LWORD value )
 {
     return value < 0 ? -value : value;
+}
+
+static ADDR display_addr( ADDR addr )
+{
+    return addr / dasm_word_width_bytes;
+}
+
+int dasm_cfg_supported( void )
+{
+    return 1;
+}
+
+static int read_opcode_word( ADDR addr, UWORD *out )
+{
+    return dasm_input_read_word_at( addr, out );
+}
+
+static int ea_field_has_direct_target( int ea )
+{
+    int mode = (ea >> 3) & 0x7;
+    int reg  = ea & 0x7;
+
+    return mode == 0x07 && reg <= 2;
+}
+
+void dasm_post_insn( void )
+{
+    UWORD op0;
+
+    if ( !read_opcode_word( g_insn_addr, &op0 ) )
+        return;
+
+    if ( (op0 & 0xF000) == 0x6000 )
+    {
+        UWORD cond = (op0 >> 8) & 0x0F;
+
+        if ( cond == 0x00 )
+            dasm_cfg_set_flow( CFG_FLOW_JUMP );
+        else if ( cond == 0x01 )
+            dasm_cfg_set_flow( CFG_FLOW_CALL );
+        else
+            dasm_cfg_set_flow( CFG_FLOW_COND_JUMP );
+    }
+    else if ( (op0 & 0xF0F8) == 0x50C8 )
+    {
+        if ( ((op0 >> 8) & 0x0F) != 0x00 )
+            dasm_cfg_set_flow( CFG_FLOW_COND_JUMP );
+    }
+    else if ( (op0 & 0xF0FF) == 0x50FA
+              || (op0 & 0xF0FF) == 0x50FB
+              || (op0 & 0xF0FF) == 0x50FC )
+        dasm_cfg_set_flow( CFG_FLOW_INDIRECT_CALL );
+    else if ( op0 == 0x4AFC || op0 == 0x4E70 || op0 == 0x4E72 )
+        dasm_cfg_set_flow( CFG_FLOW_STOP );
+    else if ( op0 == 0x4E73 || op0 == 0x4E74 || op0 == 0x4E75 || op0 == 0x4E77 )
+        dasm_cfg_set_flow( CFG_FLOW_RETURN );
+    else if ( (op0 & 0xFFF0) == 0x4E40 || op0 == 0x4E76 )
+        dasm_cfg_set_flow( CFG_FLOW_INDIRECT_CALL );
+    else if ( (op0 & 0xFFC0) == 0x4E80 )
+    {
+        if ( ea_field_has_direct_target( op0 & 0x3F ) )
+            dasm_cfg_set_flow( CFG_FLOW_CALL );
+        else
+            dasm_cfg_set_flow( CFG_FLOW_INDIRECT_CALL );
+    }
+    else if ( (op0 & 0xFFC0) == 0x4EC0 )
+    {
+        if ( ea_field_has_direct_target( op0 & 0x3F ) )
+            dasm_cfg_set_flow( CFG_FLOW_JUMP );
+        else
+            dasm_cfg_set_flow( CFG_FLOW_INDIRECT_JUMP );
+    }
 }
                                 
 /*****************************************************************************
@@ -254,7 +328,7 @@ OPERAND_FUNC(relX)
 
     dest += *addr;
     
-    operand( xref_genwordaddr( NULL, FORMAT_IMM32, dest ) );
+    operand( xref_genwordaddr( NULL, FORMAT_IMM32, display_addr( dest ) ) );
     xref_addxref( xtype, g_insn_addr, dest ); 
 }
 
@@ -299,7 +373,7 @@ static void emit_displacement( LWORD disp, const char *fmt )
 
 static void emit_abs_addr( ADDR dest, const char *fmt, XREF_TYPE xtype )
 {
-    operand( xref_genwordaddr( NULL, fmt, dest ) );
+    operand( xref_genwordaddr( NULL, fmt, display_addr( dest ) ) );
     if ( xtype != X_NONE )
         xref_addxref( xtype, g_insn_addr, dest );
 }
@@ -445,7 +519,7 @@ static void emit_ea_field( FILE *f, ADDR *addr, int ea, int size, XREF_TYPE xtyp
             LWORD disp = read_s16( f, addr );
             ADDR dest = extaddr + disp;
             operand( "(" );
-            operand( xref_genwordaddr( NULL, FORMAT_IMM32, dest ) );
+            operand( xref_genwordaddr( NULL, FORMAT_IMM32, display_addr( dest ) ) );
             if ( xtype != X_NONE )
                 xref_addxref( xtype, g_insn_addr, dest );
             operand( ",PC)" );
@@ -870,7 +944,7 @@ OPERAND_FUNC(dbcc)
     ADDR dest = *addr + disp;
 
     operand( FORMAT_DREG ", ", opc & 0x07 );
-    operand( xref_genwordaddr( NULL, FORMAT_IMM32, dest ) );
+    operand( xref_genwordaddr( NULL, FORMAT_IMM32, display_addr( dest ) ) );
     xref_addxref( xtype, g_insn_addr, dest );
 }
 
@@ -1618,7 +1692,7 @@ OPERAND_FUNC(fbranch16)
     WORD disp = (WORD)nextw( f, addr );
     ADDR dest = *addr + disp;
 
-    operand( xref_genwordaddr( NULL, FORMAT_IMM32, dest ) );
+    operand( xref_genwordaddr( NULL, FORMAT_IMM32, display_addr( dest ) ) );
     xref_addxref( xtype, g_insn_addr, dest );
 }
 
@@ -1627,7 +1701,7 @@ OPERAND_FUNC(fbranch32)
     LWORD disp = read_s32( f, addr );
     ADDR dest = *addr + disp;
 
-    operand( xref_genwordaddr( NULL, FORMAT_IMM32, dest ) );
+    operand( xref_genwordaddr( NULL, FORMAT_IMM32, display_addr( dest ) ) );
     xref_addxref( xtype, g_insn_addr, dest );
 }
 
@@ -1656,7 +1730,7 @@ OPERAND_FUNC(fdbcc)
     dest = *addr + disp;
 
     operand( FORMAT_DREG ", ", opc & 0x07 );
-    operand( xref_genwordaddr( NULL, FORMAT_IMM32, dest ) );
+    operand( xref_genwordaddr( NULL, FORMAT_IMM32, display_addr( dest ) ) );
     xref_addxref( xtype, g_insn_addr, dest );
 }
 

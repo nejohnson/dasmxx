@@ -1,5 +1,7 @@
 
-test: test.bin test.d68k test68010.bin test68010.d68k test68020.bin test68020.d68k test68030.bin test68030.d68k test68040.bin test68040.d68k test68881.bin test68881.d68k test68040fpu.bin test68040fpu.d68k
+DIFF ?= diff -u
+
+test: test.bin test.d68k test68010.bin test68010.d68k test68020.bin test68020.d68k test68030.bin test68030.d68k test68040.bin test68040.d68k test68881.bin test68881.d68k test68040fpu.bin test68040fpu.d68k cfg.out
 	../../src/dasm68k test.d68k
 	../../src/dasm68k test68010.d68k
 	../../src/dasm68k test68020.d68k
@@ -7,6 +9,7 @@ test: test.bin test.d68k test68010.bin test68010.d68k test68020.bin test68020.d6
 	../../src/dasm68k test68040.d68k
 	../../src/dasm68k test68881.d68k
 	../../src/dasm68k test68040fpu.d68k
+	$(DIFF) cfg.expected cfg.out
 
 test.bin: test.txt
 	../../src/txt2bin test.txt test.bin
@@ -29,5 +32,11 @@ test68881.bin: test68881.txt
 test68040fpu.bin: test68040fpu.txt
 	../../src/txt2bin test68040fpu.txt test68040fpu.bin
 
+cfg.bin: cfg.txt
+	../../src/txt2bin cfg.txt cfg.bin
+
+cfg.out: cfg.bin cfg.d68k ../../src/dasm68k
+	../../src/dasm68k -C cfg.d68k > cfg.out
+
 clean:
-	rm -f test.bin test68010.bin test68020.bin test68030.bin test68040.bin test68881.bin test68040fpu.bin
+	rm -f test.bin test68010.bin test68020.bin test68030.bin test68040.bin test68881.bin test68040fpu.bin cfg.bin cfg.out

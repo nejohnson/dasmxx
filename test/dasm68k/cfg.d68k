@@ -1,0 +1,16 @@
+ocpu=68020
+fcfg.bin
+c0000 Reset
+p0010 DbFlow
+p0014 TrapccFlow
+p0018 JsrFlow
+p0020 WordBranch
+p0025 RtdReturn
+p0027 RtrReturn
+p0028 IllegalStop
+l0006 BranchTarget
+p000C SubFunc
+l000D Dispatch
+p001C JsrTarget
+l0024 WordBranchTarget
+e0029

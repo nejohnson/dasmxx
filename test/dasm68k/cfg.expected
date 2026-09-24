@@ -1,0 +1,97 @@
+cfg format=debug target=dasm68k
+root addr=0000 kind=code label="Reset"
+root addr=0018 kind=proc label="SubFunc"
+root addr=0020 kind=proc label="DbFlow"
+root addr=0028 kind=proc label="TrapccFlow"
+root addr=0030 kind=proc label="JsrFlow"
+root addr=0038 kind=proc label="JsrTarget"
+root addr=0040 kind=proc label="WordBranch"
+root addr=004A kind=proc label="RtdReturn"
+root addr=004E kind=proc label="RtrReturn"
+root addr=0050 kind=proc label="IllegalStop"
+block start=0000 end=0004 label="Reset"
+block_insn block=0000 addr=0000 text="NOP       "
+block_insn block=0000 addr=0002 text="BNE       BranchTarget"
+block start=0004 end=0006
+block_insn block=0004 addr=0004 text="BSR       SubFunc"
+block start=0006 end=000A
+block_insn block=0006 addr=0006 text="STOP      #$2700"
+block start=000C end=0012 label="BranchTarget"
+block_insn block=000C addr=000C text="JMP       (Dispatch).L"
+block start=0018 end=001A label="SubFunc"
+block_insn block=0018 addr=0018 text="RTS       "
+block start=001A end=001C label="Dispatch"
+block_insn block=001A addr=001A text="JMP       (A0)"
+block start=0020 end=0024 label="DbFlow"
+block_insn block=0020 addr=0020 text="DBF       D0, DbFlow"
+block start=0024 end=0026
+block_insn block=0024 addr=0024 text="TRAP      #0"
+block start=0026 end=0028
+block_insn block=0026 addr=0026 text="RTS       "
+block start=0028 end=002A label="TrapccFlow"
+block_insn block=0028 addr=0028 text="TRAPNE    "
+block start=002A end=002C
+block_insn block=002A addr=002A text="RTS       "
+block start=0030 end=0036 label="JsrFlow"
+block_insn block=0030 addr=0030 text="JSR       (JsrTarget).L"
+block start=0036 end=0038
+block_insn block=0036 addr=0036 text="JSR       (A0)"
+block start=0038 end=003A label="JsrTarget"
+block_insn block=0038 addr=0038 text="RTS       "
+block start=0040 end=0044 label="WordBranch"
+block_insn block=0040 addr=0040 text="BRA       WordBranchTarget"
+block start=0048 end=004A label="WordBranchTarget"
+block_insn block=0048 addr=0048 text="RTE       "
+block start=004A end=004E label="RtdReturn"
+block_insn block=004A addr=004A text="RTD       #$0004"
+block start=004E end=0050 label="RtrReturn"
+block_insn block=004E addr=004E text="RTR       "
+block start=0050 end=0052 label="IllegalStop"
+block_insn block=0050 addr=0050 text="ILLEGAL   "
+insn addr=0000 next=0002 flow=normal text="NOP       "
+insn addr=0002 next=0004 flow=cond_jump text="BNE       BranchTarget" target0=000C
+insn addr=0004 next=0006 flow=call text="BSR       SubFunc" target0=0018
+insn addr=0006 next=000A flow=stop text="STOP      #$2700"
+insn addr=000C next=0012 flow=jump text="JMP       (Dispatch).L" target0=001A
+insn addr=0018 next=001A flow=return text="RTS       "
+insn addr=001A next=001C flow=indirect_jump text="JMP       (A0)"
+insn addr=0020 next=0024 flow=cond_jump text="DBF       D0, DbFlow" target0=0020
+insn addr=0024 next=0026 flow=indirect_call text="TRAP      #0"
+insn addr=0026 next=0028 flow=return text="RTS       "
+insn addr=0028 next=002A flow=indirect_call text="TRAPNE    "
+insn addr=002A next=002C flow=return text="RTS       "
+insn addr=0030 next=0036 flow=call text="JSR       (JsrTarget).L" target0=0038
+insn addr=0036 next=0038 flow=indirect_call text="JSR       (A0)"
+insn addr=0038 next=003A flow=return text="RTS       "
+insn addr=0040 next=0044 flow=jump text="BRA       WordBranchTarget" target0=0048
+insn addr=0048 next=004A flow=return text="RTE       "
+insn addr=004A next=004E flow=return text="RTD       #$0004"
+insn addr=004E next=0050 flow=return text="RTR       "
+insn addr=0050 next=0052 flow=stop text="ILLEGAL   "
+edge from=0000 to=0002 kind=fallthrough
+edge from=0002 to=0004 kind=fallthrough
+edge from=0002 to=000C kind=branch
+edge from=0004 to=0006 kind=fallthrough
+edge from=0004 to=0018 kind=call
+edge from=0006 kind=stop
+edge from=000C to=001A kind=branch
+edge from=0018 kind=return
+edge from=001A kind=indirect
+edge from=0020 to=0020 kind=branch
+edge from=0020 to=0024 kind=fallthrough
+edge from=0024 kind=indirect
+edge from=0024 to=0026 kind=fallthrough
+edge from=0026 kind=return
+edge from=0028 kind=indirect
+edge from=0028 to=002A kind=fallthrough
+edge from=002A kind=return
+edge from=0030 to=0036 kind=fallthrough
+edge from=0030 to=0038 kind=call
+edge from=0036 kind=indirect
+edge from=0036 to=0038 kind=fallthrough
+edge from=0038 kind=return
+edge from=0040 to=0048 kind=branch
+edge from=0048 kind=return
+edge from=004A kind=return
+edge from=004E kind=return
+edge from=0050 kind=stop

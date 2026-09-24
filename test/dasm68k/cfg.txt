@@ -1,0 +1,33 @@
+# Motorola 68k CFG fixture. Comments use byte offsets.
+4E71        # 0000: NOP
+6608        # 0002: BNE 000C
+6112        # 0004: BSR 0018
+4E72 2700   # 0006: STOP #$2700
+4E71        # 000A: filler
+4EF9 0000 001A  # 000C: JMP 001A
+4E71        # 0012: filler
+4E71        # 0014: filler
+4E71        # 0016: filler
+4E75        # 0018: RTS
+4ED0        # 001A: JMP (A0)
+4E71        # 001C: filler
+4E71        # 001E: filler
+51C8 FFFC   # 0020: DBF D0,0020
+4E40        # 0024: TRAP #0
+4E75        # 0026: RTS
+56FC        # 0028: TRAPNE
+4E75        # 002A: RTS
+4E71        # 002C: filler
+4E71        # 002E: filler
+4EB9 0000 0038  # 0030: JSR 0038
+4E90        # 0036: JSR (A0)
+4E75        # 0038: RTS
+4E71        # 003A: filler
+4E71        # 003C: filler
+4E71        # 003E: filler
+6000 0004   # 0040: BRA.W 0048
+6100 FFF0   # 0044: BSR.W 0038
+4E73        # 0048: RTE
+4E74 0004   # 004A: RTD #$0004
+4E77        # 004E: RTR
+4AFC        # 0050: ILLEGAL
