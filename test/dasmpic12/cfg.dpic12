@@ -1,0 +1,7 @@
+fcfg.bin
+c0000 Reset
+p0008 SubFunc
+p000A JumpTarget
+l0003 AfterSkip
+l0005 BranchTarget
+e000B

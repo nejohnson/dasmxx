@@ -1,0 +1,12 @@
+# PIC12 CFG fixture. Comments use byte offsets.
+00 00       # 0000: NOP
+44 06       # 0002: BTFSC 4,2
+00 00       # 0004: skipped NOP
+08 09       # 0006: CALL 0010
+03 00       # 0008: SLEEP
+0A 0A       # 000A: GOTO 0014
+00 00       # 000C: filler
+00 00       # 000E: filler
+55 08       # 0010: RETLW $55
+00 00       # 0012: filler
+55 08       # 0014: RETLW $55

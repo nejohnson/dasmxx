@@ -58,6 +58,45 @@ DASM_PROFILE( "dasmpic16", "Microchip PIC16", 4, 9, 0, 2, 2 )
 #define FORMAT_NUM_16BIT        "$%04X"
 #define FORMAT_REG              "%d"
 
+int dasm_cfg_supported( void )
+{
+    return 1;
+}
+
+static int read_opcode_word( ADDR addr, UWORD *out )
+{
+    return dasm_input_read_word_at( addr, out );
+}
+
+void dasm_post_insn( void )
+{
+    UWORD op0;
+
+    if ( !read_opcode_word( g_insn_addr, &op0 ) )
+        return;
+
+    op0 &= 0x3FFF;
+
+    if ( (op0 & 0x3800) == 0x2000 )
+        dasm_cfg_set_flow( CFG_FLOW_CALL );
+    else if ( (op0 & 0x3800) == 0x2800 )
+        dasm_cfg_set_flow( CFG_FLOW_JUMP );
+    else if ( (op0 & 0x3C00) == 0x3400
+              || op0 == 0x0009
+              || op0 == 0x0008 )
+        dasm_cfg_set_flow( CFG_FLOW_RETURN );
+    else if ( op0 == 0x0063 )
+        dasm_cfg_set_flow( CFG_FLOW_HALT );
+    else if ( (op0 & 0x3C00) == 0x1800
+              || (op0 & 0x3C00) == 0x1C00
+              || (op0 & 0x3F00) == 0x0B00
+              || (op0 & 0x3F00) == 0x0F00 )
+    {
+        dasm_cfg_set_flow( CFG_FLOW_COND_JUMP );
+        dasm_cfg_add_target( g_insn_addr + 4 );
+    }
+}
+
 /******************************************************************************/
 /**                            Operand Functions                             **/
 /******************************************************************************/
@@ -110,7 +149,7 @@ OPERAND_FUNC(addr11)
     UWORD addr11 = opc & 0x07FF;
     
     operand( "%s", xref_genwordaddr( NULL, FORMAT_NUM_16BIT, addr11 ) );
-    xref_addxref( xtype, g_insn_addr, addr11 );
+    xref_addxref( xtype, g_insn_addr, (ADDR)addr11 * dasm_word_width_bytes );
 }
 
 /******************************************************************************/
@@ -186,8 +225,8 @@ optab_t base_optab[] = {
         
     MASK ( "ADDLW",  imm8,          0x3E00, 0x3E00, X_NONE )
     MASK ( "ANDLW",  imm8,          0x3F00, 0x3900, X_NONE )
-    MASK ( "CALL",   addr11,        0x3800, 0x2000, X_NONE )
-    MASK ( "GOTO",   addr11,        0x3800, 0x2800, X_NONE )
+    MASK ( "CALL",   addr11,        0x3800, 0x2000, X_CALL )
+    MASK ( "GOTO",   addr11,        0x3800, 0x2800, X_JMP  )
     MASK ( "IORLW",  imm8,          0x3F00, 0x3800, X_NONE )
     MASK ( "MOVLW",  imm8,          0x3C00, 0x3000, X_NONE )
     MASK ( "RETLW",  imm8,          0x3C00, 0x3400, X_NONE )

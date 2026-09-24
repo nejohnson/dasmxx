@@ -58,6 +58,43 @@ DASM_PROFILE( "dasmpic12", "Microchip PIC10/PIC12", 4, 9, 0, 2, 2 )
 #define FORMAT_NUM_16BIT        "$%04X"
 #define FORMAT_REG              "%d"
 
+int dasm_cfg_supported( void )
+{
+    return 1;
+}
+
+static int read_opcode_word( ADDR addr, UWORD *out )
+{
+    return dasm_input_read_word_at( addr, out );
+}
+
+void dasm_post_insn( void )
+{
+    UWORD op0;
+
+    if ( !read_opcode_word( g_insn_addr, &op0 ) )
+        return;
+
+    op0 &= 0x0FFF;
+
+    if ( (op0 & 0x0F00) == 0x0900 )
+        dasm_cfg_set_flow( CFG_FLOW_CALL );
+    else if ( (op0 & 0x0E00) == 0x0A00 )
+        dasm_cfg_set_flow( CFG_FLOW_JUMP );
+    else if ( (op0 & 0x0F00) == 0x0800 )
+        dasm_cfg_set_flow( CFG_FLOW_RETURN );
+    else if ( op0 == 0x0003 )
+        dasm_cfg_set_flow( CFG_FLOW_HALT );
+    else if ( (op0 & 0x0F00) == 0x0600
+              || (op0 & 0x0F00) == 0x0700
+              || (op0 & 0x0FC0) == 0x02C0
+              || (op0 & 0x0FC0) == 0x03C0 )
+    {
+        dasm_cfg_set_flow( CFG_FLOW_COND_JUMP );
+        dasm_cfg_add_target( g_insn_addr + 4 );
+    }
+}
+
 /******************************************************************************/
 /**                            Operand Functions                             **/
 /******************************************************************************/
@@ -131,7 +168,8 @@ OPERAND_FUNC(addr8)
 {
     UBYTE addr8 = opc & 0x00FF;
     
-    operand( FORMAT_NUM_8BIT, addr8 );
+    operand( "%s", xref_genwordaddr( NULL, FORMAT_NUM_8BIT, addr8 ) );
+    xref_addxref( xtype, g_insn_addr, (ADDR)addr8 * dasm_word_width_bytes );
 }
 
 /***********************************************************
@@ -150,7 +188,8 @@ OPERAND_FUNC(addr9)
 {
     UWORD addr9 = opc & 0x01FF;
     
-    operand( FORMAT_NUM_16BIT, addr9 );
+    operand( "%s", xref_genwordaddr( NULL, FORMAT_NUM_16BIT, addr9 ) );
+    xref_addxref( xtype, g_insn_addr, (ADDR)addr9 * dasm_word_width_bytes );
 }
 
 /******************************************************************************/
@@ -224,8 +263,8 @@ optab_t base_optab[] = {
     /* Literal and Control Operations */
         
     MASK ( "ANDLW",  imm8,          0x0F00, 0x0E00, X_NONE )
-    MASK ( "CALL",   addr8,         0x0F00, 0x0900, X_NONE )
-    MASK ( "GOTO",   addr9,         0x0E00, 0x0A00, X_NONE )
+    MASK ( "CALL",   addr8,         0x0F00, 0x0900, X_CALL )
+    MASK ( "GOTO",   addr9,         0x0E00, 0x0A00, X_JMP  )
     MASK ( "IORLW",  imm8,          0x0F00, 0x0D00, X_NONE )
     MASK ( "MOVLW",  imm8,          0x0F00, 0x0C00, X_NONE )
     MASK ( "RETLW",  imm8,          0x0F00, 0x0800, X_NONE )

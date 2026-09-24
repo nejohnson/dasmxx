@@ -1,0 +1,12 @@
+# PIC16 CFG fixture. Comments use byte offsets.
+00 00       # 0000: NOP
+03 1D       # 0002: BTFSS 3,2
+00 00       # 0004: skipped NOP
+08 20       # 0006: CALL 0010
+63 00       # 0008: SLEEP
+0A 28       # 000A: GOTO 0014
+00 00       # 000C: filler
+00 00       # 000E: filler
+08 00       # 0010: RETURN
+09 00       # 0012: RETFIE
+55 34       # 0014: RETLW $55
