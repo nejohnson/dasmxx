@@ -59,6 +59,64 @@ DASM_PROFILE( "dasmpic18", "Microchip PIC18", 4, 9, 0, 2, 2 )
 #define FORMAT_NUM_24BIT		"$%06X"
 #define FORMAT_REG              "%d"
 
+int dasm_cfg_supported( void )
+{
+    return 1;
+}
+
+static int read_opcode_word( ADDR addr, UWORD *out )
+{
+    return dasm_input_read_word_at( addr, out );
+}
+
+static int cfg_is_32bit_insn( UWORD op )
+{
+    return ( (op & 0xF000) == 0xC000 )
+           || ( (op & 0xFE00) == 0xEC00 )
+           || ( (op & 0xFF00) == 0xEF00 )
+           || ( (op & 0xFFC0) == 0xEE00 );
+}
+
+void dasm_post_insn( void )
+{
+    UWORD op0, op1;
+
+    if ( !read_opcode_word( g_insn_addr, &op0 ) )
+        return;
+
+    if ( (op0 & 0xFF00) >= 0xE000 && (op0 & 0xFF00) <= 0xE700 )
+        dasm_cfg_set_flow( CFG_FLOW_COND_JUMP );
+    else if ( (op0 & 0xF800) == 0xD000
+              || (op0 & 0xFF00) == 0xEF00 )
+        dasm_cfg_set_flow( CFG_FLOW_JUMP );
+    else if ( (op0 & 0xF800) == 0xD800
+              || (op0 & 0xFE00) == 0xEC00 )
+        dasm_cfg_set_flow( CFG_FLOW_CALL );
+    else if ( (op0 & 0xFFFE) == 0x0010
+              || (op0 & 0xFF00) == 0x0C00
+              || (op0 & 0xFFFE) == 0x0012 )
+        dasm_cfg_set_flow( CFG_FLOW_RETURN );
+    else if ( op0 == 0x0003 )
+        dasm_cfg_set_flow( CFG_FLOW_HALT );
+    else if ( op0 == 0x00FF )
+        dasm_cfg_set_flow( CFG_FLOW_STOP );
+    else if ( (op0 & 0xFE00) == 0x6200
+              || (op0 & 0xFE00) == 0x6400
+              || (op0 & 0xFE00) == 0x6000
+              || (op0 & 0xFC00) == 0x2C00
+              || (op0 & 0xFC00) == 0x4C00
+              || (op0 & 0xFC00) == 0x3C00
+              || (op0 & 0xFC00) == 0x4800
+              || (op0 & 0xFE00) == 0x6600
+              || (op0 & 0xF000) == 0xB000
+              || (op0 & 0xF000) == 0xA000 )
+    {
+        dasm_cfg_set_flow( CFG_FLOW_COND_JUMP );
+        if ( read_opcode_word( g_insn_addr + 2, &op1 ) )
+            dasm_cfg_add_target( g_insn_addr + 2 + (cfg_is_32bit_insn( op1 ) ? 4 : 2) );
+    }
+}
+
 /******************************************************************************/
 /**                            Operand Functions                             **/
 /******************************************************************************/
@@ -171,7 +229,7 @@ OPERAND_FUNC(rel8)
     BYTE disp = opc & 0xFF;
     ADDR dest = *addr + ((WORD)(BYTE)disp * 2);
     
-    operand( xref_genwordaddr( NULL, FORMAT_NUM_16BIT, dest ) );
+    operand( xref_genwordaddr( NULL, FORMAT_NUM_16BIT, dest / dasm_word_width_bytes ) );
     xref_addxref( xtype, g_insn_addr, dest );
 }
 
@@ -222,7 +280,7 @@ OPERAND_FUNC(addr20)
 	hi |= lo;
 	hi <<= 1;
 	
-	operand( xref_genwordaddr( NULL, FORMAT_NUM_24BIT, hi ) );
+	operand( xref_genwordaddr( NULL, FORMAT_NUM_24BIT, hi / dasm_word_width_bytes ) );
     xref_addxref( xtype, g_insn_addr, hi );
 }
 
@@ -242,7 +300,7 @@ OPERAND_FUNC(addr20_s8)
 	hi |= lo;
 	hi <<= 1;
 	
-	operand( xref_genwordaddr( NULL, FORMAT_NUM_24BIT, hi ) );
+	operand( xref_genwordaddr( NULL, FORMAT_NUM_24BIT, hi / dasm_word_width_bytes ) );
     xref_addxref( xtype, g_insn_addr, hi );
     COMMA;
     operand( "%d", !!s8 );
@@ -262,7 +320,7 @@ OPERAND_FUNC(rel11)
         disp |= 0xF800;
     dest = *addr + (disp * 2);
     
-    operand( xref_genwordaddr( NULL, FORMAT_NUM_16BIT, dest ) );
+    operand( xref_genwordaddr( NULL, FORMAT_NUM_16BIT, dest / dasm_word_width_bytes ) );
     xref_addxref( xtype, g_insn_addr, dest );
 }
 
@@ -343,27 +401,27 @@ optab_t base_optab[] = {
         
     /* Control Operations */
     
-    MASK ( "BC",     rel8,          0xFF00, 0xE200, X_NONE )
-    MASK ( "BN",     rel8,          0xFF00, 0xE600, X_NONE )
-    MASK ( "BNC",    rel8,          0xFF00, 0xE300, X_NONE )
-    MASK ( "BNN",    rel8,          0xFF00, 0xE700, X_NONE )
-    MASK ( "BNOV",   rel8,          0xFF00, 0xE500, X_NONE )
-    MASK ( "BNZ",    rel8,          0xFF00, 0xE100, X_NONE )
-    MASK ( "BOV",    rel8,          0xFF00, 0xE400, X_NONE )
-    MASK ( "BZ",     rel8,          0xFF00, 0xE000, X_NONE )
-    MASK ( "BRA",    rel8,          0xF800, 0xD000, X_NONE )
+    MASK ( "BC",     rel8,          0xFF00, 0xE200, X_JMP )
+    MASK ( "BN",     rel8,          0xFF00, 0xE600, X_JMP )
+    MASK ( "BNC",    rel8,          0xFF00, 0xE300, X_JMP )
+    MASK ( "BNN",    rel8,          0xFF00, 0xE700, X_JMP )
+    MASK ( "BNOV",   rel8,          0xFF00, 0xE500, X_JMP )
+    MASK ( "BNZ",    rel8,          0xFF00, 0xE100, X_JMP )
+    MASK ( "BOV",    rel8,          0xFF00, 0xE400, X_JMP )
+    MASK ( "BZ",     rel8,          0xFF00, 0xE000, X_JMP )
+    MASK ( "BRA",    rel8,          0xF800, 0xD000, X_JMP )
     
-    MASK ( "CALL",   addr20_s8,     0xFE00, 0xEC00, X_NONE )
+    MASK ( "CALL",   addr20_s8,     0xFE00, 0xEC00, X_CALL )
     INSN ( "CLRWDT", none,          0x0004,         X_NONE )
     INSN ( "DAW",    none,          0x0007,         X_NONE )
-    MASK ( "GOTO",   addr20,        0xFF00, 0xEF00, X_NONE )
+    MASK ( "GOTO",   addr20,        0xFF00, 0xEF00, X_JMP  )
     
     INSN ( "NOP",    none,          0x0000,         X_NONE )
     MASK ( "NOP",    none,          0xF000, 0xF000, X_NONE )
     
     INSN ( "POP",    none,          0x0006,         X_NONE )
     INSN ( "PUSH",   none,          0x0005,         X_NONE )
-    MASK ( "RCALL",  rel11,         0xF800, 0xD800, X_NONE )
+    MASK ( "RCALL",  rel11,         0xF800, 0xD800, X_CALL )
     INSN ( "RESET",  none,          0x00FF,         X_NONE )
     
     MASK ( "RETFIE", s0,            0xFFFE, 0x0010, X_NONE )

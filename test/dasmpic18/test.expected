@@ -7,11 +7,10 @@ ___CL_0001:
    MOVFF    $0123, $0456
    LFSR     1, $000ABC
    BCF      34, 3, A
-   BRA      $0018
+   BRA      $000C
    NOP      
    NOP      
    RCALL    ___CL_0001
-   CALL     $012344, 0
-   GOTO     $023456
+   CALL     $0091A2, 0
+   GOTO     $011A2B
    RETURN   1
-

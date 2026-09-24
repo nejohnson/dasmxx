@@ -1,0 +1,22 @@
+# PIC18 CFG fixture. Comments use byte offsets.
+00 00       # 0000: NOP
+03 E0       # 0002: BZ 000A
+08 EC 00 F0 # 0004: CALL 0010,0
+03 00       # 0008: SLEEP
+04 D0       # 000A: BRA 0014
+00 00       # 000C: filler
+00 00       # 000E: filler
+12 00       # 0010: RETURN 0
+10 00       # 0012: RETFIE 0
+0D EF 00 F0 # 0014: GOTO 001A
+00 00       # 0018: filler
+55 0C       # 001A: RETLW $55
+03 B4       # 001C: BTFSC 3,2,A
+14 EF 00 F0 # 001E: skipped GOTO 0028
+12 00       # 0022: RETURN 0
+00 00       # 0024: filler
+00 00       # 0026: filler
+12 00       # 0028: RETURN 0
+F2 DF       # 002A: RCALL 0010
+12 00       # 002C: RETURN 0
+FF 00       # 002E: RESET

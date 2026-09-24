@@ -1,0 +1,13 @@
+fcfg.bin
+c0000 Reset
+p0008 SubFunc
+p0009 RetfieFlow
+p000E SkipFlow
+p0015 RcallFlow
+p0017 ResetFlow
+l0005 BranchTarget
+l000A GotoTarget
+l000D RetlwTarget
+l0011 AfterSkip
+l0014 SkippedTarget
+e0018
