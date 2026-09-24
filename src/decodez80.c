@@ -96,7 +96,7 @@ void dasm_post_insn( void )
     }
 
     if ( op0 == 0x76 )
-        dasm_cfg_set_flow( CFG_FLOW_STOP );
+        dasm_cfg_set_flow( CFG_FLOW_HALT );
     else if ( op0 == 0xC9 )
         dasm_cfg_set_flow( CFG_FLOW_RETURN );
     else if ( (op0 & 0xC7) == 0xC0 )

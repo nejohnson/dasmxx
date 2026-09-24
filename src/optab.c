@@ -235,6 +235,7 @@ const char *dasm_cfg_flow_name( CFG_FLOW flow )
     case CFG_FLOW_COND_CALL:     return "cond_call";
     case CFG_FLOW_RETURN:        return "return";
     case CFG_FLOW_COND_RETURN:   return "cond_return";
+    case CFG_FLOW_HALT:          return "halt";
     case CFG_FLOW_STOP:          return "stop";
     case CFG_FLOW_INDIRECT_JUMP: return "indirect_jump";
     case CFG_FLOW_INDIRECT_CALL: return "indirect_call";

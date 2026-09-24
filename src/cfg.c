@@ -62,6 +62,7 @@ static const char *edge_kind_name( CFG_EDGE_KIND kind )
     case CFG_EDGE_BRANCH:      return "branch";
     case CFG_EDGE_CALL:        return "call";
     case CFG_EDGE_RETURN:      return "return";
+    case CFG_EDGE_RESUME:      return "resume";
     case CFG_EDGE_STOP:        return "stop";
     case CFG_EDGE_INDIRECT:    return "indirect";
     }
@@ -291,6 +292,11 @@ static void add_info_edges_and_work( struct cfg *cfg, const struct dasm_insn_inf
     case CFG_FLOW_COND_RETURN:
         add_edge( cfg, info->addr, 0, 0, CFG_EDGE_RETURN );
         add_edge( cfg, info->addr, 1, info->next, CFG_EDGE_FALLTHROUGH );
+        enqueue( work, work_count, work_cap, info->next );
+        break;
+
+    case CFG_FLOW_HALT:
+        add_edge( cfg, info->addr, 1, info->next, CFG_EDGE_RESUME );
         enqueue( work, work_count, work_cap, info->next );
         break;
 

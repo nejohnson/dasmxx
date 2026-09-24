@@ -8,6 +8,8 @@ block start=0003 end=0006
 block_insn block=0003 addr=0003 text="CALL     SubFunc"
 block start=0006 end=0007
 block_insn block=0006 addr=0006 text="HALT     "
+block start=0007 end=0008
+block_insn block=0007 addr=0007 text="NOP      "
 block start=0008 end=000B label="BranchTarget"
 block_insn block=0008 addr=0008 text="JP       Dispatch"
 block start=0010 end=0011 label="SubFunc"
@@ -17,7 +19,8 @@ block_insn block=0012 addr=0012 text="JP       (HL)"
 insn addr=0000 next=0001 flow=normal text="NOP      "
 insn addr=0001 next=0003 flow=cond_jump text="JR       Z, BranchTarget" target0=0008
 insn addr=0003 next=0006 flow=call text="CALL     SubFunc" target0=0010
-insn addr=0006 next=0007 flow=stop text="HALT     "
+insn addr=0006 next=0007 flow=halt text="HALT     "
+insn addr=0007 next=0008 flow=normal text="NOP      "
 insn addr=0008 next=000B flow=jump text="JP       Dispatch" target0=0012
 insn addr=0010 next=0011 flow=return text="RET      "
 insn addr=0012 next=0013 flow=indirect_jump text="JP       (HL)"
@@ -26,7 +29,8 @@ edge from=0001 to=0003 kind=fallthrough
 edge from=0001 to=0008 kind=branch
 edge from=0003 to=0006 kind=fallthrough
 edge from=0003 to=0010 kind=call
-edge from=0006 kind=stop
+edge from=0006 to=0007 kind=resume
+edge from=0007 to=0008 kind=fallthrough
 edge from=0008 to=0012 kind=branch
 edge from=0010 kind=return
 edge from=0012 kind=indirect

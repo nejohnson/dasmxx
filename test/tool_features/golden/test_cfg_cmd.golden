@@ -4,6 +4,7 @@
 c0000    Reset
 c0003
 c0006
+c0007
 c0008    BranchTarget
 c0010    SubFunc
 c0012    Dispatch

@@ -8,6 +8,7 @@
     {"start": 0, "start_hex": "0000", "end": 3, "end_hex": "0003", "label": "Reset", "instructions": [{"addr": 0, "addr_hex": "0000", "text": "NOP      "}, {"addr": 1, "addr_hex": "0001", "text": "JR       Z, BranchTarget"}]},
     {"start": 3, "start_hex": "0003", "end": 6, "end_hex": "0006", "instructions": [{"addr": 3, "addr_hex": "0003", "text": "CALL     SubFunc"}]},
     {"start": 6, "start_hex": "0006", "end": 7, "end_hex": "0007", "instructions": [{"addr": 6, "addr_hex": "0006", "text": "HALT     "}]},
+    {"start": 7, "start_hex": "0007", "end": 8, "end_hex": "0008", "instructions": [{"addr": 7, "addr_hex": "0007", "text": "NOP      "}]},
     {"start": 8, "start_hex": "0008", "end": 11, "end_hex": "000B", "label": "BranchTarget", "instructions": [{"addr": 8, "addr_hex": "0008", "text": "JP       Dispatch"}]},
     {"start": 16, "start_hex": "0010", "end": 17, "end_hex": "0011", "label": "SubFunc", "instructions": [{"addr": 16, "addr_hex": "0010", "text": "RET      "}]},
     {"start": 18, "start_hex": "0012", "end": 19, "end_hex": "0013", "label": "Dispatch", "instructions": [{"addr": 18, "addr_hex": "0012", "text": "JP       (HL)"}]}
@@ -16,7 +17,8 @@
     {"addr": 0, "addr_hex": "0000", "next": 1, "next_hex": "0001", "flow": "normal", "text": "NOP      ", "targets": []},
     {"addr": 1, "addr_hex": "0001", "next": 3, "next_hex": "0003", "flow": "cond_jump", "text": "JR       Z, BranchTarget", "targets": [{"addr": 8, "addr_hex": "0008"}]},
     {"addr": 3, "addr_hex": "0003", "next": 6, "next_hex": "0006", "flow": "call", "text": "CALL     SubFunc", "targets": [{"addr": 16, "addr_hex": "0010"}]},
-    {"addr": 6, "addr_hex": "0006", "next": 7, "next_hex": "0007", "flow": "stop", "text": "HALT     ", "targets": []},
+    {"addr": 6, "addr_hex": "0006", "next": 7, "next_hex": "0007", "flow": "halt", "text": "HALT     ", "targets": []},
+    {"addr": 7, "addr_hex": "0007", "next": 8, "next_hex": "0008", "flow": "normal", "text": "NOP      ", "targets": []},
     {"addr": 8, "addr_hex": "0008", "next": 11, "next_hex": "000B", "flow": "jump", "text": "JP       Dispatch", "targets": [{"addr": 18, "addr_hex": "0012"}]},
     {"addr": 16, "addr_hex": "0010", "next": 17, "next_hex": "0011", "flow": "return", "text": "RET      ", "targets": []},
     {"addr": 18, "addr_hex": "0012", "next": 19, "next_hex": "0013", "flow": "indirect_jump", "text": "JP       (HL)", "targets": []}
@@ -27,7 +29,8 @@
     {"from": 1, "from_hex": "0001", "kind": "branch", "to": 8, "to_hex": "0008"},
     {"from": 3, "from_hex": "0003", "kind": "fallthrough", "to": 6, "to_hex": "0006"},
     {"from": 3, "from_hex": "0003", "kind": "call", "to": 16, "to_hex": "0010"},
-    {"from": 6, "from_hex": "0006", "kind": "stop"},
+    {"from": 6, "from_hex": "0006", "kind": "resume", "to": 7, "to_hex": "0007"},
+    {"from": 7, "from_hex": "0007", "kind": "fallthrough", "to": 8, "to_hex": "0008"},
     {"from": 8, "from_hex": "0008", "kind": "branch", "to": 18, "to_hex": "0012"},
     {"from": 16, "from_hex": "0010", "kind": "return"},
     {"from": 18, "from_hex": "0012", "kind": "indirect"}
