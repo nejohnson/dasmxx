@@ -205,12 +205,16 @@ dasmpic18: ${DPIC18_OBJS}
 
 DPIC24_OBJS = ${CORE_OBJS} decodepic24.o
 
+decodepic24.o: decodepic30_impl.c
+
 dasmpic24: ${DPIC24_OBJS}
 	$(CC) ${DPIC24_OBJS} -o ${@}
 
 #################################################
 
 DDSPIC33_OBJS = ${CORE_OBJS} decodedspic33.o
+
+decodedspic33.o: decodepic30_impl.c
 
 dasmdspic33: ${DDSPIC33_OBJS}
 	$(CC) ${DDSPIC33_OBJS} -o ${@}

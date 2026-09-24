@@ -62,6 +62,53 @@ static OPC next_slot( FILE *f, ADDR *addr )
     return ((OPC)hi << 16) | ((OPC)mid << 8) | lo;
 }
 
+int dasm_cfg_supported( void )
+{
+    return 1;
+}
+
+static int read_opcode_byte( ADDR addr, UBYTE *out )
+{
+    return dasm_input_read_byte_at( addr, out );
+}
+
+static int read_opcode_slot( ADDR addr, OPC *out )
+{
+    UBYTE lo, mid, hi;
+
+    if ( !read_opcode_byte( addr, &lo )
+         || !read_opcode_byte( addr + 1, &mid )
+         || !read_opcode_byte( addr + 2, &hi ) )
+        return 0;
+
+    *out = ((OPC)hi << 16) | ((OPC)mid << 8) | lo;
+    return 1;
+}
+
+void dasm_post_insn( void )
+{
+    OPC op0;
+
+    if ( !read_opcode_slot( g_insn_addr, &op0 ) )
+        return;
+
+    if ( op0 == 0x060000 )
+        dasm_cfg_set_flow( CFG_FLOW_RETURN );
+    else if ( op0 == 0xFE0000 || op0 == 0xDA4000 )
+        dasm_cfg_set_flow( CFG_FLOW_STOP );
+    else if ( (op0 & 0xFF0000) == 0x370000
+              || (op0 & 0xFF0000) == 0x040000 )
+        dasm_cfg_set_flow( CFG_FLOW_JUMP );
+    else if ( (op0 & 0xFF0000) == 0x070000
+              || (op0 & 0xFF0000) == 0x020000 )
+        dasm_cfg_set_flow( CFG_FLOW_CALL );
+    else if ( (op0 & 0xFF0000) == 0x320000
+              || (op0 & 0xFF0000) == 0x3A0000
+              || (op0 & 0xFF0000) == 0x310000
+              || (op0 & 0xFF0000) == 0x390000 )
+        dasm_cfg_set_flow( CFG_FLOW_COND_JUMP );
+}
+
 OPERAND_FUNC(none)
 {
     /* empty */
@@ -170,7 +217,7 @@ OPERAND_FUNC(rel16)
     ADDR dest = pc + 2 + ( disp * 2 );
 
     operand( xref_genwordaddr( NULL, FORMAT_NUM_16BIT, dest ) );
-    xref_addxref( xtype, g_insn_addr, dest );
+    xref_addxref( xtype, g_insn_addr, dest * dasm_word_width_bytes );
 }
 
 OPERAND_FUNC(addr23)
@@ -179,7 +226,7 @@ OPERAND_FUNC(addr23)
     ADDR dest = ( opc & 0xFFFF ) | ( ( ext & 0x007F ) << 16 );
 
     operand( xref_genwordaddr( NULL, FORMAT_NUM_24BIT, dest ) );
-    xref_addxref( xtype, g_insn_addr, dest );
+    xref_addxref( xtype, g_insn_addr, dest * dasm_word_width_bytes );
 }
 
 static void operand_cond_rel( OPC opc, const char *cond, XREF_TYPE xtype )
@@ -191,7 +238,7 @@ static void operand_cond_rel( OPC opc, const char *cond, XREF_TYPE xtype )
     operand( "%s", cond );
     COMMA;
     operand( xref_genwordaddr( NULL, FORMAT_NUM_16BIT, dest ) );
-    xref_addxref( xtype, g_insn_addr, dest );
+    xref_addxref( xtype, g_insn_addr, dest * dasm_word_width_bytes );
 }
 
 OPERAND_FUNC(z_rel16)

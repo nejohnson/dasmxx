@@ -1,0 +1,43 @@
+cfg format=debug target=dasmpic24
+root addr=0000 kind=code label="Reset"
+root addr=0020 kind=proc label="SubFunc"
+root addr=0028 kind=proc label="RcallFlow"
+root addr=0030 kind=proc label="GotoFlow"
+block start=0000 end=0008 label="Reset"
+block_insn block=0000 addr=0000 text="NOP      "
+block_insn block=0000 addr=0004 text="BRA      Z, BranchTarget"
+block start=0008 end=0010
+block_insn block=0008 addr=0008 text="CALL     SubFunc"
+block start=0010 end=0014 label="BranchTarget"
+block_insn block=0010 addr=0010 text="RESET    "
+block start=0020 end=0024 label="SubFunc"
+block_insn block=0020 addr=0020 text="RETURN   "
+block start=0028 end=002C label="RcallFlow"
+block_insn block=0028 addr=0028 text="RCALL    SubFunc"
+block start=002C end=0030
+block_insn block=002C addr=002C text="RETURN   "
+block start=0030 end=0038 label="GotoFlow"
+block_insn block=0030 addr=0030 text="GOTO     LongTarget"
+block start=0038 end=003C label="LongTarget"
+block_insn block=0038 addr=0038 text="RETURN   "
+insn addr=0000 next=0004 flow=normal text="NOP      "
+insn addr=0004 next=0008 flow=cond_jump text="BRA      Z, BranchTarget" target0=0010
+insn addr=0008 next=0010 flow=call text="CALL     SubFunc" target0=0020
+insn addr=0010 next=0014 flow=stop text="RESET    "
+insn addr=0020 next=0024 flow=return text="RETURN   "
+insn addr=0028 next=002C flow=call text="RCALL    SubFunc" target0=0020
+insn addr=002C next=0030 flow=return text="RETURN   "
+insn addr=0030 next=0038 flow=jump text="GOTO     LongTarget" target0=0038
+insn addr=0038 next=003C flow=return text="RETURN   "
+edge from=0000 to=0004 kind=fallthrough
+edge from=0004 to=0008 kind=fallthrough
+edge from=0004 to=0010 kind=branch
+edge from=0008 to=0010 kind=fallthrough
+edge from=0008 to=0020 kind=call
+edge from=0010 kind=stop
+edge from=0020 kind=return
+edge from=0028 to=0020 kind=call
+edge from=0028 to=002C kind=fallthrough
+edge from=002C kind=return
+edge from=0030 to=0038 kind=branch
+edge from=0038 kind=return
