@@ -1,8 +1,9 @@
 # CFG discovered by dasmz80
 # root 0000 code
-c0000    ___CL_0001
+# root 0010 proc
+c0000    Reset
 c0003
 c0006
-c0008
-c0010
-c0012
+c0008    BranchTarget
+c0010    SubFunc
+c0012    Dispatch

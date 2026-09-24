@@ -455,6 +455,7 @@ static const struct cfg_block *find_block_containing_addr( const struct cfg *cfg
 }
 
 static void dot_escape( FILE *out, const char *s );
+static void json_escape( FILE *out, const char *s );
 
 static int insn_in_block( const struct cfg_insn *insn, const struct cfg_block *block )
 {
@@ -485,13 +486,24 @@ void cfg_emit_debug( const struct cfg *cfg, FILE *out )
 
     fprintf( out, "cfg format=debug target=%s\n", dasm_name );
     for ( i = 0; i < cfg->root_count; i++ )
-        fprintf( out, "root addr=%04X kind=%s\n", cfg->roots[i].addr, root_kind_name( cfg->roots[i].kind ) );
+    {
+        const char *label = xref_findaddrlabel( cfg->roots[i].addr );
+
+        fprintf( out, "root addr=%04X kind=%s", cfg->roots[i].addr, root_kind_name( cfg->roots[i].kind ) );
+        if ( label )
+            fprintf( out, " label=\"%s\"", label );
+        fprintf( out, "\n" );
+    }
 
     for ( i = 0; i < cfg->block_count; i++ )
     {
+        const char *label = xref_findaddrlabel( cfg->blocks[i].start );
         unsigned int j;
 
-        fprintf( out, "block start=%04X end=%04X\n", cfg->blocks[i].start, cfg->blocks[i].end );
+        fprintf( out, "block start=%04X end=%04X", cfg->blocks[i].start, cfg->blocks[i].end );
+        if ( label )
+            fprintf( out, " label=\"%s\"", label );
+        fprintf( out, "\n" );
         for ( j = 0; j < cfg->insn_count; j++ )
             if ( insn_in_block( &cfg->insns[j], &cfg->blocks[i] ) )
                 fprintf( out, "block_insn block=%04X addr=%04X text=\"%s\"\n",
@@ -552,10 +564,16 @@ void cfg_emit_dot( const struct cfg *cfg, FILE *out )
     for ( i = 0; i < cfg->block_count; i++ )
     {
         const struct dasm_insn_info *last = block_last_insn( cfg, &cfg->blocks[i] );
+        const char *label = xref_findaddrlabel( cfg->blocks[i].start );
         unsigned int j;
 
         fprintf( out, "  \"B_%04X\" [shape=box, label=\"",
                  cfg->blocks[i].start );
+        if ( label )
+        {
+            dot_escape( out, label );
+            fprintf( out, ":\\l" );
+        }
         for ( j = 0; j < cfg->insn_count; j++ )
             if ( insn_in_block( &cfg->insns[j], &cfg->blocks[i] )
                  && !(last == &cfg->insns[j].info && flow_is_conditional( last->flow )) )
@@ -579,10 +597,20 @@ void cfg_emit_dot( const struct cfg *cfg, FILE *out )
 
     for ( i = 0; i < cfg->root_count; i++ )
         if ( find_block_for_addr( cfg, cfg->roots[i].addr ) )
-            fprintf( out, "  \"R_%u\" [shape=ellipse, label=\"%s\\n%04X\"];\n"
+        {
+            const char *label = xref_findaddrlabel( cfg->roots[i].addr );
+
+            fprintf( out, "  \"R_%u\" [shape=ellipse, label=\"%s\\n",
+                     i, root_kind_name( cfg->roots[i].kind ) );
+            if ( label )
+            {
+                dot_escape( out, label );
+                fprintf( out, "\\n" );
+            }
+            fprintf( out, "%04X\"];\n"
                           "  \"R_%u\" -> \"B_%04X\" [label=\"entry\"];\n",
-                     i, root_kind_name( cfg->roots[i].kind ), cfg->roots[i].addr,
-                     i, cfg->roots[i].addr );
+                     cfg->roots[i].addr, i, cfg->roots[i].addr );
+        }
 
     for ( i = 0; i < cfg->edge_count; i++ )
     {
@@ -669,18 +697,36 @@ void cfg_emit_json( const struct cfg *cfg, FILE *out )
 
     fprintf( out, "{\n  \"target\": \"%s\",\n  \"roots\": [\n", dasm_name );
     for ( i = 0; i < cfg->root_count; i++ )
-        fprintf( out, "    {\"addr\": %u, \"addr_hex\": \"%04X\", \"kind\": \"%s\"}%s\n",
-                 cfg->roots[i].addr, cfg->roots[i].addr, root_kind_name( cfg->roots[i].kind ),
-                 i + 1 == cfg->root_count ? "" : "," );
+    {
+        const char *label = xref_findaddrlabel( cfg->roots[i].addr );
+
+        fprintf( out, "    {\"addr\": %u, \"addr_hex\": \"%04X\", \"kind\": \"%s\"",
+                 cfg->roots[i].addr, cfg->roots[i].addr, root_kind_name( cfg->roots[i].kind ) );
+        if ( label )
+        {
+            fprintf( out, ", \"label\": \"" );
+            json_escape( out, label );
+            fprintf( out, "\"" );
+        }
+        fprintf( out, "}%s\n", i + 1 == cfg->root_count ? "" : "," );
+    }
 
     fprintf( out, "  ],\n  \"blocks\": [\n" );
     for ( i = 0; i < cfg->block_count; i++ )
     {
+        const char *label = xref_findaddrlabel( cfg->blocks[i].start );
         unsigned int j;
         int first = 1;
 
-        fprintf( out, "    {\"start\": %u, \"start_hex\": \"%04X\", \"end\": %u, \"end_hex\": \"%04X\", \"instructions\": [",
+        fprintf( out, "    {\"start\": %u, \"start_hex\": \"%04X\", \"end\": %u, \"end_hex\": \"%04X\"",
                  cfg->blocks[i].start, cfg->blocks[i].start, cfg->blocks[i].end, cfg->blocks[i].end );
+        if ( label )
+        {
+            fprintf( out, ", \"label\": \"" );
+            json_escape( out, label );
+            fprintf( out, "\"" );
+        }
+        fprintf( out, ", \"instructions\": [" );
         for ( j = 0; j < cfg->insn_count; j++ )
         {
             if ( !insn_in_block( &cfg->insns[j], &cfg->blocks[i] ) )
