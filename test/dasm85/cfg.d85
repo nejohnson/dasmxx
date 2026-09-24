@@ -1,0 +1,8 @@
+fcfg.bin
+c0000 Reset
+p0013 RestartFlow
+p0016 RstvFlow
+l0008 BranchTarget
+p0010 SubFunc
+l0012 Dispatch
+e0019

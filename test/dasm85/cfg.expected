@@ -1,0 +1,60 @@
+cfg format=debug target=dasm85
+root addr=0000 kind=code label="Reset"
+root addr=0010 kind=proc label="SubFunc"
+root addr=0013 kind=proc label="RestartFlow"
+root addr=0016 kind=proc label="RstvFlow"
+block start=0000 end=0004 label="Reset"
+block_insn block=0000 addr=0000 text="NOP      "
+block_insn block=0000 addr=0001 text="JZ       BranchTarget"
+block start=0004 end=0007
+block_insn block=0004 addr=0004 text="CALL     SubFunc"
+block start=0007 end=0008
+block_insn block=0007 addr=0007 text="HLT      "
+block start=0008 end=000B label="BranchTarget"
+block_insn block=0008 addr=0008 text="JMP      Dispatch"
+block start=0010 end=0011 label="SubFunc"
+block_insn block=0010 addr=0010 text="RET      "
+block start=0012 end=0013 label="Dispatch"
+block_insn block=0012 addr=0012 text="PCHL     "
+block start=0013 end=0014 label="RestartFlow"
+block_insn block=0013 addr=0013 text="RST      001H"
+block start=0014 end=0015
+block_insn block=0014 addr=0014 text="RNZ      "
+block start=0015 end=0016
+block_insn block=0015 addr=0015 text="RET      "
+block start=0016 end=0017 label="RstvFlow"
+block_insn block=0016 addr=0016 text="RSTV     "
+block start=0017 end=0019
+block_insn block=0017 addr=0017 text="NOP      "
+block_insn block=0017 addr=0018 text="RET      "
+insn addr=0000 next=0001 flow=normal text="NOP      "
+insn addr=0001 next=0004 flow=cond_jump text="JZ       BranchTarget" target0=0008
+insn addr=0004 next=0007 flow=call text="CALL     SubFunc" target0=0010
+insn addr=0007 next=0008 flow=halt text="HLT      "
+insn addr=0008 next=000B flow=jump text="JMP      Dispatch" target0=0012
+insn addr=0010 next=0011 flow=return text="RET      "
+insn addr=0012 next=0013 flow=indirect_jump text="PCHL     "
+insn addr=0013 next=0014 flow=call text="RST      001H" target0=0008
+insn addr=0014 next=0015 flow=cond_return text="RNZ      "
+insn addr=0015 next=0016 flow=return text="RET      "
+insn addr=0016 next=0017 flow=cond_call text="RSTV     " target0=0040
+insn addr=0017 next=0018 flow=normal text="NOP      "
+insn addr=0018 next=0019 flow=return text="RET      "
+edge from=0000 to=0001 kind=fallthrough
+edge from=0001 to=0004 kind=fallthrough
+edge from=0001 to=0008 kind=branch
+edge from=0004 to=0007 kind=fallthrough
+edge from=0004 to=0010 kind=call
+edge from=0007 to=0008 kind=resume
+edge from=0008 to=0012 kind=branch
+edge from=0010 kind=return
+edge from=0012 kind=indirect
+edge from=0013 to=0008 kind=call
+edge from=0013 to=0014 kind=fallthrough
+edge from=0014 kind=return
+edge from=0014 to=0015 kind=fallthrough
+edge from=0015 kind=return
+edge from=0016 to=0017 kind=fallthrough
+edge from=0016 to=0040 kind=call
+edge from=0017 to=0018 kind=fallthrough
+edge from=0018 kind=return
