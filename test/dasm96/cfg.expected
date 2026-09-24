@@ -1,0 +1,66 @@
+cfg format=debug target=dasm96
+root addr=0000 kind=code label="Reset"
+root addr=0010 kind=proc label="SubFunc"
+root addr=0018 kind=proc label="IndirectFlow"
+root addr=001A kind=proc label="ShortCall"
+root addr=001D kind=proc label="BitBranch"
+root addr=0021 kind=proc label="LongJump"
+block start=0000 end=0003 label="Reset"
+block_insn block=0000 addr=0000 text="nop      "
+block_insn block=0000 addr=0001 text="je       BranchTarget"
+block start=0003 end=0006
+block_insn block=0003 addr=0003 text="lcall    SubFunc"
+block start=0006 end=0008
+block_insn block=0006 addr=0006 text="idlpd    "
+block start=0008 end=000A label="BranchTarget"
+block_insn block=0008 addr=0008 text="sjmp     IndirectFlow"
+block start=0010 end=0011 label="SubFunc"
+block_insn block=0010 addr=0010 text="ret      "
+block start=0018 end=001A label="IndirectFlow"
+block_insn block=0018 addr=0018 text="br       [R20]"
+block start=001A end=001C label="ShortCall"
+block_insn block=001A addr=001A text="scall    SubFunc"
+block start=001C end=001D
+block_insn block=001C addr=001C text="ret      "
+block start=001D end=0020 label="BitBranch"
+block_insn block=001D addr=001D text="jbc      R10,0, BitTarget"
+block start=0020 end=0021
+block_insn block=0020 addr=0020 text="rst      "
+block start=0021 end=0024 label="LongJump"
+block_insn block=0021 addr=0021 text="ljmp     LongTarget"
+block start=0024 end=0025 label="BitTarget"
+block_insn block=0024 addr=0024 text="ret      "
+block start=0028 end=0029 label="LongTarget"
+block_insn block=0028 addr=0028 text="ret      "
+insn addr=0000 next=0001 flow=normal text="nop      "
+insn addr=0001 next=0003 flow=cond_jump text="je       BranchTarget" target0=0008
+insn addr=0003 next=0006 flow=call text="lcall    SubFunc" target0=0010
+insn addr=0006 next=0008 flow=halt text="idlpd    "
+insn addr=0008 next=000A flow=jump text="sjmp     IndirectFlow" target0=0018
+insn addr=0010 next=0011 flow=return text="ret      "
+insn addr=0018 next=001A flow=indirect_jump text="br       [R20]"
+insn addr=001A next=001C flow=call text="scall    SubFunc" target0=0010
+insn addr=001C next=001D flow=return text="ret      "
+insn addr=001D next=0020 flow=cond_jump text="jbc      R10,0, BitTarget" target0=0024
+insn addr=0020 next=0021 flow=stop text="rst      "
+insn addr=0021 next=0024 flow=jump text="ljmp     LongTarget" target0=0028
+insn addr=0024 next=0025 flow=return text="ret      "
+insn addr=0028 next=0029 flow=return text="ret      "
+edge from=0000 to=0001 kind=fallthrough
+edge from=0001 to=0003 kind=fallthrough
+edge from=0001 to=0008 kind=branch
+edge from=0003 to=0006 kind=fallthrough
+edge from=0003 to=0010 kind=call
+edge from=0006 to=0008 kind=resume
+edge from=0008 to=0018 kind=branch
+edge from=0010 kind=return
+edge from=0018 kind=indirect
+edge from=001A to=0010 kind=call
+edge from=001A to=001C kind=fallthrough
+edge from=001C kind=return
+edge from=001D to=0020 kind=fallthrough
+edge from=001D to=0024 kind=branch
+edge from=0020 kind=stop
+edge from=0021 to=0028 kind=branch
+edge from=0024 kind=return
+edge from=0028 kind=return

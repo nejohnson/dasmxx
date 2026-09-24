@@ -1,0 +1,11 @@
+fcfg.bin
+c0000 Reset
+p0010 SubFunc
+p0018 IndirectFlow
+p001A ShortCall
+p001D BitBranch
+p0021 LongJump
+l0008 BranchTarget
+l0024 BitTarget
+l0028 LongTarget
+e0029

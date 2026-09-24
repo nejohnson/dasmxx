@@ -1,0 +1,31 @@
+# Intel 8096 CFG fixture.
+FD          # 0000: NOP
+DF 05       # 0001: JE 0008
+EF 0A 00    # 0003: LCALL 0010
+F6 00       # 0006: IDLPD
+20 0E       # 0008: SJMP 0018
+FD          # 000A: filler
+FD          # 000B: filler
+FD          # 000C: filler
+FD          # 000D: filler
+FD          # 000E: filler
+FD          # 000F: filler
+F0          # 0010: RET
+FD          # 0011: filler
+FD          # 0012: filler
+FD          # 0013: filler
+FD          # 0014: filler
+FD          # 0015: filler
+FD          # 0016: filler
+FD          # 0017: filler
+E3 20       # 0018: BR [R20]
+2F F4       # 001A: SCALL 0010
+F0          # 001C: RET
+30 10 04    # 001D: JBC R10,0,0024
+FF          # 0020: RST
+E7 04 00    # 0021: LJMP 0028
+F0          # 0024: RET
+FD          # 0025: filler
+FD          # 0026: filler
+FD          # 0027: filler
+F0          # 0028: RET

@@ -98,6 +98,54 @@ static ADDR rel16_target( ADDR next_addr, WORD disp )
     return next_addr + disp;
 }
 
+int dasm_cfg_supported( void )
+{
+    return 1;
+}
+
+static int read_opcode_byte( ADDR addr, UBYTE *out )
+{
+    return dasm_input_read_byte_at( addr, out );
+}
+
+void dasm_post_insn( void )
+{
+    UBYTE op0;
+    ADDR opaddr = g_insn_addr;
+
+    if ( !read_opcode_byte( opaddr, &op0 ) )
+        return;
+
+    if ( op0 == 0xFE )
+    {
+        opaddr++;
+        if ( !read_opcode_byte( opaddr, &op0 ) )
+            return;
+    }
+
+    if ( op0 >= 0x20 && op0 <= 0x27 )
+        dasm_cfg_set_flow( CFG_FLOW_JUMP );
+    else if ( op0 >= 0x28 && op0 <= 0x2F )
+        dasm_cfg_set_flow( CFG_FLOW_CALL );
+    else if ( (op0 >= 0x30 && op0 <= 0x3F)
+              || (op0 >= 0xD0 && op0 <= 0xDF)
+              || op0 == 0xE0
+              || op0 == 0xE1 )
+        dasm_cfg_set_flow( CFG_FLOW_COND_JUMP );
+    else if ( op0 == 0xE3 )
+        dasm_cfg_set_flow( CFG_FLOW_INDIRECT_JUMP );
+    else if ( op0 == 0xE7 )
+        dasm_cfg_set_flow( CFG_FLOW_JUMP );
+    else if ( op0 == 0xEF )
+        dasm_cfg_set_flow( CFG_FLOW_CALL );
+    else if ( op0 == 0xF0 )
+        dasm_cfg_set_flow( CFG_FLOW_RETURN );
+    else if ( op0 == 0xF6 )
+        dasm_cfg_set_flow( CFG_FLOW_HALT );
+    else if ( op0 == 0xFF )
+        dasm_cfg_set_flow( CFG_FLOW_STOP );
+}
+
 void dasm_pre_insn( void )
 {
     signed_prefix = 0;
