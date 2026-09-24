@@ -1,0 +1,23 @@
+# Motorola 6805 CFG fixture
+9D      # 0000: nop
+00      # 0001: brset 0,$20,0009
+20
+05
+AD      # 0004: bsr 0010
+0A
+8F      # 0006: wait
+8E      # 0007: stop
+9D      # 0008: filler
+CC      # 0009: jmp 0012
+00
+12
+9D      # 000C: filler
+9D
+9D
+9D
+81      # 0010: rts
+9D      # 0011: filler
+FC      # 0012: jmp ,x
+FD      # 0013: jsr ,x
+9D      # 0014: nop
+80      # 0015: rti

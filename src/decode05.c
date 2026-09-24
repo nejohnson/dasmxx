@@ -55,6 +55,46 @@ DASM_PROFILE( "dasm05", "Motorola 6805", 3, 9, 1, 1, 1 )
 /* Construct a 16-bit word out of low and high bytes */
 #define MK_WORD(l,h)            ( ((l) & 0xFF) | (((h) & 0xFF) << 8) )
 
+int dasm_cfg_supported( void )
+{
+    return 1;
+}
+
+static int read_opcode_byte( ADDR addr, UBYTE *out )
+{
+    return dasm_input_read_byte_at( addr, out );
+}
+
+void dasm_post_insn( void )
+{
+    UBYTE op0;
+
+    if ( !read_opcode_byte( g_insn_addr, &op0 ) )
+        return;
+
+    if ( (op0 & 0xF1) == 0x00 || (op0 & 0xF1) == 0x01 )
+        dasm_cfg_set_flow( CFG_FLOW_COND_JUMP );
+    else if ( op0 == 0x20 )
+        dasm_cfg_set_flow( CFG_FLOW_JUMP );
+    else if ( op0 >= 0x22 && op0 <= 0x2F )
+        dasm_cfg_set_flow( CFG_FLOW_COND_JUMP );
+    else if ( op0 == 0x80 || op0 == 0x81 )
+        dasm_cfg_set_flow( CFG_FLOW_RETURN );
+    else if ( op0 == 0x83 )
+        dasm_cfg_set_flow( CFG_FLOW_INDIRECT_CALL );
+    else if ( op0 == 0x8E )
+        dasm_cfg_set_flow( CFG_FLOW_STOP );
+    else if ( op0 == 0x8F )
+        dasm_cfg_set_flow( CFG_FLOW_HALT );
+    else if ( op0 == 0xAD || op0 == 0xBD || op0 == 0xCD )
+        dasm_cfg_set_flow( CFG_FLOW_CALL );
+    else if ( op0 == 0xBC || op0 == 0xCC )
+        dasm_cfg_set_flow( CFG_FLOW_JUMP );
+    else if ( op0 == 0xDC || op0 == 0xEC || op0 == 0xFC )
+        dasm_cfg_set_flow( CFG_FLOW_INDIRECT_JUMP );
+    else if ( op0 == 0xDD || op0 == 0xED || op0 == 0xFD )
+        dasm_cfg_set_flow( CFG_FLOW_INDIRECT_CALL );
+}
 
 /*****************************************************************************
  *        Private Functions

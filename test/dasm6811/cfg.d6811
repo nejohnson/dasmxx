@@ -1,0 +1,9 @@
+fcfg.bin
+c0000 Reset
+p0013 IndirectSub
+p0016 YBranch
+l0008 BranchTarget
+p0010 SubFunc
+l0012 StopPath
+l001D YBranchTarget
+e001E

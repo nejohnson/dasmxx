@@ -1,0 +1,31 @@
+# Motorola 68HC11 CFG fixture
+01      # 0000: nop
+12      # 0001: brset $20,#$01,0008
+20
+01
+03
+8D      # 0005: bsr 0010
+09
+3E      # 0007: wai
+7E      # 0008: jmp 0012
+00
+12
+01      # 000B: filler
+01
+01
+01
+01
+39      # 0010: rts
+01      # 0011: filler
+CF      # 0012: stop
+AD      # 0013: jsr 00,x
+00
+3B      # 0015: rti
+18      # 0016: brset $00,y,#$01,001D
+1E
+00
+01
+02
+CF      # 001B: stop
+01      # 001C: filler
+CF      # 001D: stop

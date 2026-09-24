@@ -1,0 +1,56 @@
+cfg format=debug target=dasm6811
+root addr=0000 kind=code label="Reset"
+root addr=0010 kind=proc label="SubFunc"
+root addr=0013 kind=proc label="IndirectSub"
+root addr=0016 kind=proc label="YBranch"
+block start=0000 end=0005 label="Reset"
+block_insn block=0000 addr=0000 text="nop     "
+block_insn block=0000 addr=0001 text="brset   $20,#$01,BranchTarget"
+block start=0005 end=0007
+block_insn block=0005 addr=0005 text="bsr     SubFunc"
+block start=0007 end=0008
+block_insn block=0007 addr=0007 text="wai     "
+block start=0008 end=000B label="BranchTarget"
+block_insn block=0008 addr=0008 text="jmp     StopPath"
+block start=0010 end=0011 label="SubFunc"
+block_insn block=0010 addr=0010 text="rts     "
+block start=0012 end=0013 label="StopPath"
+block_insn block=0012 addr=0012 text="stop    "
+block start=0013 end=0015 label="IndirectSub"
+block_insn block=0013 addr=0013 text="jsr     $00,x"
+block start=0015 end=0016
+block_insn block=0015 addr=0015 text="rti     "
+block start=0016 end=001B label="YBranch"
+block_insn block=0016 addr=0016 text="brset   $00,y,#$01,YBranchTarget"
+block start=001B end=001C
+block_insn block=001B addr=001B text="stop    "
+block start=001D end=001E label="YBranchTarget"
+block_insn block=001D addr=001D text="stop    "
+insn addr=0000 next=0001 flow=normal text="nop     "
+insn addr=0001 next=0005 flow=cond_jump text="brset   $20,#$01,BranchTarget" target0=0008
+insn addr=0005 next=0007 flow=call text="bsr     SubFunc" target0=0010
+insn addr=0007 next=0008 flow=halt text="wai     "
+insn addr=0008 next=000B flow=jump text="jmp     StopPath" target0=0012
+insn addr=0010 next=0011 flow=return text="rts     "
+insn addr=0012 next=0013 flow=stop text="stop    "
+insn addr=0013 next=0015 flow=indirect_call text="jsr     $00,x"
+insn addr=0015 next=0016 flow=return text="rti     "
+insn addr=0016 next=001B flow=cond_jump text="brset   $00,y,#$01,YBranchTarget" target0=001D
+insn addr=001B next=001C flow=stop text="stop    "
+insn addr=001D next=001E flow=stop text="stop    "
+edge from=0000 to=0001 kind=fallthrough
+edge from=0001 to=0005 kind=fallthrough
+edge from=0001 to=0008 kind=branch
+edge from=0005 to=0007 kind=fallthrough
+edge from=0005 to=0010 kind=call
+edge from=0007 to=0008 kind=resume
+edge from=0008 to=0012 kind=branch
+edge from=0010 kind=return
+edge from=0012 kind=stop
+edge from=0013 kind=indirect
+edge from=0013 to=0015 kind=fallthrough
+edge from=0015 kind=return
+edge from=0016 to=001B kind=fallthrough
+edge from=0016 to=001D kind=branch
+edge from=001B kind=stop
+edge from=001D kind=stop

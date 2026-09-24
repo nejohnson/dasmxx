@@ -1,0 +1,21 @@
+# Motorola 6800 CFG fixture
+01      # 0000: nop
+26      # 0001: bne 0008
+05
+8D      # 0003: bsr 0010
+0B
+3E      # 0005: wai
+01      # 0006: nop
+01      # 0007: filler
+7E      # 0008: jmp 0012
+00
+12
+01      # 000B: filler
+01
+01
+01
+01
+39      # 0010: rts
+01      # 0011: filler
+6E      # 0012: jmp 00,x
+00

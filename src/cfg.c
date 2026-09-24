@@ -305,8 +305,13 @@ static void add_info_edges_and_work( struct cfg *cfg, const struct dasm_insn_inf
         break;
 
     case CFG_FLOW_INDIRECT_JUMP:
+        add_edge( cfg, info->addr, 0, 0, CFG_EDGE_INDIRECT );
+        break;
+
     case CFG_FLOW_INDIRECT_CALL:
         add_edge( cfg, info->addr, 0, 0, CFG_EDGE_INDIRECT );
+        add_edge( cfg, info->addr, 1, info->next, CFG_EDGE_FALLTHROUGH );
+        enqueue( work, work_count, work_cap, info->next );
         break;
     }
 }

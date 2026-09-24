@@ -1,0 +1,49 @@
+cfg format=debug target=dasm05
+root addr=0000 kind=code label="Reset"
+root addr=0010 kind=proc label="SubFunc"
+root addr=0013 kind=proc label="IndirectSub"
+block start=0000 end=0004 label="Reset"
+block_insn block=0000 addr=0000 text="nop      "
+block_insn block=0000 addr=0001 text="brset    0, $20, BranchTarget"
+block start=0004 end=0006
+block_insn block=0004 addr=0004 text="bsr      SubFunc"
+block start=0006 end=0007
+block_insn block=0006 addr=0006 text="wait     "
+block start=0007 end=0008
+block_insn block=0007 addr=0007 text="stop     "
+block start=0009 end=000C label="BranchTarget"
+block_insn block=0009 addr=0009 text="jmp      Dispatch"
+block start=0010 end=0011 label="SubFunc"
+block_insn block=0010 addr=0010 text="rts      "
+block start=0012 end=0013 label="Dispatch"
+block_insn block=0012 addr=0012 text="jmp      ,x"
+block start=0013 end=0014 label="IndirectSub"
+block_insn block=0013 addr=0013 text="jsr      ,x"
+block start=0014 end=0016
+block_insn block=0014 addr=0014 text="nop      "
+block_insn block=0014 addr=0015 text="rti      "
+insn addr=0000 next=0001 flow=normal text="nop      "
+insn addr=0001 next=0004 flow=cond_jump text="brset    0, $20, BranchTarget" target0=0009
+insn addr=0004 next=0006 flow=call text="bsr      SubFunc" target0=0010
+insn addr=0006 next=0007 flow=halt text="wait     "
+insn addr=0007 next=0008 flow=stop text="stop     "
+insn addr=0009 next=000C flow=jump text="jmp      Dispatch" target0=0012
+insn addr=0010 next=0011 flow=return text="rts      "
+insn addr=0012 next=0013 flow=indirect_jump text="jmp      ,x"
+insn addr=0013 next=0014 flow=indirect_call text="jsr      ,x"
+insn addr=0014 next=0015 flow=normal text="nop      "
+insn addr=0015 next=0016 flow=return text="rti      "
+edge from=0000 to=0001 kind=fallthrough
+edge from=0001 to=0004 kind=fallthrough
+edge from=0001 to=0009 kind=branch
+edge from=0004 to=0006 kind=fallthrough
+edge from=0004 to=0010 kind=call
+edge from=0006 to=0007 kind=resume
+edge from=0007 kind=stop
+edge from=0009 to=0012 kind=branch
+edge from=0010 kind=return
+edge from=0012 kind=indirect
+edge from=0013 kind=indirect
+edge from=0013 to=0014 kind=fallthrough
+edge from=0014 to=0015 kind=fallthrough
+edge from=0015 kind=return

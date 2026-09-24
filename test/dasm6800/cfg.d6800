@@ -1,0 +1,7 @@
+ocpu=6800
+fcfg.bin
+c0000 Reset
+l0008 BranchTarget
+p0010 SubFunc
+l0012 Dispatch
+e0014

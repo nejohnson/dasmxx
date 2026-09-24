@@ -1,0 +1,39 @@
+cfg format=debug target=dasm6800
+root addr=0000 kind=code label="Reset"
+root addr=0010 kind=proc label="SubFunc"
+block start=0000 end=0003 label="Reset"
+block_insn block=0000 addr=0000 text="nop     "
+block_insn block=0000 addr=0001 text="bne     BranchTarget"
+block start=0003 end=0005
+block_insn block=0003 addr=0003 text="bsr     SubFunc"
+block start=0005 end=0006
+block_insn block=0005 addr=0005 text="wai     "
+block start=0006 end=0008
+block_insn block=0006 addr=0006 text="nop     "
+block_insn block=0006 addr=0007 text="nop     "
+block start=0008 end=000B label="BranchTarget"
+block_insn block=0008 addr=0008 text="jmp     Dispatch"
+block start=0010 end=0011 label="SubFunc"
+block_insn block=0010 addr=0010 text="rts     "
+block start=0012 end=0014 label="Dispatch"
+block_insn block=0012 addr=0012 text="jmp     $00,x"
+insn addr=0000 next=0001 flow=normal text="nop     "
+insn addr=0001 next=0003 flow=cond_jump text="bne     BranchTarget" target0=0008
+insn addr=0003 next=0005 flow=call text="bsr     SubFunc" target0=0010
+insn addr=0005 next=0006 flow=halt text="wai     "
+insn addr=0006 next=0007 flow=normal text="nop     "
+insn addr=0007 next=0008 flow=normal text="nop     "
+insn addr=0008 next=000B flow=jump text="jmp     Dispatch" target0=0012
+insn addr=0010 next=0011 flow=return text="rts     "
+insn addr=0012 next=0014 flow=indirect_jump text="jmp     $00,x"
+edge from=0000 to=0001 kind=fallthrough
+edge from=0001 to=0003 kind=fallthrough
+edge from=0001 to=0008 kind=branch
+edge from=0003 to=0005 kind=fallthrough
+edge from=0003 to=0010 kind=call
+edge from=0005 to=0006 kind=resume
+edge from=0006 to=0007 kind=fallthrough
+edge from=0007 to=0008 kind=fallthrough
+edge from=0008 to=0012 kind=branch
+edge from=0010 kind=return
+edge from=0012 kind=indirect
