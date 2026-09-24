@@ -1,0 +1,48 @@
+cfg format=debug target=dasm48
+root addr=0000 kind=code label="Reset"
+root addr=0010 kind=proc label="SubFunc"
+root addr=0020 kind=proc label="Loop"
+block start=0000 end=0003 label="Reset"
+block_insn block=0000 addr=0000 text="NOP      "
+block_insn block=0000 addr=0001 text="JNZ      BranchTarget"
+block start=0003 end=0005
+block_insn block=0003 addr=0003 text="CALL     SubFunc"
+block start=0005 end=0008
+block_insn block=0005 addr=0005 text="NOP      "
+block_insn block=0005 addr=0006 text="NOP      "
+block_insn block=0005 addr=0007 text="NOP      "
+block start=0008 end=000A label="BranchTarget"
+block_insn block=0008 addr=0008 text="JMP      Dispatch"
+block start=0010 end=0011 label="SubFunc"
+block_insn block=0010 addr=0010 text="RET      "
+block start=0012 end=0013 label="Dispatch"
+block_insn block=0012 addr=0012 text="JMPP     @A"
+block start=0020 end=0022 label="Loop"
+block_insn block=0020 addr=0020 text="DJNZ     R0, Loop"
+block start=0022 end=0023
+block_insn block=0022 addr=0022 text="RETR     "
+insn addr=0000 next=0001 flow=normal text="NOP      "
+insn addr=0001 next=0003 flow=cond_jump text="JNZ      BranchTarget" target0=0008
+insn addr=0003 next=0005 flow=call text="CALL     SubFunc" target0=0010
+insn addr=0005 next=0006 flow=normal text="NOP      "
+insn addr=0006 next=0007 flow=normal text="NOP      "
+insn addr=0007 next=0008 flow=normal text="NOP      "
+insn addr=0008 next=000A flow=jump text="JMP      Dispatch" target0=0012
+insn addr=0010 next=0011 flow=return text="RET      "
+insn addr=0012 next=0013 flow=indirect_jump text="JMPP     @A"
+insn addr=0020 next=0022 flow=cond_jump text="DJNZ     R0, Loop" target0=0020
+insn addr=0022 next=0023 flow=return text="RETR     "
+edge from=0000 to=0001 kind=fallthrough
+edge from=0001 to=0003 kind=fallthrough
+edge from=0001 to=0008 kind=branch
+edge from=0003 to=0005 kind=fallthrough
+edge from=0003 to=0010 kind=call
+edge from=0005 to=0006 kind=fallthrough
+edge from=0006 to=0007 kind=fallthrough
+edge from=0007 to=0008 kind=fallthrough
+edge from=0008 to=0012 kind=branch
+edge from=0010 kind=return
+edge from=0012 kind=indirect
+edge from=0020 to=0020 kind=branch
+edge from=0020 to=0022 kind=fallthrough
+edge from=0022 kind=return

@@ -1,0 +1,10 @@
+fcfg.bin
+c0000 Reset
+p0020 CompareLoop
+p0030 AbsoluteCall
+p0050 BitFlow
+l0008 BranchTarget
+p0010 SubFunc
+l0012 Dispatch
+p0040 AbsoluteSub
+e0054

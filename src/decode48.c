@@ -57,6 +57,40 @@ DASM_PROFILE( "dasm48", "Intel MCS-48 (8035, 8048, 8049)", 4, 9, 0, 1, 1 )
 /* Construct a 16-bit word out of low and high bytes */
 #define MK_WORD(l,h)         ( ((l) & 0xFF) | (((h) & 0xFF) << 8) )
 
+int dasm_cfg_supported( void )
+{
+   return 1;
+}
+
+static int read_opcode_byte( ADDR addr, UBYTE *out )
+{
+   return dasm_input_read_byte_at( addr, out );
+}
+
+void dasm_post_insn( void )
+{
+   UBYTE op0;
+
+   if ( !read_opcode_byte( g_insn_addr, &op0 ) )
+      return;
+
+   if ( (op0 & 0x1F) == 0x04 )
+      dasm_cfg_set_flow( CFG_FLOW_JUMP );
+   else if ( op0 == 0xB3 )
+      dasm_cfg_set_flow( CFG_FLOW_INDIRECT_JUMP );
+   else if ( (op0 & 0x1F) == 0x14 )
+      dasm_cfg_set_flow( CFG_FLOW_CALL );
+   else if ( op0 == 0x83 || op0 == 0x93 )
+      dasm_cfg_set_flow( CFG_FLOW_RETURN );
+   else if ( (op0 >= 0xE8 && op0 <= 0xEF)
+             || op0 == 0x16 || op0 == 0x26 || op0 == 0x36 || op0 == 0x46
+             || op0 == 0x56 || op0 == 0x76 || op0 == 0x86 || op0 == 0x96
+             || op0 == 0xB6 || op0 == 0xC6 || op0 == 0xE6 || op0 == 0xF6
+             || op0 == 0x12 || op0 == 0x32 || op0 == 0x52 || op0 == 0x72
+             || op0 == 0x92 || op0 == 0xB2 || op0 == 0xD2 || op0 == 0xF2 )
+      dasm_cfg_set_flow( CFG_FLOW_COND_JUMP );
+}
+
 /*****************************************************************************
  *        Private Functions
  *****************************************************************************/

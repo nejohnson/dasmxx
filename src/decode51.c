@@ -56,6 +56,39 @@ DASM_PROFILE( "dasm51", "Intel 8051", 4, 9, 0, 1, 1 )
 /* Construct a 16-bit word out of low and high bytes */
 #define MK_WORD(l,h)         ( ((l) & 0xFF) | (((h) & 0xFF) << 8) )
 
+int dasm_cfg_supported( void )
+{
+   return 1;
+}
+
+static int read_opcode_byte( ADDR addr, UBYTE *out )
+{
+   return dasm_input_read_byte_at( addr, out );
+}
+
+void dasm_post_insn( void )
+{
+   UBYTE op0;
+
+   if ( !read_opcode_byte( g_insn_addr, &op0 ) )
+      return;
+
+   if ( op0 == 0x80 || op0 == 0x02 || (op0 & 0x1F) == 0x01 )
+      dasm_cfg_set_flow( CFG_FLOW_JUMP );
+   else if ( op0 == 0x73 )
+      dasm_cfg_set_flow( CFG_FLOW_INDIRECT_JUMP );
+   else if ( op0 == 0x12 || (op0 & 0x1F) == 0x11 )
+      dasm_cfg_set_flow( CFG_FLOW_CALL );
+   else if ( op0 == 0x22 || op0 == 0x32 )
+      dasm_cfg_set_flow( CFG_FLOW_RETURN );
+   else if ( op0 == 0x10 || op0 == 0x20 || op0 == 0x30
+             || op0 == 0x40 || op0 == 0x50 || op0 == 0x60 || op0 == 0x70
+             || op0 == 0xB4 || op0 == 0xB5 || op0 == 0xB6
+             || (op0 >= 0xB8 && op0 <= 0xBF)
+             || op0 == 0xD5 || (op0 >= 0xD8 && op0 <= 0xDF) )
+      dasm_cfg_set_flow( CFG_FLOW_COND_JUMP );
+}
+
 /*****************************************************************************
  *        Private Functions
  *****************************************************************************/

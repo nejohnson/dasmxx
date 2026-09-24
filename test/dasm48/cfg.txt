@@ -1,0 +1,32 @@
+# Intel MCS-48 CFG fixture
+00        # 0000: NOP
+96 08     # 0001: JNZ 0008
+14 10     # 0003: CALL 0010
+00        # 0005: filler
+00        # 0006: filler
+00        # 0007: filler
+04 12     # 0008: JMP 0012
+00        # 000A: filler
+00        # 000B: filler
+00        # 000C: filler
+00        # 000D: filler
+00        # 000E: filler
+00        # 000F: filler
+83        # 0010: RET
+00        # 0011: filler
+B3        # 0012: JMPP @A
+00        # 0013: filler
+00        # 0014: filler
+00        # 0015: filler
+00        # 0016: filler
+00        # 0017: filler
+00        # 0018: filler
+00        # 0019: filler
+00        # 001A: filler
+00        # 001B: filler
+00        # 001C: filler
+00        # 001D: filler
+00        # 001E: filler
+00        # 001F: filler
+E8 20     # 0020: DJNZ R0,0020
+93        # 0022: RETR

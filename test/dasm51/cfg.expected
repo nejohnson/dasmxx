@@ -1,0 +1,72 @@
+cfg format=debug target=dasm51
+root addr=0000 kind=code label="Reset"
+root addr=0010 kind=proc label="SubFunc"
+root addr=0020 kind=proc label="CompareLoop"
+root addr=0030 kind=proc label="AbsoluteCall"
+root addr=0040 kind=proc label="AbsoluteSub"
+root addr=0050 kind=proc label="BitFlow"
+block start=0000 end=0003 label="Reset"
+block_insn block=0000 addr=0000 text="NOP      "
+block_insn block=0000 addr=0001 text="JNZ      BranchTarget"
+block start=0003 end=0006
+block_insn block=0003 addr=0003 text="LCALL    SubFunc"
+block start=0006 end=0008
+block_insn block=0006 addr=0006 text="SJMP     Dispatch"
+block start=0008 end=000B label="BranchTarget"
+block_insn block=0008 addr=0008 text="LJMP     Dispatch"
+block start=0010 end=0011 label="SubFunc"
+block_insn block=0010 addr=0010 text="RET      "
+block start=0012 end=0013 label="Dispatch"
+block_insn block=0012 addr=0012 text="JMP      @A+DPTR"
+block start=0020 end=0023 label="CompareLoop"
+block_insn block=0020 addr=0020 text="CJNE     A, #055H, CompareLoop"
+block start=0023 end=0024
+block_insn block=0023 addr=0023 text="RETI     "
+block start=0030 end=0032 label="AbsoluteCall"
+block_insn block=0030 addr=0030 text="ACALL    AbsoluteSub"
+block start=0032 end=0035
+block_insn block=0032 addr=0032 text="DJNZ     CompareLoop, AbsoluteCall"
+block start=0035 end=0036
+block_insn block=0035 addr=0035 text="RET      "
+block start=0040 end=0041 label="AbsoluteSub"
+block_insn block=0040 addr=0040 text="RET      "
+block start=0050 end=0053 label="BitFlow"
+block_insn block=0050 addr=0050 text="JBC      CompareLoop.0, BitFlow"
+block start=0053 end=0054
+block_insn block=0053 addr=0053 text="RET      "
+insn addr=0000 next=0001 flow=normal text="NOP      "
+insn addr=0001 next=0003 flow=cond_jump text="JNZ      BranchTarget" target0=0008
+insn addr=0003 next=0006 flow=call text="LCALL    SubFunc" target0=0010
+insn addr=0006 next=0008 flow=jump text="SJMP     Dispatch" target0=0012
+insn addr=0008 next=000B flow=jump text="LJMP     Dispatch" target0=0012
+insn addr=0010 next=0011 flow=return text="RET      "
+insn addr=0012 next=0013 flow=indirect_jump text="JMP      @A+DPTR"
+insn addr=0020 next=0023 flow=cond_jump text="CJNE     A, #055H, CompareLoop" target0=0020
+insn addr=0023 next=0024 flow=return text="RETI     "
+insn addr=0030 next=0032 flow=call text="ACALL    AbsoluteSub" target0=0040
+insn addr=0032 next=0035 flow=cond_jump text="DJNZ     CompareLoop, AbsoluteCall" target0=0030
+insn addr=0035 next=0036 flow=return text="RET      "
+insn addr=0040 next=0041 flow=return text="RET      "
+insn addr=0050 next=0053 flow=cond_jump text="JBC      CompareLoop.0, BitFlow" target0=0050
+insn addr=0053 next=0054 flow=return text="RET      "
+edge from=0000 to=0001 kind=fallthrough
+edge from=0001 to=0003 kind=fallthrough
+edge from=0001 to=0008 kind=branch
+edge from=0003 to=0006 kind=fallthrough
+edge from=0003 to=0010 kind=call
+edge from=0006 to=0012 kind=branch
+edge from=0008 to=0012 kind=branch
+edge from=0010 kind=return
+edge from=0012 kind=indirect
+edge from=0020 to=0020 kind=branch
+edge from=0020 to=0023 kind=fallthrough
+edge from=0023 kind=return
+edge from=0030 to=0032 kind=fallthrough
+edge from=0030 to=0040 kind=call
+edge from=0032 to=0030 kind=branch
+edge from=0032 to=0035 kind=fallthrough
+edge from=0035 kind=return
+edge from=0040 kind=return
+edge from=0050 to=0050 kind=branch
+edge from=0050 to=0053 kind=fallthrough
+edge from=0053 kind=return

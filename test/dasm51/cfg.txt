@@ -1,0 +1,72 @@
+# Intel 8051 CFG fixture
+00           # 0000: NOP
+70 05        # 0001: JNZ 0008
+12 00 10     # 0003: LCALL 0010
+80 0A        # 0006: SJMP 0012
+02 00 12     # 0008: LJMP 0012
+00           # 000B: filler
+00           # 000C: filler
+00           # 000D: filler
+00           # 000E: filler
+00           # 000F: filler
+22           # 0010: RET
+00           # 0011: filler
+73           # 0012: JMP @A+DPTR
+00           # 0013: filler
+00           # 0014: filler
+00           # 0015: filler
+00           # 0016: filler
+00           # 0017: filler
+00           # 0018: filler
+00           # 0019: filler
+00           # 001A: filler
+00           # 001B: filler
+00           # 001C: filler
+00           # 001D: filler
+00           # 001E: filler
+00           # 001F: filler
+B4 55 FD     # 0020: CJNE A,#55,0020
+32           # 0023: RETI
+00           # 0024: filler
+00           # 0025: filler
+00           # 0026: filler
+00           # 0027: filler
+00           # 0028: filler
+00           # 0029: filler
+00           # 002A: filler
+00           # 002B: filler
+00           # 002C: filler
+00           # 002D: filler
+00           # 002E: filler
+00           # 002F: filler
+11 40        # 0030: ACALL 0040
+D5 20 FB     # 0032: DJNZ 20,0030
+22           # 0035: RET
+00           # 0036: filler
+00           # 0037: filler
+00           # 0038: filler
+00           # 0039: filler
+00           # 003A: filler
+00           # 003B: filler
+00           # 003C: filler
+00           # 003D: filler
+00           # 003E: filler
+00           # 003F: filler
+22           # 0040: RET
+00           # 0041: filler
+00           # 0042: filler
+00           # 0043: filler
+00           # 0044: filler
+00           # 0045: filler
+00           # 0046: filler
+00           # 0047: filler
+00           # 0048: filler
+00           # 0049: filler
+00           # 004A: filler
+00           # 004B: filler
+00           # 004C: filler
+00           # 004D: filler
+00           # 004E: filler
+00           # 004F: filler
+10 20 FD     # 0050: JBC 20.0,0050
+22           # 0053: RET
