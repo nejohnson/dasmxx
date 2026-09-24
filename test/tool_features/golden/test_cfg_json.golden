@@ -4,12 +4,12 @@
     {"addr": 0, "addr_hex": "0000", "kind": "code"}
   ],
   "blocks": [
-    {"start": 0, "start_hex": "0000", "end": 3, "end_hex": "0003"},
-    {"start": 3, "start_hex": "0003", "end": 6, "end_hex": "0006"},
-    {"start": 6, "start_hex": "0006", "end": 7, "end_hex": "0007"},
-    {"start": 8, "start_hex": "0008", "end": 11, "end_hex": "000B"},
-    {"start": 16, "start_hex": "0010", "end": 17, "end_hex": "0011"},
-    {"start": 18, "start_hex": "0012", "end": 19, "end_hex": "0013"}
+    {"start": 0, "start_hex": "0000", "end": 3, "end_hex": "0003", "instructions": [{"addr": 0, "addr_hex": "0000", "text": "NOP      "}, {"addr": 1, "addr_hex": "0001", "text": "JR       Z, $0008"}]},
+    {"start": 3, "start_hex": "0003", "end": 6, "end_hex": "0006", "instructions": [{"addr": 3, "addr_hex": "0003", "text": "CALL     $0010"}]},
+    {"start": 6, "start_hex": "0006", "end": 7, "end_hex": "0007", "instructions": [{"addr": 6, "addr_hex": "0006", "text": "HALT     "}]},
+    {"start": 8, "start_hex": "0008", "end": 11, "end_hex": "000B", "instructions": [{"addr": 8, "addr_hex": "0008", "text": "JP       $0012"}]},
+    {"start": 16, "start_hex": "0010", "end": 17, "end_hex": "0011", "instructions": [{"addr": 16, "addr_hex": "0010", "text": "RET      "}]},
+    {"start": 18, "start_hex": "0012", "end": 19, "end_hex": "0013", "instructions": [{"addr": 18, "addr_hex": "0012", "text": "JP       (HL)"}]}
   ],
   "instructions": [
     {"addr": 0, "addr_hex": "0000", "next": 1, "next_hex": "0001", "flow": "normal", "text": "NOP      ", "targets": []},

@@ -1,11 +1,18 @@
 cfg format=debug target=dasmz80
 root addr=0000 kind=code
 block start=0000 end=0003
+block_insn block=0000 addr=0000 text="NOP      "
+block_insn block=0000 addr=0001 text="JR       Z, $0008"
 block start=0003 end=0006
+block_insn block=0003 addr=0003 text="CALL     $0010"
 block start=0006 end=0007
+block_insn block=0006 addr=0006 text="HALT     "
 block start=0008 end=000B
+block_insn block=0008 addr=0008 text="JP       $0012"
 block start=0010 end=0011
+block_insn block=0010 addr=0010 text="RET      "
 block start=0012 end=0013
+block_insn block=0012 addr=0012 text="JP       (HL)"
 insn addr=0000 next=0001 flow=normal text="NOP      "
 insn addr=0001 next=0003 flow=cond_jump text="JR       Z, $0008" target0=0008
 insn addr=0003 next=0006 flow=call text="CALL     $0010" target0=0010
