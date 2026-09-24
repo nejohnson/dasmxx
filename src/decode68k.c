@@ -106,9 +106,20 @@ static int ea_field_has_direct_target( int ea )
     return mode == 0x07 && reg <= 2;
 }
 
+static int cfg_fpu_enabled( void )
+{
+    return dasm_fpu_level != 1;
+}
+
+static int cfg_read_fpu_ext( UWORD *ext )
+{
+    return read_opcode_word( g_insn_addr + 2, ext );
+}
+
 void dasm_post_insn( void )
 {
     UWORD op0;
+    UWORD ext;
 
     if ( !read_opcode_word( g_insn_addr, &op0 ) )
         return;
@@ -132,6 +143,18 @@ void dasm_post_insn( void )
     else if ( (op0 & 0xF0FF) == 0x50FA
               || (op0 & 0xF0FF) == 0x50FB
               || (op0 & 0xF0FF) == 0x50FC )
+        dasm_cfg_set_flow( CFG_FLOW_INDIRECT_CALL );
+    else if ( cfg_fpu_enabled()
+              && ( ((op0 & 0xFFC0) == 0xF2C0
+                    && cfg_read_fpu_ext( &ext ))
+                   || ((op0 & 0xFFC0) == 0xF280
+                       && cfg_read_fpu_ext( &ext ) && (op0 != 0xF280 || ext != 0x0000))
+                   || ((op0 & 0xFFF8) == 0xF248
+                       && cfg_read_fpu_ext( &ext ) && ext <= 0x001F) ) )
+        dasm_cfg_set_flow( CFG_FLOW_COND_JUMP );
+    else if ( cfg_fpu_enabled()
+              && (op0 == 0xF27A || op0 == 0xF27B || op0 == 0xF27C)
+              && cfg_read_fpu_ext( &ext ) && ext <= 0x001F )
         dasm_cfg_set_flow( CFG_FLOW_INDIRECT_CALL );
     else if ( op0 == 0x4AFC || op0 == 0x4E70 || op0 == 0x4E72 )
         dasm_cfg_set_flow( CFG_FLOW_STOP );

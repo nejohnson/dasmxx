@@ -13,4 +13,9 @@ p000C SubFunc
 l000D Dispatch
 p001C JsrTarget
 l0024 WordBranchTarget
-e0029
+p0029 FpuFlow
+l002D FpuDbLoop
+l0030 FpuTrap
+p0033 FpuLongFlow
+l0038 FpuLongTarget
+e0039

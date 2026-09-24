@@ -9,6 +9,8 @@ root addr=0040 kind=proc label="WordBranch"
 root addr=004A kind=proc label="RtdReturn"
 root addr=004E kind=proc label="RtrReturn"
 root addr=0050 kind=proc label="IllegalStop"
+root addr=0052 kind=proc label="FpuFlow"
+root addr=0066 kind=proc label="FpuLongFlow"
 block start=0000 end=0004 label="Reset"
 block_insn block=0000 addr=0000 text="NOP       "
 block_insn block=0000 addr=0002 text="BNE       BranchTarget"
@@ -48,6 +50,21 @@ block start=004E end=0050 label="RtrReturn"
 block_insn block=004E addr=004E text="RTR       "
 block start=0050 end=0052 label="IllegalStop"
 block_insn block=0050 addr=0050 text="ILLEGAL   "
+block start=0052 end=005A label="FpuFlow"
+block_insn block=0052 addr=0052 text="FNOP      "
+block_insn block=0052 addr=0056 text="FBNE      FpuTrap"
+block start=005A end=0060 label="FpuDbLoop"
+block_insn block=005A addr=005A text="FDBEQ     D0, FpuDbLoop"
+block start=0060 end=0064 label="FpuTrap"
+block_insn block=0060 addr=0060 text="FTRAPNE   "
+block start=0064 end=0066
+block_insn block=0064 addr=0064 text="RTS       "
+block start=0066 end=006C label="FpuLongFlow"
+block_insn block=0066 addr=0066 text="FBNE      FpuLongTarget"
+block start=006C end=006E
+block_insn block=006C addr=006C text="RTS       "
+block start=0070 end=0072 label="FpuLongTarget"
+block_insn block=0070 addr=0070 text="RTS       "
 insn addr=0000 next=0002 flow=normal text="NOP       "
 insn addr=0002 next=0004 flow=cond_jump text="BNE       BranchTarget" target0=000C
 insn addr=0004 next=0006 flow=call text="BSR       SubFunc" target0=0018
@@ -68,6 +85,14 @@ insn addr=0048 next=004A flow=return text="RTE       "
 insn addr=004A next=004E flow=return text="RTD       #$0004"
 insn addr=004E next=0050 flow=return text="RTR       "
 insn addr=0050 next=0052 flow=stop text="ILLEGAL   "
+insn addr=0052 next=0056 flow=normal text="FNOP      "
+insn addr=0056 next=005A flow=cond_jump text="FBNE      FpuTrap" target0=0060
+insn addr=005A next=0060 flow=cond_jump text="FDBEQ     D0, FpuDbLoop" target0=005A
+insn addr=0060 next=0064 flow=indirect_call text="FTRAPNE   "
+insn addr=0064 next=0066 flow=return text="RTS       "
+insn addr=0066 next=006C flow=cond_jump text="FBNE      FpuLongTarget" target0=0070
+insn addr=006C next=006E flow=return text="RTS       "
+insn addr=0070 next=0072 flow=return text="RTS       "
 edge from=0000 to=0002 kind=fallthrough
 edge from=0002 to=0004 kind=fallthrough
 edge from=0002 to=000C kind=branch
@@ -95,3 +120,15 @@ edge from=0048 kind=return
 edge from=004A kind=return
 edge from=004E kind=return
 edge from=0050 kind=stop
+edge from=0052 to=0056 kind=fallthrough
+edge from=0056 to=005A kind=fallthrough
+edge from=0056 to=0060 kind=branch
+edge from=005A to=005A kind=branch
+edge from=005A to=0060 kind=fallthrough
+edge from=0060 kind=indirect
+edge from=0060 to=0064 kind=fallthrough
+edge from=0064 kind=return
+edge from=0066 to=006C kind=fallthrough
+edge from=0066 to=0070 kind=branch
+edge from=006C kind=return
+edge from=0070 kind=return
