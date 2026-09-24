@@ -1,0 +1,8 @@
+# Regression fixture for issue 23.
+F8 1A   # 0000: vector -> F81A
+F8 5C   # 0002: vector -> F85C
+12 34   # 0004: word -> 1234
+F8 00   # 0006: word -> F800
+1F C0   # 0008: TFR invalid-source-register,D
+1E 0D   # 000A: EXG D,invalid-destination-register
+8E F8 1A # 000C: LDX #$F81A

@@ -1,0 +1,19 @@
+   dasm09 -- Motorola 6809 Disassembler --
+-----------------------------------------------------------------
+
+;   Processing "issue23.bin" (15 bytes)
+;   Disassembly start address: 0x0000
+;   String terminator: 0x00
+
+
+Vectors:
+   DW      F81A
+   DW      F85C
+
+Words:
+   DW      1234, F800
+
+InvalidRegs:
+   TFR      ???, D
+   EXG      D, ???
+   LDX      #$F81A

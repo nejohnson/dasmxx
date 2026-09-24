@@ -42,7 +42,7 @@
  * Globally-visible decoder properties
  *****************************************************************************/
 
-DASM_PROFILE( "dasm09", "Motorola 6809", 4, 9, 0, 1, 1 )
+DASM_PROFILE( "dasm09", "Motorola 6809", 4, 9, 1, 1, 1 )
 
 /*****************************************************************************
  * Private data types, macros, constants.
@@ -381,7 +381,8 @@ OPERAND_FUNC(r1_r2)
         "A",
         "B",
         "CCR",
-        "DP"
+        "DP",
+        "???", "???", "???", "???"
     };
     
     operand( "%s", rtab[src] );
@@ -516,6 +517,12 @@ static optab_t page3[] = {
         INSN(M_name, indexed,  (0xE0 | M_base), X_NONE) \
         INSN(M_name, extended, (0xF0 | M_base), X_NONE)        
 
+#define WORD_ARGS_OP(M_name, M_base)    \
+        INSN(M_name, imm16,    (0x80 | M_base), X_NONE) \
+        INSN(M_name, direct,   (0x90 | M_base), X_NONE) \
+        INSN(M_name, indexed,  (0xA0 | M_base), X_NONE) \
+        INSN(M_name, extended, (0xB0 | M_base), X_NONE)
+
 #define ACC_AB_ARGS_OP(M_name, M_base)    \
         ACC_ARGS_OP(M_name "A", (0x00 | M_base)) \
         ACC_ARGS_OP(M_name "B", (0x40 | M_base))
@@ -596,13 +603,13 @@ optab_t base_optab[] = {
     INSN ( "SEX",  none, 0x1D, X_NONE )
 
     ACC_ARGS_OP_NOIMM( "STD", 0x4D, X_PTR )
-    ACC_ARGS_OP( "SUBD", 0x03 )
+    WORD_ARGS_OP( "SUBD", 0x03 )
   
 /*----------------------------------------------------------------------------
   Index Register/Stack Pointer
   ----------------------------------------------------------------------------*/
 
-    ACC_ARGS_OP( "CMPX", 0x0C )
+    WORD_ARGS_OP( "CMPX", 0x0C )
     
     INSN ( "EXG",    r1_r2, 0x1E, X_NONE )
     INSN ( "LEAX", indexed, 0x30, X_NONE )
@@ -611,7 +618,7 @@ optab_t base_optab[] = {
     INSN ( "LEAU", indexed, 0x33, X_NONE )
     
     ACC_ARGS_OPD( "LDU",  0x0E )
-    ACC_ARGS_OP( "LDX",  0x0E )
+    WORD_ARGS_OP( "LDX",  0x0E )
   
     INSN ( "PSHS", stackregs, 0x34, X_NONE )
     INSN ( "PULS", stackregs, 0x35, X_NONE )
