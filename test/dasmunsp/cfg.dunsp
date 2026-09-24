@@ -1,0 +1,10 @@
+fcfg.bin
+c0000 Reset
+p0008 SubFunc
+p000D CallFlow
+p0010 GotoFlow
+l0005 BranchTarget
+l000A LongJump
+l000C LongTarget
+l0012 GotoTarget
+e0013

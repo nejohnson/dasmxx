@@ -1,0 +1,16 @@
+# SunPlus u'nSP CFG fixture. Comments use byte offsets.
+00 00       # 0000: ADD SP,[BP+0]
+03 5E       # 0002: JZ 0005
+40 F0 08 00 # 0004: CALL 0008
+90 9A       # 0008: RETF
+04 EE       # 000A: JMP 000A
+00 00       # 000C: filler
+00 00       # 000E: filler
+98 9A       # 0010: RETI
+00 00       # 0012: filler
+0F 9F 0C 00 # 0014: LJMP 0000000C
+90 9A       # 0018: RETF
+40 F0 08 00 # 001A: CALL 0008
+90 9A       # 001E: RETF
+80 FE 12 00 # 0020: GOTO 00000012
+90 9A       # 0024: RETF

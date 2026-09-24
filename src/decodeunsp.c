@@ -26,6 +26,104 @@ const char* const regname[] = { "SP", "R1", "R2", "R3", "R4", "BP", "SR", "PC" }
 #define OPA ((opc >> 9) & 7)
 #define IMM6 (opc & 0x3F)
 
+int dasm_cfg_supported( void )
+{
+	return 1;
+}
+
+static int read_opcode_word( ADDR addr, UWORD *out )
+{
+	return dasm_input_read_word_at( addr, out );
+}
+
+static int cfg_jmp_target( ADDR opaddr, UWORD op, ADDR *target )
+{
+	int dir = (op >> 6) & 7;
+	int off = op & 0x3F;
+	ADDR next_word_addr = opaddr / dasm_word_width_bytes + 1;
+
+	if (dir == 1)
+		*target = (next_word_addr - off) * dasm_word_width_bytes;
+	else if (dir == 0)
+		*target = (next_word_addr + off) * dasm_word_width_bytes;
+	else
+		return 0;
+
+	return 1;
+}
+
+static int cfg_long_target( ADDR opaddr, ADDR *target )
+{
+	UWORD word;
+	ADDR next_word_addr = opaddr / dasm_word_width_bytes + 1;
+
+	if (!read_opcode_word(opaddr + 2, &word))
+		return 0;
+
+	*target = (word | (next_word_addr & 0xFFFF0000)) * dasm_word_width_bytes;
+	return 1;
+}
+
+static int cfg_call_target( ADDR opaddr, UWORD op, ADDR *target )
+{
+	UWORD word;
+
+	if (!read_opcode_word(opaddr + 2, &word))
+		return 0;
+
+	*target = (((op & 0x3F) << 16) | word) * dasm_word_width_bytes;
+	return 1;
+}
+
+void dasm_post_insn( void )
+{
+	UWORD op0;
+	ADDR target;
+
+	if (!read_opcode_word(g_insn_addr, &op0))
+		return;
+
+	if ((op0 & 0xFF80) == 0xEE00)
+	{
+		dasm_cfg_set_flow(CFG_FLOW_JUMP);
+		if (cfg_jmp_target(g_insn_addr, op0, &target))
+			dasm_cfg_add_target(target);
+	}
+	else if ((op0 & 0xFF80) == 0x0E00
+	         || (op0 & 0xFF80) == 0x4E00
+	         || (op0 & 0xFF80) == 0x5E00
+	         || (op0 & 0xFF80) == 0x7E00
+	         || (op0 & 0xFF80) == 0x9E00
+	         || (op0 & 0xFF80) == 0xBE00)
+	{
+		dasm_cfg_set_flow(CFG_FLOW_COND_JUMP);
+		if (cfg_jmp_target(g_insn_addr, op0, &target))
+			dasm_cfg_add_target(target);
+	}
+	else if (op0 == 0x9A90 || op0 == 0x9A98)
+	{
+		dasm_cfg_set_flow(CFG_FLOW_RETURN);
+	}
+	else if (op0 == 0x9F0F)
+	{
+		dasm_cfg_set_flow(CFG_FLOW_JUMP);
+		if (cfg_long_target(g_insn_addr, &target))
+			dasm_cfg_add_target(target);
+	}
+	else if ((op0 & 0xF1C0) == 0xF040)
+	{
+		dasm_cfg_set_flow(CFG_FLOW_CALL);
+		if (cfg_call_target(g_insn_addr, op0, &target))
+			dasm_cfg_add_target(target);
+	}
+	else if ((op0 & 0xFFC0) == 0xFE80)
+	{
+		dasm_cfg_set_flow(CFG_FLOW_JUMP);
+		if (cfg_call_target(g_insn_addr, op0, &target))
+			dasm_cfg_add_target(target);
+	}
+}
+
 OPERAND_FUNC(none)
 {
 }

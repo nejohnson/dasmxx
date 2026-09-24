@@ -1,0 +1,55 @@
+cfg format=debug target=dasmunsp
+root addr=0000 kind=code label="Reset"
+root addr=0010 kind=proc label="SubFunc"
+root addr=001A kind=proc label="CallFlow"
+root addr=0020 kind=proc label="GotoFlow"
+block start=0000 end=0004 label="Reset"
+block_insn block=0000 addr=0000 text="ADD     SP, [BP+0]"
+block_insn block=0000 addr=0002 text="JZ      BranchTarget"
+block start=0004 end=0008
+block_insn block=0004 addr=0004 text="CALL    SubFunc"
+block start=0008 end=000A
+block_insn block=0008 addr=0008 text="RETF    "
+block start=000A end=000C label="BranchTarget"
+block_insn block=000A addr=000A text="JMP     LongJump"
+block start=0010 end=0012 label="SubFunc"
+block_insn block=0010 addr=0010 text="RETI    "
+block start=0014 end=0018 label="LongJump"
+block_insn block=0014 addr=0014 text="LJMP    LongTarget"
+block start=0018 end=001A label="LongTarget"
+block_insn block=0018 addr=0018 text="RETF    "
+block start=001A end=001E label="CallFlow"
+block_insn block=001A addr=001A text="CALL    SubFunc"
+block start=001E end=0020
+block_insn block=001E addr=001E text="RETF    "
+block start=0020 end=0024 label="GotoFlow"
+block_insn block=0020 addr=0020 text="GOTO    GotoTarget"
+block start=0024 end=0026 label="GotoTarget"
+block_insn block=0024 addr=0024 text="RETF    "
+insn addr=0000 next=0002 flow=normal text="ADD     SP, [BP+0]"
+insn addr=0002 next=0004 flow=cond_jump text="JZ      BranchTarget" target0=000A
+insn addr=0004 next=0008 flow=call text="CALL    SubFunc" target0=0010
+insn addr=0008 next=000A flow=return text="RETF    "
+insn addr=000A next=000C flow=jump text="JMP     LongJump" target0=0014
+insn addr=0010 next=0012 flow=return text="RETI    "
+insn addr=0014 next=0018 flow=jump text="LJMP    LongTarget" target0=0018
+insn addr=0018 next=001A flow=return text="RETF    "
+insn addr=001A next=001E flow=call text="CALL    SubFunc" target0=0010
+insn addr=001E next=0020 flow=return text="RETF    "
+insn addr=0020 next=0024 flow=jump text="GOTO    GotoTarget" target0=0024
+insn addr=0024 next=0026 flow=return text="RETF    "
+edge from=0000 to=0002 kind=fallthrough
+edge from=0002 to=0004 kind=fallthrough
+edge from=0002 to=000A kind=branch
+edge from=0004 to=0008 kind=fallthrough
+edge from=0004 to=0010 kind=call
+edge from=0008 kind=return
+edge from=000A to=0014 kind=branch
+edge from=0010 kind=return
+edge from=0014 to=0018 kind=branch
+edge from=0018 kind=return
+edge from=001A to=0010 kind=call
+edge from=001A to=001E kind=fallthrough
+edge from=001E kind=return
+edge from=0020 to=0024 kind=branch
+edge from=0024 kind=return
