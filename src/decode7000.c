@@ -56,6 +56,108 @@ DASM_PROFILE( "dasm7000", "TI TMS7000", 4, 9, 1, 1, 1 )
 /* Construct a 16-bit word out of low and high bytes */
 #define MK_WORD(l,h)            ( ((l) & 0xFF) | (((h) & 0xFF) << 8) )
 
+int dasm_cfg_supported( void )
+{
+    return 1;
+}
+
+static int read_opcode_byte( ADDR addr, UBYTE *out )
+{
+    return dasm_input_read_byte_at( addr, out );
+}
+
+static int read_operand_word( ADDR addr, ADDR *out )
+{
+    UBYTE msb;
+    UBYTE lsb;
+
+    if ( !dasm_input_read_byte_at( addr, &msb )
+         || !dasm_input_read_byte_at( addr + 1, &lsb ) )
+        return 0;
+
+    *out = MK_WORD( lsb, msb );
+    return 1;
+}
+
+static unsigned int bt_insn_len( UBYTE op )
+{
+    switch ( op & 0xF0 )
+    {
+    case 0x60:
+        return 2;
+    case 0x10:
+    case 0x20:
+    case 0x30:
+    case 0x50:
+    case 0x80:
+    case 0x90:
+        return 3;
+    default:
+        return 4;
+    }
+}
+
+static void add_relative_target( unsigned int len )
+{
+    UBYTE offset;
+    ADDR operand_addr = g_insn_addr + len - 1;
+
+    if ( dasm_input_read_byte_at( operand_addr, &offset ) )
+        dasm_cfg_add_target( g_insn_addr + len + (BYTE)offset );
+}
+
+void dasm_post_insn( void )
+{
+    UBYTE op0;
+    ADDR target;
+
+    if ( !read_opcode_byte( g_insn_addr, &op0 ) )
+        return;
+
+    if ( op0 == 0x01 )
+        dasm_cfg_set_flow( CFG_FLOW_HALT );
+    else if ( op0 == 0x0A || op0 == 0x0B )
+        dasm_cfg_set_flow( CFG_FLOW_RETURN );
+    else if ( op0 == 0xE0 )
+        dasm_cfg_set_flow( CFG_FLOW_JUMP );
+    else if ( op0 == 0xE2 || op0 == 0xE3 || op0 == 0xE4
+              || op0 == 0xE5 || op0 == 0xE6 || op0 == 0xE7 )
+        dasm_cfg_set_flow( CFG_FLOW_COND_JUMP );
+    else if ( op0 == 0x8C )
+    {
+        dasm_cfg_set_flow( CFG_FLOW_JUMP );
+        if ( read_operand_word( g_insn_addr + 1, &target ) )
+            dasm_cfg_add_target( target );
+    }
+    else if ( op0 == 0xAC || op0 == 0x9C )
+        dasm_cfg_set_flow( CFG_FLOW_INDIRECT_JUMP );
+    else if ( op0 == 0x8E )
+    {
+        dasm_cfg_set_flow( CFG_FLOW_CALL );
+        if ( read_operand_word( g_insn_addr + 1, &target ) )
+            dasm_cfg_add_target( target );
+    }
+    else if ( op0 == 0xAE || op0 == 0x9E )
+        dasm_cfg_set_flow( CFG_FLOW_INDIRECT_CALL );
+    else if ( (op0 & 0x0F) == 0x06 || (op0 & 0x0F) == 0x07 )
+    {
+        dasm_cfg_set_flow( CFG_FLOW_COND_JUMP );
+        add_relative_target( bt_insn_len( op0 ) );
+    }
+    else if ( op0 == 0xBA || op0 == 0xCA )
+    {
+        dasm_cfg_set_flow( CFG_FLOW_COND_JUMP );
+        add_relative_target( 2 );
+    }
+    else if ( op0 == 0xDA )
+    {
+        dasm_cfg_set_flow( CFG_FLOW_COND_JUMP );
+        add_relative_target( 3 );
+    }
+    else if ( op0 >= 0xE8 )
+        dasm_cfg_set_flow( CFG_FLOW_INDIRECT_CALL );
+}
+
 /*****************************************************************************
  *        Private Functions
  *****************************************************************************/

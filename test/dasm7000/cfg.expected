@@ -1,0 +1,65 @@
+cfg format=debug target=dasm7000
+root addr=0000 kind=code label="Reset"
+root addr=0010 kind=proc label="SubFunc"
+root addr=0020 kind=proc label="Loop"
+root addr=0030 kind=proc label="BranchFlow"
+block start=0000 end=0003 label="Reset"
+block_insn block=0000 addr=0000 text="NOP      "
+block_insn block=0000 addr=0001 text="JNZ      BranchTarget"
+block start=0003 end=0006
+block_insn block=0003 addr=0003 text="CALL     @SubFunc"
+block start=0006 end=0007
+block_insn block=0006 addr=0006 text="IDLE     "
+block start=0007 end=0008
+block_insn block=0007 addr=0007 text="NOP      "
+block start=0008 end=000A label="BranchTarget"
+block_insn block=0008 addr=0008 text="JMP      Dispatch"
+block start=0010 end=0011 label="SubFunc"
+block_insn block=0010 addr=0010 text="RETS     "
+block start=0012 end=0014 label="Dispatch"
+block_insn block=0012 addr=0012 text="BR       *R32"
+block start=0020 end=0022 label="Loop"
+block_insn block=0020 addr=0020 text="DJNZ     A, Loop"
+block start=0022 end=0026
+block_insn block=0022 addr=0022 text="BTJZP    %$01, P$02, BitTarget"
+block start=0026 end=0027
+block_insn block=0026 addr=0026 text="RETI     "
+block start=0028 end=0029 label="BitTarget"
+block_insn block=0028 addr=0028 text="TRAP     23"
+block start=0029 end=002A
+block_insn block=0029 addr=0029 text="RETS     "
+block start=0030 end=0033 label="BranchFlow"
+block_insn block=0030 addr=0030 text="BR       @SubFunc"
+insn addr=0000 next=0001 flow=normal text="NOP      "
+insn addr=0001 next=0003 flow=cond_jump text="JNZ      BranchTarget" target0=0008
+insn addr=0003 next=0006 flow=call text="CALL     @SubFunc" target0=0010
+insn addr=0006 next=0007 flow=halt text="IDLE     "
+insn addr=0007 next=0008 flow=normal text="NOP      "
+insn addr=0008 next=000A flow=jump text="JMP      Dispatch" target0=0012
+insn addr=0010 next=0011 flow=return text="RETS     "
+insn addr=0012 next=0014 flow=indirect_jump text="BR       *R32"
+insn addr=0020 next=0022 flow=cond_jump text="DJNZ     A, Loop" target0=0020
+insn addr=0022 next=0026 flow=cond_jump text="BTJZP    %$01, P$02, BitTarget" target0=0028
+insn addr=0026 next=0027 flow=return text="RETI     "
+insn addr=0028 next=0029 flow=indirect_call text="TRAP     23"
+insn addr=0029 next=002A flow=return text="RETS     "
+insn addr=0030 next=0033 flow=jump text="BR       @SubFunc" target0=0010
+edge from=0000 to=0001 kind=fallthrough
+edge from=0001 to=0003 kind=fallthrough
+edge from=0001 to=0008 kind=branch
+edge from=0003 to=0006 kind=fallthrough
+edge from=0003 to=0010 kind=call
+edge from=0006 to=0007 kind=resume
+edge from=0007 to=0008 kind=fallthrough
+edge from=0008 to=0012 kind=branch
+edge from=0010 kind=return
+edge from=0012 kind=indirect
+edge from=0020 to=0020 kind=branch
+edge from=0020 to=0022 kind=fallthrough
+edge from=0022 to=0026 kind=fallthrough
+edge from=0022 to=0028 kind=branch
+edge from=0026 kind=return
+edge from=0028 kind=indirect
+edge from=0028 to=0029 kind=fallthrough
+edge from=0029 kind=return
+edge from=0030 to=0010 kind=branch

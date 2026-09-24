@@ -1,0 +1,9 @@
+fcfg.bin
+c0000 Reset
+p0010 SubFunc
+p0020 Loop
+p0030 BranchFlow
+l0008 BranchTarget
+l0012 Dispatch
+l0028 BitTarget
+e0033

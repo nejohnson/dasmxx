@@ -1,0 +1,41 @@
+# TI TMS7000 CFG fixture
+00          # 0000: NOP
+E6 05       # 0001: JNZ 0008
+8E 00 10    # 0003: CALL 0010
+01          # 0006: IDLE
+00          # 0007: filler
+E0 08       # 0008: JMP 0012
+00          # 000A: filler
+00          # 000B: filler
+00          # 000C: filler
+00          # 000D: filler
+00          # 000E: filler
+00          # 000F: filler
+0A          # 0010: RETS
+00          # 0011: filler
+9C 20       # 0012: BR *R32
+00          # 0014: filler
+00          # 0015: filler
+00          # 0016: filler
+00          # 0017: filler
+00          # 0018: filler
+00          # 0019: filler
+00          # 001A: filler
+00          # 001B: filler
+00          # 001C: filler
+00          # 001D: filler
+00          # 001E: filler
+00          # 001F: filler
+BA FE       # 0020: DJNZ A,0020
+A7 01 02 02 # 0022: BTJZP %01,P02,0028
+0B          # 0026: RETI
+00          # 0027: filler
+E8          # 0028: TRAP 23
+0A          # 0029: RETS
+00          # 002A: filler
+00          # 002B: filler
+00          # 002C: filler
+00          # 002D: filler
+00          # 002E: filler
+00          # 002F: filler
+8C 00 10    # 0030: BR 0010
