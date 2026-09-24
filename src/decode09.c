@@ -56,6 +56,83 @@ DASM_PROFILE( "dasm09", "Motorola 6809", 4, 9, 0, 1, 1 )
 /* Construct a 16-bit word out of low and high bytes */
 #define MK_WORD(l,h)            ( ((l) & 0xFF) | (((h) & 0xFF) << 8) )
 
+int dasm_cfg_supported( void )
+{
+    return 1;
+}
+
+static int read_opcode_byte( ADDR addr, UBYTE *out )
+{
+    return dasm_input_read_byte_at( addr, out );
+}
+
+static int read_word_be( ADDR addr, UWORD *out )
+{
+    UBYTE msb, lsb;
+
+    if ( !read_opcode_byte( addr, &msb ) || !read_opcode_byte( addr + 1, &lsb ) )
+        return 0;
+
+    *out = MK_WORD( lsb, msb );
+    return 1;
+}
+
+void dasm_post_insn( void )
+{
+    UBYTE op0, op1;
+    UWORD target;
+
+    if ( !read_opcode_byte( g_insn_addr, &op0 ) )
+        return;
+
+    if ( op0 == 0x10 || op0 == 0x11 )
+    {
+        if ( !read_opcode_byte( g_insn_addr + 1, &op1 ) )
+            return;
+
+        if ( op0 == 0x10 && op1 >= 0x22 && op1 <= 0x2F )
+            dasm_cfg_set_flow( CFG_FLOW_COND_JUMP );
+        else if ( op1 == 0x3F )
+            dasm_cfg_set_flow( CFG_FLOW_INDIRECT_CALL );
+        return;
+    }
+
+    if ( op0 == 0x0E )
+    {
+        if ( read_opcode_byte( g_insn_addr + 1, &op1 ) )
+        {
+            dasm_cfg_set_flow( CFG_FLOW_JUMP );
+            dasm_cfg_add_target( op1 );
+        }
+    }
+    else if ( op0 == 0x13 || op0 == 0x3C )
+        dasm_cfg_set_flow( CFG_FLOW_HALT );
+    else if ( op0 == 0x16 || op0 == 0x20 )
+        dasm_cfg_set_flow( CFG_FLOW_JUMP );
+    else if ( op0 == 0x17 || op0 == 0x8D )
+        dasm_cfg_set_flow( CFG_FLOW_CALL );
+    else if ( op0 >= 0x22 && op0 <= 0x2F )
+        dasm_cfg_set_flow( CFG_FLOW_COND_JUMP );
+    else if ( op0 == 0x39 || op0 == 0x3B )
+        dasm_cfg_set_flow( CFG_FLOW_RETURN );
+    else if ( op0 == 0x3F )
+        dasm_cfg_set_flow( CFG_FLOW_INDIRECT_CALL );
+    else if ( op0 == 0x6E )
+        dasm_cfg_set_flow( CFG_FLOW_INDIRECT_JUMP );
+    else if ( op0 == 0x7E )
+    {
+        if ( read_word_be( g_insn_addr + 1, &target ) )
+        {
+            dasm_cfg_set_flow( CFG_FLOW_JUMP );
+            dasm_cfg_add_target( target );
+        }
+    }
+    else if ( op0 == 0x9D || op0 == 0xBD )
+        dasm_cfg_set_flow( CFG_FLOW_CALL );
+    else if ( op0 == 0xAD )
+        dasm_cfg_set_flow( CFG_FLOW_INDIRECT_CALL );
+}
+
 /*****************************************************************************
  *        Private Functions
  *****************************************************************************/

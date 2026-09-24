@@ -1,0 +1,113 @@
+cfg format=debug target=dasm09
+root addr=0000 kind=code label="Reset"
+root addr=0010 kind=proc label="SubFunc"
+root addr=0014 kind=proc label="LongFlow"
+root addr=0020 kind=proc label="LongSub"
+root addr=0030 kind=proc label="JsrFlow"
+root addr=0038 kind=proc label="JsrTarget"
+root addr=0040 kind=proc label="DirectJmp"
+root addr=0044 kind=proc label="DirectJmpTarget"
+block start=0000 end=0003 label="Reset"
+block_insn block=0000 addr=0000 text="NOP      "
+block_insn block=0000 addr=0001 text="BNE      BranchTarget"
+block start=0003 end=0005
+block_insn block=0003 addr=0003 text="BSR      SubFunc"
+block start=0005 end=0006
+block_insn block=0005 addr=0005 text="SYNC     "
+block start=0006 end=0008
+block_insn block=0006 addr=0006 text="NOP      "
+block_insn block=0006 addr=0007 text="NOP      "
+block start=0008 end=000B label="BranchTarget"
+block_insn block=0008 addr=0008 text="JMP      Dispatch"
+block start=0010 end=0011 label="SubFunc"
+block_insn block=0010 addr=0010 text="RTS      "
+block start=0012 end=0014 label="Dispatch"
+block_insn block=0012 addr=0012 text="JMP      ,X"
+block start=0014 end=0017 label="LongFlow"
+block_insn block=0014 addr=0014 text="LBSR     LongSub"
+block start=0017 end=001B
+block_insn block=0017 addr=0017 text="LBNE     InterruptWait"
+block start=001B end=001C
+block_insn block=001B addr=001B text="SWI      "
+block start=001C end=001E
+block_insn block=001C addr=001C text="SWI2     "
+block start=001E end=0020
+block_insn block=001E addr=001E text="SWI3     "
+block start=0020 end=0021 label="LongSub"
+block_insn block=0020 addr=0020 text="RTS      "
+block start=0023 end=0025 label="InterruptWait"
+block_insn block=0023 addr=0023 text="CWAI     #$00"
+block start=0025 end=0026
+block_insn block=0025 addr=0025 text="RTS      "
+block start=0030 end=0032 label="JsrFlow"
+block_insn block=0030 addr=0030 text="JSR      JsrTarget"
+block start=0032 end=0035
+block_insn block=0032 addr=0032 text="JSR      JsrTarget"
+block start=0035 end=0037
+block_insn block=0035 addr=0035 text="JSR      ,X"
+block start=0037 end=0038
+block_insn block=0037 addr=0037 text="RTS      "
+block start=0038 end=0039 label="JsrTarget"
+block_insn block=0038 addr=0038 text="RTS      "
+block start=0040 end=0042 label="DirectJmp"
+block_insn block=0040 addr=0040 text="JMP      DirectJmpTarget"
+block start=0044 end=0045 label="DirectJmpTarget"
+block_insn block=0044 addr=0044 text="RTS      "
+insn addr=0000 next=0001 flow=normal text="NOP      "
+insn addr=0001 next=0003 flow=cond_jump text="BNE      BranchTarget" target0=0008
+insn addr=0003 next=0005 flow=call text="BSR      SubFunc" target0=0010
+insn addr=0005 next=0006 flow=halt text="SYNC     "
+insn addr=0006 next=0007 flow=normal text="NOP      "
+insn addr=0007 next=0008 flow=normal text="NOP      "
+insn addr=0008 next=000B flow=jump text="JMP      Dispatch" target0=0012
+insn addr=0010 next=0011 flow=return text="RTS      "
+insn addr=0012 next=0014 flow=indirect_jump text="JMP      ,X"
+insn addr=0014 next=0017 flow=call text="LBSR     LongSub" target0=0020
+insn addr=0017 next=001B flow=cond_jump text="LBNE     InterruptWait" target0=0023
+insn addr=001B next=001C flow=indirect_call text="SWI      "
+insn addr=001C next=001E flow=indirect_call text="SWI2     "
+insn addr=001E next=0020 flow=indirect_call text="SWI3     "
+insn addr=0020 next=0021 flow=return text="RTS      "
+insn addr=0023 next=0025 flow=halt text="CWAI     #$00"
+insn addr=0025 next=0026 flow=return text="RTS      "
+insn addr=0030 next=0032 flow=call text="JSR      JsrTarget" target0=0038
+insn addr=0032 next=0035 flow=call text="JSR      JsrTarget" target0=0038
+insn addr=0035 next=0037 flow=indirect_call text="JSR      ,X"
+insn addr=0037 next=0038 flow=return text="RTS      "
+insn addr=0038 next=0039 flow=return text="RTS      "
+insn addr=0040 next=0042 flow=jump text="JMP      DirectJmpTarget" target0=0044
+insn addr=0044 next=0045 flow=return text="RTS      "
+edge from=0000 to=0001 kind=fallthrough
+edge from=0001 to=0003 kind=fallthrough
+edge from=0001 to=0008 kind=branch
+edge from=0003 to=0005 kind=fallthrough
+edge from=0003 to=0010 kind=call
+edge from=0005 to=0006 kind=resume
+edge from=0006 to=0007 kind=fallthrough
+edge from=0007 to=0008 kind=fallthrough
+edge from=0008 to=0012 kind=branch
+edge from=0010 kind=return
+edge from=0012 kind=indirect
+edge from=0014 to=0017 kind=fallthrough
+edge from=0014 to=0020 kind=call
+edge from=0017 to=001B kind=fallthrough
+edge from=0017 to=0023 kind=branch
+edge from=001B kind=indirect
+edge from=001B to=001C kind=fallthrough
+edge from=001C kind=indirect
+edge from=001C to=001E kind=fallthrough
+edge from=001E kind=indirect
+edge from=001E to=0020 kind=fallthrough
+edge from=0020 kind=return
+edge from=0023 to=0025 kind=resume
+edge from=0025 kind=return
+edge from=0030 to=0032 kind=fallthrough
+edge from=0030 to=0038 kind=call
+edge from=0032 to=0035 kind=fallthrough
+edge from=0032 to=0038 kind=call
+edge from=0035 kind=indirect
+edge from=0035 to=0037 kind=fallthrough
+edge from=0037 kind=return
+edge from=0038 kind=return
+edge from=0040 to=0044 kind=branch
+edge from=0044 kind=return

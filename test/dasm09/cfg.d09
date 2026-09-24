@@ -1,0 +1,13 @@
+fcfg.bin
+c0000 Reset
+p0014 LongFlow
+p0030 JsrFlow
+p0040 DirectJmp
+l0008 BranchTarget
+p0010 SubFunc
+l0012 Dispatch
+p0020 LongSub
+l0023 InterruptWait
+p0038 JsrTarget
+p0044 DirectJmpTarget
+e0045
