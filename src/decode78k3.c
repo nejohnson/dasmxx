@@ -63,6 +63,90 @@ DASM_PROFILE( "dasm78k3", "NEC 78K/III", 5, 9, 0, 1, 1 )
 /* Construct a 16-bit word out of low and high bytes */
 #define MK_WORD(l,h)            ( ((l) & 0xFF) | (((h) & 0xFF) << 8) )
 
+int dasm_cfg_supported( void )
+{
+    return 1;
+}
+
+static int read_opcode_byte( ADDR addr, UBYTE *out )
+{
+    return dasm_input_read_byte_at( addr, out );
+}
+
+static void cfg_classify_prefixed( UBYTE prefix, UBYTE op )
+{
+    if ( prefix == 0x02 || prefix == 0x03 )
+    {
+        if ( (op >= 0xA0 && op <= 0xAF)
+             || (op >= 0xB0 && op <= 0xBF)
+             || (op >= 0xC0 && op <= 0xCF)
+             || (op >= 0xD0 && op <= 0xDF) )
+            dasm_cfg_set_flow( CFG_FLOW_COND_JUMP );
+    }
+    else if ( prefix == 0x05 )
+    {
+        if ( (op >= 0x48 && op <= 0x4F)
+             || (op >= 0x68 && op <= 0x6F) )
+            dasm_cfg_set_flow( CFG_FLOW_INDIRECT_JUMP );
+        else if ( (op >= 0x58 && op <= 0x5F)
+                  || (op >= 0x78 && op <= 0x7F)
+                  || (op >= 0xD8 && op <= 0xDF) )
+            dasm_cfg_set_flow( CFG_FLOW_INDIRECT_CALL );
+    }
+    else if ( prefix == 0x07 )
+    {
+        if ( op == 0xF8 || op == 0xF9 || op == 0xFA
+             || op == 0xFB || op == 0xFC || op == 0xFD )
+            dasm_cfg_set_flow( CFG_FLOW_COND_JUMP );
+    }
+    else if ( prefix == 0x08 )
+    {
+        if ( (op >= 0xA0 && op <= 0xAF)
+             || (op >= 0xB0 && op <= 0xBF)
+             || (op >= 0xC0 && op <= 0xCF)
+             || (op >= 0xD0 && op <= 0xDF) )
+            dasm_cfg_set_flow( CFG_FLOW_COND_JUMP );
+    }
+}
+
+void dasm_post_insn( void )
+{
+    UBYTE op0, op1;
+
+    if ( !read_opcode_byte( g_insn_addr, &op0 ) )
+        return;
+
+    if ( op0 == 0x02 || op0 == 0x03 || op0 == 0x05
+         || op0 == 0x07 || op0 == 0x08 )
+    {
+        if ( read_opcode_byte( g_insn_addr + 1, &op1 ) )
+            cfg_classify_prefixed( op0, op1 );
+        return;
+    }
+
+    if ( op0 == 0x28 || (op0 >= 0x90 && op0 <= 0x97) )
+        dasm_cfg_set_flow( CFG_FLOW_CALL );
+    else if ( op0 >= 0xE0 && op0 <= 0xFF )
+    {
+        dasm_cfg_set_flow( CFG_FLOW_CALL );
+        dasm_cfg_add_target( 0x0040 + (2 * (op0 & 0x1F)) );
+    }
+    else if ( op0 == 0x5E )
+        dasm_cfg_set_flow( CFG_FLOW_INDIRECT_CALL );
+    else if ( op0 == 0x56 || op0 == 0x57 || op0 == 0x29 )
+        dasm_cfg_set_flow( CFG_FLOW_RETURN );
+    else if ( op0 == 0x2C || op0 == 0x14 )
+        dasm_cfg_set_flow( CFG_FLOW_JUMP );
+    else if ( (op0 >= 0x80 && op0 <= 0x87)
+              || (op0 >= 0x70 && op0 <= 0x77)
+              || op0 == 0x32
+              || op0 == 0x33
+              || op0 == 0x3B )
+        dasm_cfg_set_flow( CFG_FLOW_COND_JUMP );
+    else if ( op0 == 0x43 )
+        dasm_cfg_set_flow( CFG_FLOW_STOP );
+}
+
 /*****************************************************************************
  * Private data.
  *****************************************************************************/

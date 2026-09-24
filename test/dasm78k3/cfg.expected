@@ -1,0 +1,100 @@
+cfg format=debug target=dasm78k3
+root addr=0000 kind=code label="Reset"
+root addr=0010 kind=proc label="SubFunc"
+root addr=0018 kind=proc label="IndirectJump"
+root addr=001A kind=proc label="IndirectCall"
+root addr=001D kind=proc label="CallTable"
+root addr=001F kind=proc label="BitBranch"
+root addr=0025 kind=proc label="PrefixBranch"
+root addr=002B kind=proc label="ResetFlow"
+root addr=0040 kind=proc label="TableTarget"
+block start=0000 end=0003 label="Reset"
+block_insn block=0000 addr=0000 text="nop      "
+block_insn block=0000 addr=0001 text="bz       $BranchTarget"
+block start=0003 end=0006
+block_insn block=0003 addr=0003 text="call     !SubFunc"
+block start=0006 end=0007
+block_insn block=0006 addr=0006 text="brk      "
+block start=0007 end=0008
+block_insn block=0007 addr=0007 text="nop      "
+block start=0008 end=000A label="BranchTarget"
+block_insn block=0008 addr=0008 text="br       $Dispatch"
+block start=0010 end=0011 label="SubFunc"
+block_insn block=0010 addr=0010 text="ret      "
+block start=0012 end=0015 label="Dispatch"
+block_insn block=0012 addr=0012 text="br       !IndirectJump"
+block start=0018 end=001A label="IndirectJump"
+block_insn block=0018 addr=0018 text="br       [AX]"
+block start=001A end=001C label="IndirectCall"
+block_insn block=001A addr=001A text="call     AX"
+block start=001C end=001D
+block_insn block=001C addr=001C text="ret      "
+block start=001D end=001E label="CallTable"
+block_insn block=001D addr=001D text="callt    [00040H]"
+block start=001E end=001F
+block_insn block=001E addr=001E text="ret      "
+block start=001F end=0022 label="BitBranch"
+block_insn block=001F addr=001F text="bt       A.0, $BitTarget"
+block start=0022 end=0023
+block_insn block=0022 addr=0022 text="ret      "
+block start=0024 end=0025 label="BitTarget"
+block_insn block=0024 addr=0024 text="ret      "
+block start=0025 end=0028 label="PrefixBranch"
+block_insn block=0025 addr=0025 text="bgt      $PrefixTarget"
+block start=0028 end=0029
+block_insn block=0028 addr=0028 text="ret      "
+block start=002A end=002B label="PrefixTarget"
+block_insn block=002A addr=002A text="ret      "
+block start=002B end=002C label="ResetFlow"
+block_insn block=002B addr=002B text="swrs     "
+block start=0040 end=0041 label="TableTarget"
+block_insn block=0040 addr=0040 text="ret      "
+insn addr=0000 next=0001 flow=normal text="nop      "
+insn addr=0001 next=0003 flow=cond_jump text="bz       $BranchTarget" target0=0008
+insn addr=0003 next=0006 flow=call text="call     !SubFunc" target0=0010
+insn addr=0006 next=0007 flow=indirect_call text="brk      "
+insn addr=0007 next=0008 flow=normal text="nop      "
+insn addr=0008 next=000A flow=jump text="br       $Dispatch" target0=0012
+insn addr=0010 next=0011 flow=return text="ret      "
+insn addr=0012 next=0015 flow=jump text="br       !IndirectJump" target0=0018
+insn addr=0018 next=001A flow=indirect_jump text="br       [AX]"
+insn addr=001A next=001C flow=indirect_call text="call     AX"
+insn addr=001C next=001D flow=return text="ret      "
+insn addr=001D next=001E flow=call text="callt    [00040H]" target0=0040
+insn addr=001E next=001F flow=return text="ret      "
+insn addr=001F next=0022 flow=cond_jump text="bt       A.0, $BitTarget" target0=0024
+insn addr=0022 next=0023 flow=return text="ret      "
+insn addr=0024 next=0025 flow=return text="ret      "
+insn addr=0025 next=0028 flow=cond_jump text="bgt      $PrefixTarget" target0=002A
+insn addr=0028 next=0029 flow=return text="ret      "
+insn addr=002A next=002B flow=return text="ret      "
+insn addr=002B next=002C flow=stop text="swrs     "
+insn addr=0040 next=0041 flow=return text="ret      "
+edge from=0000 to=0001 kind=fallthrough
+edge from=0001 to=0003 kind=fallthrough
+edge from=0001 to=0008 kind=branch
+edge from=0003 to=0006 kind=fallthrough
+edge from=0003 to=0010 kind=call
+edge from=0006 kind=indirect
+edge from=0006 to=0007 kind=fallthrough
+edge from=0007 to=0008 kind=fallthrough
+edge from=0008 to=0012 kind=branch
+edge from=0010 kind=return
+edge from=0012 to=0018 kind=branch
+edge from=0018 kind=indirect
+edge from=001A kind=indirect
+edge from=001A to=001C kind=fallthrough
+edge from=001C kind=return
+edge from=001D to=001E kind=fallthrough
+edge from=001D to=0040 kind=call
+edge from=001E kind=return
+edge from=001F to=0022 kind=fallthrough
+edge from=001F to=0024 kind=branch
+edge from=0022 kind=return
+edge from=0024 kind=return
+edge from=0025 to=0028 kind=fallthrough
+edge from=0025 to=002A kind=branch
+edge from=0028 kind=return
+edge from=002A kind=return
+edge from=002B kind=stop
+edge from=0040 kind=return

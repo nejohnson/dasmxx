@@ -1,0 +1,39 @@
+# NEC 78K/III CFG fixture.
+00          # 0000: nop
+81 05       # 0001: bz 0008
+28 10 00    # 0003: call 0010
+5E          # 0006: brk
+00          # 0007: filler
+14 08       # 0008: br 0012
+00          # 000A: filler
+00          # 000B: filler
+00          # 000C: filler
+00          # 000D: filler
+00          # 000E: filler
+00          # 000F: filler
+56          # 0010: ret
+00          # 0011: filler
+2C 18 00    # 0012: br 0018
+00          # 0015: filler
+00          # 0016: filler
+00          # 0017: filler
+05 68       # 0018: br [AX]
+05 58       # 001A: call AX
+56          # 001C: ret
+E0          # 001D: callt [0040]
+56          # 001E: ret
+03 B8 02    # 001F: bt A.0,0024
+56          # 0022: ret
+00          # 0023: filler
+56          # 0024: ret
+07 FB 02    # 0025: bgt 002A
+56          # 0028: ret
+00          # 0029: filler
+56          # 002A: ret
+43          # 002B: swrs
+00 00 00 00 # 002C-002F: filler
+00 00 00 00 # 0030-0033: filler
+00 00 00 00 # 0034-0037: filler
+00 00 00 00 # 0038-003B: filler
+00 00 00 00 # 003C-003F: filler
+56          # 0040: ret

@@ -1,0 +1,15 @@
+fcfg.bin
+c0000 Reset
+p0010 SubFunc
+p0018 IndirectJump
+p001A IndirectCall
+p001D CallTable
+p001F BitBranch
+p0025 PrefixBranch
+p002B ResetFlow
+l0008 BranchTarget
+l0012 Dispatch
+l0024 BitTarget
+l002A PrefixTarget
+p0040 TableTarget
+e0041
