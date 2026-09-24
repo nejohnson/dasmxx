@@ -80,6 +80,102 @@ static void addr16( UWORD a, XREF_TYPE xtype )
     xref_addxref( xtype, g_insn_addr, a );
 }
 
+int dasm_cfg_supported( void )
+{
+    return 1;
+}
+
+static int read_opcode_word( ADDR addr, UWORD *out )
+{
+    return dasm_input_read_word_at( addr, out );
+}
+
+static int cfg_source_has_direct_target( UWORD op )
+{
+    unsigned int r = op & 0x0F;
+    unsigned int as = ( op >> 4 ) & 0x03;
+
+    return ( r == 0 && ( as == 1 || as == 3 ) )
+           || ( r == 2 && as == 1 );
+}
+
+static int cfg_calla_has_direct_target( UWORD op )
+{
+    unsigned int mode = ( op >> 4 ) & 0x0F;
+    unsigned int r = op & 0x0F;
+
+    return ( mode == 5 && ( r == 0 || r == 2 ) )
+           || mode == 8
+           || mode == 9
+           || mode == 11;
+}
+
+static void cfg_add_source_target( ADDR opaddr, UWORD op )
+{
+    unsigned int r = ( op >> 8 ) & 0x0F;
+    unsigned int as = ( op >> 4 ) & 0x03;
+    UWORD word;
+
+    if ( !read_opcode_word( opaddr + 2, &word ) )
+        return;
+
+    if ( r == 0 && as == 1 )
+        dasm_cfg_add_target( opaddr + 4 + (WORD)word );
+    else if ( r == 0 && as == 3 )
+        dasm_cfg_add_target( word );
+    else if ( r == 2 && as == 1 )
+        dasm_cfg_add_target( word );
+}
+
+void dasm_post_insn( void )
+{
+    UWORD op0;
+    ADDR opaddr = g_insn_addr;
+
+    if ( ext_active )
+    {
+        opaddr += 2;
+        if ( !read_opcode_word( opaddr, &op0 ) )
+            return;
+    }
+    else if ( !read_opcode_word( opaddr, &op0 ) )
+    {
+        return;
+    }
+
+    if ( op0 == 0x0110 || op0 == 0x1300 )
+        dasm_cfg_set_flow( CFG_FLOW_RETURN );
+    else if ( (op0 & 0xFF80) == 0x1280 )
+        dasm_cfg_set_flow( cfg_source_has_direct_target( op0 ) ? CFG_FLOW_CALL : CFG_FLOW_INDIRECT_CALL );
+    else if ( (op0 & 0xFFC0) == 0x1340
+              || (op0 & 0xFFF0) == 0x1380
+              || (op0 & 0xFFF0) == 0x1390
+              || (op0 & 0xFFF0) == 0x13B0 )
+        dasm_cfg_set_flow( cfg_calla_has_direct_target( op0 ) ? CFG_FLOW_CALL : CFG_FLOW_INDIRECT_CALL );
+    else if ( (op0 & 0xE000) == 0x2000 )
+        dasm_cfg_set_flow( ((op0 >> 10) & 0x07) == 0x07 ? CFG_FLOW_JUMP : CFG_FLOW_COND_JUMP );
+    else if ( (op0 & 0xF000) == 0x4000
+              && (op0 & 0x000F) == 0
+              && ((op0 >> 7) & 0x01) == 0 )
+    {
+        unsigned int src = ( op0 >> 8 ) & 0x0F;
+        unsigned int as = ( op0 >> 4 ) & 0x03;
+
+        if ( src == 1 && as == 3 )
+            dasm_cfg_set_flow( CFG_FLOW_RETURN );
+        else if ( cfg_source_has_direct_target( op0 ) )
+        {
+            if ( !ext_active )
+                cfg_add_source_target( opaddr, op0 );
+            dasm_cfg_set_flow( CFG_FLOW_JUMP );
+        }
+        else
+        {
+            dasm_cfg_set_flow( CFG_FLOW_INDIRECT_JUMP );
+        }
+    }
+}
+
 static void addr20( ADDR a, XREF_TYPE xtype )
 {
     a &= 0xFFFFF;

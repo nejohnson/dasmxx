@@ -1,0 +1,35 @@
+cfg format=debug target=dasm430
+root addr=0000 kind=code label="Reset"
+root addr=0010 kind=proc label="IndirectCalla"
+root addr=0020 kind=proc label="LongSub"
+root addr=0030 kind=proc label="CallxFlow"
+block start=0000 end=0006 label="Reset"
+block_insn block=0000 addr=0000 text="MOV     #0,CG"
+block_insn block=0000 addr=0002 text="CALLA   #LongSub"
+block start=0006 end=0008
+block_insn block=0006 addr=0006 text="RETA    "
+block start=0010 end=0012 label="IndirectCalla"
+block_insn block=0010 addr=0010 text="CALLA   R4"
+block start=0012 end=0014
+block_insn block=0012 addr=0012 text="RETA    "
+block start=0020 end=0022 label="LongSub"
+block_insn block=0020 addr=0020 text="RETA    "
+block start=0030 end=0036 label="CallxFlow"
+block_insn block=0030 addr=0030 text="CALLX.A #0x12345"
+insn addr=0000 next=0002 flow=normal text="MOV     #0,CG"
+insn addr=0002 next=0006 flow=call text="CALLA   #LongSub" target0=0020
+insn addr=0006 next=0008 flow=return text="RETA    "
+insn addr=0010 next=0012 flow=indirect_call text="CALLA   R4"
+insn addr=0012 next=0014 flow=return text="RETA    "
+insn addr=0020 next=0022 flow=return text="RETA    "
+insn addr=0030 next=0036 flow=call text="CALLX.A #0x12345" target0=12345
+edge from=0000 to=0002 kind=fallthrough
+edge from=0002 to=0006 kind=fallthrough
+edge from=0002 to=0020 kind=call
+edge from=0006 kind=return
+edge from=0010 kind=indirect
+edge from=0010 to=0012 kind=fallthrough
+edge from=0012 kind=return
+edge from=0020 kind=return
+edge from=0030 to=0036 kind=fallthrough
+edge from=0030 to=12345 kind=call

@@ -1,0 +1,7 @@
+fcfg.bin
+c0000 Reset
+p0010 SubFunc
+p0018 Dispatch
+p0020 IndirectFlow
+l000A BranchTarget
+e0024

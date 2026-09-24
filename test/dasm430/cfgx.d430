@@ -1,0 +1,7 @@
+fcfgx.bin
+ocpu=msp430x
+c0000 Reset
+p0010 IndirectCalla
+p0020 LongSub
+p0030 CallxFlow
+e0036

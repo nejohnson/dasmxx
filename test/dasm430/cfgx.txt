@@ -1,0 +1,25 @@
+# TI MSP430X CFG fixture. Words are little-endian.
+03 43       # 0000: NOP
+B0 13 20 00 # 0002: CALLA #00020
+10 01       # 0006: RETA
+03 43       # 0008: filler
+03 43       # 000A: filler
+03 43       # 000C: filler
+03 43       # 000E: filler
+44 13       # 0010: CALLA R4
+10 01       # 0012: RETA
+03 43       # 0014: filler
+03 43       # 0016: filler
+03 43       # 0018: filler
+03 43       # 001A: filler
+03 43       # 001C: filler
+03 43       # 001E: filler
+10 01       # 0020: RETA
+03 43       # 0022: filler
+03 43       # 0024: filler
+03 43       # 0026: filler
+03 43       # 0028: filler
+03 43       # 002A: filler
+03 43       # 002C: filler
+03 43       # 002E: filler
+01 18 B0 12 45 23 # 0030: CALLX.A #12345

@@ -1,0 +1,17 @@
+# TI MSP430 CFG fixture. Words are little-endian.
+03 43       # 0000: NOP
+03 20       # 0002: JNE 000A
+B0 12 10 00 # 0004: CALL #0010
+00 13       # 0008: RETI
+30 40 18 00 # 000A: MOV #0018,PC
+03 43       # 000E: filler
+30 41       # 0010: MOV @SP+,PC
+03 43       # 0012: filler
+03 43       # 0014: filler
+03 43       # 0016: filler
+30 41       # 0018: MOV @SP+,PC
+03 43       # 001A: filler
+03 43       # 001C: filler
+03 43       # 001E: filler
+84 12       # 0020: CALL R4
+00 44       # 0022: MOV R4,PC
