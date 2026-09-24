@@ -120,3 +120,19 @@ CFG construction. `X_JMP` currently does not distinguish conditional from
 unconditional control flow, and returns/stops are often represented as
 `X_NONE`. The CFG work therefore needs explicit instruction-flow metadata rather
 than relying only on xref records.
+
+## Future Development
+
+Further CFG work should be driven by real firmware examples rather than added
+speculatively. Likely areas are:
+
+- Resolving common jump-table and dispatch-table patterns.
+- Modeling enough register or flag state to follow simple computed branches.
+- Adding richer vector-table conventions for targets that use non-trivial
+  interrupt, reset, trap, or banked-vector layouts.
+- Improving output ergonomics once `cmd`, `dot`, and `json` have been used on
+  larger programs.
+
+These are deliberately outside the initial CFG/basic-block reconstruction
+scope. The current tracer reports unresolved indirect exits explicitly so those
+cases remain visible for later analysis.
