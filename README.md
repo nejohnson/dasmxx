@@ -5,7 +5,8 @@ Features:
   * Script-driven disassembly
   * Reads raw binary, Intel HEX, and Motorola S-record files
   * Maps multiple ROM images into one address space
-  * Output include verbose listing for analysis and extensive cross-reference
+  * Reconstructs control-flow graphs and basic blocks from command-file entry points
+  * Outputs verbose listings for analysis and extensive cross-reference
 
 Supported Processors:
   * Atmel AVR

@@ -31,6 +31,45 @@ If `-g` is used without `-G`, the CFG output filename is derived from the
 command-file name. For example, `firmware.dz80` produces `firmware.dot` with
 `-g dot`, `firmware.json` with `-g json`, and `firmware.cfg.dz80` with `-g cmd`.
 
+Control-flow graph output
+=========================
+
+The `-g` option traces reachable code from the command file's code and
+procedure entries, builds basic blocks, and writes a control-flow graph. The
+normal disassembly listing is still written to stdout, or to the `-o` file if
+one is supplied.
+
+Example:
+
+```sh
+dasmz80 -g dot firmware.dz80
+```
+
+This reads `firmware.dz80`, writes the normal listing to stdout, and writes the
+CFG to `firmware.dot`. To choose the output filename explicitly:
+
+```sh
+dasmz80 -g json -G firmware-cfg.json firmware.dz80
+```
+
+Supported CFG formats are:
+
+- `dot`: Graphviz DOT output for quick visual inspection.
+- `json`: structured output for analysis tools.
+- `cmd`: a dasmxx command-file fragment with discovered code block starts.
+
+The tracer uses these command-file entries as roots:
+
+- `cXXXX`: code entry points, such as reset handlers.
+- `pXXXX`: procedure entry points.
+- `vXXXX`: vector tables. Each word up to the next command address is read as
+  a target address and added as a vector root.
+
+Direct branches, conditional branches, calls, returns, halts/stops, and
+indirect exits are recorded. Indirect jumps and calls are not guessed; they are
+reported as indirect edges so downstream tools can decide how to handle them.
+This is CFG and basic-block reconstruction, not full partial evaluation.
+
 Command list file
 =================
 
