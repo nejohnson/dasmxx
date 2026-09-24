@@ -1,0 +1,20 @@
+digraph cfg {
+  graph [label="dasmz80 CFG", labelloc=t];
+  "B_0000" [label="0000..0003"];
+  "B_0003" [label="0003..0006"];
+  "B_0006" [label="0006..0007"];
+  "B_0008" [label="0008..000B"];
+  "B_0010" [label="0010..0011"];
+  "B_0012" [label="0012..0013"];
+  "B_0000" -> "B_0003" [label="fallthrough"];
+  "B_0000" -> "B_0008" [label="branch"];
+  "B_0003" -> "B_0006" [label="fallthrough"];
+  "B_0003" -> "B_0010" [label="call"];
+  "B_0006" -> "X_0006_stop" [label="stop"];
+  "X_0006_stop" [label="stop", shape=box, style=dashed];
+  "B_0008" -> "B_0012" [label="branch"];
+  "B_0010" -> "X_0010_return" [label="return"];
+  "X_0010_return" [label="return", shape=box, style=dashed];
+  "B_0012" -> "X_0012_indirect" [label="indirect"];
+  "X_0012_indirect" [label="indirect", shape=box, style=dashed];
+}

@@ -1,0 +1,4 @@
+# Test CFG reconstruction with direct and unresolved Z80 control flow
+f../testdata/cfg_z80.bin
+c0000
+e0013
