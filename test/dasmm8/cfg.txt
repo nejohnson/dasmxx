@@ -1,0 +1,31 @@
+# STM8 CFG fixture.
+9D          # 0000: NOP
+26 03       # 0001: JRNE 0006
+CD 00 0A    # 0003: CALL 000A
+8E          # 0006: HALT
+20 09       # 0007: JRA 0012
+9D          # 0009: filler
+81          # 000A: RET
+80          # 000B: IRET
+83          # 000C: TRAP
+81          # 000D: RET
+FC          # 000E: JP (X)
+72 8F       # 000F: WFE
+81          # 0011: RET
+CC 00 18    # 0012: JP 0018
+8B          # 0015: BREAK
+AD 02       # 0016: CALLR 001A
+81          # 0018: RET
+9D          # 0019: filler
+81          # 001A: RET
+AC 00 00 20 # 001B: JPF 000020
+9D          # 001F: filler
+81          # 0020: RET
+8D 00 00 30 # 0021: CALLF 000030
+9D          # 0025: filler
+72 00 00 00 2A 01 # 0026: BTJT 002A,#0,002D
+81          # 002C: filler
+81          # 002D: RET
+81          # 002E: RET
+9D          # 002F: filler
+81          # 0030: RET

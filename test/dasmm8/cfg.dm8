@@ -1,0 +1,20 @@
+fcfg.bin
+c0000 Reset
+p000A SubFunc
+p000B IretFlow
+p000C TrapFlow
+p000E IndirectJump
+p000F WaitFlow
+p0015 StopFlow
+p0016 CallrFlow
+p001B FarJump
+p0021 FarCall
+p0026 BitBranch
+l0006 BranchTarget
+l0012 Dispatch
+l0018 JumpTarget
+l001A CallrTarget
+l0020 FarTarget
+l0030 FarSub
+l002D BitTarget
+e0031

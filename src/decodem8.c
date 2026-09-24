@@ -59,6 +59,94 @@ DASM_PROFILE( "dasmm8", "ST Micro STM8", 5, 7, 1, 1, 1 )
 /* Construct a 24-bit word out of low, mid and high bytes */
 #define MK_LONG_WORD(l,m,h)     ( MK_WORD(l,m) | (((h) & 0xFF) << 16) )
 
+int dasm_cfg_supported( void )
+{
+    return 1;
+}
+
+static int read_opcode_byte( ADDR addr, UBYTE *out )
+{
+    return dasm_input_read_byte_at( addr, out );
+}
+
+static void m8_cfg_classify_prefixed( UBYTE op )
+{
+    if ( op == 0x8F )
+        dasm_cfg_set_flow( CFG_FLOW_HALT );
+    else if ( op == 0xCD || op == 0xDD )
+        dasm_cfg_set_flow( CFG_FLOW_INDIRECT_CALL );
+    else if ( op == 0xCC || op == 0xDC )
+        dasm_cfg_set_flow( CFG_FLOW_INDIRECT_JUMP );
+    else if ( (op & 0xF1) == 0x00 || (op & 0xF1) == 0x01 )
+        dasm_cfg_set_flow( CFG_FLOW_COND_JUMP );
+}
+
+static void m8_cfg_classify_y_prefixed( UBYTE op )
+{
+    if ( op == 0xFD || op == 0xED || op == 0xDD )
+        dasm_cfg_set_flow( CFG_FLOW_INDIRECT_CALL );
+    else if ( op == 0xFC || op == 0xEC || op == 0xDC )
+        dasm_cfg_set_flow( CFG_FLOW_INDIRECT_JUMP );
+    else if ( op == 0x28 || op == 0x29 || (op >= 0x2C && op <= 0x2F) )
+        dasm_cfg_set_flow( CFG_FLOW_COND_JUMP );
+}
+
+static void m8_cfg_classify_ptr_prefixed( UBYTE op )
+{
+    if ( op == 0x8D || op == 0xCD || op == 0xDD )
+        dasm_cfg_set_flow( CFG_FLOW_INDIRECT_CALL );
+    else if ( op == 0xAC || op == 0xCC || op == 0xDC )
+        dasm_cfg_set_flow( CFG_FLOW_INDIRECT_JUMP );
+}
+
+void dasm_post_insn( void )
+{
+    UBYTE op0, op1;
+
+    if ( !read_opcode_byte( g_insn_addr, &op0 ) )
+        return;
+
+    if ( op0 == 0x72 )
+    {
+        if ( read_opcode_byte( g_insn_addr + 1, &op1 ) )
+            m8_cfg_classify_prefixed( op1 );
+        return;
+    }
+
+    if ( op0 == 0x90 )
+    {
+        if ( read_opcode_byte( g_insn_addr + 1, &op1 ) )
+            m8_cfg_classify_y_prefixed( op1 );
+        return;
+    }
+
+    if ( op0 == 0x91 || op0 == 0x92 )
+    {
+        if ( read_opcode_byte( g_insn_addr + 1, &op1 ) )
+            m8_cfg_classify_ptr_prefixed( op1 );
+        return;
+    }
+
+    if ( op0 == 0x80 || op0 == 0x81 || op0 == 0x87 )
+        dasm_cfg_set_flow( CFG_FLOW_RETURN );
+    else if ( op0 == 0x8E || op0 == 0x8F )
+        dasm_cfg_set_flow( CFG_FLOW_HALT );
+    else if ( op0 == 0x8B )
+        dasm_cfg_set_flow( CFG_FLOW_STOP );
+    else if ( op0 == 0x83 )
+        dasm_cfg_set_flow( CFG_FLOW_INDIRECT_CALL );
+    else if ( op0 == 0xAD || op0 == 0x8D || op0 == 0xCD )
+        dasm_cfg_set_flow( CFG_FLOW_CALL );
+    else if ( op0 == 0xFD || op0 == 0xED || op0 == 0xDD )
+        dasm_cfg_set_flow( CFG_FLOW_INDIRECT_CALL );
+    else if ( op0 == 0x82 || op0 == 0xAC || op0 == 0xCC || op0 == 0x20 )
+        dasm_cfg_set_flow( CFG_FLOW_JUMP );
+    else if ( op0 == 0xFC || op0 == 0xEC || op0 == 0xDC )
+        dasm_cfg_set_flow( CFG_FLOW_INDIRECT_JUMP );
+    else if ( op0 >= 0x21 && op0 <= 0x2F )
+        dasm_cfg_set_flow( CFG_FLOW_COND_JUMP );
+}
+
 /*****************************************************************************
  *        Private Functions
  *****************************************************************************/
@@ -497,7 +585,12 @@ TWO_OPERAND_PAIR(Y, off16X)
 /**                      Composite Triple Operands                           **/
 /******************************************************************************/
 
-TWO_OPERAND(mem16_bit, rel8)
+OPERAND_FUNC(mem16_bit_rel8)
+{
+    operand_mem16_bit( f, addr, opc, X_NONE );
+    COMMA;
+    operand_rel8( f, addr, opc, xtype );
+}
 
 /******************************************************************************/
 /** Instruction Decoding Tables                                              **/

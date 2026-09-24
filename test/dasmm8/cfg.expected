@@ -1,0 +1,117 @@
+cfg format=debug target=dasmm8
+root addr=0000 kind=code label="Reset"
+root addr=000A kind=proc label="SubFunc"
+root addr=000B kind=proc label="IretFlow"
+root addr=000C kind=proc label="TrapFlow"
+root addr=000E kind=proc label="IndirectJump"
+root addr=000F kind=proc label="WaitFlow"
+root addr=0015 kind=proc label="StopFlow"
+root addr=0016 kind=proc label="CallrFlow"
+root addr=001B kind=proc label="FarJump"
+root addr=0021 kind=proc label="FarCall"
+root addr=0026 kind=proc label="BitBranch"
+block start=0000 end=0003 label="Reset"
+block_insn block=0000 addr=0000 text="nop    "
+block_insn block=0000 addr=0001 text="jrne   BranchTarget"
+block start=0003 end=0006
+block_insn block=0003 addr=0003 text="call   SubFunc"
+block start=0006 end=0007 label="BranchTarget"
+block_insn block=0006 addr=0006 text="halt   "
+block start=0007 end=0009
+block_insn block=0007 addr=0007 text="jra    Dispatch"
+block start=000A end=000B label="SubFunc"
+block_insn block=000A addr=000A text="ret    "
+block start=000B end=000C label="IretFlow"
+block_insn block=000B addr=000B text="iret   "
+block start=000C end=000D label="TrapFlow"
+block_insn block=000C addr=000C text="trap   "
+block start=000D end=000E
+block_insn block=000D addr=000D text="ret    "
+block start=000E end=000F label="IndirectJump"
+block_insn block=000E addr=000E text="jp     (X)"
+block start=000F end=0011 label="WaitFlow"
+block_insn block=000F addr=000F text="wfe    "
+block start=0011 end=0012
+block_insn block=0011 addr=0011 text="ret    "
+block start=0012 end=0015 label="Dispatch"
+block_insn block=0012 addr=0012 text="jp     JumpTarget"
+block start=0015 end=0016 label="StopFlow"
+block_insn block=0015 addr=0015 text="break  "
+block start=0016 end=0018 label="CallrFlow"
+block_insn block=0016 addr=0016 text="callr  CallrTarget"
+block start=0018 end=0019 label="JumpTarget"
+block_insn block=0018 addr=0018 text="ret    "
+block start=001A end=001B label="CallrTarget"
+block_insn block=001A addr=001A text="ret    "
+block start=001B end=001F label="FarJump"
+block_insn block=001B addr=001B text="jpf    FarTarget"
+block start=0020 end=0021 label="FarTarget"
+block_insn block=0020 addr=0020 text="ret    "
+block start=0021 end=0025 label="FarCall"
+block_insn block=0021 addr=0021 text="callf  FarSub"
+block start=0025 end=0026
+block_insn block=0025 addr=0025 text="nop    "
+block start=0026 end=002C label="BitBranch"
+block_insn block=0026 addr=0026 text="btjt   $002A, #0, BitTarget"
+block start=002C end=002D
+block_insn block=002C addr=002C text="ret    "
+block start=002D end=002E label="BitTarget"
+block_insn block=002D addr=002D text="ret    "
+block start=0030 end=0031 label="FarSub"
+block_insn block=0030 addr=0030 text="ret    "
+insn addr=0000 next=0001 flow=normal text="nop    "
+insn addr=0001 next=0003 flow=cond_jump text="jrne   BranchTarget" target0=0006
+insn addr=0003 next=0006 flow=call text="call   SubFunc" target0=000A
+insn addr=0006 next=0007 flow=halt text="halt   "
+insn addr=0007 next=0009 flow=jump text="jra    Dispatch" target0=0012
+insn addr=000A next=000B flow=return text="ret    "
+insn addr=000B next=000C flow=return text="iret   "
+insn addr=000C next=000D flow=indirect_call text="trap   "
+insn addr=000D next=000E flow=return text="ret    "
+insn addr=000E next=000F flow=indirect_jump text="jp     (X)"
+insn addr=000F next=0011 flow=halt text="wfe    "
+insn addr=0011 next=0012 flow=return text="ret    "
+insn addr=0012 next=0015 flow=jump text="jp     JumpTarget" target0=0018
+insn addr=0015 next=0016 flow=stop text="break  "
+insn addr=0016 next=0018 flow=call text="callr  CallrTarget" target0=001A
+insn addr=0018 next=0019 flow=return text="ret    "
+insn addr=001A next=001B flow=return text="ret    "
+insn addr=001B next=001F flow=jump text="jpf    FarTarget" target0=0020
+insn addr=0020 next=0021 flow=return text="ret    "
+insn addr=0021 next=0025 flow=call text="callf  FarSub" target0=0030
+insn addr=0025 next=0026 flow=normal text="nop    "
+insn addr=0026 next=002C flow=cond_jump text="btjt   $002A, #0, BitTarget" target0=002D
+insn addr=002C next=002D flow=return text="ret    "
+insn addr=002D next=002E flow=return text="ret    "
+insn addr=0030 next=0031 flow=return text="ret    "
+edge from=0000 to=0001 kind=fallthrough
+edge from=0001 to=0003 kind=fallthrough
+edge from=0001 to=0006 kind=branch
+edge from=0003 to=0006 kind=fallthrough
+edge from=0003 to=000A kind=call
+edge from=0006 to=0007 kind=resume
+edge from=0007 to=0012 kind=branch
+edge from=000A kind=return
+edge from=000B kind=return
+edge from=000C kind=indirect
+edge from=000C to=000D kind=fallthrough
+edge from=000D kind=return
+edge from=000E kind=indirect
+edge from=000F to=0011 kind=resume
+edge from=0011 kind=return
+edge from=0012 to=0018 kind=branch
+edge from=0015 kind=stop
+edge from=0016 to=0018 kind=fallthrough
+edge from=0016 to=001A kind=call
+edge from=0018 kind=return
+edge from=001A kind=return
+edge from=001B to=0020 kind=branch
+edge from=0020 kind=return
+edge from=0021 to=0025 kind=fallthrough
+edge from=0021 to=0030 kind=call
+edge from=0025 to=0026 kind=fallthrough
+edge from=0026 to=002C kind=fallthrough
+edge from=0026 to=002D kind=branch
+edge from=002C kind=return
+edge from=002D kind=return
+edge from=0030 kind=return
