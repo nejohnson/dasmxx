@@ -76,6 +76,7 @@ Command list file
 The command list file contains a list of memory segment definitions, used during
  processing to tell the disassembler what the memory at a particular address
  is for (unknown, code, or some sort of data).
+Blank lines and lines whose first non-whitespace character is `#` are ignored.
 
 The commands are (where XXXX denotes hexadecimal address):
 

@@ -443,6 +443,48 @@ static int emitaddr( ADDR addr, struct params *params )
         return 0;
 }
 
+static void emit_byte_data( FILE *f, ADDR *addr, ADDR end, struct params *params )
+{
+    unsigned char buf[BYTES_PER_LINE];
+    int p, i = 0;
+
+    while ( *addr < end )
+    {
+        if ( i == 0 )
+        {
+            emitaddr( *addr, params );
+            if ( params->want_asm_out )
+                printf( params->want_stripped ? "   " : "\n   " );
+            printf( "DB      " );
+        }
+
+        buf[i] = (unsigned char)next( f, addr );
+        printf( "%02X", (unsigned char)buf[i] );
+        i++;
+
+        if ( i == BYTES_PER_LINE || *addr >= end )
+        {
+            for ( p = i; p < BYTES_PER_LINE; p++ )
+                printf( "    " );
+
+            printf( "      " );
+            if ( params->want_asm_out )
+                printf( "; " );
+
+            for ( p = 0; p < i; p++ )
+                if ( isprint( (unsigned char)buf[p] ) )
+                    putchar( buf[p] );
+                else
+                    putchar( '.' );
+
+            newline();
+            i = 0;
+        }
+        else
+            printf( ", " );
+    }
+}
+
 /***********************************************************
  *
  * FUNCTION
@@ -1137,16 +1179,40 @@ static void run_disasm( struct params params )
             *            c - CODE
             *****************************************************************/
             int column, i;
+            int data_boundary;
+            int guarded_decode;
             ADDR lineaddr;
+            ADDR nextaddr;
             char insnbuf[256];
 
             printcomment( blockcmt, addr, 0 );
 
-            column = emitaddr( addr, &params );
             lineaddr = addr;
             insn_byte_idx = 0;
 
-            addr = dasm_insn( f, insnbuf, addr );
+            data_boundary = clist->mode != CODE && clist->mode != PROCS && clist->mode != END;
+            guarded_decode = data_boundary && clist->addr - lineaddr < dasm_max_insn_length;
+            if ( guarded_decode )
+                xref_set_suppressed( 1 );
+
+            nextaddr = dasm_insn( f, insnbuf, addr );
+            if ( guarded_decode )
+                xref_set_suppressed( 0 );
+
+            if ( data_boundary && nextaddr > clist->addr )
+            {
+                emit_byte_data( f, &addr, clist->addr, &params );
+                continue;
+            }
+
+            if ( guarded_decode )
+            {
+                insn_byte_idx = 0;
+                nextaddr = dasm_insn( f, insnbuf, addr );
+            }
+
+            addr = nextaddr;
+            column = emitaddr( lineaddr, &params );
 
             if ( !params.want_stripped )
             {

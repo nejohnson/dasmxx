@@ -6,3 +6,5 @@ F8 00   # 0006: word -> F800
 1F C0   # 0008: TFR invalid-source-register,D
 1E 0D   # 000A: EXG D,invalid-destination-register
 8E F8 1A # 000C: LDX #$F81A
+FF 1E   # 000F: incomplete STU extended before vector boundary
+FE 63   # 0011: vector -> FE63
