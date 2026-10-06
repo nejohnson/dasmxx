@@ -1,0 +1,280 @@
+   dasm1802 -- RCA CDP1802 Disassembler --
+-----------------------------------------------------------------
+
+;   Processing "test.bin" (295 bytes)
+;   Disassembly start address: 0x0000
+;   String terminator: 0x00
+
+Start:
+   IDL
+Block_0X:
+   LDN      1
+   LDN      2
+   LDN      3
+   LDN      4
+   LDN      5
+   LDN      6
+   LDN      7
+   LDN      8
+   LDN      9
+   LDN      A
+   LDN      B
+   LDN      C
+   LDN      D
+   LDN      E
+   LDN      F
+Block_1X:
+   INC      0
+   INC      1
+   INC      2
+   INC      3
+   INC      4
+   INC      5
+   INC      6
+   INC      7
+   INC      8
+   INC      9
+   INC      A
+   INC      B
+   INC      C
+   INC      D
+   INC      E
+   INC      F
+Block_2X:
+   DEC      0
+   DEC      1
+   DEC      2
+   DEC      3
+   DEC      4
+   DEC      5
+   DEC      6
+   DEC      7
+   DEC      8
+   DEC      9
+   DEC      A
+   DEC      B
+   DEC      C
+   DEC      D
+   DEC      E
+   DEC      F
+Block_3X:
+   BR       Start
+   BQ       Block_1X
+   BZ       Block_2X
+   BDF      Block_3X
+   B1       Block_4X
+   B2       Block_5X
+   B3       Block_6X
+   B4       Block_7X
+   SKP
+   BNQ      Block_8X
+   BNZ      Block_9X
+   BNF      Block_AX
+   BN1      Block_BX
+   BN2      Block_CX
+   BN3      Block_DX
+   BN4      Start
+Block_4X:
+   LDA      0
+   LDA      1
+   LDA      2
+   LDA      3
+   LDA      4
+   LDA      5
+   LDA      6
+   LDA      7
+   LDA      8
+   LDA      9
+   LDA      A
+   LDA      B
+   LDA      C
+   LDA      D
+   LDA      E
+   LDA      F
+Block_5X:
+   STR      0
+   STR      1
+   STR      2
+   STR      3
+   STR      4
+   STR      5
+   STR      6
+   STR      7
+   STR      8
+   STR      9
+   STR      A
+   STR      B
+   STR      C
+   STR      D
+   STR      E
+   STR      F
+Block_6X:
+   IRX
+   OUT      1
+   OUT      2
+   OUT      3
+   OUT      4
+   OUT      5
+   OUT      6
+   OUT      7
+   ?????
+   INP      1
+   INP      2
+   INP      3
+   INP      4
+   INP      5
+   INP      6
+   INP      7
+Block_7X:
+   RET
+   DIS
+   LDXA
+   STXD
+   ADC
+   SDB
+   SHRC
+   SMB
+   SAV
+   MARK
+   REQ
+   SEQ
+   ADCI     $01
+   SDBI     $11
+   SHLC
+   SMBI     $FF
+Block_8X:
+   GLO      0
+   GLO      1
+   GLO      2
+   GLO      3
+   GLO      4
+   GLO      5
+   GLO      6
+   GLO      7
+   GLO      8
+   GLO      9
+   GLO      A
+   GLO      B
+   GLO      C
+   GLO      D
+   GLO      E
+   GLO      F
+Block_9X:
+   GHI      0
+   GHI      1
+   GHI      2
+   GHI      3
+   GHI      4
+   GHI      5
+   GHI      6
+   GHI      7
+   GHI      8
+   GHI      9
+   GHI      A
+   GHI      B
+   GHI      C
+   GHI      D
+   GHI      E
+   GHI      F
+Block_AX:
+   PLO      0
+   PLO      1
+   PLO      2
+   PLO      3
+   PLO      4
+   PLO      5
+   PLO      6
+   PLO      7
+   PLO      8
+   PLO      9
+   PLO      A
+   PLO      B
+   PLO      C
+   PLO      D
+   PLO      E
+   PLO      F
+Block_BX:
+   PHI      0
+   PHI      1
+   PHI      2
+   PHI      3
+   PHI      4
+   PHI      5
+   PHI      6
+   PHI      7
+   PHI      8
+   PHI      9
+   PHI      A
+   PHI      B
+   PHI      C
+   PHI      D
+   PHI      E
+   PHI      F
+Block_CX:
+   LBR      $D200
+   LBQ      $F000
+   LBZ      Block_0X
+   LBDF     $1001
+   NOP
+   LSNQ
+   LSNZ
+   LSNF
+   LSKP
+   LBNQ     Start
+   LBNZ     $1000
+   LBNF     $2000
+   LSIE
+   LSQ
+   LSZ
+   LSDF
+Block_DX:
+   SEP      0
+   SEP      1
+   SEP      2
+   SEP      3
+   SEP      4
+   SEP      5
+   SEP      6
+   SEP      7
+   SEP      8
+   SEP      9
+   SEP      A
+   SEP      B
+   SEP      C
+   SEP      D
+   SEP      E
+   SEP      F
+Block_EX:
+   SEX      0
+   SEX      1
+   SEX      2
+   SEX      3
+   SEX      4
+   SEX      5
+   SEX      6
+   SEX      7
+   SEX      8
+   SEX      9
+   SEX      A
+   SEX      B
+   SEX      C
+   SEX      D
+   SEX      E
+   SEX      F
+Block_FX:
+   LDX
+   OR
+   AND
+   XOR
+   ADD
+   SD
+   SHR
+   SM
+   LDI      $01
+   ORI      $11
+   ANI      $10
+   XRI      $FF
+   ADI      $7F
+   SDI      $AA
+   SHL
+   SMI      $55
