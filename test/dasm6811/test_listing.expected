@@ -1,0 +1,126 @@
+   dasm6811 -- Motorola 68HC11 Disassembler --
+-----------------------------------------------------------------
+
+;   Processing "test.bin" (255 bytes)
+;   Disassembly start address: 0x0000
+;   String terminator: 0x00
+
+Start:
+    0000:    00                test
+    0001:    01                nop
+    0002:    02                idiv
+    0003:    03                fdiv
+    0004:    04                lsrd
+    0005:    05                asld
+    0006:    06                tap
+    0007:    07                tpa
+    0008:    08                inx
+    0009:    09                dex
+    000A:    0A                clv
+    000B:    0B                sev
+    000C:    0C                clc
+    000D:    0D                sec
+    000E:    0E                cli
+    000F:    0F                sei
+    0010:    10                sba
+    0011:    11                cba
+    0012:    12 10 80 02       brset   $10,#$80,$0018
+    0016:    13 11 40 FC       brclr   $11,#$40,$0016
+    001A:    14 12 20          bset    $12,#$20
+    001D:    15 13 10          bclr    $13,#$10
+    0020:    16                tab
+    0021:    17                tba
+    0022:    19                daa
+    0023:    1A 83 12 34       cpd     #$1234
+    0027:    1A 93 10          cpd     $10
+    002A:    1A A3 20          cpd     $20,x
+    002D:    1A B3 12 34       cpd     TestAddr
+    0031:    1B                aba
+    0032:    1C 21 01          bset    $21,x,#$01
+    0035:    1D 22 02          bclr    $22,x,#$02
+    0038:    1E 23 04 02       brset   $23,x,#$04,$003E
+    003C:    1F 24 08 FC       brclr   $24,x,#$08,$003C
+    0040:    20 00             bra     $0042
+    0042:    21 00             brn     $0044
+    0044:    22 00             bhi     $0046
+    0046:    23 00             bls     $0048
+    0048:    24 00             bcc     $004A
+    004A:    25 00             bcs     $004C
+    004C:    26 00             bne     $004E
+    004E:    27 00             beq     $0050
+    0050:    28 00             bvc     $0052
+    0052:    29 00             bvs     $0054
+    0054:    2A 00             bpl     $0056
+    0056:    2B 00             bmi     $0058
+    0058:    2C 00             bge     $005A
+    005A:    2D 00             blt     $005C
+    005C:    2E 00             bgt     $005E
+    005E:    2F 00             ble     $0060
+    0060:    30                tsx
+    0061:    31                ins
+    0062:    32                pula
+    0063:    33                pulb
+    0064:    34                des
+    0065:    35                txs
+    0066:    36                psha
+    0067:    37                pshb
+    0068:    38                pulx
+    0069:    39                rts
+    006A:    3A                abx
+    006B:    3B                rti
+    006C:    3C                pshx
+    006D:    3D                mul
+    006E:    3E                wai
+    006F:    3F                swi
+    0070:    8D 00             bsr     $0072
+    0072:    8E 12 34          lds     #$1234
+    0075:    8F                xgdx
+    0076:    9D 10             jsr     $10
+    0078:    A6 20             ldaa    $20,x
+    007A:    A7 21             staa    $21,x
+    007C:    AD 22             jsr     $22,x
+    007E:    83 12 34          subd    #$1234
+    0081:    93 10             subd    $10
+    0083:    A3 20             subd    $20,x
+    0085:    B3 12 34          subd    TestAddr
+    0088:    C3 12 34          addd    #$1234
+    008B:    D3 10             addd    $10
+    008D:    E3 20             addd    $20,x
+    008F:    F3 12 34          addd    TestAddr
+    0092:    CC 12 34          ldd     #$1234
+    0095:    CD A3 20          cpd     $20,y
+    0098:    CF                stop
+    0099:    DC 10             ldd     $10
+    009B:    DD 11             std     $11
+    009D:    EC 20             ldd     $20,x
+    009F:    ED 21             std     $21,x
+    00A1:    FC 12 34          ldd     TestAddr
+    00A4:    FD 12 34          std     TestAddr
+    00A7:    18 08             iny
+    00A9:    18 09             dey
+    00AB:    18 1C 20 01       bset    $20,y,#$01
+    00AF:    18 1D 21 02       bclr    $21,y,#$02
+    00B3:    18 1E 22 04 02    brset   $22,y,#$04,$00BA
+    00B8:    18 1F 23 08 FC    brclr   $23,y,#$08,$00B9
+    00BD:    18 30             tsy
+    00BF:    18 35             tys
+    00C1:    18 3A             aby
+    00C3:    18 6E 20          jmp     $20,y
+    00C6:    18 8C 12 34       cpy     #$1234
+    00CA:    18 8F             xgdy
+    00CC:    18 9C 10          cpy     $10
+    00CF:    18 A6 20          ldaa    $20,y
+    00D2:    18 A7 21          staa    $21,y
+    00D5:    18 AC 22          cpy     $22,y
+    00D8:    18 AD 23          jsr     $23,y
+    00DB:    18 CE 12 34       ldy     #$1234
+    00DF:    18 DE 10          ldy     $10
+    00E2:    18 DF 11          sty     $11
+    00E5:    18 E6 20          ldab    $20,y
+    00E8:    18 E7 21          stab    $21,y
+    00EB:    18 EC 22          ldd     $22,y
+    00EE:    18 ED 23          std     $23,y
+    00F1:    18 EE 24          ldy     $24,y
+    00F4:    18 EF 25          sty     $25,y
+    00F7:    18 FE 12 34       ldy     TestAddr
+    00FB:    18 FF 12 34       sty     TestAddr
