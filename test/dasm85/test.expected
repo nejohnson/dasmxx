@@ -1,0 +1,293 @@
+   dasm85 -- Intel 8085 Disassembler --
+-----------------------------------------------------------------
+
+;   Processing "test.bin" (388 bytes)
+;   Disassembly start address: 0x0000
+;   String terminator: 0x00
+
+___CL_0001:
+   MOV      B, B
+   MOV      B, C
+   MOV      B, D
+   MOV      B, E
+   MOV      B, H
+   MOV      B, L
+   MOV      B, M
+   MOV      B, A
+   MOV      C, B
+   MOV      C, C
+   MOV      C, D
+   MOV      C, E
+   MOV      C, H
+   MOV      C, L
+   MOV      C, M
+   MOV      C, A
+   MOV      D, B
+   MOV      D, C
+   MOV      D, D
+   MOV      D, E
+   MOV      D, H
+   MOV      D, L
+   MOV      D, M
+   MOV      D, A
+   MOV      E, B
+   MOV      E, C
+   MOV      E, D
+   MOV      E, E
+   MOV      E, H
+   MOV      E, L
+   MOV      E, M
+   MOV      E, A
+   MOV      H, B
+   MOV      H, C
+   MOV      H, D
+   MOV      H, E
+   MOV      H, H
+   MOV      H, L
+   MOV      H, M
+   MOV      H, A
+   MOV      L, B
+   MOV      L, C
+   MOV      L, D
+   MOV      L, E
+   MOV      L, H
+   MOV      L, L
+   MOV      L, M
+   MOV      L, A
+   MOV      A, B
+   MOV      A, C
+   MOV      A, D
+   MOV      A, E
+   MOV      A, H
+   MOV      A, L
+   MOV      A, M
+   MOV      A, A
+   MOV      M, B
+   MOV      M, C
+   MOV      M, D
+   MOV      M, E
+   MOV      M, H
+   MOV      M, L
+   MOV      M, A
+   MVI      B, 0BBH
+   MVI      C, 0CCH
+   MVI      D, 0DDH
+   MVI      E, 0EEH
+   MVI      H, 010H
+   MVI      L, 001H
+   MVI      A, 0AAH
+   MVI      M, 011H
+   LXI      B, 01234H
+   LXI      D, 01234H
+   LXI      H, 01234H
+   LXI      SP, 01234H
+   LDAX     B
+   LDAX     D
+   STAX     B
+   STAX     D
+   LDA      (01234H)
+   STA      (01234H)
+   LHLD     (01234H)
+   SHLD     (01234H)
+   XCHG
+   ADD      B
+   ADD      C
+   ADD      D
+   ADD      E
+   ADD      H
+   ADD      L
+   ADD      M
+   ADD      A
+   ADC      B
+   ADC      C
+   ADC      D
+   ADC      E
+   ADC      H
+   ADC      L
+   ADC      M
+   ADC      A
+   SUB      B
+   SUB      C
+   SUB      D
+   SUB      E
+   SUB      H
+   SUB      L
+   SUB      M
+   SUB      A
+   SBB      B
+   SBB      C
+   SBB      D
+   SBB      E
+   SBB      H
+   SBB      L
+   SBB      M
+   SBB      A
+   ADI      000H
+   ADI      0AAH
+   ADI      0FFH
+   ACI      000H
+   ACI      0AAH
+   ACI      0FFH
+   SUI      000H
+   SUI      0AAH
+   SUI      0FFH
+   SBI      000H
+   SBI      0AAH
+   SBI      0FFH
+   DAD      B
+   DAD      D
+   DAD      H
+   DAD      SP
+   INR      B
+   INR      C
+   INR      D
+   INR      E
+   INR      H
+   INR      L
+   INR      M
+   INR      A
+   DCR      B
+   DCR      C
+   DCR      D
+   DCR      E
+   DCR      H
+   DCR      L
+   DCR      M
+   DCR      A
+   INX      B
+   INX      D
+   INX      H
+   INX      SP
+   DCX      B
+   DCX      D
+   DCX      H
+   DCX      SP
+   DAA
+   CMA
+   CMC
+   STC
+   ANA      B
+   ANA      C
+   ANA      D
+   ANA      E
+   ANA      H
+   ANA      L
+   ANA      M
+   ANA      A
+   ORA      B
+   ORA      C
+   ORA      D
+   ORA      E
+   ORA      H
+   ORA      L
+   ORA      M
+   ORA      A
+   XRA      B
+   XRA      C
+   XRA      D
+   XRA      E
+   XRA      H
+   XRA      L
+   XRA      M
+   XRA      A
+   CPA      B
+   CPA      C
+   CPA      D
+   CPA      E
+   CPA      H
+   CPA      L
+   CPA      M
+   CPA      A
+   RLC
+   RRC
+   RAL
+   RAR
+   ANI      000H
+   ANI      0AAH
+   ANI      0FFH
+   ORI      000H
+   ORI      0AAH
+   ORI      0FFH
+   XRI      000H
+   XRI      0AAH
+   XRI      0FFH
+   CPI      000H
+   CPI      0AAH
+   CPI      0FFH
+   JMP      JumpDest1
+   JNZ      JumpDest2
+   JZ       JumpDest2
+   JNC      JumpDest2
+   JC       JumpDest2
+   JPO      JumpDest2
+   JPE      JumpDest2
+   JP       JumpDest2
+   JM       JumpDest2
+   CALL     JumpDest1
+   CNZ      JumpDest2
+   CZ       JumpDest2
+   CNC      JumpDest2
+   CC       JumpDest2
+   CPO      JumpDest2
+   CPE      JumpDest2
+   CP       JumpDest2
+   CM       JumpDest2
+   RET
+   RNZ
+   RZ
+   RNC
+   RC
+   RPO
+   RPE
+   RP
+   RM
+   PCHL
+   IN       (___CL_0001)
+   IN       (07FH)
+   IN       (080H)
+   IN       (0FFH)
+   OUT      (___CL_0001)
+   OUT      (07FH)
+   OUT      (080H)
+   OUT      (0FFH)
+   PUSH     B
+   PUSH     D
+   PUSH     H
+   PUSH     PSW
+   POP      B
+   POP      D
+   POP      H
+   POP      PSW
+   XTHL
+   SPHL
+   EI
+   DI
+   RIM
+   SIM
+   NOP
+   HLT
+   RST      000H
+   RST      001H
+   RST      002H
+   RST      003H
+   RST      004H
+   RST      005H
+   RST      006H
+   RST      007H
+UndocInsn:
+   DSUB     B
+   ARHL
+   RDEL
+   LDHI     000H
+   LDHI     07FH
+   LDHI     080H
+   LDHI     0FFH
+   LDSI     000H
+   LDSI     07FH
+   LDSI     080H
+   LDSI     0FFH
+   RSTV
+   SHLX
+   JNK      JumpDest3
+   LHLX
+   JK       JumpDest3
