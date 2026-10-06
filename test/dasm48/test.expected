@@ -1,0 +1,294 @@
+   dasm48 -- Intel MCS-48 (8035, 8048, 8049) Disassembler --
+-----------------------------------------------------------------
+
+;   Processing "test.bin" (378 bytes)
+;   Disassembly start address: 0x0000
+;   String terminator: 0x00
+
+Start:
+   ADD      A, R0
+   ADD      A, R1
+   ADD      A, R2
+   ADD      A, R3
+   ADD      A, R4
+   ADD      A, R5
+   ADD      A, R6
+   ADD      A, R7
+   ADD      A, @R0
+   ADD      A, @R1
+   ADD      A, #000H
+   ADD      A, #07FH
+   ADD      A, #080H
+   ADD      A, #0FFH
+   ADDC     A, R0
+   ADDC     A, R1
+   ADDC     A, R2
+   ADDC     A, R3
+   ADDC     A, R4
+   ADDC     A, R5
+   ADDC     A, R6
+   ADDC     A, R7
+   ADDC     A, @R0
+   ADDC     A, @R1
+   ADDC     A, #000H
+   ADDC     A, #07FH
+   ADDC     A, #080H
+   ADDC     A, #0FFH
+   DA       A
+   DEC      A
+   DEC      R0
+   DEC      R1
+   DEC      R2
+   DEC      R3
+   DEC      R4
+   DEC      R5
+   DEC      R6
+   DEC      R7
+   INC      A
+   INC      R0
+   INC      R1
+   INC      R2
+   INC      R3
+   INC      R4
+   INC      R5
+   INC      R6
+   INC      R7
+   INC      @R0
+   INC      @R1
+   SWAP     A
+   ANL      A, R0
+   ANL      A, R1
+   ANL      A, R2
+   ANL      A, R3
+   ANL      A, R4
+   ANL      A, R5
+JumpDest2:
+   ANL      A, R6
+   ANL      A, R7
+   ANL      A, @R0
+   ANL      A, @R1
+   ANL      A, #000H
+   ANL      A, #07FH
+   ANL      A, #080H
+   ANL      A, #0FFH
+   ANL      BUS, #000H
+   ANL      BUS, #07FH
+   ANL      BUS, #080H
+   ANL      BUS, #0FFH
+   ANL      P1, #000H
+   ANL      P1, #0FFH
+   ANL      P2, #07FH
+   ANL      P2, #080H
+   ANLD     P4, A
+   ANLD     P5, A
+   ANLD     P6, A
+   ANLD     P7, A
+   ORL      A, R0
+   ORL      A, R1
+   ORL      A, R2
+   ORL      A, R3
+   ORL      A, R4
+   ORL      A, R5
+   ORL      A, R6
+   ORL      A, R7
+   ORL      A, @R0
+   ORL      A, @R1
+   ORL      A, #000H
+   ORL      A, #07FH
+   ORL      A, #080H
+   ORL      A, #0FFH
+   ORL      BUS, #000H
+   ORL      BUS, #03FH
+   ORL      BUS, #088H
+   ORL      BUS, #0FFH
+   ORL      P1, #000H
+   ORL      P1, #0FFH
+   ORL      P2, #011H
+JumpDest1:
+   ORL      P2, #0EEH
+   ORLD     P4, A
+   ORLD     P5, A
+   ORLD     P6, A
+   ORLD     P7, A
+   XRL      A, R0
+   XRL      A, R1
+   XRL      A, R2
+   XRL      A, R3
+   XRL      A, R4
+   XRL      A, R5
+   XRL      A, R6
+   XRL      A, R7
+   XRL      A, @R0
+   XRL      A, @R1
+   XRL      A, #000H
+   XRL      A, #07FH
+   XRL      A, #080H
+   XRL      A, #0FFH
+   RL       A
+   RLC      A
+   RR       A
+   RRC      A
+   CALL     00011H
+   CALL     00133H
+   CALL     00255H
+   CALL     00377H
+   CALL     00499H
+   CALL     005BBH
+   CALL     SubRtn1
+   CALL     007FFH
+   RET
+   RETR
+   DJNZ     R0, JumpDest1
+   DJNZ     R1, JumpDest1
+   DJNZ     R2, JumpDest1
+   DJNZ     R3, JumpDest1
+   DJNZ     R4, JumpDest1
+   DJNZ     R5, JumpDest1
+   DJNZ     R6, JumpDest1
+   DJNZ     R7, JumpDest1
+   JB0      JumpDest2
+   JB1      JumpDest2
+   JB2      JumpDest2
+   JB3      JumpDest2
+   JB4      JumpDest2
+   JB5      JumpDest2
+   JB6      JumpDest2
+   JB7      JumpDest2
+   JC       JumpDest2
+   JF0      JumpDest2
+   JF1      JumpDest2
+   JMP      Start
+   JMP      00122H
+   JMP      00244H
+   JMP      00366H
+   JMP      00488H
+   JMP      005AAH
+   JMP      SubRtn1
+   JMP      007EEH
+   JMPP     @A
+   JNC      JumpDest2
+   JNI      JumpDest2
+   JNT0     JumpDest2
+   JNT1     JumpDest2
+   JNZ      JumpDest2
+   JTF      JumpDest2
+   JT0      JumpDest2
+   JT1      JumpDest2
+   JZ       JumpDest2
+   CLR      A
+   CLR      C
+   CLR      F1
+   CLR      F0
+   CPL      A
+   CPL      C
+   CPL      F0
+   CPL      F1
+   DIS      I
+   DIS      TCNTI
+   EN       I
+   EN       TCNTI
+   ENT0     CLK
+   IN       A, P1
+   IN       A, P2
+   INS      A, BUS
+   OUTL     BUS, A
+   OUTL     P1, A
+   OUTL     P2, A
+   MOV      A, #000H
+   MOV      A, #07FH
+   MOV      A, #080H
+   MOV      A, #0FFH
+   MOV      A, PSW
+   MOV      A, R0
+   MOV      A, R1
+   MOV      A, R2
+   MOV      A, R3
+   MOV      A, R4
+   MOV      A, R5
+   MOV      A, R6
+   MOV      A, R7
+   MOV      A, @R0
+   MOV      A, @R1
+   MOV      A, T
+   MOV      PSW, A
+   MOV      R0, A
+   MOV      R1, A
+   MOV      R2, A
+   MOV      R3, A
+   MOV      R4, A
+   MOV      R5, A
+   MOV      R6, A
+   MOV      R7, A
+   MOV      R0, #000H
+   MOV      R1, #011H
+   MOV      R2, #022H
+   MOV      R3, #033H
+   MOV      R4, #040H
+   MOV      R5, #005H
+   MOV      R6, #066H
+   MOV      R7, #077H
+   MOV      @R0, A
+   MOV      @R1, A
+   MOV      @R0, #0A5H
+   MOV      @R1, #05AH
+   MOV      T, A
+   MOVD     A, P4
+   MOVD     A, P5
+   MOVD     A, P6
+   MOVD     A, P7
+   MOVD     P4, A
+   MOVD     P5, A
+   MOVD     P6, A
+   MOVD     P7, A
+   MOVP     A, @A
+   MOVP3    A, @A
+   MOVX     A, @R0
+   MOVX     A, @R1
+   MOVX     @R0, A
+   MOVX     @R1, A
+   XCH      A, R0
+   XCH      A, R1
+   XCH      A, R2
+   XCH      A, R3
+   XCH      A, R4
+   XCH      A, R5
+   XCH      A, R6
+   XCH      A, R7
+   XCH      A, @R0
+   XCH      A, @R1
+   XCHD     A, @R0
+   XCHD     A, @R1
+   NOP
+   SEL      MB0
+   SEL      MB1
+   SEL      RB0
+   SEL      RB1
+   STOP     TCNT
+   STRT     CNT
+   STRT     T
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???

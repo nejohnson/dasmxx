@@ -1,0 +1,13 @@
+   dasm48 -- Intel MCS-48 (8035, 8048, 8049) Disassembler --
+-----------------------------------------------------------------
+
+;   Processing "test_page.bin" (10 bytes)
+;   Disassembly start address: 0x0FF7
+;   String terminator: 0x00
+
+PageTest:
+   JMP      PageJump
+   JC       PageJC
+   CALL     PageCall
+   JB0      PageJB0
+   DJNZ     R0, PageDJNZ
