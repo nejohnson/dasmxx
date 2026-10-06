@@ -1,0 +1,11 @@
+   dasm7000 -- TI TMS7000 Disassembler --
+-----------------------------------------------------------------
+
+;   Processing "test.bin" (9 bytes)
+;   Disassembly start address: 0x0000
+;   String terminator: 0x00
+
+___CL_0001:
+   NOP
+   BTJZP    %$08, P$10, $000D
+   BTJOP    %$01, P$04, $000D

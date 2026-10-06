@@ -1,0 +1,12 @@
+   dasm7000 -- TI TMS7000 Disassembler --
+-----------------------------------------------------------------
+
+;   Processing "trap.bin" (4 bytes)
+;   Disassembly start address: 0x0000
+;   String terminator: 0x00
+
+___CL_0001:
+   TRAP     0
+   TRAP     1
+   TRAP     22
+   TRAP     23
