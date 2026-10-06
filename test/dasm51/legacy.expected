@@ -1,0 +1,4570 @@
+   dasm51 -- Intel 8051 Disassembler --
+-----------------------------------------------------------------
+
+;   Processing "test.bin" (8121 bytes)
+;   Disassembly start address: 0x0000
+;   String terminator: 0x00
+
+___CL_0001:
+   LJMP     00860H
+   LJMP     02003H
+   MOV      082H, R6
+   MOV      083H, R7
+   RET
+   LJMP     0200BH
+   MOV      R6, 082H
+   MOV      R7, 083H
+   RET
+   LJMP     02013H
+   MOV      A, #02DH
+   AJMP     00076H
+   NOP
+   LJMP     0201BH
+   ACALL    00076H
+   AJMP     00074H
+   NOP
+   LJMP     02023H
+   ACALL    00016H
+   AJMP     00074H
+   NOP
+   LJMP     0202BH
+   AJMP     0016AH
+   AJMP     00076H
+   AJMP     0006AH
+   AJMP     00167H
+   AJMP     00179H
+   AJMP     00186H
+   AJMP     0008DH
+   AJMP     000D1H
+   AJMP     001BAH
+   AJMP     0019AH
+   LJMP     008F6H
+   LJMP     00B15H
+   AJMP     P0
+   LJMP     001A7H
+   LJMP     00A5EH
+   LJMP     00A64H
+   LJMP     00AA2H
+   LJMP     00822H
+   LJMP     0079FH
+   LJMP     007C1H
+   LJMP     007F8H
+   LJMP     009DDH
+   AJMP     0014DH
+   LJMP     007DFH
+   JNB      SCON.0, 0006AH
+   CLR      SCON.0
+   MOV      A, 099H
+   RET
+   ACALL    00074H
+   MOV      A, #020H
+   JNB      SCON.1, 00076H
+   CLR      SCON.1
+   MOV      099H, A
+   RET
+   ACALL    P0
+P0:
+   PUSH     ACC
+   MOV      A, #00DH
+   ACALL    00076H
+   MOV      A, #00AH
+TCON:
+   ACALL    00076H
+   POP      ACC
+   RET
+   CLR      PSW.5
+   ACALL    00062H
+   ACALL    0019AH
+   CJNE     A, #01BH, 00099H
+   SETB     C
+   CLR      A
+SCON:
+   RET
+   CJNE     A, #00DH, 000A1H
+   SETB     PSW.5
+   CLR      C
+   CLR      A
+P2:
+   RET
+   MOV      R2, A
+   ACALL    0014DH
+   JC       0008FH
+   XCH      A, R2
+   ACALL    00076H
+   ACALL    00062H
+   ACALL    0019AH
+   CJNE     A, #01BH, 000B2H
+P3:
+   SJMP     00096H
+   CJNE     A, #00DH, IP
+   MOV      A, R2
+   CLR      C
+   RET
+IP:
+   CJNE     A, #008H, 000BFH
+   ACALL    00076H
+   SJMP     0008FH
+   CJNE     A, #015H, 000C4H
+   SJMP     000BBH
+   MOV      R3, A
+   ACALL    0014DH
+   JC       000A9H
+   XCH      A, R3
+   ACALL    00076H
+   MOV      A, R2
+   SWAP     A
+   ORL      A, R3
+   CLR      C
+PSW:
+   RET
+   MOV      R2, #000H
+   MOV      R3, #000H
+   MOV      R4, #004H
+   CLR      PSW.5
+   ACALL    00062H
+   ACALL    0019AH
+   CJNE     A, #01BH, 000E7H
+ACC:
+   SETB     C
+   CLR      A
+   MOV      083H, A
+   MOV      082H, A
+   RET
+   CJNE     A, #008H, 000ECH
+   SJMP     000EFH
+   CJNE     A, #07FH, 000FBH
+   CJNE     R4, #004H, 000F4H
+   SJMP     000D9H
+   ACALL    00076H
+   ACALL    0013CH
+   INC      R4
+   SJMP     000D9H
+   CJNE     A, #00DH, 0010EH
+   MOV      083H, R3
+   MOV      082H, R2
+   CJNE     R4, #004H, 0010CH
+   CLR      A
+   MOV      083H, A
+   MOV      082H, A
+   SETB     PSW.5
+   CLR      C
+   RET
+   MOV      R5, A
+   ACALL    0014DH
+   JC       000D9H
+   XCH      A, R5
+   LCALL    00076H
+   MOV      A, R5
+   PUSH     ACC
+   ACALL    0012BH
+   POP      ACC
+   ADD      A, R2
+   MOV      R2, A
+   CLR      A
+   ADDC     A, R3
+   MOV      R3, A
+   DJNZ     R4, 000D9H
+   CLR      C
+   MOV      082H, R2
+   MOV      083H, R3
+   RET
+   MOV      A, R3
+   SWAP     A
+   ANL      A, #0F0H
+   MOV      R3, A
+   MOV      A, R2
+   SWAP     A
+   ANL      A, #00FH
+   ORL      A, R3
+   MOV      R3, A
+   MOV      A, R2
+   SWAP     A
+   ANL      A, #0F0H
+   MOV      R2, A
+   RET
+   MOV      A, R2
+   SWAP     A
+   ANL      A, #00FH
+   MOV      R2, A
+   MOV      A, R3
+   SWAP     A
+   ANL      A, #0F0H
+   ORL      A, R2
+   MOV      R2, A
+   MOV      A, R3
+   SWAP     A
+   ANL      A, #00FH
+   MOV      R3, A
+   RET
+   ADD      A, #0D0H
+   JNC      00165H
+   ADD      A, #0F6H
+   JC       00159H
+   ADD      A, #00AH
+   CLR      C
+   RET
+   ADD      A, #0F9H
+   JNC      00165H
+   ADD      A, #0FAH
+   JC       00165H
+   ADD      A, #010H
+   CLR      C
+   RET
+   SETB     C
+   RET
+   ACALL    00169H
+   SWAP     A
+   PUSH     ACC
+   ANL      A, #00FH
+   ADD      A, #090H
+   DA       A
+   ADDC     A, #040H
+   DA       A
+   ACALL    00076H
+   POP      ACC
+   RET
+   PUSH     ACC
+   MOV      A, 083H
+   ACALL    00167H
+   MOV      A, 082H
+   ACALL    00167H
+   POP      ACC
+   RET
+   PUSH     ACC
+   CLR      A
+   MOVC     A, @A+DPTR
+   INC      DPTR
+   JZ       00197H
+   MOV      C, ACC.7
+   ANL      A, #07FH
+   ACALL    00076H
+   JC       00197H
+   SJMP     00188H
+   POP      ACC
+   RET
+   CJNE     A, #061H, 0019DH
+   JC       001A6H
+   CJNE     A, #07BH, 001A2H
+   JNC      001A6H
+   ADD      A, #0E0H
+   RET
+   MOV      R0, #000H
+   PUSH     ACC
+   CLR      A
+   MOVC     A, @A+DPTR
+   JZ       001B7H
+   MOV      C, ACC.7
+   INC      R0
+   JC       001B7H
+   INC      DPTR
+   SJMP     001ABH
+   POP      ACC
+   RET
+   PUSH     ACC
+   CLR      C
+   JNB      SCON.0, 001C8H
+   MOV      A, 099H
+   CJNE     A, #01BH, 001C6H
+   SETB     C
+   CLR      SCON.0
+   POP      ACC
+   RET
+   MOV      DPTR, #00DB6H
+   ACALL    00045H
+   MOV      A, R7
+   ACALL    00167H
+   MOV      A, R6
+   ACALL    00167H
+   ACALL    00186H
+   ACALL    00062H
+   CJNE     A, #03AH, 001E1H
+   ACALL    002B8H
+   SJMP     001CBH
+   ACALL    0019AH
+   MOV      B, #0CBH
+   PUSH     B
+   MOV      B, #001H
+   PUSH     B
+   MOV      B, A
+   MOV      DPTR, #01000H
+   ACALL    007F8H
+   JNC      0021AH
+   MOV      082H, #004H
+   CLR      A
+   MOVC     A, @A+DPTR
+   CJNE     A, #0FEH, 00213H
+   INC      082H
+   CLR      A
+   MOVC     A, @A+DPTR
+   CJNE     A, B, 00213H
+   ACALL    00074H
+   MOV      082H, #020H
+   ACALL    00186H
+   ACALL    P0
+   MOV      082H, #040H
+   CLR      A
+   JMP      @A+DPTR
+   INC      083H
+   MOV      A, 083H
+   CJNE     A, #000H, 001F2H
+   MOV      A, B
+   CJNE     A, #03FH, 00226H
+   MOV      DPTR, #00F1EH
+   ACALL    00045H
+   AJMP     005C7H
+   CJNE     A, #04DH, 00230H
+   MOV      DPTR, #00F26H
+   ACALL    00045H
+   AJMP     004B8H
+   CJNE     A, #052H, 0023AH
+   MOV      DPTR, #00F2BH
+   ACALL    00045H
+   AJMP     0052FH
+   CJNE     A, #044H, 00244H
+   MOV      DPTR, #00F2FH
+   ACALL    00045H
+   AJMP     0029BH
+   CJNE     A, #055H, 0024EH
+   MOV      DPTR, #00F32H
+   ACALL    00045H
+   AJMP     0063CH
+   CJNE     A, #04EH, 00258H
+   MOV      DPTR, #00F35H
+   ACALL    00045H
+   AJMP     0072EH
+   CJNE     A, #04AH, 00262H
+   MOV      DPTR, #00F39H
+   ACALL    00045H
+   AJMP     0040DH
+   CJNE     A, #048H, 0026CH
+   MOV      DPTR, #00F3FH
+   ACALL    00045H
+   AJMP     00441H
+   CJNE     A, #045H, 00276H
+   MOV      DPTR, #00F4BH
+   ACALL    00045H
+   AJMP     00482H
+   CJNE     A, #043H, 00280H
+   MOV      DPTR, #00F50H
+   ACALL    00045H
+   AJMP     0070AH
+   CJNE     A, #05AH, 0028EH
+   MOV      A, #000H
+   JZ       00299H
+   MOV      DPTR, #00F54H
+   ACALL    00045H
+   AJMP     0073EH
+   CJNE     A, #049H, 00299H
+   MOV      DPTR, #00F45H
+   ACALL    00045H
+   LJMP     00764H
+   AJMP     P0
+   MOV      DPTR, #00E50H
+   ACALL    00045H
+   ACALL    00404H
+   ACALL    0006AH
+   CJNE     A, #01BH, 002A9H
+   SJMP     00321H
+   CJNE     A, #03AH, 002AEH
+   SJMP     002BEH
+   ACALL    0014DH
+   JC       002A2H
+   MOV      R1, #006H
+   ACALL    00333H
+   SJMP     002A2H
+   MOV      A, #05EH
+   ACALL    00076H
+   ACALL    00404H
+   MOV      R1, #000H
+   ACALL    00333H
+   MOV      R4, #000H
+   ACALL    00352H
+   MOV      R0, A
+   MOV      A, #02EH
+   ACALL    00076H
+   ACALL    00352H
+   MOV      083H, A
+   ACALL    00352H
+   MOV      082H, A
+   ACALL    00352H
+   CJNE     A, #001H, 002DAH
+   SJMP     00307H
+   JNZ      002FEH
+   MOV      A, R0
+   JZ       002F3H
+   ACALL    00352H
+   MOV      R2, A
+   MOV      R1, #001H
+   ACALL    00333H
+   MOV      A, R2
+   LCALL    00822H
+   CLR      A
+   ADDC     A, #002H
+   MOV      R1, A
+   ACALL    00333H
+   INC      DPTR
+   DJNZ     R0, 002DCH
+   ACALL    00352H
+   MOV      A, R4
+   JZ       002A2H
+   MOV      R1, #004H
+   ACALL    00333H
+   SJMP     002A2H
+   MOV      A, R0
+   JZ       002F3H
+   ACALL    00352H
+   DJNZ     R0, 00301H
+   SJMP     002F3H
+   MOV      A, R0
+   JZ       0030EH
+   ACALL    00352H
+   DJNZ     R0, 00301H
+   ACALL    00352H
+   MOV      A, R4
+   JNZ      002F8H
+   ACALL    0032AH
+   MOV      DPTR, #00E6FH
+   ACALL    00045H
+   JNB      SCON.0, 00397H
+   ACALL    0006AH
+   SJMP     00397H
+   ACALL    0032AH
+   MOV      DPTR, #00E67H
+   ACALL    00045H
+   SJMP     00397H
+   MOV      R0, #000H
+   MOV      R1, #000H
+   DJNZ     R1, 0032EH
+   DJNZ     R0, 0032CH
+   RET
+   MOV      A, R1
+   ANL      A, #007H
+   RL       A
+   ADD      A, #010H
+   MOV      R1, A
+   INC      @R1
+   MOV      A, @R1
+   JNZ      00340H
+   INC      R1
+   INC      @R1
+   RET
+   SETB     C
+   MOV      082H, @R1
+   INC      R1
+   MOV      083H, @R1
+   INC      R1
+   MOV      A, 082H
+   JNZ      00351H
+   MOV      A, 083H
+   JNZ      00351H
+   CLR      C
+   RET
+   ACALL    0006AH
+   ACALL    0019AH
+   CJNE     A, #01BH, 0035FH
+   POP      ACC
+   POP      ACC
+   SJMP     00321H
+   CJNE     A, #03AH, 0036CH
+   MOV      R1, #005H
+   ACALL    00333H
+   POP      ACC
+   POP      ACC
+   AJMP     002C2H
+   ACALL    0014DH
+   JNC      00376H
+   MOV      R1, #007H
+   ACALL    00333H
+   SJMP     00352H
+   MOV      R2, A
+   ACALL    0006AH
+   ACALL    0019AH
+   CJNE     A, #01BH, 00380H
+   SJMP     00359H
+   CJNE     A, #03AH, 00385H
+   SJMP     00362H
+   ACALL    0014DH
+   JNC      0038FH
+   MOV      R1, #007H
+   ACALL    00333H
+   SJMP     00377H
+   XCH      A, R2
+   SWAP     A
+   ORL      A, R2
+   MOV      R2, A
+   ADD      A, R4
+   MOV      R4, A
+   MOV      A, R2
+   RET
+   MOV      A, R6
+   PUSH     ACC
+   MOV      A, R7
+   PUSH     ACC
+   MOV      DPTR, #00E76H
+   ACALL    00045H
+   MOV      R1, #010H
+   MOV      R6, #07FH
+   MOV      R7, #00EH
+   ACALL    00400H
+   MOV      R6, #085H
+   MOV      R7, #00EH
+   ACALL    00400H
+   MOV      R6, #08AH
+   MOV      R7, #00EH
+   ACALL    00400H
+   MOV      R2, #005H
+   ACALL    00341H
+   JC       003C5H
+   DJNZ     R2, 003B8H
+   MOV      DPTR, #00EC6H
+   ACALL    00045H
+   SJMP     003EAH
+   MOV      DPTR, #00E95H
+   ACALL    00045H
+   MOV      R1, #016H
+   MOV      R6, #099H
+   MOV      R7, #00EH
+   ACALL    003F2H
+   MOV      R6, #0AAH
+   MOV      R7, #00EH
+   ACALL    003F2H
+   MOV      R6, #0B2H
+   MOV      R7, #00EH
+   ACALL    003F2H
+   MOV      R6, #0B8H
+   MOV      R7, #00EH
+   ACALL    003F2H
+   MOV      R6, #0BDH
+   MOV      R7, #00EH
+   ACALL    003F2H
+   POP      ACC
+   MOV      R7, A
+   POP      ACC
+   MOV      R6, A
+   AJMP     P0
+   ACALL    00341H
+   JNC      003FFH
+   ACALL    00074H
+   LCALL    00AA2H
+   ACALL    00006H
+   ACALL    00045H
+   RET
+   ACALL    00341H
+   SJMP     003F6H
+   MOV      R0, #010H
+   MOV      @R0, #000H
+   INC      R0
+   CJNE     R0, #020H, 00406H
+   RET
+   MOV      DPTR, #00DF8H
+   ACALL    00045H
+   ACALL    00006H
+   ACALL    00179H
+   MOV      DPTR, #00DC6H
+   ACALL    00045H
+   ACALL    000D1H
+   JB       PSW.5, 00426H
+   JNC      00424H
+   AJMP     00705H
+   ACALL    0000EH
+   ACALL    P0
+   MOV      DPTR, #00ED4H
+   ACALL    00045H
+   ACALL    00006H
+   CLR      A
+   MOV      PSW, A
+   MOV      B, A
+   MOV      R0, #007H
+   MOV      @R0, A
+   DJNZ     R0, 00436H
+   MOV      081H, #008H
+   PUSH     ACC
+   PUSH     ACC
+   JMP      @A+DPTR
+   MOV      R2, #010H
+   ACALL    0007EH
+   ACALL    00006H
+   ACALL    00179H
+   MOV      A, #03AH
+   ACALL    0001EH
+   MOV      R3, #010H
+   ACALL    00006H
+   CLR      A
+   MOVC     A, @A+DPTR
+   INC      DPTR
+   ACALL    00167H
+   ACALL    00074H
+   DJNZ     R3, 00451H
+   ACALL    00072H
+   MOV      R3, #010H
+   ACALL    00006H
+   CLR      A
+   MOVC     A, @A+DPTR
+   INC      DPTR
+   ANL      A, #07FH
+   CJNE     A, #07FH, 00469H
+   CLR      A
+   ADD      A, #0E0H
+   JC       0046EH
+   CLR      A
+   ADD      A, #020H
+   ACALL    00076H
+   DJNZ     R3, 00460H
+   ACALL    P0
+   ACALL    006C1H
+   ACALL    0000EH
+   ACALL    001BAH
+   JC       00480H
+   DJNZ     R2, 00445H
+   AJMP     P0
+   MOV      DPTR, #00E3AH
+   ACALL    00045H
+   ACALL    00006H
+   ACALL    00179H
+   MOV      A, #03AH
+   ACALL    0001EH
+   MOV      A, #028H
+   ACALL    00076H
+   ACALL    0000EH
+   CLR      A
+   MOVC     A, @A+DPTR
+   ACALL    00167H
+   MOV      DPTR, #00E13H
+   ACALL    00045H
+   ACALL    0008DH
+   JB       PSW.5, 004B3H
+   JC       004B3H
+   ACALL    00006H
+   LCALL    00822H
+   ACALL    P0
+   ACALL    00006H
+   INC      DPTR
+   ACALL    0000EH
+   AJMP     00489H
+   MOV      DPTR, #00E45H
+   AJMP     00045H
+   MOV      DPTR, #00E02H
+   ACALL    00045H
+   MOV      R0, #015H
+   ACALL    00074H
+   DJNZ     R0, 004BFH
+   ACALL    00045H
+   MOV      083H, #010H
+   ACALL    007F8H
+   JC       004CEH
+   AJMP     P0
+   ACALL    00072H
+   MOV      082H, #020H
+   ACALL    00186H
+   MOV      082H, #020H
+   ACALL    001A7H
+   MOV      A, #021H
+   CLR      C
+   SUBB     A, R0
+   MOV      R0, A
+   MOV      A, #020H
+   ACALL    00076H
+   DJNZ     R0, 004E1H
+   MOV      082H, #000H
+   ACALL    00179H
+   MOV      R0, #006H
+   MOV      A, #020H
+   ACALL    00076H
+   DJNZ     R0, 004EEH
+   MOV      082H, #004H
+   CLR      A
+   MOVC     A, @A+DPTR
+   MOV      R2, 083H
+   CJNE     A, #0FEH, 00501H
+   MOV      DPTR, #00F0CH
+   SJMP     00519H
+   CJNE     A, #0FDH, 00509H
+   MOV      DPTR, #00F13H
+   SJMP     00519H
+   CJNE     A, #023H, 00511H
+   MOV      DPTR, #00F10H
+   SJMP     00519H
+   CJNE     A, #0F9H, 00516H
+   SJMP     00504H
+   MOV      DPTR, #00F1AH
+   ACALL    00045H
+   MOV      083H, R2
+   ACALL    P0
+   MOV      A, #0FFH
+   CJNE     A, 083H, 00526H
+   AJMP     004CCH
+   INC      083H
+   MOV      A, 083H
+   CJNE     A, #000H, 004C8H
+   AJMP     004CCH
+   ACALL    0007EH
+   MOV      R2, #0FFH
+   MOV      DPTR, #01000H
+   DEC      083H
+   INC      083H
+   MOV      A, 083H
+   CJNE     A, #000H, 00541H
+   SJMP     00562H
+   ACALL    007F8H
+   JNC      00562H
+   MOV      082H, #004H
+   CLR      A
+   MOVC     A, @A+DPTR
+   ORL      A, #003H
+   CPL      A
+   JZ       00538H
+   ACALL    00072H
+   INC      R2
+   MOV      A, #041H
+   ADD      A, R2
+   ACALL    0001EH
+   ACALL    00026H
+   MOV      082H, #020H
+   ACALL    00186H
+   ACALL    P0
+   AJMP     00538H
+   CJNE     R2, #0FFH, 0056AH
+   MOV      DPTR, #00DCFH
+   AJMP     00045H
+   MOV      DPTR, #00DC1H
+   ACALL    00045H
+   MOV      A, #041H
+   ACALL    00076H
+   ACALL    00016H
+   MOV      A, #041H
+   ADD      A, R2
+   ACALL    00076H
+   MOV      DPTR, #00DC6H
+   ACALL    00045H
+   ACALL    00062H
+   CJNE     A, #01BH, 00586H
+   AJMP     P0
+   MOV      R3, A
+   MOV      A, #01FH
+   CLR      C
+   SUBB     A, R2
+   MOV      A, R3
+   JC       00590H
+   ACALL    0019AH
+   ACALL    00076H
+   MOV      R3, A
+   ACALL    P0
+   MOV      A, R3
+   ADD      A, #0BFH
+   JNC      0056AH
+   MOV      R3, A
+   MOV      A, R2
+   CLR      C
+   SUBB     A, R3
+   JC       0056AH
+   INC      R3
+   MOV      DPTR, #01000H
+   DEC      083H
+   INC      083H
+   MOV      A, 083H
+   CJNE     A, #000H, 005AFH
+   SJMP     005C6H
+   ACALL    007F8H
+   JNC      005C6H
+   MOV      082H, #004H
+   CLR      A
+   MOVC     A, @A+DPTR
+   ORL      A, #003H
+   CPL      A
+   JZ       005A6H
+   DJNZ     R3, 005A6H
+   ACALL    P0
+   MOV      082H, #040H
+   AJMP     0042FH
+   RET
+   MOV      DPTR, #00EF4H
+   ACALL    00045H
+   MOV      R4, #03FH
+   MOV      DPTR, #00F21H
+   ACALL    00631H
+   MOV      R4, #04DH
+   ACALL    00631H
+   MOV      R4, #052H
+   ACALL    00631H
+   MOV      R4, #044H
+   ACALL    00631H
+   MOV      R4, #055H
+   ACALL    00631H
+   MOV      R4, #04EH
+   ACALL    00631H
+   MOV      R4, #04AH
+   ACALL    00631H
+   MOV      R4, #048H
+   ACALL    00631H
+   MOV      R4, #049H
+   ACALL    00631H
+   MOV      R4, #045H
+   ACALL    00631H
+   MOV      R4, #043H
+   ACALL    00631H
+   MOV      A, #000H
+   JZ       00603H
+   MOV      R4, #05AH
+   ACALL    00631H
+   MOV      DPTR, #00F02H
+   ACALL    00045H
+   MOV      DPTR, #01000H
+   ACALL    007F8H
+   JNC      0062FH
+   MOV      082H, #004H
+   CLR      A
+   MOVC     A, @A+DPTR
+   CJNE     A, #0FEH, 00628H
+   ACALL    00072H
+   INC      082H
+   CLR      A
+   MOVC     A, @A+DPTR
+   ACALL    00076H
+   ACALL    00026H
+   MOV      082H, #020H
+   ACALL    00186H
+   ACALL    P0
+   INC      083H
+   MOV      A, 083H
+   CJNE     A, #000H, 0060BH
+   AJMP     P0
+   ACALL    00072H
+   MOV      A, R4
+   ACALL    00076H
+   ACALL    00026H
+   ACALL    00045H
+   AJMP     P0
+   ACALL    006D3H
+   MOV      DPTR, #00EDEH
+   ACALL    00045H
+   MOV      A, R3
+   ACALL    00167H
+   MOV      A, R2
+   ACALL    00167H
+   ACALL    00045H
+   MOV      A, R5
+   ACALL    00167H
+   MOV      A, R4
+   ACALL    00167H
+   ACALL    P0
+   MOV      083H, R5
+   MOV      082H, R4
+   INC      DPTR
+   MOV      R4, 082H
+   MOV      R5, 083H
+   MOV      DPTR, #00DEEH
+   ACALL    00045H
+   ACALL    0006AH
+   CJNE     A, #01BH, 00668H
+   AJMP     00703H
+   ACALL    P0
+   MOV      082H, R2
+   MOV      083H, R3
+   MOV      A, R4
+   CLR      C
+   SUBB     A, 082H
+   MOV      R2, A
+   MOV      A, R5
+   SUBB     A, 083H
+   JNZ      00681H
+   MOV      A, R2
+   JZ       006ADH
+   ANL      A, #0F0H
+   JNZ      00681H
+   SJMP     00683H
+   MOV      R2, #010H
+   MOV      A, #03AH
+   ACALL    00076H
+   MOV      A, R2
+   ACALL    00167H
+   ACALL    00179H
+   MOV      A, 083H
+   ADD      A, 082H
+   ADD      A, R2
+   MOV      R3, A
+   CLR      A
+   ACALL    00167H
+   CLR      A
+   MOVC     A, @A+DPTR
+   ACALL    00167H
+   ADD      A, R3
+   MOV      R3, A
+   INC      DPTR
+   DJNZ     R2, 00695H
+   MOV      A, R3
+   CPL      A
+   INC      A
+   ACALL    00167H
+   ACALL    P0
+   ACALL    006C1H
+   ACALL    001BAH
+   JNC      0066EH
+   SJMP     00703H
+   MOV      A, #03AH
+   ACALL    00076H
+   CLR      A
+   ACALL    00167H
+   ACALL    00167H
+   ACALL    00167H
+   INC      A
+   ACALL    00167H
+   MOV      A, #0FFH
+   ACALL    00167H
+   AJMP     0007EH
+   MOV      A, R0
+   PUSH     ACC
+   MOV      R0, #00CH
+   MOV      A, 08CH
+   INC      A
+   NOP
+   NOP
+   JNZ      006C8H
+   DJNZ     R0, 006C6H
+   POP      ACC
+   MOV      R0, A
+   RET
+   ACALL    0007EH
+   MOV      DPTR, #00E1CH
+   ACALL    00045H
+   ACALL    000D1H
+   JC       006FFH
+   JB       PSW.5, 006FFH
+   PUSH     083H
+   PUSH     082H
+   ACALL    P0
+   MOV      DPTR, #00E26H
+   ACALL    00045H
+   ACALL    000D1H
+   MOV      R5, 083H
+   MOV      R4, 082H
+   POP      ACC
+   MOV      R2, A
+   POP      ACC
+   MOV      R3, A
+   JC       006FFH
+   JB       PSW.5, 006FFH
+   AJMP     P0
+   POP      ACC
+   POP      ACC
+   ACALL    P0
+   MOV      DPTR, #00DAEH
+   AJMP     00045H
+   ACALL    006D3H
+   MOV      DPTR, #00E30H
+   ACALL    00045H
+   ACALL    00062H
+   ACALL    0019AH
+   CJNE     A, #059H, 00703H
+   ACALL    0007EH
+   MOV      083H, R3
+   MOV      082H, R2
+   CLR      A
+   LCALL    00822H
+   MOV      A, R5
+   CJNE     A, 083H, 0072BH
+   MOV      A, R4
+   CJNE     A, 082H, 0072BH
+   RET
+   INC      DPTR
+   SJMP     0071EH
+   MOV      DPTR, #00DE5H
+   ACALL    00045H
+   ACALL    000D1H
+   JC       00705H
+   JB       PSW.5, 00705H
+   ACALL    0000EH
+   AJMP     0007EH
+   ACALL    0007EH
+   MOV      DPTR, #00F54H
+   ACALL    00045H
+   MOV      A, #02CH
+   ACALL    0001EH
+   MOV      DPTR, #00E30H
+   ACALL    00045H
+   ACALL    00062H
+   ACALL    0019AH
+   CJNE     A, #059H, 00703H
+   ACALL    0007EH
+   LCALL    007C1H
+   MOV      DPTR, #00F59H
+   JNC      00762H
+   MOV      DPTR, #00F60H
+   AJMP     00045H
+   ACALL    P0
+   MOV      R0, #000H
+   ACALL    P0
+   CJNE     R0, #080H, 0076FH
+   AJMP     P0
+   MOV      A, R0
+   ACALL    00167H
+   MOV      A, #03AH
+   ACALL    00076H
+   ACALL    00074H
+   MOV      A, @R0
+   ACALL    00167H
+   INC      R0
+   MOV      A, R0
+   ANL      A, #00FH
+   JNZ      00776H
+   SJMP     00768H
+   PUSH     B
+   CLR      A
+   MOVC     A, @A+DPTR
+   MOV      B, A
+   INC      R5
+   CLR      A
+   MOVC     A, @A+DPTR
+   CJNE     A, B, 00787H
+   POP      B
+   RET
+   MOV      DPTR, #0D555H
+   MOV      A, #0AAH
+   MOVX     @DPTR, A
+   MOV      DPTR, #0AAAAH
+   MOV      A, #055H
+   MOVX     @DPTR, A
+   RET
+   XCH      A, R0
+   PUSH     ACC
+   PUSH     082H
+   PUSH     083H
+   ACALL    00792H
+   MOV      DPTR, #0D555H
+   MOV      A, #0A0H
+   MOVX     @DPTR, A
+   POP      083H
+   POP      082H
+   MOV      A, R0
+   MOVX     @DPTR, A
+   ACALL    00783H
+   CLR      A
+   MOVC     A, @A+DPTR
+   CLR      C
+   XRL      A, R0
+   JZ       007BDH
+   SETB     C
+   POP      ACC
+   XCH      A, R0
+   RET
+   MOV      DPTR, #0D555H
+   MOV      A, #010H
+   ACALL    007DFH
+   MOV      DPTR, #08000H
+   CLR      A
+   MOVC     A, @A+DPTR
+   CPL      A
+   JNZ      007DDH
+   INC      DPTR
+   MOV      A, #000H
+   CJNE     A, 082H, 007CBH
+   MOV      A, #000H
+   CJNE     A, 083H, 007CBH
+   CLR      C
+   RET
+   SETB     C
+   RET
+   PUSH     ACC
+   PUSH     082H
+   PUSH     083H
+   ACALL    00792H
+   MOV      DPTR, #0D555H
+   MOV      A, #080H
+   MOVX     @DPTR, A
+   ACALL    00792H
+   POP      083H
+   POP      082H
+   POP      ACC
+   MOVX     @DPTR, A
+   AJMP     00783H
+   MOV      082H, #000H
+   CLR      A
+   MOVC     A, @A+DPTR
+   CJNE     A, #0A5H, 00817H
+   INC      DPTR
+   CLR      A
+   MOVC     A, @A+DPTR
+   CJNE     A, #0E5H, 00817H
+   INC      DPTR
+   CLR      A
+   MOVC     A, @A+DPTR
+   CJNE     A, #0E0H, 00817H
+   INC      DPTR
+   CLR      A
+   MOVC     A, @A+DPTR
+   CJNE     A, #0A5H, 00817H
+   MOV      082H, #000H
+   SETB     C
+   RET
+   MOV      A, #0FFH
+   CJNE     A, 083H, 0081EH
+   CLR      C
+   RET
+   INC      083H
+   SJMP     007F8H
+   PUSH     ACC
+   PUSH     B
+   MOV      B, A
+   MOV      A, #000H
+   JZ       0083CH
+   MOV      A, 083H
+   CJNE     A, #0FFH, 00833H
+   SJMP     00855H
+   JNC      0083CH
+   CJNE     A, #080H, 0083AH
+   SJMP     00855H
+   JNC      00855H
+   MOV      A, B
+   MOVX     @DPTR, A
+   CLR      A
+   MOVC     A, @A+DPTR
+   CLR      C
+   SUBB     A, B
+   JZ       0084FH
+   MOVX     A, @DPTR
+   CLR      C
+   SUBB     A, B
+   JZ       0084FH
+   SETB     C
+   SJMP     00850H
+   CLR      C
+   POP      B
+   POP      ACC
+   RET
+   MOV      A, B
+   LCALL    0079FH
+   POP      B
+   POP      ACC
+   RET
+   RETI
+   CLR      A
+   MOV      IE, A
+   MOV      IP, A
+   MOV      PSW, #000H
+   ACALL    0085FH
+   ACALL    0085FH
+   CPL      A
+   MOV      P0, A
+   MOV      P1, A
+   MOV      P2, A
+   MOV      P3, A
+   MOV      081H, #030H
+   MOV      R1, #0C8H
+   MOV      R2, #0F9H
+   DJNZ     R2, 0087CH
+   DJNZ     R1, 0087AH
+   MOV      A, #000H
+   JZ       00897H
+   MOV      A, #000H
+   JZ       00897H
+   MOV      R0, #0FAH
+   MOV      C, ___CL_0001.0
+   MOV      R1, #0C8H
+   DJNZ     R1, 0088EH
+   JC       00897H
+   DJNZ     R0, 0088AH
+   LCALL    007C1H
+   MOV      B, #0F9H
+   ACALL    008C9H
+   ACALL    008F6H
+   MOV      B, #0FDH
+   ACALL    008C9H
+   MOV      R0, #018H
+   LCALL    P0
+   DJNZ     R0, 008A5H
+   MOV      R0, #00FH
+   MOV      A, #020H
+   LCALL    00076H
+   DJNZ     R0, 008AEH
+   MOV      DPTR, #00D77H
+   LCALL    00B15H
+   MOV      DPTR, #00D90H
+   LCALL    00B15H
+   LCALL    004B8H
+   MOV      R6, #000H
+   MOV      R7, #020H
+   LJMP     001CBH
+   MOV      DPTR, #01000H
+   LCALL    007F8H
+   JNC      008F5H
+   MOV      082H, #004H
+   CLR      A
+   MOVC     A, @A+DPTR
+   CJNE     A, B, 008EEH
+   PUSH     B
+   PUSH     083H
+   MOV      A, #0EAH
+   PUSH     ACC
+   MOV      A, #008H
+   PUSH     ACC
+   MOV      082H, #040H
+   CLR      A
+   JMP      @A+DPTR
+   POP      083H
+   POP      B
+   INC      083H
+   MOV      A, 083H
+   CJNE     A, #000H, 008CCH
+   RET
+   MOV      A, #000H
+   JNZ      0090EH
+   MOV      A, 07BH
+   XRL      07AH, #055H
+   XRL      079H, #0CCH
+   XRL      078H, #01DH
+   CJNE     A, 07AH, 00910H
+   CJNE     A, 079H, 00910H
+   CJNE     A, 078H, 00910H
+   AJMP     009BCH
+   MOV      087H, #080H
+   MOV      SCON, #042H
+   MOV      089H, #011H
+   CLR      A
+   MOV      TCON, A
+   MOV      08AH, A
+   MOV      08CH, A
+   MOV      08BH, A
+   MOV      08DH, A
+   MOV      R0, #0C8H
+   MOV      R1, #01EH
+   JNB      P3.0, 00910H
+   DJNZ     R1, 00928H
+   DJNZ     R0, 00926H
+   JB       P3.0, 0092FH
+   JB       P3.0, 0092FH
+   JB       P3.0, 0092FH
+   JB       P3.0, 0092FH
+   JB       P3.0, 0092FH
+   JNB      P3.0, 0093EH
+   SETB     TCON.6
+   JB       TCON.7, 00910H
+   JB       P3.0, 00943H
+   JB       TCON.7, 00910H
+   JNB      P3.0, 00949H
+   JB       TCON.7, 00910H
+   JB       P3.0, 0094FH
+   SETB     TCON.4
+   JB       TCON.7, 00910H
+   JNB      P3.0, 00957H
+   CLR      TCON.6
+   CLR      TCON.4
+   JB       TCON.7, 00910H
+   MOV      A, 08BH
+   RLC      A
+   MOV      B, A
+   MOV      A, 08DH
+   RLC      A
+   JC       00910H
+   MOV      C, B.7
+   ADDC     A, #000H
+   CPL      A
+   INC      A
+   JZ       00910H
+   MOV      08DH, A
+   MOV      08BH, #0FFH
+   MOV      089H, #021H
+   SETB     SCON.4
+   SETB     TCON.6
+   MOV      A, 08DH
+   CPL      A
+   INC      A
+   MOV      R1, A
+   MOV      R0, #0FFH
+   DJNZ     R0, 00989H
+   DJNZ     R1, 00987H
+   JNB      SCON.0, 009A1H
+   CLR      SCON.0
+   MOV      A, 099H
+   ANL      A, #07FH
+   ADD      A, #0F6H
+   JZ       009A1H
+   ADD      A, #005H
+   JZ       009A1H
+   LJMP     00910H
+   MOV      A, 08AH
+   RLC      A
+   MOV      R0, A
+   MOV      A, 08CH
+   RLC      A
+   MOV      R1, A
+   JC       0099EH
+   MOV      A, R0
+   RLC      A
+   MOV      B, A
+   MOV      A, R1
+   RLC      A
+   MOV      C, B.7
+   ADDC     A, #000H
+   JZ       0099EH
+   CPL      A
+   INC      A
+   CJNE     A, 08DH, 0099EH
+   MOV      07BH, A
+   MOV      07AH, A
+   MOV      079H, A
+   MOV      078H, A
+   XRL      07AH, #055H
+   XRL      079H, #0CCH
+   XRL      078H, #01DH
+   MOV      08DH, A
+   MOV      08BH, A
+   MOV      089H, #021H
+   MOV      087H, #080H
+   MOV      SCON, #052H
+   SETB     TCON.6
+   RET
+   JNB      SCON.0, 009E6H
+   LCALL    0006AH
+   CJNE     A, #01BH, 00A37H
+   LCALL    0006AH
+   CJNE     A, #01BH, 00A37H
+   ACALL    00A4BH
+   JB       SCON.0, 009F4H
+   MOV      A, #01BH
+   RET
+   LCALL    0006AH
+   CJNE     A, #05BH, 00A3EH
+   ACALL    00A4BH
+   JNB      SCON.0, 009DDH
+   LCALL    0006AH
+   CJNE     A, #041H, 00A08H
+   MOV      A, #00BH
+   RET
+   CJNE     A, #042H, 00A0EH
+   MOV      A, #00AH
+   RET
+   CJNE     A, #043H, 00A14H
+   MOV      A, #015H
+   RET
+   CJNE     A, #044H, 00A1AH
+   MOV      A, #008H
+   RET
+   CJNE     A, #035H, 00A1FH
+   SJMP     00A26H
+   CJNE     A, #036H, 00A24H
+   SJMP     00A26H
+   SJMP     00A3EH
+   PUSH     ACC
+   ACALL    00A4BH
+   JNB      SCON.0, 00A38H
+   LCALL    0006AH
+   CJNE     A, #07EH, 00A3CH
+   POP      ACC
+   ADD      A, #0E4H
+   RET
+   POP      ACC
+   SJMP     009DDH
+   POP      ACC
+   ACALL    00A4BH
+   JNB      SCON.0, 009DDH
+   LCALL    0006AH
+   CJNE     A, #01BH, 00A3EH
+   SJMP     009ECH
+   MOV      A, R2
+   PUSH     ACC
+   MOV      R2, #014H
+   MOV      A, 08CH
+   JB       SCON.0, 00A5AH
+   INC      A
+   JNZ      00A52H
+   DJNZ     R2, 00A50H
+   POP      ACC
+   MOV      R2, A
+   RET
+   PUSH     B
+   PUSH     ACC
+   SJMP     00A77H
+   PUSH     B
+   PUSH     ACC
+   JNB      ACC.7, 00A77H
+   MOV      A, #02DH
+   LCALL    00076H
+   POP      ACC
+   PUSH     ACC
+   CPL      A
+   ADD      A, #001H
+   MOV      B, #064H
+   DIV      AB
+   SETB     PSW.5
+   JZ       00A86H
+   CLR      PSW.5
+   ADD      A, #030H
+   LCALL    00076H
+   MOV      A, B
+   MOV      B, #00AH
+   DIV      AB
+   JNB      PSW.5, 00A91H
+   JZ       00A96H
+   ADD      A, #030H
+   LCALL    00076H
+   MOV      A, B
+   ADD      A, #030H
+   LCALL    00076H
+   POP      ACC
+   POP      B
+   RET
+   PUSH     ACC
+   MOV      A, R0
+   PUSH     ACC
+   CLR      PSW.5
+   MOV      R2, 082H
+   MOV      R3, 083H
+   MOV      R4, #010H
+   MOV      R5, #027H
+   ACALL    00B00H
+   JZ       00ABCH
+   ADD      A, #030H
+   LCALL    00076H
+   SETB     PSW.5
+   MOV      R4, #0E8H
+   MOV      R5, #003H
+   ACALL    00B00H
+   JNZ      00AC7H
+   JNB      PSW.5, 00ACEH
+   ADD      A, #030H
+   LCALL    00076H
+   SETB     PSW.5
+   MOV      R4, #064H
+   MOV      R5, #000H
+   ACALL    00B00H
+   JNZ      00AD9H
+   JNB      PSW.5, 00AE0H
+   ADD      A, #030H
+   LCALL    00076H
+   SETB     PSW.5
+   MOV      A, R2
+   MOV      R3, B
+   MOV      B, #00AH
+   DIV      AB
+   JNZ      00AECH
+   JNB      PSW.5, 00AF1H
+   ADD      A, #030H
+   LCALL    00076H
+   MOV      A, B
+   MOV      B, R3
+   ADD      A, #030H
+   LCALL    00076H
+   POP      ACC
+   MOV      R0, A
+   POP      ACC
+   RET
+   MOV      R0, #000H
+   INC      R0
+   CLR      C
+   MOV      A, R2
+   SUBB     A, R4
+   MOV      R2, A
+   MOV      A, R3
+   SUBB     A, R5
+   MOV      R3, A
+   JNC      00B02H
+   DEC      R0
+   MOV      A, R2
+   ADD      A, R4
+   MOV      R2, A
+   MOV      A, R3
+   ADDC     A, R5
+   MOV      R3, A
+   MOV      A, R0
+   RET
+   PUSH     ACC
+   MOV      A, R0
+   PUSH     ACC
+   MOV      A, R1
+   PUSH     ACC
+   MOV      A, R4
+   PUSH     ACC
+   SETB     PSW.1
+   SETB     PSW.5
+   CLR      A
+   MOVC     A, @A+DPTR
+   INC      DPTR
+   JZ       00B4EH
+   JB       ACC.7, 00B5AH
+   ANL      A, #07FH
+   CJNE     A, #00DH, 00B38H
+   LCALL    P0
+   SETB     PSW.1
+   SJMP     00B24H
+   CJNE     A, #01FH, 00B3FH
+   CLR      PSW.5
+   SJMP     00B24H
+   CJNE     A, #00EH, 00B47H
+   LCALL    P0
+   SJMP     00B4EH
+   CLR      PSW.1
+   LCALL    00076H
+   SJMP     00B24H
+   POP      ACC
+   MOV      R4, A
+   POP      ACC
+   MOV      R1, A
+   POP      ACC
+   MOV      R0, A
+   POP      ACC
+   RET
+   ANL      A, #07FH
+   MOV      R0, A
+   JB       PSW.1, 00B63H
+   LCALL    00074H
+   CLR      PSW.1
+   PUSH     082H
+   PUSH     083H
+   MOV      DPTR, #00BCFH
+   MOV      R4, #000H
+   MOV      A, R0
+   JZ       00B78H
+   MOV      R1, A
+   ACALL    00BBEH
+   JNZ      00B72H
+   DJNZ     R1, 00B72H
+   ACALL    00BBEH
+   JZ       00BB8H
+   CJNE     A, #00FH, 00B91H
+   ACALL    00BBEH
+   INC      A
+   MOVC     A, @A+PC
+   SJMP     00BA3H
+   XRL      A, R0
+   XRL      A, @R0
+   MOV      @R1, #067H
+   MOV      R1, #062H
+   MOV      R0, #076H
+   XRL      A, R3
+   ACALL    00B6AH
+   MOV      R2, #004H
+   MOVC     A, @A+PC
+   SJMP     00BA3H
+   XRL      A, 074H
+   AJMP     00B72H
+   XRL      A, R6
+   XRL      A, R1
+   JMP      @A+DPTR
+   XRL      A, R7
+   XRL      A, R4
+   MOV      06DH, #070H
+   XRL      A, #063H
+   MOV      C, PSW.5
+   MOV      ACC.5, C
+   SETB     PSW.5
+   CJNE     R0, #014H, 00BAEH
+   CLR      ACC.5
+   CJNE     R0, #00CH, 00BB3H
+   CLR      ACC.5
+   LCALL    00076H
+   SJMP     00B78H
+   POP      083H
+   POP      082H
+   AJMP     00B24H
+   CLR      A
+   MOVC     A, @A+DPTR
+   CJNE     R4, #000H, 00BC8H
+   MOV      R4, #0FFH
+   ANL      A, #00FH
+   RET
+   MOV      R4, #000H
+   INC      DPTR
+   SWAP     A
+   ANL      A, #00FH
+   RET
+   ANL      C, P1.0
+   MOV      A, R0
+   RL       A
+   MOV      005H, @R0
+   ORL      A, R4
+   MOV      R0, A
+   ORL      A, #0B3H
+   ANL      C, /P3.1
+   ORL      A, R0
+   ANL      A, R7
+   MOVX     @DPTR, A
+   ACALL    0087FH
+   ORL      C, /010H.5
+   MOV      R7, #01CH
+   ADD      A, R6
+   ACALL    00E40H
+   ANL      A, R2
+   JNC      00BDBH
+   RR       A
+   CJNE     R7, #0BAH, 00BFAH
+   ADD      A, R7
+   SUBB     A, @R0
+   AJMP     0088DH
+   ADDC     A, R7
+   SUBB     A, 038H
+   INC      R5
+   XRL      A, R7
+   ANL      A, R7
+   LCALL    00771H
+   INC      R6
+   ANL      A, @R0
+   ADD      A, R7
+   ORL      A, R0
+   ADDC     A, R3
+   XRL      058H, A
+   JB       018H.7, 00C7BH
+   JNZ      00C39H
+   ADD      A, #040H
+   CJNE     R0, #040H, 00BEDH
+   AJMP     00B8FH
+   AJMP     00834H
+   INC      R3
+   XCH      A, R2
+   MOV      0D3H, R1
+   PUSH     0A3H
+   CJNE     R1, #058H, 00B99H
+   INC      A
+   MOV      R0, A
+   LJMP     08560H
+   ADD      A, 091H
+   MOVX     @DPTR, A
+   MOV      070H.3, C
+   DEC      R7
+   JBC      078H.7, 00C39H
+   ANL      A, #093H
+   JBC      040H.4, 00C74H
+   INC      @R1
+   ACALL    00E26H
+   ANL      A, @R0
+   ORL      A, R7
+   POP      0F6H
+   XRL      A, #072H
+   MOVX     A, @DPTR
+   CJNE     R0, #03BH, 00C0EH
+   MOVX     @DPTR, A
+   DEC      @R0
+   ORL      A, R7
+   ANL      A, @R0
+   JNB      068H.7, 00C88H
+   LJMP     05FA8H
+   JB       018H.7, 00C47H
+   MOV      @R0, #030H
+   DJNZ     060H, 00C70H
+   AJMP     00AA4H
+   ADD      A, R4
+   JZ       00C55H
+   XRL      A, R7
+   AJMP     0083FH
+   ADD      A, @R0
+   DEC      R7
+   JNB      ___CL_0001.7, 00BE6H
+   DEC      R5
+   MOVX     @DPTR, A
+   XRL      099H, #0F0H
+   ORL      IP, A
+   JB       018H.7, 00C85H
+   JNB      ___CL_0001.2, 00CDFH
+   ACALL    00E60H
+   ADD      A, R7
+   MOVX     @DPTR, A
+   MOV      @R0, A
+   INC      08FH
+   MOVC     A, @A+DPTR
+   DEC      R2
+   JNC      00C98H
+   MOVX     @DPTR, A
+   ANL      C, ___CL_0001.4
+   XRL      A, R7
+   INC      DPTR
+   INC      R5
+   ADDC     A, R7
+   DEC      R7
+   ACALL    00A40H
+   RL       A
+   AJMP     0083EH
+   INC      043H
+   AJMP     0087AH
+   AJMP     00817H
+   XRL      A, #093H
+   JNB      028H.2, 00C90H
+   MOV      024H, R4
+   JNB      SCON.1, 00C3DH
+   MOVX     @R1, A
+   DEC      R1
+   JZ       00CB6H
+   AJMP     00A35H
+   INC      R1
+   MOV      0CBH, R6
+   DEC      R1
+   LCALL    03005H
+   DEC      R7
+   ACALL    0091DH
+   INC      A
+   DEC      A
+   ORL      A, R7
+   MOV      @R0, #012H
+   INC      A
+   MOV      R3, 027H
+   MOV      DPTR, #05601H
+   ADD      A, R7
+   MOV      R0, 0D5H
+   MOVX     @DPTR, A
+   MOV      R2, 026H
+   JB       058H.7, 00CCDH
+   MOVX     @DPTR, A
+   MOVX     @R1, A
+   AJMP     00BFEH
+   AJMP     00841H
+   JMP      @A+DPTR
+   AJMP     00827H
+   AJMP     00EC0H
+   DIV      AB
+   MOV      0D6H, R7
+   AJMP     00887H
+   JNZ      00D19H
+   ORL      A, R7
+   DEC      R1
+   JNZ      00CE6H
+   MOV      R0, 0D9H
+   MOV      DPTR, #07602H
+   DEC      @R1
+   ORL      0FEH, #001H
+   AJMP     00E84H
+   INC      R3
+   DEC      07FH
+   LJMP     08B14H
+   JNB      TCON.7, 00D3EH
+   ADDC     A, R1
+   XRL      A, R7
+   DEC      R1
+   MOVX     @DPTR, A
+   ACALL    008C9H
+   JBC      068H.5, 00CE6H
+   ADDC     A, R7
+   ACALL    00C09H
+   MOV      R2, #041H
+   POP      0BAH
+   INC      R4
+   DEC      R5
+   ADDC     A, R1
+   ANL      A, R7
+   INC      @R1
+   MOVX     @R0, A
+   ACALL    00817H
+   JB       040H.1, 00D61H
+   ADDC     A, 009H
+   MOV      @R1, A
+   MOV      012H, #00BH
+   MOV      @R1, 0CCH
+   ORL      A, R0
+   LJMP     03F64H
+   LCALL    0A00CH
+   ADD      A, @R1
+   MOVX     A, @R1
+   SUBB     A, R7
+   PUSH     014H
+   MOV      @R1, #070H
+   ACALL    00840H
+   ACALL    00B21H
+   PUSH     068H
+   ADD      A, 041H
+   MOVX     @DPTR, A
+   XRL      07FH, A
+   ACALL    00ED0H
+   AJMP     009E1H
+   XRL      058H, A
+   ANL      C, /B.3
+   INC      01FH
+   JMP      @A+DPTR
+   JNB      070H.7, 00CD6H
+   XRL      A, R7
+   DEC      R1
+   MOVX     A, @DPTR
+   DEC      R1
+   ORL      ACC, #058H
+   ADD      A, R7
+   MOV      @R0, A
+   MUL      AB
+   DEC      A
+   POP      023H
+   RR       A
+   MOV      R6, A
+   ACALL    009F5H
+   DEC      A
+   JNB      SCON.1, 00D32H
+   RR       A
+   ADDC     A, R7
+   XRL      A, #022H
+   ACALL    00A60H
+   ADD      A, 041H
+   ADD      A, R7
+   MOVX     A, @R1
+   AJMP     00856H
+   ADD      A, @R1
+   MOVC     A, @A+DPTR
+   INC      R1
+   MOV      R6, A
+   ACALL    008FEH
+   MOV      R1, #0BAH
+   JZ       00DC5H
+   ORL      0EAH, A
+   XRL      058H, A
+   ORL      C, /ACC.5
+   DEC      R7
+   ANL      04FH, #0D1H
+   PUSH     0A3H
+   INC      R1
+   ORL      053H, A
+   MOV      @R1, A
+   LCALL    00462H
+   DEC      R3
+   JNB      B.5, 00D6CH
+   MOV      @R1, A
+   XRL      A, R1
+   INC      R4
+   ADDC     A, 01BH
+   JNZ      00CF0H
+   ADD      A, R7
+   ADD      A, R7
+   DEC      A
+   ORL      A, R7
+   ACALL    00AC0H
+   XRL      A, #025H
+   NOP
+   ANL      A, @R1
+   XRL      A, 06CH
+   XRL      06FH, #06DH
+   XRL      A, P0
+   SUBB     A, #032H
+   JB       070H.6, 00DB6H
+   ADD      A, R6
+   ACALL    0092CH
+   JB       060H.2, 00E03H
+   DEC      R7
+   MOV      R0, A
+   DEC      R7
+   MOV      R6, A
+   INC      R5
+   INC      R6
+   JB       020H.0, 00DE6H
+   XRL      A, 065H
+   SUBB     A, #032H
+   ADD      A, R6
+   ORL      A, #04FH
+   ORL      02CH, #094H
+   RETI
+   ADD      A, R6
+   ORL      A, 051H
+   ANL      A, 0A4H
+   SUBB     A, #032H
+   ADD      A, R6
+   ORL      A, R0
+   ORL      A, #052H
+   CJNE     A, #0D5H, 00D39H
+   ADD      A, R6
+   INC      R6
+   JB       018H.7, 00D4FH
+   DEC      R7
+   ORL      C, /020H.1
+   INC      R5
+   INC      R6
+   SUBB     A, #032H
+   JB       048H.4, 00E2AH
+   XRL      03AH, #000H
+   JB       038H.6, 00D61H
+   MOV      0CAH, @R0
+   ANL      C, 028H.0
+   NOP
+   ADD      A, R1
+   ADD      A, R4
+   SUBB     A, 08CH
+   SJMP     00D94H
+   ADDC     A, R2
+   JB       ___CL_0001.0, 00DEFH
+   SUBB     A, @R1
+   ANL      C, 0C0H.3
+   JMP      @A+DPTR
+   XCH      A, @R1
+   MOV      @R0, 083H
+   ADD      A, R4
+   CJNE     R2, #020H, 00E25H
+   ANL      A, 04DH
+   JNC      00D5FH
+   MOV      0A1H, @R0
+   ORL      C, P0.2
+   INC      R5
+   INC      R6
+   INC      R5
+   INC      R5
+   DEC      R7
+   MOV      083H, @R1
+   AJMP     00C3AH
+   JB       ___CL_0001.0, 00E0EH
+   CLR      A
+   MOV      R3, A
+   JB       068H.3, 00E59H
+   MOV      R1, #03AH
+   JB       ___CL_0001.0, 00E06H
+   INC      R5
+   DEC      R7
+   MOV      P0, R0
+   MOVC     A, @A+PC
+   AJMP     00C20H
+   ADD      A, R0
+   NOP
+   INC      R5
+   INC      R5
+   DEC      R7
+   ANL      C, 018H.7
+   MOV      R5, A
+   NOP
+   DEC      R7
+   AJMP     00C20H
+   JB       020H.0, 00E2FH
+   JB       018H.7, 00DDBH
+   INC      R6
+   ADD      A, R1
+   JB       018H.7, 00D9EH
+   DEC      R7
+   CPL      038H.2
+   JB       ___CL_0001.0, 00E63H
+   XRL      A, R1
+   ORL      C, 070H.3
+   MOV      A, #01FH
+   AJMP     00C3AH
+   JB       ___CL_0001.0, 00E73H
+   AJMP     00B73H
+   MOV      A, #01FH
+   AJMP     00C3AH
+   JB       020H.0, 00E30H
+   DEC      R7
+   CJNE     R1, #0A1H, 00E54H
+   JMP      @A+DPTR
+   MOV      072H, #065H
+   ADDC     A, R7
+   NOP
+   INC      R5
+   INC      R5
+   DEC      R7
+   SUBB     A, R4
+   SUBB     A, R2
+   MOV      028H.4, C
+   MOV      P0, R4
+   XCH      A, R0
+   INC      R6
+   JB       020H.0, 00E67H
+   SUBB     A, R4
+   AJMP     00E2CH
+   MOV      081H, R6
+   MOV      @R1, A
+   INC      R5
+   INC      R6
+   INC      R5
+   INC      R5
+   DEC      R7
+   SUBB     A, R7
+   JB       060H.1, 00ECAH
+   XRL      069H, #069H
+   MOV      R1, A
+   SUBB     A, @R0
+   DEC      R7
+   SUBB     A, R0
+   DIV      AB
+   MOV      02CH, R1
+   SUBB     A, 08CH
+   SJMP     00E05H
+   INC      R5
+   INC      R6
+   INC      R5
+   DEC      R7
+   MOV      P2, R2
+   XRL      A, 064H
+   INC      R5
+   INC      R6
+   INC      R5
+   DEC      R7
+   MOV      0C1H, R2
+   XRL      A, #00DH
+   INC      R6
+   ANL      075H, #06DH
+   XRL      A, R5
+   AJMP     00B72H
+   MOV      R1, #03AH
+   INC      R6
+   JB       0C0H.6, 00EF5H
+   ACALL    00C64H
+   INC      R6
+   JB       TCON.3, 00E19H
+   XRL      A, #00EH
+   JB       TCON.3, 00EADH
+   MOV      @R1, #072H
+   XRL      A, R1
+   MOV      A, #074H
+   XRL      A, 06EH
+   INC      R6
+   DEC      R7
+   SUBB     A, R3
+   ADDC     A, R2
+   INC      R6
+   JB       TCON.3, 00EBCH
+   MOV      06EH, #061H
+   XRL      06CH, A
+   XRL      A, P0
+   JB       070H.7, 00F18H
+   XRL      A, R1
+   MOV      A, #065H
+   INC      R6
+   JB       020H.0, 00F0FH
+   AJMP     00B64H
+   MOV      073H, A
+   INC      R6
+   JB       P0.5, 00E54H
+   SUBB     A, @R0
+   XCH      A, @R0
+   INC      R6
+   JB       P0.5, 00E3FH
+   SUBB     A, R5
+   INC      R6
+   JB       P0.5, 00EE0H
+   XRL      A, R6
+   XRL      A, R7
+   XRL      A, R6
+   DIV      AB
+   SUBB     A, R5
+   INC      R6
+   DEC      R7
+   SUBB     A, @R1
+   SUBB     A, R3
+   JB       060H.4, 00F31H
+   MOV      A, #065H
+   XRL      074H, #065H
+   XRL      A, #00DH
+   INC      R6
+   INC      R5
+   MOV      06EH, @R0
+   XRL      A, R1
+   XRL      A, R6
+   XRL      A, @R1
+   ANL      C, 038H.2
+   INC      R5
+   INC      R6
+   INC      R5
+   INC      R5
+   ANL      065H, #06EH
+   XRL      A, #069H
+   XRL      A, R6
+   XRL      A, @R1
+   DEC      R7
+   SUBB     A, R0
+   DIV      AB
+   MOV      0ACH, R1
+   JB       020H.0, 00EEFH
+   JB       P0.0, 00F12H
+   JB       ___CL_0001.0, 00F02H
+   INC      R5
+   ANL      074H, #061H
+   XRL      A, R6
+   XRL      A, #061H
+   ORL      C, 060H.4
+   DEC      R7
+   SUBB     A, R6
+   JMP      @A+DPTR
+   INC      R6
+   DEC      R7
+   DJNZ     R2, 00F24H
+   CPL      A
+   XRL      A, 064H
+   DEC      R7
+   SUBB     A, R6
+   JMP      @A+DPTR
+   INC      R6
+   DEC      R7
+   SUBB     A, R2
+   SUBB     A, R6
+   NOP
+   DEC      R7
+   ANL      C, ___CL_0001.0
+   DEC      R7
+   MOV      01FH, R7
+   MOVX     A, @R0
+   DEC      R7
+   MOV      R2, ___CL_0001
+   ADDC     A, R7
+   ADDC     A, R7
+   ADDC     A, R7
+   NOP
+   DEC      R7
+   XCHD     A, @R1
+   NOP
+   DEC      R7
+   MOV      0D7H, R6
+   ACALL    00E00H
+   DEC      R7
+   ACALL    00E82H
+   JMP      @A+DPTR
+   NOP
+   DEC      R7
+   MOV      082H, @R0
+   NOP
+   DEC      R7
+   MOV      ___CL_0001, R2
+   DEC      R7
+   MOVC     A, @A+DPTR
+   NOP
+   DEC      R7
+   MOV      081H, @R1
+   NOP
+   DEC      R7
+   MOV      P0, R0
+   MOVC     A, @A+PC
+   AJMP     00C00H
+   DEC      R7
+   DIV      AB
+   DJNZ     R3, 00EDDH
+   MOVC     A, @A+PC
+   NOP
+   DEC      R7
+   DIV      AB
+   DJNZ     R3, 00F09H
+   MOVC     A, @A+PC
+   NOP
+   DEC      R7
+   SUBB     A, R4
+   SUBB     A, R2
+   MOV      ___CL_0001.0, C
+   DEC      R7
+   MOV      A, R5
+   MOVC     A, @A+PC
+   NOP
+   DEC      R7
+   XCH      A, R3
+   SUBB     A, R1
+   MOV      DPTR, #0001FH
+   SUBB     A, R1
+   MOV      DPTR, #0CB64H
+   INC      R5
+   INC      R6
+   DEC      R7
+   MOV      09BH, 00DH
+   INC      R6
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   ???
+   MOV      A, ACC
+   ???
+   MOV      R6, A
+   ORL      A, R4
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   MOV      R7, A
+   MOV      R7, A
+   MOV      R7, A
+   MOV      R7, A
+   ORL      A, R4
+   XRL      A, R1
+   JMP      @A+DPTR
+   MOV      A, #000H
+   LJMP     00048H
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   ACALL    01025H
+   MOV      R5, #014H
+   CLR      PSW.1
+   ACALL    0104CH
+   DJNZ     R5, 01046H
+   AJMP     01025H
+   MOV      A, R7
+   MOV      083H, A
+   ACALL    0124FH
+   MOV      A, R6
+   MOV      082H, A
+   ACALL    0124FH
+   CLR      A
+   MOVC     A, @A+DPTR
+   MOV      R2, A
+   INC      DPTR
+   CLR      A
+   MOVC     A, @A+DPTR
+   MOV      R3, A
+   INC      DPTR
+   CLR      A
+   MOVC     A, @A+DPTR
+   MOV      R4, A
+   MOV      A, R2
+   ANL      A, #008H
+   JNZ      01075H
+   MOV      A, R2
+   RR       A
+   ANL      A, #078H
+   MOV      R0, A
+   MOV      A, R2
+   ANL      A, #007H
+   ORL      A, R0
+   MOV      DPTR, #016C8H
+   MOVC     A, @A+DPTR
+   SJMP     0107DH
+   MOV      A, R2
+   SWAP     A
+   ANL      A, #00FH
+   MOV      DPTR, #01362H
+   MOVC     A, @A+DPTR
+   ANL      A, #003H
+   MOV      R0, A
+   ADD      A, R6
+   MOV      R6, A
+   MOV      A, R7
+   ADDC     A, #000H
+   MOV      R7, A
+   MOV      A, #03AH
+   ACALL    0122AH
+   ACALL    0139DH
+   JB       PSW.1, 010B0H
+   MOV      A, R2
+   ACALL    0124FH
+   ACALL    0139DH
+   CJNE     R0, #001H, 0109BH
+   MOV      R1, #00BH
+   SJMP     010ACH
+   MOV      A, R3
+   ACALL    0124FH
+   ACALL    0139DH
+   CJNE     R0, #002H, 010A7H
+   MOV      R1, #008H
+   SJMP     010ACH
+   MOV      A, R4
+   ACALL    0124FH
+   MOV      R1, #006H
+   ACALL    0139DH
+   DJNZ     R1, 010ACH
+   MOV      A, R2
+   ANL      A, #008H
+   JNZ      010C5H
+   MOV      DPTR, #01748H
+   MOV      A, R2
+   RR       A
+   ANL      A, #078H
+   MOV      R0, A
+   MOV      A, R2
+   ANL      A, #007H
+   ORL      A, R0
+   MOVC     A, @A+DPTR
+   MOV      R1, A
+   SJMP     010CEH
+   MOV      DPTR, #017C8H
+   MOV      A, R2
+   SWAP     A
+   ANL      A, #00FH
+   MOVC     A, @A+DPTR
+   MOV      R1, A
+   MOV      DPTR, #01EFEH
+   MOV      R0, #008H
+   CLR      C
+   MOV      A, #020H
+   JC       010DFH
+   MOV      A, R1
+   MOVC     A, @A+DPTR
+   INC      R1
+   MOV      C, ACC.7
+   ANL      A, #07FH
+   ACALL    0122AH
+   DJNZ     R0, 010D4H
+   MOV      A, #01BH
+   PUSH     ACC
+   MOV      A, #011H
+   PUSH     ACC
+   MOV      A, R2
+   ANL      A, #008H
+   JNZ      010FFH
+   MOV      A, R2
+   RR       A
+   ANL      A, #078H
+   MOV      R0, A
+   MOV      A, R2
+   ANL      A, #007H
+   ORL      A, R0
+   MOV      DPTR, #016C8H
+   MOVC     A, @A+DPTR
+   SJMP     01107H
+   MOV      A, R2
+   SWAP     A
+   ANL      A, #00FH
+   MOV      DPTR, #01362H
+   MOVC     A, @A+DPTR
+   ANL      A, #0FCH
+   RR       A
+   RR       A
+   DEC      A
+   MOV      DPTR, #0111DH
+   RL       A
+   ADD      A, 082H
+   MOV      082H, A
+   CLR      A
+   ADDC     A, 083H
+   MOV      083H, A
+   CLR      A
+   JMP      @A+DPTR
+   AJMP     01025H
+   AJMP     0122DH
+   AJMP     0123CH
+   AJMP     01181H
+   AJMP     01172H
+   AJMP     01248H
+   AJMP     01204H
+   AJMP     01252H
+   AJMP     01258H
+   AJMP     011A2H
+   AJMP     011D7H
+   AJMP     0125EH
+   AJMP     01269H
+   AJMP     0126DH
+   AJMP     01208H
+   AJMP     01210H
+   AJMP     011AAH
+   AJMP     01183H
+   AJMP     01174H
+   AJMP     01271H
+   AJMP     01277H
+   AJMP     0127DH
+   AJMP     0123EH
+   AJMP     0121CH
+   AJMP     01281H
+   AJMP     011DFH
+   AJMP     01214H
+   AJMP     012C5H
+   AJMP     01285H
+   AJMP     0128BH
+   AJMP     01291H
+   AJMP     01295H
+   AJMP     0129BH
+   AJMP     012A9H
+   AJMP     012AFH
+   AJMP     012B5H
+   AJMP     012BBH
+   AJMP     0120CH
+   AJMP     012BFH
+   AJMP     012CBH
+   AJMP     012D7H
+   AJMP     012E7H
+   AJMP     012EDH
+   RET
+   ACALL    011F6H
+   MOV      A, #040H
+   ACALL    0122AH
+   MOV      A, #052H
+   ACALL    0122AH
+   MOV      A, R2
+   ANL      A, #001H
+   AJMP     01245H
+   ACALL    011F6H
+   MOV      A, R3
+   JB       ACC.7, 0118AH
+   MOV      A, R3
+   AJMP     0124FH
+   MOV      DPTR, #012F5H
+   CLR      A
+   MOVC     A, @A+DPTR
+   INC      DPTR
+   JZ       01187H
+   MOV      R0, A
+   CLR      C
+   SUBB     A, R3
+   JNZ      0119AH
+   LJMP     00038H
+   CLR      A
+   MOVC     A, @A+DPTR
+   INC      DPTR
+   JNB      ACC.7, 0119AH
+   SJMP     0118DH
+   ACALL    01210H
+   ACALL    011F8H
+   MOV      A, #02FH
+   ACALL    0122AH
+   MOV      A, R3
+   ANL      A, #078H
+   RL       A
+   SWAP     A
+   MOV      R0, A
+   MOV      A, R3
+   ANL      A, #080H
+   JZ       011C9H
+   MOV      DPTR, #01372H
+   MOV      A, R0
+   MOVC     A, @A+DPTR
+   MOV      DPTR, #01F93H
+   ADDC     A, 082H
+   MOV      082H, A
+   JNC      011C5H
+   INC      083H
+   ACALL    01197H
+   SJMP     011CEH
+   MOV      A, R0
+   ADD      A, #020H
+   ACALL    0124FH
+   MOV      A, #02EH
+   ACALL    0122AH
+   MOV      A, R3
+   ANL      A, #007H
+   AJMP     01245H
+   ACALL    011F6H
+   ACALL    01183H
+   ACALL    011F8H
+   MOV      A, R4
+   MOV      R3, A
+   MOV      A, R3
+   ADD      A, R6
+   MOV      082H, A
+   MOV      A, R3
+   JB       ACC.7, 011EAH
+   CLR      A
+   SJMP     011ECH
+   CLR      A
+   CPL      A
+   ADDC     A, R7
+   MOV      083H, A
+   LJMP     00036H
+   MOV      A, #040H
+   AJMP     0122AH
+   ACALL    01208H
+   MOV      A, #02CH
+   ACALL    0122AH
+   MOV      A, #020H
+   AJMP     0122AH
+   MOV      A, #023H
+   AJMP     0122AH
+   ACALL    01183H
+   ACALL    011F8H
+   MOV      A, #041H
+   AJMP     0122AH
+   ACALL    011AAH
+   ACALL    011F8H
+   MOV      A, #043H
+   AJMP     0122AH
+   ACALL    011F2H
+   ACALL    01208H
+   MOV      A, #02BH
+   ACALL    0122AH
+   MOV      A, #044H
+   ACALL    0122AH
+   MOV      A, #050H
+   ACALL    0122AH
+   MOV      A, #054H
+   ACALL    0122AH
+   MOV      A, #052H
+   LJMP     00030H
+   MOV      A, R7
+   ANL      A, #0F8H
+   MOV      R0, A
+   MOV      A, R2
+   SWAP     A
+   RR       A
+   ANL      A, #007H
+   ORL      A, R0
+   ACALL    0124FH
+   MOV      A, R3
+   AJMP     0124FH
+   ACALL    011F6H
+   MOV      A, #052H
+   ACALL    0122AH
+   MOV      A, R2
+   ANL      A, #007H
+   LJMP     0002EH
+   ACALL    01208H
+   ACALL    011F8H
+   ACALL    01200H
+   MOV      A, R3
+   LJMP     00034H
+   ACALL    01183H
+   MOV      A, R4
+   MOV      R3, A
+   AJMP     0124AH
+   ACALL    01210H
+   ACALL    011F8H
+   AJMP     011AAH
+   ACALL    01208H
+   ACALL    011F8H
+   ACALL    01200H
+   MOV      A, R3
+   ACALL    0124FH
+   AJMP     011DBH
+   ACALL    0123EH
+   AJMP     01260H
+   ACALL    01174H
+   AJMP     01260H
+   ACALL    01208H
+   MOV      A, #042H
+   AJMP     0122AH
+   ACALL    0123EH
+   ACALL    011F8H
+   AJMP     011DFH
+   ACALL    01183H
+   AJMP     011DBH
+   ACALL    011AAH
+   AJMP     011DBH
+   ACALL    0123EH
+   ACALL    011F8H
+   AJMP     01208H
+   ACALL    0123EH
+   ACALL    011F8H
+   AJMP     01183H
+   ACALL    0123EH
+   AJMP     0124AH
+   ACALL    01183H
+   ACALL    011F8H
+   AJMP     0123EH
+   MOV      A, R3
+   PUSH     ACC
+   MOV      A, R4
+   MOV      R3, A
+   ACALL    01183H
+   ACALL    011F8H
+   POP      ACC
+   MOV      R3, A
+   AJMP     01183H
+   ACALL    01183H
+   ACALL    011F8H
+   AJMP     01174H
+   ACALL    01174H
+   ACALL    011F8H
+   AJMP     01208H
+   ACALL    01174H
+   ACALL    011F8H
+   AJMP     01183H
+   ACALL    01174H
+   AJMP     0124AH
+   ACALL    0121CH
+   ACALL    011F8H
+   ACALL    01200H
+   MOV      A, R3
+   ACALL    0124FH
+   MOV      A, R4
+   AJMP     0124FH
+   ACALL    011F6H
+   ACALL    011F2H
+   ACALL    01208H
+   MOV      A, #02BH
+   ACALL    0122AH
+   AJMP     0121CH
+   ACALL    011F6H
+   ACALL    011F2H
+   ACALL    01208H
+   MOV      A, #02BH
+   ACALL    0122AH
+   MOV      A, #050H
+   ACALL    0122AH
+   AJMP     01210H
+   ACALL    011F6H
+   ACALL    011F2H
+   AJMP     0121CH
+   ACALL    011F2H
+   ACALL    0121CH
+   ACALL    011F8H
+   AJMP     01208H
+   MOVX     A, @DPTR
+   AJMP     01243H
+   CLR      C
+   AJMP     01453H
+   POP      082H
+   ORL      A, #050H
+   XCH      A, R4
+   MOVC     A, @A+PC
+   ORL      A, #050H
+   XCH      A, R0
+   SJMP     01356H
+   ANL      C, /P1.0
+   JNC      012BBH
+   ORL      C, /050H.0
+   CPL      P3.0
+   JNC      012C3H
+   SUBB     A, R1
+   ANL      042H, #055H
+   XCH      A, @R0
+   XCH      A, R5
+   ANL      A, #048H
+   CPL      T2CON.0
+   ANL      A, #032H
+   ORL      04FH, #0CEH
+   XCH      A, R4
+   ANL      A, #04CH
+   CPL      T2CON.3
+   ANL      043H, A
+   AJMP     01250H
+   RETI
+   XCH      A, R0
+   XCH      A, R2
+   ANL      043H, A
+   AJMP     01250H
+   RETI
+   XCH      A, R4
+   MOV      054H, R4
+   ORL      A, R0
+   ANL      C, /TCON.2
+   ANL      A, #04CH
+   ANL      C, /TCON.5
+   ANL      A, #048H
+   ACALL    0158BH
+   ANL      A, #04CH
+   ACALL    015F0H
+   CLR      PSW.0
+   JNC      01399H
+   XCHD     A, @R1
+   MOV      R0, 049H
+   XCH      A, IP
+   ORL      A, R1
+   POP      089H
+   ANL      A, #04DH
+   ORL      A, R7
+   SWAP     A
+   MOV      054H, R0
+   ORL      04FH, #0CEH
+   SUBB     A, R0
+   ANL      043H, #04FH
+   XCH      A, R6
+   MOV      050H, @R1
+   ORL      04FH, #0CEH
+   NOP
+   ANL      A, R1
+   ANL      A, R1
+   INC      R1
+   INC      R1
+   INC      R1
+   INC      R1
+   INC      R1
+   MOV      R2, #07EH
+   INC      R1
+   MOV      @R0, #033H
+   INC      R1
+   ANL      009H, A
+   ACALL    01300H
+   LJMP     00608H
+   INC      R4
+   INC      R6
+   JBC      010H.2, 0138FH
+   DEC      @R0
+   DEC      R3
+   DEC      R6
+   JB       020H.3, 013A5H
+   ADD      A, 0F8H
+   MOVX     @DPTR, A
+   CLR      A
+   MOVC     A, @A+DPTR
+   CLR      C
+   SUBB     A, R0
+   RET
+   MOV      R1, #050H
+   MOV      A, 08DH
+   CPL      A
+   INC      A
+   MOV      R0, A
+   DJNZ     R0, 01390H
+   DJNZ     R1, 0138BH
+   RET
+   ACALL    0124FH
+   MOV      A, #03AH
+   AJMP     0122AH
+   ACALL    0124FH
+   MOV      A, #020H
+   AJMP     0122AH
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   ???
+   MOV      A, ACC
+   ???
+   MOV      R6, A
+   ANL      ___CL_0001, #000H
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   MOV      R7, A
+   MOV      R7, A
+   MOV      R7, A
+   MOV      R7, A
+   ANL      069H, #06EH
+   XRL      A, @R1
+   XRL      A, R4
+   XRL      A, 02DH
+   ANL      074H, #065H
+   JNZ      0142CH
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   JNB      P3.3, 01449H
+   MOV      DPTR, #01D85H
+   LJMP     00045H
+   MOV      DPTR, #00013H
+   CLR      A
+   MOVC     A, @A+DPTR
+   ADD      A, #0FEH
+   JZ       01457H
+   MOV      DPTR, #01DA8H
+   AJMP     01446H
+   INC      DPTR
+   MOVC     A, @A+DPTR
+   MOV      R0, A
+   CLR      A
+   INC      DPTR
+   MOVC     A, @A+DPTR
+   MOV      082H, A
+   MOV      083H, R0
+   MOV      A, #002H
+   ACALL    01382H
+   JNZ      01475H
+   INC      DPTR
+   MOV      A, #014H
+   ACALL    01382H
+   JNZ      01475H
+   INC      DPTR
+   MOV      A, #0EFH
+   ACALL    01382H
+   JZ       01486H
+   MOV      R0, 082H
+   MOV      R1, 083H
+   MOV      DPTR, #01DB5H
+   ACALL    01446H
+   MOV      A, R1
+   ACALL    0124FH
+   MOV      A, R0
+   ACALL    0124FH
+   AJMP     01025H
+   MOV      A, IP
+   ANL      A, #004H
+   MOV      IP, A
+   MOV      DPTR, #01D68H
+   ACALL    01446H
+   MOV      A, R7
+   ACALL    0124FH
+   MOV      A, R6
+   ACALL    0124FH
+   MOV      DPTR, #01D52H
+   ACALL    01446H
+   LCALL    0003CH
+   JB       PSW.5, 014AFH
+   JNC      014ABH
+   MOV      DPTR, #01D71H
+   ACALL    01197H
+   AJMP     01025H
+   MOV      R6, 082H
+   MOV      R7, 083H
+   CLR      TCON.2
+   MOV      DPTR, #01DC4H
+   ACALL    01446H
+   MOV      DPTR, #01EBCH
+   ACALL    01197H
+   CLR      A
+   MOV      081H, #008H
+   PUSH     ACC
+   PUSH     ACC
+   MOV      082H, R6
+   MOV      083H, R7
+   MOV      PSW, A
+   MOV      R0, A
+   MOV      R1, A
+   MOV      R2, A
+   MOV      R3, A
+   MOV      R4, A
+   MOV      R5, A
+   MOV      R6, A
+   MOV      R7, A
+   MOV      B, A
+   MOV      07CH, #0DDH
+   MOV      07DH, #014H
+   SETB     IE.2
+   SETB     IE.7
+   JMP      @A+DPTR
+   ACALL    01389H
+   POP      ACC
+   MOV      R1, A
+   POP      ACC
+   MOV      R0, A
+   POP      082H
+   POP      083H
+   POP      PSW
+   POP      ACC
+   RETI
+   PUSH     ACC
+   PUSH     PSW
+   PUSH     083H
+   PUSH     082H
+   MOV      A, R0
+   PUSH     ACC
+   MOV      A, R1
+   PUSH     ACC
+   ACALL    01389H
+   SETB     SCON.1
+   ACALL    0139DH
+   ACALL    0139DH
+   MOV      A, 081H
+   ADD      A, #0FBH
+   MOV      R0, A
+   MOV      A, @R0
+   ACALL    0139BH
+   MOV      A, B
+   ACALL    0139BH
+   INC      R0
+   MOV      A, @R0
+   RL       A
+   ANL      A, #001H
+   ACALL    01245H
+   ACALL    0139DH
+   INC      R0
+   MOV      A, @R0
+   ACALL    0124FH
+   INC      R0
+   MOV      A, @R0
+   ACALL    0139BH
+   ACALL    0139DH
+   INC      R0
+   MOV      A, @R0
+   ACALL    01395H
+   INC      R0
+   MOV      A, @R0
+   ACALL    01395H
+   MOV      A, R2
+   ACALL    01395H
+   MOV      A, R3
+   ACALL    01395H
+   MOV      A, R4
+   ACALL    01395H
+   MOV      A, R5
+   ACALL    01395H
+   MOV      A, R6
+   ACALL    01395H
+   MOV      A, R7
+   ACALL    0139BH
+   ACALL    0139DH
+   MOV      A, R0
+   ADD      A, #0F8H
+   ACALL    0139BH
+   ACALL    0139DH
+   ACALL    0139DH
+   MOV      A, 07CH
+   MOV      07CH, R6
+   MOV      R6, A
+   MOV      A, 07DH
+   MOV      07DH, R7
+   MOV      R7, A
+   MOV      A, R2
+   PUSH     ACC
+   MOV      A, R3
+   PUSH     ACC
+   MOV      A, R4
+   PUSH     ACC
+   SETB     PSW.1
+   ACALL    0104CH
+   POP      ACC
+   MOV      R4, A
+   POP      ACC
+   MOV      R3, A
+   POP      ACC
+   MOV      R2, A
+   MOV      R7, 07DH
+   MOV      R6, 07CH
+   MOV      A, 081H
+   ADD      A, #0F9H
+   MOV      R0, A
+   MOV      A, @R0
+   MOV      07CH, A
+   INC      R0
+   MOV      A, @R0
+   MOV      07DH, A
+   LCALL    00062H
+   LCALL    00040H
+   CJNE     A, #00DH, 01584H
+   AJMP     014DEH
+   CJNE     A, #020H, 01589H
+   AJMP     014DEH
+   CJNE     A, #03FH, 01593H
+   MOV      DPTR, #01E35H
+   ACALL    01446H
+   AJMP     01579H
+   CJNE     A, #051H, 015A9H
+   MOV      DPTR, #01EB5H
+   ACALL    01197H
+   CLR      IE.2
+   ACALL    01389H
+   MOV      008H, #000H
+   MOV      009H, #000H
+   MOV      081H, #009H
+   RETI
+   CJNE     A, #048H, 015AEH
+   AJMP     015CDH
+   CJNE     A, #052H, 015B3H
+   AJMP     015FDH
+   CJNE     A, #053H, 015B8H
+   AJMP     01667H
+   CJNE     A, #041H, 015BDH
+   AJMP     016AAH
+   CJNE     A, #02EH, 015C7H
+   MOV      DPTR, #01EBCH
+   ACALL    01197H
+   AJMP     01579H
+   AJMP     01579H
+   MOV      A, #03DH
+   AJMP     0122AH
+   MOV      DPTR, #01E03H
+   ACALL    01197H
+   CLR      A
+   ACALL    01395H
+   ACALL    0139DH
+   MOV      R0, 081H
+   DEC      R0
+   MOV      A, @R0
+   ACALL    0139BH
+   INC      R0
+   MOV      A, @R0
+   ACALL    0124FH
+   MOV      R0, #002H
+   MOV      R1, #00EH
+   AJMP     015ECH
+   MOV      A, R0
+   ACALL    01395H
+   MOV      R1, #010H
+   ACALL    0139DH
+   MOV      A, @R0
+   ACALL    0124FH
+   INC      R0
+   DJNZ     R1, 015ECH
+   ACALL    01025H
+   CJNE     R0, #080H, 015E7H
+   ACALL    01025H
+   AJMP     01579H
+   MOV      DPTR, #01344H
+   ACALL    01197H
+   ACALL    015C9H
+   MOV      A, 081H
+   ADD      A, #0FCH
+   MOV      R0, A
+   MOV      A, @R0
+   ACALL    0139BH
+   MOV      DPTR, #01348H
+   MOV      R0, IE
+   ACALL    01660H
+   MOV      DPTR, #0134BH
+   MOV      R0, IP
+   ACALL    01660H
+   MOV      DPTR, #0134EH
+   MOV      R0, 089H
+   ACALL    01660H
+   MOV      DPTR, #01353H
+   MOV      R0, TCON
+   ACALL    01660H
+   MOV      DPTR, #01358H
+   MOV      R0, SCON
+   ACALL    01660H
+   MOV      DPTR, #0135DH
+   MOV      R0, 087H
+   ACALL    01660H
+   MOV      A, #054H
+   ACALL    0122AH
+   MOV      A, #030H
+   ACALL    0122AH
+   ACALL    015C9H
+   MOV      A, 08CH
+   ACALL    0124FH
+   MOV      A, 08AH
+   ACALL    0124FH
+   ACALL    0139DH
+   MOV      A, #054H
+   ACALL    0122AH
+   MOV      A, #031H
+   ACALL    0122AH
+   ACALL    015C9H
+   MOV      A, 08DH
+   ACALL    0124FH
+   MOV      A, 08BH
+   ACALL    0124FH
+   ACALL    01025H
+   AJMP     01579H
+   ACALL    01197H
+   ACALL    015C9H
+   MOV      A, R0
+   AJMP     0139BH
+   MOV      R0, #017H
+   ACALL    0139DH
+   DJNZ     R0, 01669H
+   MOV      DPTR, #01DEBH
+   ACALL    01197H
+   MOV      A, 081H
+   ADD      A, #0F9H
+   MOV      R0, A
+   MOV      A, @R0
+   MOV      07CH, R6
+   MOV      R6, A
+   INC      R0
+   MOV      A, @R0
+   MOV      07DH, R7
+   MOV      R7, A
+   MOV      A, R2
+   PUSH     ACC
+   MOV      A, R3
+   PUSH     ACC
+   MOV      A, R4
+   PUSH     ACC
+   SETB     PSW.1
+   ACALL    0104CH
+   POP      ACC
+   MOV      R4, A
+   POP      ACC
+   MOV      R3, A
+   POP      ACC
+   MOV      R2, A
+   MOV      A, 081H
+   ADD      A, #0F9H
+   MOV      R0, A
+   MOV      A, R6
+   MOV      R6, 07CH
+   MOV      07CH, A
+   MOV      @R0, A
+   INC      R0
+   MOV      A, R7
+   MOV      R7, 07DH
+   MOV      07DH, A
+   MOV      @R0, A
+   AJMP     01579H
+   MOV      A, 081H
+   ADD      A, #0FBH
+   MOV      R0, A
+   MOV      DPTR, #01E25H
+   ACALL    01197H
+   LCALL    0003AH
+   JC       016C1H
+   JB       PSW.5, 016C1H
+   MOV      @R0, A
+   ACALL    01025H
+   AJMP     01579H
+   MOV      DPTR, #01D71H
+   ACALL    01197H
+   AJMP     01579H
+   MOV      R5, 006H
+   XRL      A, R7
+   ADDC     A, R1
+   ADDC     A, R1
+   ORL      A, @R0
+   ORL      A, R1
+   ORL      A, R1
+   XRL      006H, #06FH
+   ADDC     A, R1
+   ADDC     A, R1
+   ORL      A, @R0
+   ORL      A, R1
+   ORL      A, R1
+   XRL      006H, #0ADH
+   ADDC     A, R1
+   DEC      @R0
+   INC      R6
+   ACALL    01011H
+   XRL      006H, #0ADH
+   ADDC     A, R1
+   DEC      @R0
+   INC      R6
+   ACALL    01011H
+   XRL      A, @R0
+   INC      @R0
+   DEC      R2
+   DEC      R7
+   DEC      @R0
+   INC      R6
+   ACALL    01011H
+   XRL      A, @R0
+   INC      @R0
+   DEC      R2
+   DEC      R7
+   DEC      @R0
+   INC      R6
+   ACALL    01011H
+   XRL      A, @R0
+   INC      @R0
+   DEC      R2
+   DEC      R7
+   DEC      @R0
+   INC      R6
+   ACALL    01011H
+   XRL      A, @R0
+   INC      @R0
+   RET
+   XRL      A, R1
+   DEC      @R0
+   DEC      R7
+   MOV      P1.2, C
+   XRL      A, @R0
+   INC      @R0
+   RET
+   AJMP     0154DH
+   MOVC     A, @A+PC
+   MOV      086H, @R0
+   SUBB     A, R3
+   INC      @R0
+   SUBB     A, @R0
+   SUBB     A, R5
+   DEC      @R0
+   INC      R6
+   ACALL    01011H
+   ADD      A, @R0
+   INC      @R0
+   RET
+   ANL      A, R5
+   ORL      A, R5
+   MOV      R5, 08EH
+   MOV      026H, R6
+   INC      @R0
+   ORL      03DH, A
+   ADD      A, R7
+   ADD      A, R3
+   ADDC     A, @R1
+   ADDC     A, @R1
+   ORL      A, @R0
+   INC      @R0
+   ORL      03DH, A
+   ADDC     A, R1
+   INC      R6
+   ACALL    01011H
+   ORL      A, @R0
+   INC      @R0
+   ORL      03DH, A
+   ADDC     A, R1
+   ANL      A, @R1
+   ACALL    01011H
+   ???
+   INC      @R0
+   ACALL    01011H
+   ADDC     A, R1
+   INC      R6
+   ACALL    01011H
+   MOV      R1, 006H
+   MOV      089H, R1
+   ADDC     A, R1
+   DEC      R2
+   MOV      089H, R1
+   ANL      A, R2
+   INC      R6
+   ORL      A, R0
+   JMP      @A+DPTR
+   ADD      A, R3
+   ADD      A, R3
+   ADD      A, R3
+   ADD      A, R3
+   JNB      ___CL_0001.0, 01796H
+   MOV      021H, #021H
+   AJMP     01121H
+   ADD      A, R6
+   INC      R6
+   XRL      A, @R1
+   XRL      A, R6
+   INC      @R0
+   INC      @R0
+   INC      @R0
+   INC      @R0
+   ADDC     A, R0
+   NOP
+   XRL      A, R2
+   JNZ      0176FH
+   INC      R2
+   INC      R2
+   INC      R2
+   RLC      A
+   INC      R6
+   ANL      A, R5
+   ANL      A, R5
+   ANL      A, R5
+   ANL      A, R5
+   ANL      A, R5
+   ANL      A, R5
+   ADDC     A, R3
+   NOP
+   LCALL    01212H
+   LCALL    01212H
+   AJMP     0120EH
+   MOV      08FH, R7
+   MOV      08FH, R7
+   MOV      08FH, R7
+   ADDC     A, R6
+   NOP
+   ANL      A, R5
+   ADDC     A, 04CH
+   ORL      A, R4
+   ORL      A, R4
+   ORL      A, R4
+   MOV      R4, #00EH
+   LCALL    04F24H
+   ORL      A, R4
+   ORL      A, R4
+   ORL      A, R4
+   ORL      A, R4
+   NOP
+   ORL      A, R4
+   ORL      A, R7
+   SJMP     01716H
+   SJMP     01718H
+   ANL      A, R5
+   INC      R6
+   ORL      A, R4
+   ADD      A, R3
+   ANL      A, @R1
+   MOV      048H.4, C
+   ORL      A, R4
+   LCALL    0001CH
+   DEC      R4
+   DEC      015H
+   DEC      015H
+   XRL      00EH, #019H
+   DEC      R1
+   DIV      AB
+   MOV      TCON, R0
+   MOV      060H, R0
+   NOP
+   MOV      R0, #078H
+   DEC      R7
+   ADD      A, @R1
+   MOV      08BH, R3
+   ANL      00EH, #053H
+   ANL      019H, #04CH
+   ORL      A, R4
+   ORL      A, R4
+   ANL      ___CL_0001, #053H
+   ANL      01CH, #04CH
+   ORL      A, R4
+   ORL      A, R4
+   ADD      A, R3
+   AJMP     01106H
+   INC      R2
+   ANL      A, R5
+   LCALL    08F4CH
+   ORL      A, R4
+   SJMP     0181FH
+   DEC      TCON
+   ADD      A, @R1
+   ORL      A, R4
+   ORL      A, R4
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   ???
+   MOV      A, ACC
+   ???
+   MOV      R6, A
+   ORL      A, ___CL_0001
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   MOV      R7, A
+   MOV      R7, A
+   MOV      R7, A
+   MOV      R7, A
+   ORL      A, R5
+   XRL      A, 06DH
+   XRL      A, R7
+   ORL      C, 078H.1
+   JB       040H.5, 0188DH
+   XRL      A, R1
+   MOV      A, #06FH
+   ORL      C, 020H.0
+   ADD      A, R0
+   ANL      A, @R0
+   ANL      A, #031H
+   JNB      030H.0, 0185EH
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   NOP
+   MOV      R4, #000H
+   ACALL    01AC6H
+   MOV      A, R4
+   CLR      ACC.3
+   MOV      R4, A
+   LCALL    00062H
+   ACALL    01919H
+   CJNE     A, #01BH, 01852H
+   AJMP     01B8DH
+   CJNE     A, #00BH, 01857H
+   AJMP     01A24H
+   CJNE     A, #00AH, 0185CH
+   AJMP     01A4BH
+   CJNE     A, #008H, 01861H
+   AJMP     01A66H
+   CJNE     A, #015H, 01866H
+   AJMP     01A95H
+   CJNE     A, #00CH, 0186DH
+   ACALL    01AC6H
+   AJMP     01844H
+   CJNE     A, #011H, 01872H
+   AJMP     01B8DH
+   CJNE     A, #003H, 01884H
+   MOV      A, R4
+   ANL      A, #0FEH
+   MOV      R4, A
+   ACALL    01BCFH
+   MOV      DPTR, #01D36H
+   ACALL    01D46H
+   ACALL    01AE1H
+   AJMP     01844H
+   CJNE     A, #004H, 01896H
+   MOV      A, R4
+   ORL      A, #001H
+   MOV      R4, A
+   ACALL    01BCFH
+   MOV      DPTR, #01D3BH
+   ACALL    01D46H
+   ACALL    01AE1H
+   AJMP     01844H
+   CJNE     A, #007H, 0189BH
+   AJMP     019ECH
+   CJNE     A, #005H, 018A0H
+   AJMP     019E0H
+   CJNE     A, #006H, 018A5H
+   AJMP     01959H
+   CJNE     A, #001H, 018B7H
+   MOV      A, R4
+   JNB      ACC.1, 01844H
+   SETB     ACC.2
+   MOV      R4, A
+   ACALL    01C54H
+   ACALL    01C64H
+   ACALL    01B21H
+   AJMP     01844H
+   CJNE     A, #018H, 018C9H
+   MOV      A, R4
+   JNB      ACC.1, 01844H
+   CLR      ACC.2
+   MOV      R4, A
+   ACALL    01C54H
+   ACALL    01C64H
+   ACALL    01B21H
+   AJMP     01844H
+   CJNE     A, #019H, 018CEH
+   AJMP     01A41H
+   CJNE     A, #01AH, 018D3H
+   AJMP     01A46H
+   MOV      B, A
+   MOV      A, R4
+   JB       ACC.1, 018DBH
+   AJMP     01844H
+   JNB      ACC.2, 018EEH
+   MOV      A, B
+   ACALL    01B98H
+   CJNE     A, B, 018D9H
+   MOV      083H, R7
+   MOV      082H, R6
+   LCALL    00056H
+   AJMP     01A95H
+   MOV      A, B
+   LCALL    00040H
+   LCALL    00065H
+   JC       018D9H
+   MOV      R0, A
+   MOV      083H, R7
+   MOV      082H, R6
+   MOV      A, R4
+   JB       ACC.3, 0190BH
+   MOV      A, R0
+   MOV      R5, A
+   MOV      A, R4
+   SETB     ACC.3
+   MOV      R4, A
+   ACALL    01B21H
+   AJMP     01848H
+   MOV      A, R5
+   SWAP     A
+   ANL      A, #0F0H
+   ADD      A, R0
+   LCALL    00056H
+   MOV      A, R4
+   CLR      ACC.3
+   MOV      R4, A
+   AJMP     01A95H
+   PUSH     ACC
+   MOV      A, R4
+   JB       ACC.1, 01925H
+   CLR      ACC.3
+   MOV      R4, A
+   POP      ACC
+   RET
+   JNB      ACC.3, 01921H
+   POP      ACC
+   PUSH     ACC
+   LCALL    00040H
+   LCALL    00065H
+   JNC      01922H
+   POP      ACC
+   PUSH     ACC
+   CJNE     A, #01BH, 01949H
+   MOV      A, R4
+   CLR      ACC.3
+   MOV      R4, A
+   ACALL    01B21H
+   POP      ACC
+   POP      ACC
+   POP      ACC
+   AJMP     01844H
+   MOV      083H, R7
+   MOV      082H, R6
+   MOV      A, R5
+   LCALL    00056H
+   MOV      A, R4
+   CLR      ACC.3
+   MOV      R4, A
+   ACALL    01B21H
+   SJMP     01922H
+   MOV      A, R4
+   ANL      A, #002H
+   JNZ      01960H
+   AJMP     01844H
+   ACALL    01C54H
+   MOV      A, R4
+   PUSH     ACC
+   MOV      DPTR, #019C2H
+   ACALL    01D4CH
+   LCALL    0003CH
+   JC       019B7H
+   JB       PSW.5, 019B7H
+   MOV      R0, 082H
+   MOV      R1, 083H
+   MOV      DPTR, #019D2H
+   ACALL    01D46H
+   LCALL    0003CH
+   JC       019B7H
+   JB       PSW.5, 019B7H
+   MOV      R4, 082H
+   MOV      R5, 083H
+   MOV      DPTR, #019DBH
+   ACALL    01D4CH
+   LCALL    0003AH
+   JC       019B7H
+   JB       PSW.5, 019B7H
+   MOV      R2, A
+   MOV      A, R4
+   MOV      R6, A
+   MOV      A, R5
+   MOV      R7, A
+   POP      ACC
+   MOV      R4, A
+   MOV      082H, R0
+   MOV      083H, R1
+   MOV      A, R2
+   LCALL    00056H
+   MOV      A, R6
+   CJNE     A, 082H, 019B4H
+   MOV      A, R7
+   CJNE     A, 083H, 019B4H
+   ACALL    01C54H
+   ACALL    01C64H
+   ACALL    01AE1H
+   AJMP     01844H
+   INC      DPTR
+   SJMP     019A0H
+   POP      ACC
+   MOV      R4, A
+   ACALL    01C54H
+   ACALL    01C64H
+   ACALL    01B21H
+   AJMP     01844H
+   ORL      A, @R0
+   XRL      A, R1
+   XRL      A, R4
+   XRL      A, R4
+   DEC      R7
+   MOVC     A, @A+PC
+   ADDC     A, R3
+   JB       040H.6, 01A35H
+   ORL      C, 070H.3
+   MOV      A, #03AH
+   JB       ___CL_0001.0, 019F3H
+   JB       048H.4, 01A37H
+   JMP      @A+DPTR
+   MOV      A, #03AH
+   JB       ___CL_0001.0, 019FCH
+   MOV      R0, 03AH
+   JB       ___CL_0001.0, 01972H
+   ANL      A, #0ECH
+   XRL      A, #002H
+   MOV      R4, A
+   ACALL    01C64H
+   ACALL    01B21H
+   AJMP     01844H
+   ACALL    01C54H
+   MOV      DPTR, #01A1DH
+   ACALL    01D4CH
+   MOV      A, R4
+   PUSH     ACC
+   LCALL    0003CH
+   POP      ACC
+   MOV      R4, A
+   JC       01A11H
+   JB       PSW.5, 01A11H
+   MOV      R6, 082H
+   MOV      R7, 083H
+   ACALL    01BCFH
+   MOV      A, #014H
+   ACALL    01BD5H
+   ACALL    01C64H
+   ACALL    01AE1H
+   AJMP     01844H
+   ACALL    01BCFH
+   MOV      A, #014H
+   ACALL    01BD5H
+   ACALL    01C64H
+   ACALL    01B21H
+   AJMP     01844H
+   DEC      R7
+   MOVC     A, @A+PC
+   DEC      R7
+   AJMP     01C3AH
+   JB       ___CL_0001.0, 01A96H
+   ORL      A, R5
+   MOV      A, R6
+   CLR      C
+   SUBB     A, #010H
+   MOV      R6, A
+   MOV      A, R7
+   SUBB     A, #000H
+   MOV      R7, A
+   MOV      A, R6
+   CPL      A
+   ANL      A, #0F0H
+   JZ       01A3DH
+   MOV      A, #001H
+   ACALL    01BDDH
+   ACALL    01B69H
+   AJMP     01844H
+   ACALL    01AE1H
+   AJMP     01844H
+   DEC      R7
+   ACALL    01AE1H
+   AJMP     01844H
+   INC      R7
+   ACALL    01AE1H
+   AJMP     01844H
+   ACALL    01B4DH
+   MOV      A, R6
+   ADD      A, #010H
+   MOV      R6, A
+   MOV      A, R7
+   ADDC     A, #000H
+   MOV      R7, A
+   MOV      A, R6
+   ANL      A, #0F0H
+   JZ       01A62H
+   MOV      A, #001H
+   ACALL    01BD5H
+   ACALL    01B69H
+   AJMP     01844H
+   ACALL    01AE1H
+   AJMP     01844H
+   ACALL    01B4DH
+   MOV      A, #003H
+   ACALL    01BE5H
+   MOV      A, R6
+   CLR      C
+   SUBB     A, #001H
+   MOV      R6, A
+   MOV      A, R7
+   SUBB     A, #000H
+   MOV      R7, A
+   MOV      A, R6
+   ORL      A, #0F0H
+   CPL      A
+   JZ       01A7FH
+   ACALL    01B69H
+   AJMP     01844H
+   MOV      A, R6
+   CPL      A
+   ANL      A, #0F0H
+   JZ       01A91H
+   MOV      A, #030H
+   ACALL    01BEDH
+   MOV      A, #001H
+   ACALL    01BDDH
+   ACALL    01B69H
+   AJMP     01844H
+   ACALL    01AE1H
+   AJMP     01844H
+   ACALL    01B4DH
+   MOV      A, #003H
+   ACALL    01BEDH
+   MOV      082H, R6
+   MOV      083H, R7
+   INC      DPTR
+   MOV      R6, 082H
+   MOV      R7, 083H
+   MOV      A, R6
+   ANL      A, #00FH
+   JZ       01AADH
+   ACALL    01B69H
+   AJMP     01844H
+   MOV      A, R6
+   ANL      A, #0F0H
+   JZ       01ABEH
+   MOV      A, #030H
+   ACALL    01BE5H
+   MOV      A, #001H
+   ACALL    01BD5H
+   ACALL    01B69H
+   AJMP     01844H
+   ACALL    01AE1H
+   AJMP     01844H
+   MOV      A, #020H
+   AJMP     01D40H
+   MOV      DPTR, #01CFCH
+   ACALL    01D46H
+   ACALL    01C3BH
+   ACALL    01D49H
+   ACALL    01C18H
+   ACALL    01D49H
+   ACALL    01C32H
+   ACALL    01D49H
+   MOV      A, #010H
+   ACALL    01BD5H
+   ACALL    01C32H
+   ACALL    01D49H
+   ACALL    01C64H
+   ACALL    01BCFH
+   MOV      A, #002H
+   ACALL    01BD5H
+   MOV      082H, #000H
+   MOV      083H, R7
+   MOV      R0, #010H
+   ACALL    01D49H
+   LCALL    00036H
+   MOV      A, #03AH
+   ACALL    01D40H
+   MOV      R2, 082H
+   MOV      R3, 083H
+   ACALL    01AC2H
+   ACALL    01BAAH
+   ACALL    01D43H
+   INC      DPTR
+   MOV      A, 082H
+   ANL      A, #00FH
+   JNZ      01AFBH
+   MOV      082H, R2
+   MOV      083H, R3
+   ACALL    01AC2H
+   ACALL    01AC2H
+   ACALL    01AC2H
+   ACALL    01BAAH
+   ACALL    01B98H
+   ACALL    01D40H
+   INC      DPTR
+   MOV      A, 082H
+   ANL      A, #00FH
+   JNZ      01B12H
+   DJNZ     R0, 01AEEH
+   ACALL    01BCFH
+   MOV      A, R6
+   SWAP     A
+   ANL      A, #00FH
+   ADD      A, #003H
+   ACALL    01BD5H
+   MOV      A, R6
+   ANL      A, #00FH
+   ADD      A, #038H
+   ACALL    01BEDH
+   ACALL    01BF5H
+   ACALL    01BB3H
+   ACALL    01B98H
+   ACALL    01D40H
+   ACALL    01C01H
+   MOV      A, R6
+   ANL      A, #00FH
+   RL       A
+   CPL      A
+   ADD      A, #034H
+   ACALL    01BE5H
+   ACALL    01BF5H
+   ACALL    01BB3H
+   ACALL    01D43H
+   AJMP     01C01H
+   MOV      A, R6
+   ANL      A, #00FH
+   RL       A
+   CPL      A
+   ADD      A, #031H
+   ACALL    01BEDH
+   ACALL    01BB3H
+   ACALL    01B98H
+   ACALL    01D40H
+   MOV      A, R6
+   ANL      A, #00FH
+   RL       A
+   CPL      A
+   ADD      A, #034H
+   ACALL    01BE5H
+   ACALL    01BB3H
+   AJMP     01D43H
+   MOV      A, R6
+   ANL      A, #00FH
+   RL       A
+   CPL      A
+   ADD      A, #031H
+   ACALL    01BEDH
+   ACALL    01BB3H
+   ACALL    01B98H
+   ACALL    01BF5H
+   ACALL    01D40H
+   ACALL    01C01H
+   MOV      A, R6
+   ANL      A, #00FH
+   RL       A
+   CPL      A
+   ADD      A, #034H
+   ACALL    01BE5H
+   ACALL    01BB3H
+   ACALL    01BF5H
+   ACALL    01D43H
+   AJMP     01C01H
+   MOV      A, R6
+   ANL      A, #0F0H
+   SWAP     A
+   CPL      A
+   ADD      A, #013H
+   ACALL    01BD5H
+   AJMP     01D49H
+   ANL      A, #07FH
+   CJNE     A, #07FH, 01BA0H
+   MOV      A, #020H
+   RET
+   CLR      C
+   SUBB     A, #020H
+   JNC      01BA7H
+   MOV      A, #000H
+   ADD      A, #020H
+   RET
+   MOV      A, R4
+   JB       ACC.0, 01BB1H
+   CLR      A
+   MOVC     A, @A+DPTR
+   RET
+   MOVX     A, @DPTR
+   RET
+   PUSH     083H
+   PUSH     082H
+   MOV      083H, R7
+   MOV      082H, R6
+   MOV      A, R4
+   JB       ACC.3, 01BCCH
+   JB       ACC.0, 01BC6H
+   CLR      A
+   MOVC     A, @A+DPTR
+   SJMP     01BC7H
+   MOVX     A, @DPTR
+   POP      082H
+   POP      083H
+   RET
+   MOV      A, R5
+   SJMP     01BC7H
+   ACALL    01C0BH
+   MOV      A, #048H
+   AJMP     01D40H
+   ACALL    01C0BH
+   ACALL    01D4FH
+   MOV      A, #042H
+   AJMP     01D40H
+   ACALL    01C0BH
+   ACALL    01D4FH
+   MOV      A, #041H
+   AJMP     01D40H
+   ACALL    01C0BH
+   ACALL    01D4FH
+   MOV      A, #044H
+   AJMP     01D40H
+   ACALL    01C0BH
+   ACALL    01D4FH
+   MOV      A, #043H
+   AJMP     01D40H
+   MOV      DPTR, #01BFAH
+   AJMP     01D46H
+   DEC      R3
+   ANL      A, R3
+   JNB      038H.3, 01C36H
+   XRL      A, R5
+   NOP
+   MOV      DPTR, #01C06H
+   AJMP     01D46H
+   DEC      R3
+   ANL      A, R3
+   JNB      068H.5, 01C0BH
+   PUSH     ACC
+   MOV      A, #01BH
+   ACALL    01D40H
+   MOV      A, #05BH
+   ACALL    01D40H
+   POP      ACC
+   RET
+   MOV      DPTR, #01D04H
+   ACALL    01D46H
+   MOV      R0, #000H
+   ACALL    01AC2H
+   MOV      A, #02BH
+   ACALL    01D40H
+   MOV      A, R0
+   LCALL    0002EH
+   INC      R0
+   CJNE     R0, #010H, 01C1FH
+   MOV      DPTR, #01D0AH
+   AJMP     01D46H
+   MOV      R0, #048H
+   MOV      A, #02DH
+   ACALL    01D40H
+   DJNZ     R0, 01C34H
+   RET
+   MOV      A, R4
+   JB       ACC.0, 01C44H
+   MOV      DPTR, #01D36H
+   SJMP     01C47H
+   MOV      DPTR, #01D3BH
+   ACALL    01D46H
+   MOV      R0, #008H
+   ACALL    01AC2H
+   DJNZ     R0, 01C4BH
+   MOV      DPTR, #01D1EH
+   AJMP     01D4CH
+   ACALL    01BCFH
+   MOV      A, #014H
+   ACALL    01BD5H
+   MOV      R2, #048H
+   ACALL    01AC2H
+   DJNZ     R2, 01C5CH
+   MOV      A, #048H
+   AJMP     01BE5H
+   MOV      A, R4
+   JNB      ACC.1, 01C7AH
+   MOV      DPTR, #01CBCH
+   JB       ACC.2, 01C71H
+   MOV      DPTR, #01CD7H
+   ACALL    01D46H
+   MOV      DPTR, #01CF2H
+   ACALL    01D46H
+   SJMP     01C7FH
+   MOV      DPTR, #01CB4H
+   ACALL    01D46H
+   MOV      DPTR, #01C84H
+   AJMP     01D46H
+   JB       020H.0, 01CE5H
+   ORL      A, @R1
+   ADDC     A, R5
+   ORL      A, @R1
+   XRL      A, R7
+   MOV      A, #06FH
+   JB       020H.0, 01CEEH
+   ORL      03DH, #043H
+   XRL      A, R7
+   XRL      A, #065H
+   JB       020H.0, 01CF7H
+   ORL      A, #03DH
+   ORL      A, #061H
+   MOV      A, #061H
+   JB       020H.0, 01D00H
+   ORL      A, R4
+   ADDC     A, R5
+   ANL      065H, A
+   XRL      A, #072H
+   AJMP     01B77H
+   JB       020H.0, 01D0BH
+   ACALL    01A3DH
+   ACALL    01A75H
+   XRL      A, R1
+   MOV      A, #000H
+   ANL      A, R6
+   ORL      A, 02DH
+   ORL      A, 064H
+   XRL      A, R1
+   MOV      A, #000H
+   ANL      A, R6
+   AJMP     01A3DH
+   DEC      R3
+   ANL      A, R3
+   JNB      038H.3, 01CFBH
+   XRL      A, R5
+   AJMP     01A53H
+   ORL      049H, #049H
+   DEC      R3
+   ANL      A, R3
+   JNB      068H.5, 01CEFH
+   JB       058H.6, 01D2AH
+   ADDC     A, R5
+   ORL      A, R0
+   XRL      A, 078H
+   NOP
+   ANL      A, R6
+   AJMP     01A3DH
+   AJMP     01A53H
+   ORL      049H, #049H
+   JB       020H.0, 01D40H
+   ANL      A, R0
+   ADDC     A, R5
+   DEC      R3
+   ANL      A, R3
+   JNB      038H.3, 01D20H
+   XRL      A, R5
+   ORL      A, R0
+   XRL      A, 078H
+   DEC      R3
+   ANL      A, R3
+   JNB      068H.5, 01CF2H
+   JB       020H.0, 01D53H
+   ORL      A, @R0
+   ADDC     A, R5
+   ORL      A, @R0
+   XRL      A, R1
+   XRL      A, R4
+   XRL      A, R4
+   NOP
+   DEC      R3
+   ANL      A, R3
+   ORL      A, R0
+   DEC      R3
+   ANL      A, R3
+   RETI
+   ORL      A, R2
+   NOP
+   AJMP     01A44H
+   ORL      A, #052H
+   ADDC     A, R2
+   NOP
+   JB       020H.0, 01D2DH
+   AJMP     01A53H
+   ORL      049H, #049H
+   JB       040H.5, 01D66H
+   ANL      A, 049H
+   ANL      A, @R0
+   ORL      A, R1
+   ORL      A, R4
+   AJMP     01A4EH
+   ANL      A, #000H
+   ADDC     A, R0
+   JNB      030H.5, 01D53H
+   DEC      R7
+   SUBB     A, R2
+   DEC      R7
+   MOVC     A, @A+PC
+   DEC      R7
+   DJNZ     R0, 01D98H
+   ORL      C, 028H.4
+   DEC      R7
+   MOV      R0, A
+   DEC      R7
+   MOV      R6, A
+   ADD      A, R4
+   JB       030H.1, 01D6CH
+   ADDC     A, R1
+   ADDC     A, @R0
+   NOP
+   ORL      04FH, #044H
+   ORL      A, ___CL_0001
+   ORL      A, #041H
+   ANL      A, #041H
+   NOP
+   LJMP     00030H
+   LJMP     00034H
+   LJMP     00038H
+   LJMP     00048H
+   LJMP     00045H
+   LJMP     00050H
+   ADD      A, R1
+   ADD      A, R4
+   JB       068H.7, 01DC9H
+   JB       038H.4, 01D9FH
+   ANL      043H, #03EH
+   JB       070H.4, 01DCFH
+   JB       060H.5, 01DDBH
+   XRL      A, R1
+   MOV      A, #03AH
+   JB       ___CL_0001.0, 01D76H
+   DEC      R7
+   MOV      P0, R0
+   MOVC     A, @A+PC
+   AJMP     01C20H
+   ADD      A, R0
+   NOP
+   JB       040H.3, 01DE3H
+   XRL      A, R5
+   XRL      A, R5
+   AJMP     01B6EH
+   XRL      A, #020H
+   AJMP     01A62H
+   XRL      A, R7
+   ORL      C, 070H.4
+   XRL      A, 064H
+   ADD      A, R6
+   INC      R5
+   INC      R2
+   NOP
+   INC      R5
+   AJMP     01DC5H
+   JB       060H.3, 01DFAH
+   XRL      A, R6
+   XRL      A, R6
+   XRL      A, 063H
+   MOV      A, #020H
+   ORL      A, R1
+   ORL      A, R6
+   ANL      A, #031H
+   JB       028H.0, 01E08H
+   XRL      A, R1
+   XRL      A, R6
+   JB       030H.1, 01DD0H
+   ADD      A, R1
+   JB       068H.4, 01E10H
+   MOV      @R1, #080H
+   CJNE     R2, #0CFH, 01D72H
+   INC      R5
+   NOP
+   SUBB     A, #032H
+   CPL      C
+   XCH      A, @R1
+   MOV      R6, 081H
+   JB       030H.0, 01DE1H
+   ACALL    01933H
+   INC      R5
+   NOP
+   DEC      R7
+   CJNE     R0, #0B3H, 01DB8H
+   ???
+   JB       070H.6, 01E22H
+   XRL      074H, #06FH
+   ORL      C, IE.6
+   JB       ___CL_0001.0, 01DD2H
+   ORL      A, R6
+   XRL      A, R7
+   MOV      @R1, #086H
+   XRL      A, R6
+   XRL      A, R1
+   XRL      A, R6
+   XRL      A, @R1
+   MOV      @R0, 0CFH
+   XCH      A, R4
+   JB       068H.5, 01E42H
+   XRL      A, #065H
+   ADDC     A, R2
+   JB       020H.0, 01E15H
+   ANL      045H, A
+   ANL      A, #03EH
+   ADDC     A, R5
+   XCH      A, R4
+   ADD      A, R4
+   JB       038H.7, 01E20H
+   JB       048H.0, 01E4BH
+   XRL      A, R4
+   JNZ      01DF6H
+   INC      R5
+   NOP
+   ANL      06BH, #069H
+   JNZ      01E60H
+   XRL      A, R1
+   XRL      A, R6
+   XRL      A, @R1
+   JB       048H.1, 01E64H
+   JMP      @A+DPTR
+   MOV      A, #072H
+   MOV      063H, #074H
+   XRL      A, R1
+   XRL      A, R7
+   XRL      A, R6
+   ADD      A, R5
+   ADDC     A, R6
+   JB       ___CL_0001.0, 01E11H
+   INC      R2
+   ORL      A, R4
+   XRL      A, R7
+   XRL      03AH, #020H
+   JB       048H.1, 01E7BH
+   MOV      A, #020H
+   ANL      041H, A
+   ORL      A, R5
+   JB       048H.5, 01E7AH
+   XRL      A, R5
+   XRL      A, R7
+   ORL      C, 078H.1
+   JB       040H.3, 01E8BH
+   XRL      A, R6
+   MOV      A, #065H
+   XRL      A, R6
+   MOV      A, #073H
+   INC      R5
+   INC      R2
+   NOP
+   ORL      A, R6
+   XRL      A, 077H
+   JB       040H.1, 01E8EH
+   XRL      020H, #056H
+   AJMP     01B6CH
+   MOV      065H, #03AH
+   JB       ___CL_0001.0, 01E43H
+   DEC      R7
+   XCH      A, R7
+   DEC      R7
+   XCH      A, R4
+   DEC      R7
+   SUBB     A, R6
+   ADDC     A, R2
+   INC      R5
+   ADDC     A, R4
+   ANL      045H, A
+   ANL      A, #03EH
+   JB       P0.6, 01E1AH
+   MOV      @R0, A
+   INC      R5
+   JB       038H.4, 01E9EH
+   JNC      01E8BH
+   JB       P0.6, 01E24H
+   MOV      @R0, A
+   INC      R5
+   JB       020H.7, 01E94H
+   ADD      A, @R1
+   JB       020H.0, 01E58H
+   MOV      0D7H, R6
+   INC      R5
+   JB       020H.7, 01E8DH
+   ADD      A, @R1
+   JB       020H.0, 01E62H
+   SWAP     A
+   MOV      R5, A
+   JMP      @A+DPTR
+   INC      R5
+   JB       020H.7, 01EBCH
+   ADD      A, @R1
+   JB       020H.0, 01E6DH
+   JB       070H.3, 01EE1H
+   XRL      A, 063H
+   XRL      A, R1
+   AJMP     01B6CH
+   JB       060H.6, 01EEEH
+   XRL      A, R6
+   XRL      074H, #069H
+   XRL      A, R7
+   XRL      A, R6
+   SWAP     A
+   JMP      @A+DPTR
+   INC      R5
+   JB       020H.7, 01ECDH
+   ADD      A, @R1
+   JB       020H.0, 01E0DH
+   DJNZ     R3, 01E4BH
+   MOV      008H.5, C
+   JB       020H.7, 01EE3H
+   ADD      A, @R1
+   JB       020H.0, 01E90H
+   DA       A
+   MOV      @R0, A
+   INC      R5
+   JB       020H.7, 01EDBH
+   ADD      A, @R1
+   JB       020H.0, 01E8EH
+   MOV      C, 020H.0
+   AJMP     01A63H
+   XRL      020H, #076H
+   AJMP     01B6CH
+   MOV      065H, #00DH
+   JB       020H.7, 01EFEH
+   ADD      A, @R1
+   JB       020H.0, 01E79H
+   XCH      A, R7
+   XCH      A, R4
+   INC      R5
+   INC      R6
+   ACALL    01A75H
+   XRL      A, R1
+   MOV      A, #00DH
+   INC      R2
+   NOP
+   JB       020H.0, 01F00H
+   ORL      043H, #020H
+   ORL      020H, A
+   ORL      020H, #044H
+   JNC      01F1DH
+   ANL      020H, A
+   JB       050H.2, 01EFEH
+   JB       050H.2, 01F02H
+   JB       050H.2, 01F06H
+   JB       050H.2, 01F0AH
+   JB       050H.2, 01F0EH
+   JB       050H.2, 01F12H
+   JB       050H.2, 01F16H
+   JB       050H.2, 01F1AH
+   JB       020H.0, 01F39H
+   JNC      01F08H
+   JB       020H.0, 01F2CH
+   XRL      A, #064H
+   ORL      C, 020H.0
+   JB       048H.1, 01F60H
+   JMP      @A+DPTR
+   MOV      A, #072H
+   MOV      063H, #074H
+   XRL      A, R1
+   XRL      A, R7
+   XRL      A, R6
+   INC      R5
+   INC      R2
+   NOP
+   AJMP     01A43H
