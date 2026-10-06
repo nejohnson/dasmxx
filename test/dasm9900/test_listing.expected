@@ -1,0 +1,77 @@
+   dasm9900 -- TI TMS9900/TMS9995 Disassembler --
+-----------------------------------------------------------------
+
+;   Processing "test.bin" (162 bytes)
+;   Disassembly start address: 0x0000
+;   String terminator: 0x00
+
+Start:
+    0000:    01 02 34 12          LI   R1,#>1234
+    0004:    22 02 10 00          AI   R2,#>0010
+    0008:    43 02 00 FF          ANDI R3,#>FF00
+    000C:    64 02 FF 00          ORI  R4,#>00FF
+    0010:    85 02 34 12          CI   R5,#>1234
+    0014:    A6 02                STWP R6
+    0016:    C7 02                STST R7
+    0018:    E0 02 00 20          LWPI #>2000
+    001C:    00 03 02 00          LIMI #>0002
+    0020:    40 03                IDLE
+    0022:    60 03                RSET
+    0024:    80 03                RTWP
+    0026:    A0 03                CKON
+    0028:    C0 03                CKOF
+    002A:    E0 03                LREX
+    002C:    00 04                BLWP R0
+    002E:    51 04                B    *R1
+    0030:    A2 04 34 12          X    @TestAddr(R2)
+    0034:    F3 04                CLR  *R3+
+    0036:    04 05                NEG  R4
+    0038:    55 05                INV  *R5
+    003A:    A6 05 34 12          INC  @TestAddr(R6)
+    003E:    F7 05                INCT *R7+
+    0040:    08 06                DEC  R8
+    0042:    59 06                DECT *R9
+    0044:    AA 06 34 12          BL   @TestAddr(R10)
+    0048:    FB 06                SWPB *R11+
+    004A:    0C 07                SETO R12
+    004C:    5D 07                ABS  *R13
+    004E:    21 08                SRA  R1,2
+    0050:    02 09                SRL  R2,R0
+    0052:    F3 0A                SLA  R3,15
+    0054:    44 0B                SRC  R4,4
+    0056:    02 10                JMP  >005C
+    0058:    FE 11                JLT  >0056
+    005A:    02 12                JLE  >0060
+    005C:    FE 13                JEQ  >005A
+    005E:    02 14                JHE  >0064
+    0060:    FE 15                JGT  >005E
+    0062:    02 16                JNE  >0068
+    0064:    FE 17                JNC  >0062
+    0066:    02 18                JOC  >006C
+    0068:    FE 19                JNO  >0066
+    006A:    02 1A                JL   >0070
+    006C:    FE 1B                JH   >006A
+    006E:    02 1C                JOP  >0074
+    0070:    05 1D                SBO  >05
+    0072:    06 1E                SBZ  >06
+    0074:    07 1F                TB   >07
+    0076:    01 20                COC  R1,R0
+    0078:    51 24                CZC  *R1,R1
+    007A:    A2 28 34 12          XOR  @TestAddr(R2),R2
+    007E:    F3 2C                XOP  *R3+,R3
+    0080:    81 30                LDCR R1,2
+    0082:    E2 34 34 12          STCR @TestAddr(R2),3
+    0086:    03 38                MPY  R3,R0
+    0088:    54 3C                DIV  *R4,R1
+    008A:    41 40                SZC  R1,R1
+    008C:    82 51                SZCB R2,R6
+    008E:    C3 60                S    R3,R3
+    0090:    F4 70                SB   *R4+,R3
+    0092:    05 84                C    R5,*R0
+    0094:    46 94                CB   R6,*R1
+    0096:    87 A4                A    R7,*R2
+    0098:    C8 B4                AB   R8,*R3
+    009A:    09 C5                MOV  R9,*R4
+    009C:    4A D5                MOVB R10,*R5
+    009E:    8B E5                SOC  R11,*R6
+    00A0:    CC F5                SOCB R12,*R7
