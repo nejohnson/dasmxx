@@ -1,0 +1,43 @@
+   dasmunsp -- SunPlus µnSP Disassembler --
+-----------------------------------------------------------------
+
+;   Processing "test.hex" (260 bytes, Intel HEX)
+;   Disassembly start address: 0x0000
+;   String terminator: 0x00
+
+___CL_0001:
+    0000:    00 00          ADD     SP, [BP+0]
+    0001:    0E 02          JCC     0004
+    0002:    0E 42          JCC     0001
+    0003:    4E 02          JNZ     0006
+    0004:    5E 02          JZ      0007
+    0005:    7E 02          JMI     0008
+    0006:    9E 02          JA      0009
+    0007:    BE 02          JG      000a
+    0008:    EE 02          JMP     000b
+    0009:    9A 90          RETF
+    000A:    9A 98          RETI
+    000B:    D4 90          PUSH    R1-R2, [SP]
+    000C:    90 90          POP     R1-R2, [SP]
+    000D:    9F 0F 12 34    LJMP    00001234
+    000F:    02 05          ADD     R1, [BP+5]
+    0010:    14 52          ADC     R2, #12
+    0011:    26 D4          SUB     R3, [R4++]
+    0012:    39 0D 12 34    SBC     R4, BP, #1234
+    0014:    49 05          CMP     R4, BP
+    0015:    49 0D 12 34    CMP     BP, #1234
+    0017:    63 53          NEG     R1, R3 LSL 3
+    0018:    83 12 20 00    XOR     R1, [2000]
+    001A:    95 12 20 02    LD      R2, [2002]
+    001C:    C9 0D 12 34    TEST    BP, #1234
+    001E:    D9 1D 20 04    ST      R4, [2004]
+    0020:    F1 40          INT     OFF
+    0021:    F1 41          INT     IRQ
+    0022:    F1 43          INT     IRQ,FIQ
+    0023:    F1 44          FIR_MOV ON
+    0024:    F1 45          FIR_MOV OFF
+    0025:    F0 42 34 56    CALL    00023456
+    0027:    FE 81 12 34    GOTO    00011234
+    0029:    F4 0B          MULU    R2, R3
+    002A:    F4 AB          MACU    R2, R3, 5
+    002B:    F5 AB          MACS    R2, R3, 5
