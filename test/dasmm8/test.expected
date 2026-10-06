@@ -1,0 +1,28 @@
+   dasmm8 -- ST Micro STM8 Disassembler --
+-----------------------------------------------------------------
+
+;   Processing "test.bin" (23 bytes)
+;   Disassembly start address: 0x0000
+;   String terminator: 0x00
+
+___CL_0001:
+   break
+   halt
+   iret
+   nop
+   trap
+   wfi
+   int    $123456
+   rvf
+   rcf
+   ccf
+   scf
+   rim
+   sim
+   rrwa   X
+   rlwa   X
+   rrcw   X
+   rlcw   X
+   sraw   X
+   sllw   X
+   srlw   X
