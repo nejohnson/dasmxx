@@ -1,0 +1,74 @@
+   dasm78k3 -- NEC 78K/III Disassembler --
+-----------------------------------------------------------------
+
+;   Processing "test.hex" (396 bytes, Intel HEX)
+;   Disassembly start address: 0x0000
+;   String terminator: 0x00
+
+___CL_0001:
+    0000:    00                nop
+    0001:    4A                di
+    0002:    4B                ei
+    0003:    43                swrs
+    0004:    B9 12             mov      A, #012H
+    0006:    3A 20 34          mov      0FE20H, #034H
+    0009:    2B FE 55          mov      PSWL, #055H
+    000C:    D2                mov      A, C
+    000D:    20 20             mov      A, 0FE20H
+    000F:    22 20             mov      0FE20H, A
+    0011:    10 FE             mov      A, PSWL
+    0013:    12 FE             mov      PSWL, A
+    0015:    58                mov      A, [DE+]
+    0016:    50                mov      [DE+], A
+    0017:    60 34 12          movw     AX, #01234H
+    001A:    0C 20 78 56       movw     0FE20H, #05678H
+    001E:    1C 20             movw     AX, 0FE20H
+    0020:    1A 20             movw     0FE20H, AX
+    0022:    0B FC BC 9A       movw     SP, #09ABCH
+    0026:    11 FC             movw     AX, SP
+    0028:    13 FC             movw     SP, AX
+    002A:    A8 01             add      A, #001H
+    002C:    68 20 02          add      0FE20H, #002H
+    002F:    98 20             add      A, 0FE20H
+    0031:    78 20 21          add      0FE21H, 0FE20H
+    0034:    C1                inc      A
+    0035:    26 20             inc      0FE20H
+    0037:    44                incw     VP
+    0038:    4C                decw     VP
+    0039:    30 49             ror      A, 1
+    003B:    31 89             shl      A, 1
+    003D:    B0 20             set1     0FE20H.0
+    003F:    A0 20             clr1     0FE20H.0
+    0041:    41                set1     CY
+    0042:    40                clr1     CY
+    0043:    42                not1     CY
+    0044:    28 34 12          call     !01234H
+    0047:    90 34             callf    !00034H
+    0049:    E0                callt    [00040H]
+    004A:    5E                brk
+    004B:    56                ret
+    004C:    57                reti
+    004D:    35 FF             push     AX,BC,RP2,RP3,VP,UP,DE,HL
+    004F:    34 FF             pop      AX,BC,RP2,RP3,VP,UP,DE,HL
+    0051:    49                push     PSW
+    0052:    48                pop      PSW
+    0053:    37 03             pushu    AX,BC
+    0055:    2C 34 12          br       !01234H
+    0058:    14 02             br       $0005CH
+    005A:    83 02             bc       $0005EH
+    005C:    80 FE             bnz      $0005CH
+    005E:    70 20 02          bt       0FE20H.0, $00063H
+    0061:    32 02             dbnz     C, $00065H
+    0063:    3B 20 02          dbnz     0FE20H, $00068H
+    0066:    29 34 12          retcs    !01234H
+    0069:    15 00             movm     [DE+], A
+    006B:    15 20             movbk    [DE+], [HL+]
+    006D:    01 68 FE 12       add      PSWL, #012H
+    0071:    02 00             mov1     CY, PSWL.0
+    0073:    03 E8 20          incw     0FE20H
+    0076:    05 08             mulu     X
+    0078:    07 FB 02          bgt      $0007DH
+    007B:    08 00 20          mov1     CY, 0FE20H.0
+    007E:    09 F0 34 12       mov      A, !01234H
+    0082:    09 F1 34 12       mov      !01234H, A
+    0086:    09 44 7F 80       mov      STBC, #080H
