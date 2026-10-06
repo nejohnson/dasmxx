@@ -1,0 +1,55 @@
+   dasm96 -- Intel 8096 Disassembler --
+-----------------------------------------------------------------
+
+;   Processing "test.hex" (388 bytes, Intel HEX)
+;   Disassembly start address: 0x0000
+;   String terminator: 0x00
+
+___CL_0001:
+    0000:    00 10                      skip     R10
+    0002:    07 11                      inc      R11
+    0004:    08 02 12                   shr      R12, #02
+    0007:    20 02                      sjmp     000B
+    0009:    28 02                      scall    000D
+    000B:    30 10 02                   jbc      R10,0, 0010
+    000E:    38 11 FE                   jbs      R11,0, 000F
+    0011:    41 34 12 20 22             and      R22, R20, #1234
+    0016:    45 78 56 24 26             add      R26, R24, #5678
+    001B:    4D 02 00 28 2A             mulu     R2A, R28, #0002
+    0020:    FE 4D 02 00 2C 2E          mul      R2E, R2C, #0002
+    0026:    8D 04 00 30                divu     R30, #0004
+    002A:    FE 8D 04 00 32             div      R32, #0004
+    002F:    C0 50 52                   st       R52, R50
+    0032:    C1 54 56                   bmov     R54, R56
+    0035:    C5 58 5A                   cmpl     R58, R5A
+    0038:    C9 34 12                   push     #1234
+    003B:    CB 60 10                   push     10[R60]
+    003E:    E0 70 FE                   djnz     R70, 003F
+    0041:    E1 72 02                   djnzw    R72, 0046
+    0044:    E3 74                      br       [R74]
+    0046:    E7 02 00                   ljmp     004B
+    0049:    EF FE FF                   lcall    004A
+    004C:    D0 02                      jnst     0050
+    004E:    DF FE                      je       004E
+    0050:    F0                         ret
+    0051:    F2                         pushf
+    0052:    F3                         popf
+    0053:    F4                         pusha
+    0054:    F5                         popa
+    0055:    F6 12                      idlpd
+    0057:    F8                         clrc
+    0058:    F9                         setc
+    0059:    FA                         di
+    005A:    FB                         ei
+    005B:    FC                         clrvt
+    005C:    FD                         nop
+    005D:    FF                         rst
+    005E:    40 10 12 14                and      R14, R12, R10
+    0062:    42 21 16 18                and      R18, R16, [R20]+
+    0066:    43 20 08 1A 1C             and      R1C, R1A, 08[R20]
+    006B:    43 21 78 56 1E 20          and      R20, R1E, 5678[R20]
+    0071:    62 21 40                   and      R40, [R20]+
+    0074:    63 20 08 42                and      R42, 08[R20]
+    0078:    63 21 34 12 44             and      R44, 1234[R20]
+    007D:    C3 21 78 56 62             st       R62, 5678[R20]
+    0082:    CF 21 78 56                pop      5678[R20]
