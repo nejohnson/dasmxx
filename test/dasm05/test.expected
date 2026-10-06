@@ -1,0 +1,264 @@
+   dasm05 -- Motorola 6805 Disassembler --
+-----------------------------------------------------------------
+
+;   Processing "test.bin" (450 bytes)
+;   Disassembly start address: 0x0000
+;   String terminator: 0x00
+
+Start:
+   brset    0, $55, Start
+   brclr    0, $55, $0003
+   brset    1, $66, $0006
+   brclr    1, $66, $0009
+   brset    2, $77, $000C
+   brclr    2, $77, $000F
+   brset    3, $88, $0012
+   brclr    3, $88, $0015
+   brset    4, $99, $0018
+   brclr    4, $99, $001B
+   brset    5, $11, $001E
+   brclr    5, $11, $0021
+   brset    6, $22, $0024
+   brclr    6, $22, $0027
+   brset    7, $33, $002A
+   brclr    7, $33, $002D
+   bset     0, $55
+   bclr     0, $55
+   bset     1, $66
+   bclr     1, $66
+   bset     2, $77
+   bclr     2, $77
+   bset     3, $88
+   bclr     3, $88
+   bset     4, $99
+   bclr     4, $99
+   bset     5, $11
+   bclr     5, $11
+   bset     6, $22
+   bclr     6, $22
+   bset     7, $33
+   bclr     7, $33
+   bra      $0050
+   brn      $0052
+   bhi      $0054
+   bls      $0056
+   bcc      $0058
+   bcs      $005A
+   bne      $005C
+   beq      $005E
+   bhcc     $0060
+   bhcs     $0062
+   bpl      $0064
+   bmi      $0066
+   bmc      $0068
+   bms      $006A
+   bil      $006C
+   bih      $006E
+   neg      $55
+   com      $66
+   lsr      $77
+   ror      $88
+   asr      $99
+   lsl      $AA
+   rol      $BB
+   dec      $CC
+   inc      $DD
+   tst      $EE
+   clr      $11
+   nega
+   mul
+TestAddr1:
+   coma
+   lsra
+   rora
+   asra
+   lsla
+   rola
+   deca
+   inca
+   tsta
+   clra
+   negx
+   comx
+   lsrx
+   rorx
+   asrx
+   lslx
+   rolx
+   decx
+   incx
+   tstx
+   clrx
+   neg      $55,x
+   com      $66,x
+   lsr      $77,x
+   ror      $88,x
+   asr      $99,x
+   lsl      $AA,x
+   rol      $BB,x
+   dec      $CC,x
+   inc      $DD,x
+   tst      $EE,x
+   clr      $11,x
+   neg      ,x
+   com      ,x
+   lsr      ,x
+   ror      ,x
+   asr      ,x
+   lsl      ,x
+   rol      ,x
+   dec      ,x
+   inc      ,x
+   tst      ,x
+   clr      ,x
+   nop
+   stop
+   wait
+   rti
+   rts
+   swi
+   tax
+   clc
+   sec
+   cli
+   sei
+   rsp
+   txa
+   sub      #$01
+   cmp      #$0F
+   sbc      #$1E
+   cpx      #$2D
+   and      #$3C
+   bit      #$4B
+   lda      #$5A
+   eor      #$69
+   adc      #$78
+   ora      #$87
+   add      #$96
+   bsr      $00E1
+   ldx      #$A5
+   sub      $01
+   cmp      $0F
+   sbc      $1E
+   cpx      $2D
+   and      $3C
+   bit      $4B
+   lda      $5A
+   sta      $5F
+   eor      $69
+   adc      $78
+   ora      $87
+   add      $96
+   jmp      TestAddr1
+   jsr      TestAddr1
+   ldx      $A5
+   stx      $A3
+   sub      $1801
+   cmp      $180F
+   sbc      $181E
+   cpx      $182D
+   and      $183C
+   bit      $184B
+   lda      $185A
+   sta      $185F
+   eor      $1869
+   adc      $1878
+   ora      $1887
+   add      $1896
+   jmp      $1800
+   jsr      $1888
+   ldx      $18A5
+   stx      $18A3
+   sub      $0401,x
+   cmp      $040F,x
+   sbc      $041E,x
+   cpx      $042D,x
+   and      $043C,x
+   bit      $044B,x
+   lda      $045A,x
+   sta      $045F,x
+   eor      $0469,x
+   adc      $0478,x
+   ora      $0487,x
+   add      $0496,x
+   jmp      $0400,x
+   jsr      $0488,x
+   ldx      $04A5,x
+   stx      $04A3,x
+   sub      $01,x
+   cmp      $0F,x
+   sbc      $1E,x
+   cpx      $2D,x
+   and      $3C,x
+   bit      $4B,x
+   lda      $5A,x
+   sta      $5F,x
+   eor      $69,x
+   adc      $78,x
+   ora      $87,x
+   add      $96,x
+   jmp      $00,x
+   jsr      $88,x
+   ldx      $A5,x
+   stx      $A3,x
+   sub      ,x
+   cmp      ,x
+   sbc      ,x
+   cpx      ,x
+   and      ,x
+   bit      ,x
+   lda      ,x
+   sta      ,x
+   eor      ,x
+   adc      ,x
+   ora      ,x
+   add      ,x
+   jmp      ,x
+   jsr      ,x
+   ldx      ,x
+   stx      ,x
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
+   ???
