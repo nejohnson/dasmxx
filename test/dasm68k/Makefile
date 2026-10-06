@@ -1,5 +1,6 @@
 
 DIFF ?= diff -u
+SHELL := /bin/bash
 CASES = test test68010 test68020 test68030 test68040 test68881 test68040fpu
 
 test: $(addprefix output/,$(addsuffix .out,$(CASES))) cfg.out
@@ -17,7 +18,7 @@ test: $(addprefix output/,$(addsuffix .out,$(CASES))) cfg.out
 
 output/%.out: %.bin %.d68k ../../src/dasm68k
 	mkdir -p output
-	../../src/dasm68k -s $*.d68k | sed 's/[[:space:]]*$$//' | sed '$${/^$$/d;}' > $@
+	set -o pipefail; ../../src/dasm68k -s $*.d68k | sed 's/[[:space:]]*$$//' | sed '$${/^$$/d;}' > $@
 
 cfg.bin: cfg.txt ../../src/txt2bin
 	../../src/txt2bin cfg.txt cfg.bin
