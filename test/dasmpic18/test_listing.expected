@@ -1,0 +1,16 @@
+___CL_0001:
+    0000:    00 00          NOP
+    0001:    24 12          ADDWF    18, W, A
+    0002:    6F 34          MOVWF    52, B
+    0003:    6C 56          NEGF     86, A
+    0004:    5F 78          SUBWF    120, F, B
+    0005:    C1 23 F4 56    MOVFF    $0123, $0456
+    0007:    EE 1A F0 BC    LFSR     1, $000ABC
+    0009:    96 22          BCF      34, 3, A
+    000A:    D0 01          BRA      $000C
+    000B:    00 00          NOP
+    000C:    00 00          NOP
+    000D:    DF F2          RCALL    ___CL_0001
+    000E:    EC A2 F0 91    CALL     $0091A2, 0
+    0010:    EF 2B F1 1A    GOTO     $011A2B
+    0012:    00 13          RETURN   1
