@@ -1,13 +1,18 @@
 
 DIFF ?= diff -u
+SHELL := /bin/bash
 GPASM ?= gpasm
 
-test: test.out cfg.out
+test: test.out test_listing.out cfg.out
 	$(DIFF) test.expected test.out
+	$(DIFF) test_listing.expected test_listing.out
 	$(DIFF) cfg.expected cfg.out
 
 test.out: test.hex test.dpic12 ../../src/dasmpic12
-	../../src/dasmpic12 -s test.dpic12 | sed -n '/^___CL_0001:/,$$p' > test.out
+	set -o pipefail; ../../src/dasmpic12 -s test.dpic12 | sed -n '/^___CL_0001:/,$$p' > test.out
+
+test_listing.out: test.hex test.dpic12 ../../src/dasmpic12
+	set -o pipefail; ../../src/dasmpic12 test.dpic12 | sed -n '/^___CL_0001:/,$$p' | sed 's/[[:space:]]*$$//' | sed '$${/^$$/d;}' > test_listing.out
 
 cfg.bin: cfg.txt ../../src/txt2bin
 	../../src/txt2bin cfg.txt cfg.bin
@@ -19,4 +24,6 @@ regen: test.asm
 	$(GPASM) -q -o test.hex test.asm
 
 clean:
-	rm -f test.cod test.err test.lst test.out cfg.bin cfg.out
+	rm -f test.cod test.err test.lst test.out test_listing.out cfg.bin cfg.out
+
+.PHONY: test clean
