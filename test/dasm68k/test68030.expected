@@ -1,0 +1,40 @@
+   dasm68k -- Motorola 68000 Disassembler --
+-----------------------------------------------------------------
+
+;   Processing "test68030.bin" (128 bytes)
+;   Disassembly start address: 0x0000
+;   String terminator: 0x00
+
+Start:
+   PFLUSHA
+   PFLUSH    #0, #0
+   PFLUSH    #7, #7
+   PFLUSH    #0, #0, (A0)
+   PFLUSH    #7, #7, (A7)
+   PFLUSHS   #0, #0
+   PFLUSHS   #0, #0, (A0)
+   PLOADR    #0, (A0)
+   PLOADW    #7, (A1)
+   PTESTW    #0, (A0), #0
+   PTESTR    #7, (A1), #7
+   PTESTW    #0, (A0), #0, A2
+   PTESTR    #7, (A1), #7, A3
+   PMOVE     TC, (A0)
+   PMOVE     (A0), TC
+   PMOVE     DRP, (A1)
+   PMOVE     (A1), DRP
+   PMOVE     SRP, (A2)
+   PMOVE     (A2), SRP
+   PMOVE     CRP, (A3)
+   PMOVE     (A3), CRP
+   PMOVE     CAL, (A4)
+   PMOVE     (A4), CAL
+   PMOVE     VAL, (A5)
+   PMOVE     (A5), VAL
+   PMOVE     SCC, (A6)
+   PMOVE     (A6), SCC
+   PMOVE     AC, (A0)
+   PMOVE     (A0), AC
+   PMOVE     PSR, (A1)
+   PMOVE     (A1), PSR
+   PMOVE     PCSR, (A2)

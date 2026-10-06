@@ -1,0 +1,15 @@
+   dasm68k -- Motorola 68000 Disassembler --
+-----------------------------------------------------------------
+
+;   Processing "test68010.bin" (24 bytes)
+;   Disassembly start address: 0x0000
+;   String terminator: 0x00
+
+Start:
+   BKPT      #0
+   RTD       #$0010
+   MOVE      CCR, D0
+   MOVEC     VBR, D0
+   MOVEC     A0, VBR
+   MOVES.L   D0, (A0)
+   MOVES.W   (A0), D0

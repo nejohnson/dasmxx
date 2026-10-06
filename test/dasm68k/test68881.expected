@@ -1,0 +1,65 @@
+   dasm68k -- Motorola 68000 Disassembler --
+-----------------------------------------------------------------
+
+;   Processing "test68881.bin" (234 bytes)
+;   Disassembly start address: 0x0000
+;   String terminator: 0x00
+
+Start:
+   FNOP
+   FBEQ      $00000005
+   FBNE      $00000009
+   FRESTORE  (A0)
+   FSAVE     (A0)
+   FMOVE.X   FP0, FP0
+   FABS.X    FP0, FP0
+   FNEG.X    FP0, FP0
+   FDIV.X    FP0, FP0
+   FADD.X    FP0, FP0
+   FMUL.X    FP0, FP0
+   FSUB.X    FP0, FP1
+   FMOVE.B   D0, FP0
+   FMOVE.W   D0, FP1
+   FMOVE.L   D0, FP2
+   FMOVE.S   D0, FP3
+   FMOVE.D   (A0), FP4
+   FMOVE.X   (A0), FP5
+   FMOVE.P   (A0), FP6
+   FMOVE.L   FP0, D0
+   FMOVE.S   FP1, D1
+   FMOVE.D   FP2, (A0)
+   FMOVE.X   FP3, (A0)
+   FMOVECR.X #$00, FP1
+   FADD.L    D0, FP1
+   FSUB.W    D1, FP2
+   FMUL.S    (A0), FP3
+   FDIV.D    (A1), FP4
+   FCMP.L    D0, FP1
+   FTST.X    FP1
+   FSQRT.X   FP0, FP2
+   FINT.X    FP0, FP3
+   FSIN.X    FP0, FP4
+   FCOS.X    FP0, FP5
+   FSNE      D0
+   FSNE      (A0)
+   FDBEQ     D0, $00000054
+   FTRAPNE
+   FTRAPEQ   #$1234
+   FTRAPLT   #$12345678
+   FMOVE.L   FPCR, D0
+   FMOVE.L   D0, FPCR
+   FMOVE.L   FPSR, D1
+   FMOVE.L   D2, FPIAR
+   FMOVEM.L  FPCR/FPSR/FPIAR, (A0)
+   FMOVEM.L  (A0), FPCR/FPSR/FPIAR
+   FMOVEM.X  FP0/FP1/FP2/FP3, (A0)
+   FMOVEM.X  (A0), FP0/FP1/FP2/FP3
+   FMOVEM.X  FP0/FP2/FP7, -(A7)
+   FMOVEM.X  (A7)+, FP0/FP2/FP7
+   FSINCOS.X FP0, FP0, FP1
+   FSINCOS.X FP2, FP3, FP4
+   FSINCOS.L D0, FP5, FP6
+   FSINCOS.S (A0), FP1, FP7
+   FMOVE.P   FP0, (A0){#0}
+   FMOVE.P   FP1, (A1){#17}
+   FMOVE.P   FP2, (A2), D3

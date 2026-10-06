@@ -1,0 +1,34 @@
+   dasm68k -- Motorola 68000 Disassembler --
+-----------------------------------------------------------------
+
+;   Processing "test68040.bin" (88 bytes)
+;   Disassembly start address: 0x0000
+;   String terminator: 0x00
+
+Start:
+   CINVL     IC, (A0)
+   CINVP     DC, (A1)
+   CINVA     BC
+   CPUSHL    IC, (A2)
+   CPUSHP    DC, (A3)
+   CPUSHA    BC
+   PFLUSHN   (A0)
+   PFLUSH    (A0)
+   PFLUSHAN
+   PFLUSHA
+   PTESTW    (A0)
+   PTESTR    (A1)
+   MOVEC     TC, D0
+   MOVEC     D0, TC
+   MOVEC     ITT0, D1
+   MOVEC     ITT1, D2
+   MOVEC     DTT0, D3
+   MOVEC     DTT1, D4
+   MOVEC     MMUSR, D5
+   MOVEC     URP, D6
+   MOVEC     SRP, D7
+   MOVE16    (A0)+, ($091A2B3C).L
+   MOVE16    ($091A2B3C).L, (A1)+
+   MOVE16    (A2), ($091A2B3C).L
+   MOVE16    ($091A2B3C).L, (A3)
+   MOVE16    (A4)+, (A5)+

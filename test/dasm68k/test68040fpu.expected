@@ -1,0 +1,10 @@
+   dasm68k -- Motorola 68000 Disassembler --
+-----------------------------------------------------------------
+
+;   Processing "test68040fpu.bin" (8 bytes)
+;   Disassembly start address: 0x0000
+;   String terminator: 0x00
+
+Start:
+   FADD.X    FP0, FP1
+   FSQRT.X   FP0, FP2

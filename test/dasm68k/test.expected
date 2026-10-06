@@ -1,0 +1,122 @@
+   dasm68k -- Motorola 68000 Disassembler --
+-----------------------------------------------------------------
+
+;   Processing "test.bin" (272 bytes)
+;   Disassembly start address: 0x0000
+;   String terminator: 0x00
+
+Start:
+   RESET
+   NOP
+   RTE
+   TRAPV
+   ILLEGAL
+   UNLK      A0
+   UNLK      A1
+   UNLK      A2
+   UNLK      A3
+   UNLK      A4
+   UNLK      A5
+   UNLK      A6
+   UNLK      A7
+   TRAP      #0
+   TRAP      #1
+   TRAP      #2
+   TRAP      #3
+   TRAP      #4
+   TRAP      #5
+   TRAP      #6
+   TRAP      #7
+   TRAP      #8
+   TRAP      #9
+   TRAP      #10
+   TRAP      #11
+   TRAP      #12
+   TRAP      #13
+   TRAP      #14
+   TRAP      #15
+   SWAP      D0
+   SWAP      D1
+   SWAP      D2
+   SWAP      D3
+   SWAP      D4
+   SWAP      D5
+   SWAP      D6
+   SWAP      D7
+   PEA       (A0)
+   PEA       ($1234,A0)
+   PEA       ($10,A0,D0.W*1)
+   PEA       ($091A).W
+   PEA       ($091A2B3C).L
+   PEA       ($00000032,PC)
+   JMP       (A0)
+   JMP       ($091A2B3C).L
+   JSR       (A0)
+   JSR       ($091A2B3C).L
+   EXT.W     D0
+   EXT.L     D1
+   EXG       D0, D0
+   EXG       D1, D7
+   EXG       A0, A0
+   EXG       D0, A0
+   MOVEQ     D4, -#$01
+   MOVEQ     D4, -#$80
+   MOVEQ     D4, #$7F
+   MOVEQ     D4, #$00
+   MOVE.B    D1, D0
+   MOVEA.L   D1, A0
+   MOVE.W    D0, (A1)
+   ORI       #$12, CCR
+   ORI       #$2700, SR
+   ADDI.W    #$0001, D0
+   SUBI.L    #$00000002, D0
+   BTST      #$03, D0
+   BCHG      D0, D0
+   MOVEP.W   ($0010,A0), D0
+   MOVEP.W   D0, ($0010,A0)
+   CLR.B     D0
+   NEG.W     D0
+   NOT.L     D0
+   TST.B     D0
+   NBCD      D0
+   TAS       D0
+   MOVE      SR, D0
+   MOVE      D0, CCR
+   MOVE      D0, SR
+   CHK.W     D0, D0
+   LEA       (A0), A0
+   ADDQ.W    #$01, D0
+   SUBQ.L    #$01, D0
+   ST        D0
+   DBNE      D0, $00000067
+   BSR       $00000069
+   OR.W      D1, D0
+   OR.W      D0, D0
+   DIVU.W    D1, D0
+   SUB.W     D1, D0
+   SUBX.W    D0, D0
+   SUBA.W    D1, A0
+   CMP.W     D1, D0
+   EOR.W     D0, (A0)
+   CMPA.W    D1, A0
+   AND.W     D1, D0
+   AND.W     D0, (A0)
+   MULU.W    D1, D0
+   ADD.W     D1, D0
+   ADD.W     D0, (A0)
+   ADDA.W    D1, A0
+   LSR.W     #$01, D0
+   ROL.W     D1, D0
+   LSR.W     (A0)
+   MOVE      USP, A0
+   MOVE      A0, USP
+   SBCD      D0, D0
+   SBCD      -(A0), -(A0)
+   ADDX.B    D0, D0
+   ADDX.W    -(A0), -(A0)
+   SUBX.L    D0, D0
+   CMPM.W    (A0)+, (A0)+
+   ABCD      D0, D0
+   ABCD      -(A0), -(A0)
+   MOVEM.L   D0/D1, (A0)
+   MOVEM.L   (A0), A0

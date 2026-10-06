@@ -1,0 +1,48 @@
+   dasm68k -- Motorola 68000 Disassembler --
+-----------------------------------------------------------------
+
+;   Processing "test68020.bin" (166 bytes)
+;   Disassembly start address: 0x0000
+;   String terminator: 0x00
+
+Start:
+   LINK.L    A0, #$00000004
+   EXTB.L    D2
+   CHK.L     D0, D1
+   CHK.L     #$12345678, D2
+   TST.W     ($00000009,PC)
+   TST.L     #$12345678
+   BRA       $00000012
+   TRAPNE
+   TRAPEQ    #$1234
+   TRAPLT    #$00001234
+   CALLM     #$05, (A0)
+   CALLM     #$06, ($091A).W
+   RTM       D0
+   RTM       A1
+   BFTST     D0{#$01:#$08}
+   BFEXTU    D0{#$01:#$08}, D2
+   BFINS     D2, D0{#$01:#$08}
+   CMP2.B    (A0), D0
+   CMP2.W    (A0), A1
+   CMP2.L    (A0), D2
+   CHK2.B    (A0), D0
+   CHK2.W    (A0), A1
+   CHK2.L    (A0), D2
+   CAS.B     D0, D1, (A0)
+   CAS.W     D2, D3, (A1)
+   CAS.L     D4, D5, (A2)
+   MULU.L    D0, D1
+   MULU.L    D0, D1:D2
+   MULS.L    D0, D3
+   MULS.L    D0, D3:D4
+   DIVU.L    D0, D1
+   DIVU.L    D0, D1:D2
+   DIVS.L    D0, D3
+   DIVS.L    D0, D3:D4
+   PACK      D0, D1, #$1234
+   PACK      -(A0), -(A1), #$1234
+   UNPK      D2, D3, #$5678
+   UNPK      -(A2), -(A3), #$5678
+   CAS2.W    D0:D1, D2:D3, (A0):(A1)
+   CAS2.L    D4:D5, D6:D7, (A2):(A3)
