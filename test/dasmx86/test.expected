@@ -1,0 +1,247 @@
+   dasmx86 -- Intel x86 Disassembler --
+-----------------------------------------------------------------
+
+;   Processing "test.bin" (599 bytes)
+;   Disassembly start address: 0x0000
+;   String terminator: 0x00
+
+Code:
+   MOV      AL, B[01234]                                      ; This is a comment
+   MOV      AX, W[02468]
+   MOV      B[02143], AL
+   MOV      W[04286], AX
+   MOV      AL, 012
+   MOV      CX, 04433
+   LAHF
+   SAHF
+   PUSHF
+   POPF
+   XCHG     AX, CX
+   XCHG     AL, B[BP + DI]
+   XCHG     CX, ES:W[SI + 01234]
+   LEA      AX, W[BP + DI]
+   LES      CX, F[SI + 01234]
+   BOUND    AX, DD[BX + SI]
+   BOUND    EAX, DQ[BX + SI]
+   MOV      B[BP + DI], AL
+   MOV      CX, W[SI + 01234]
+   PUSH     W[BX + SI + 05678]
+   JMP      W[BX + SI]
+   CALL     F[BX + SI]
+   JMP      F[BX + SI]
+   INC      W[BX + SI]
+   INC      B[BX + SI]
+   MOV      ES, W[BX + SI]
+   MOV      W[SI + 02345], DS
+   MOV      B[BX + SI], 012
+   MOV      W[BX + SI], 05544
+   ADD      AL, 012
+   ADD      AX, 04523
+   ADC      AL, 021
+   ADC      AX, 05544
+   INC      DX
+   DEC      DX
+   SUB      AL, 021
+   SUB      AX, 06644
+   SBB      AL, 012
+   SBB      AX, 06655
+   XOR      AL, 0FF
+   AAA
+   DAA
+   AAS
+   DAS
+   CBW
+   CWD
+   AAM
+   ADD      B[BX + SI], 012
+   ADD      W[BX + SI], 03412
+   ADD      W[BX + SI], 0007F
+   ADD      W[BX + SI], 0FF80
+   AND      B[BX + SI], 012
+   AND      W[BX + SI], 01122
+   TEST     B[BX + SI], 012
+   TEST     W[BX + SI], 05544
+   ROL      B[BX + SI], 1
+   SHL      W[SI], 1
+   RCR      B[BX + SI], CL
+   SAR      W[BX + SI + 08811], CL
+   REPNZ MOVSB
+   REP  SCASW
+   JE       00094
+   JNBE     0008E
+   LOOP     0009C
+   LOOPZ    000A2
+   LOOPNZ   00094
+   JCXZ     000A2
+   JMP      05678:01234 {579B4}
+   INT      000
+   INT      021
+   INT      003
+   INT3
+   INTO
+   IRET
+   IRETD
+   CLC
+   CMC
+   STC
+   CLD
+   STD
+   CLI
+   STI
+   HLT
+   WAIT
+   LOCK
+   FILD     D[BX + SI]
+
+
+String:
+   DB      '0123'
+   DB      '@ABC'
+
+Word:
+   DW      2211, 4433
+
+Alpha:
+   DB      'D', 'E', 'F', 'G'
+
+Bitmap:
+   DB      80    ; [#.......]
+   DB      40    ; [.#......]
+   DB      20    ; [..#.....]
+   DB      10    ; [...#....]
+   DB      08    ; [....#...]
+   DB      04    ; [.....#..]
+   DB      02    ; [......#.]
+   DB      01    ; [.......#]
+
+Floating point:
+   FLD1
+   FLDZ
+   FLD      ST(1)
+   FXCH     ST(1)
+   FADD     ST, ST(1)
+   FADD     ST(1), ST
+   FADDP    ST(1), ST
+   FADD     D[01234]
+   FST      D[01234]
+   FLDCW    W[01234]
+   FIADD    D[01234]
+   FLD      T[01234]
+   FNSTSW   W[01234]
+   FIADD    W[01234]
+   FILD     Q[01234]
+   FNSTSW   AX
+   FNINIT
+   FCOMPP
+286 protected-mode:
+   ARPL     CX, AX
+   CLTS
+   SLDT     W[BX + SI]
+   VERR     W[BX + SI]
+   LGDT     F[BX + SI]
+   LMSW     W[BX + SI]
+   LAR      AX, CX
+   LSL      AX, CX
+386 extended:
+   SETZ     AL
+   MOVZX    AX, CL
+   MOVZX    EAX, CX
+   MOVSX    AX, CL
+   MOVSX    EAX, CX
+   BSF      AX, CX
+   LAR      EAX, CX
+   BSR      AX, CX
+   BT       CX, AX
+   BT       CX, 005
+   BTS      CX, AX
+   BTR      CX, AX
+   BTC      CX, AX
+   SHLD     CX, AX, 004
+   SHLD     CX, AX, CL
+   SHRD     CX, AX, 004
+   SHRD     CX, AX, CL
+486 extended:
+   INVD
+   WBINVD
+   INVLPG   M[BX + SI]
+   CMPXCHG  CL, AL
+   CMPXCHG  CX, AX
+   XADD     CL, AL
+   XADD     CX, AX
+   BSWAP    EAX
+   BSWAP    EDI
+387 floating point:
+   FPREM1
+   FSINCOS
+   FSIN
+   FCOS
+   FUCOMPP
+   FUCOM    ST(0)
+   FUCOMP   ST(0)
+   FNSETPM
+386 32-bit modes:
+   MOV      EAX, 012345678
+   ADD      EAX, 001020304
+   ADD      D[BX + SI], 012345678
+   MOV      EAX, D[JumpDest1]
+   MOV      AX, W[012345678]
+   IMUL     EAX, ECX, 012345678
+   IMUL     EAX, ECX, 0FFFFFF80
+   MOV      AX, W[012345678]
+   MOV      AX, W[012345678]
+   MOV      AX, W[ESP + 0F0]
+   MOV      AX, W[ECX*4 + 012345678]
+   MOV      AX, W[EBX + ECX*4 + 010]
+   MOV      EAX, D[EBX + ECX*4 + 012345678]
+   MOV      AX, FS:W[EAX]
+   MOVZX    EAX, CL
+   CMPXCHG  ECX, EAX
+   FADD     D[ECX*4 + 012345678]
+386 system:
+   JE       0141C
+   JNE      012345867
+   MOV      EAX, CR0
+   MOV      CR3, EAX
+   MOV      EAX, DR3
+   MOV      EAX, TR6
+   MOV      EAX, ?CR?
+   MOV      EAX, DR4
+   MOV      EAX, ?TR?
+   MOV      EAX, CR0
+   PUSH     FS
+   POP      FS
+   PUSH     GS
+   POP      GS
+   IMUL     AX, CX
+   IMUL     EAX, ECX
+   LSS      AX, F[BX + SI]
+   LFS      EAX, F[BX + SI]
+   LGS      EAX, F[BX + SI]
+   MOV      W[BX + SI], FS
+   MOV      GS, W[BX + SI]
+486 identification:
+   CPUID
+386 size-dependent mnemonics:
+   PUSHFD
+   POPFD
+   PUSHAD
+   POPAD
+   CWDE
+   CDQ
+   MOVSD
+   CMPSD
+   SCASD
+   LODSD
+   STOSD
+   INSD
+   OUTSD
+   JECXZ    00242
+memory-only operand validation:
+   LEA      AX, ???
+   CALL     ???
+   JMP      ???
+   BOUND    AX, ???
+   LES      AX, ???
+   LSS      AX, ???
+   LFS      AX, ???
+   LGS      AX, ???

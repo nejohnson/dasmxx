@@ -1,0 +1,16 @@
+   dasmx86 -- Intel x86 Disassembler --
+-----------------------------------------------------------------
+
+;   Processing "test386.bin" (38 bytes)
+;   Disassembly start address: 0x0000
+;   String terminator: 0x00
+
+386 strict mode:
+   MOV      EAX, 012345678
+   MOV      AX, W[012345678]
+   PUSH     FS
+   ???
+   ???
+   CALL     012345690
+   JMP      012345696
+   JMP      0ABCD:012345678 {123F1348}

@@ -1,0 +1,13 @@
+   dasmx86 -- Intel x86 Disassembler --
+-----------------------------------------------------------------
+
+;   Processing "test8086.bin" (6 bytes)
+;   Disassembly start address: 0x0000
+;   String terminator: 0x00
+
+___CL_0001:
+   POP      CS
+   ???
+   ???
+   ???
+   ESC      AX

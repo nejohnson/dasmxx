@@ -1,0 +1,20 @@
+   dasmx86 -- Intel x86 Disassembler --
+-----------------------------------------------------------------
+
+;   Processing "test286.bin" (24 bytes)
+;   Disassembly start address: 0x0000
+;   String terminator: 0x00
+
+286 strict mode:
+   PUSHA
+   POPA
+   PUSH     01234
+   PUSH     080
+   ROL      B[BX + SI], 004
+   SHL      W[BX + SI], 004
+   ENTER    01234, 002
+   LEAVE
+   CLTS
+   ???
+   ???
+   ???
