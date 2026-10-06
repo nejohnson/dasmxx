@@ -1,5 +1,6 @@
 
 DIFF ?= diff -u
+SHELL := /bin/bash
 
 test: output/test.out cfg.out
 	$(DIFF) test.expected output/test.out
@@ -16,7 +17,7 @@ test.bin: test.txt ../../src/txt2bin
 
 output/test.out: test.bin test.d05 ../../src/dasm05
 	mkdir -p output
-	../../src/dasm05 -s test.d05 | sed 's/[[:space:]]*$$//' | sed '$${/^$$/d;}' > output/test.out
+	set -o pipefail; ../../src/dasm05 -s test.d05 | sed 's/[[:space:]]*$$//' | sed '$${/^$$/d;}' > output/test.out
 
 cfg.bin: cfg.txt ../../src/txt2bin
 	../../src/txt2bin cfg.txt cfg.bin
