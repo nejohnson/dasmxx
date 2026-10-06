@@ -1,0 +1,63 @@
+   dasmz8 -- Zilog Z8 Disassembler --
+-----------------------------------------------------------------
+
+;   Processing "test.bin" (115 bytes)
+;   Disassembly start address: 0x0000
+;   String terminator: 0x00
+
+Start:
+    0000:    00             dec   r0
+    0001:    11             dec   @r1
+    0002:    2C 55          ld    r2,#$55
+    0004:    3E             inc   r3
+    0005:    02 12          add   r1,r2
+    0007:    13 34          adc   r3,@r4
+    0009:    22 56          sub   r5,r6
+    000B:    33 78          sbc   r7,@r8
+    000D:    42 9A          or    r9,rA
+    000F:    53 BC          and   rB,@rC
+    0011:    62 DE          tcm   rD,rE
+    0013:    73 F0          tm    rF,@r0
+    0015:    A2 21          cp    r2,r1
+    0017:    B3 43          xor   r4,@r3
+    0019:    04 12          add   r2,r1
+    001B:    15 34          adc   @r4,r3
+    001D:    24 56          sub   r6,r5
+    001F:    35 78          sbc   @r8,r7
+    0021:    44 9A          or    rA,r9
+    0023:    55 BC          and   @rC,rB
+    0025:    64 DE          tcm   rE,rD
+    0027:    75 F0          tm    @r0,rF
+    0029:    A4 21          cp    r1,r2
+    002B:    B5 43          xor   @r3,r4
+    002D:    06 20 01       add   $20,#$01
+    0030:    17 21 02       adc   @$21,#$02
+    0033:    26 22 03       sub   $22,#$03
+    0036:    37 23 04       sbc   @$23,#$04
+    0039:    46 24 05       or    $24,#$05
+    003C:    57 25 06       and   @$25,#$06
+    003F:    66 26 07       tcm   $26,#$07
+    0042:    77 27 08       tm    @$27,#$08
+    0045:    A6 2A 09       cp    $2A,#$09
+    0048:    B7 2B 0A       xor   @$2B,#$0A
+    004B:    08 12          ld    r1,r2
+    004D:    19 34          ld    r4,r3
+    004F:    2A 02          djnz  r2,$0053
+    0051:    3B FE          jr    ule,$0051
+    0053:    4D 12 34       jp    ov,TestAddr
+    0056:    5E             inc   r5
+    0057:    0F             stop
+    0058:    1F             halt
+    0059:    2F 20          decw  $20
+    005B:    4F 21          da    $21
+    005D:    5F 22          pop   $22
+    005F:    6F 23          com   $23
+    0061:    7F 24          push  $24
+    0063:    8F 25          decw  @$25
+    0065:    9F 26          rl    $26
+    0067:    AF 27          incw  @$27
+    0069:    BF 28          clr   $28
+    006B:    CF 29          rrc   $29
+    006D:    DF 2A          sra   $2A
+    006F:    EF 2B          rr    $2B
+    0071:    FF 2C          swap  $2C
