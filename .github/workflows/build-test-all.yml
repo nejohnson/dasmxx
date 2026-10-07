@@ -20,6 +20,4 @@ jobs:
         cd src
         make
     - name: Run all tests
-      run: |
-        cd test
-        for f in */; do pushd "$f"; make; popd; done
+      run: make -C test test
