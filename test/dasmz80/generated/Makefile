@@ -28,6 +28,7 @@ output/test_all.out: test_all.bin test_all.dz80 $(DASM)
 
 test: output/test_all.out
 	$(DIFF) test_all.expected output/test_all.out
+	python3 ../../../tools/verify_instruction_spec.py z80
 
 # Update the reviewed snapshot after inspecting the output change.
 golden: output/test_all.out

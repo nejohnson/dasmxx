@@ -216,7 +216,10 @@ class TestGenerator:
         """
         with open(output_file, 'w') as f:
             f.write(f"# Specification reference for {self.processor.upper()} instruction tests\n")
-            f.write("# This records YAML intent; make test compares test_all.expected instead.\n")
+            if self.processor == 'z80':
+                f.write("# YAML intent; make test verifies the decoded listing against these cases.\n")
+            else:
+                f.write("# This records YAML intent; make test compares test_all.expected instead.\n")
             f.write(f"# Total instructions: {len(self.suite.tests)}\n")
 
             current_category = None
@@ -268,7 +271,10 @@ class TestGenerator:
             f.write(f"- `test_all.txt` - txt2bin source with all instructions\n")
             f.write(f"- `test_all.bin` - Binary test file\n")
             f.write(f"- `test_all.d{self.processor}` - Command file\n")
-            f.write("- `test_all.reference` - Generated YAML intent (not a test oracle)\n")
+            if self.processor == 'z80':
+                f.write("- `test_all.reference` - YAML intent checked by `make test`\n")
+            else:
+                f.write("- `test_all.reference` - Generated YAML intent (not a test oracle)\n")
             f.write("- `test_all.expected` - Reviewed disassembler output used by `make test`\n\n")
 
             f.write(f"## Running Tests\n\n")
@@ -278,8 +284,13 @@ class TestGenerator:
             f.write(f"```\n\n")
 
             f.write("To accept an intentional output change, run `make golden` and review the diff.\n")
-            f.write("The YAML reference may differ from current decoder behavior; reconcile those\n")
-            f.write("differences before treating it as an independent correctness check.\n\n")
+            if self.processor == 'z80':
+                f.write("`make test` also checks the YAML opcodes and instruction meanings.\n")
+                f.write("It treats an implicit accumulator and resolved relative targets as\n")
+                f.write("equivalent notation.\n\n")
+            else:
+                f.write("The YAML reference may differ from current decoder behavior; reconcile those\n")
+                f.write("differences before treating it as an independent correctness check.\n\n")
 
             f.write(f"## Regenerating Tests\n\n")
             f.write(f"```bash\n")

@@ -1,5 +1,5 @@
 # Specification reference for Z80 instruction tests
-# This records YAML intent; make test compares test_all.expected instead.
+# YAML intent; make test verifies the decoded listing against these cases.
 # Total instructions: 142
 
 # 16-bit Arithmetic
