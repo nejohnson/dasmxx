@@ -19,6 +19,7 @@ TEST_DIRS = \
 	dasmavr \
 	dasmdspic33 \
 	dasmm8 \
+	dasmm8/generated \
 	dasmpic12 \
 	dasmpic16 \
 	dasmpic18 \
@@ -27,6 +28,7 @@ TEST_DIRS = \
 	dasmx86 \
 	dasmz8 \
 	dasmz80 \
+	dasmz80/generated \
 	tool_features
 
 .PHONY: test clean $(TEST_DIRS)

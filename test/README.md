@@ -18,16 +18,18 @@ Tests for dasmxx command codes and features that work across all processors:
 - Configuration commands (f, i, t, e, q, >)
 - Output modes (-x, -a, -s flags)
 
-**12 automated tests, all passing**
+**19 automated tests**, run by the aggregate `make -C test test` target.
 
 ### Processor-Specific Tests (`dasm*/`)
-Instruction set tests for each supported processor:
-- Comprehensive coverage of all documented instructions
-- Based on reference documentation (datasheets)
-- Generated from specifications in `../tools/instruction_specs/`
+Processor test directories check disassembler output against reviewed expectations.
+The Z80 and STM8 generated suites exercise byte sequences from
+`../tools/instruction_specs/` and compare complete listings against checked-in
+regression snapshots. Their YAML reference files record specification intent;
+some entries differ from current decoder behavior and need separate review.
 
 Current processors with generated tests:
-- Z80 (142 instructions) - pilot implementation
+- Z80 (142 generated cases)
+- STM8 (175 generated cases; 176 decoded instructions)
 
 ## Workflow: Binary Files
 
@@ -36,7 +38,8 @@ Current processors with generated tests:
 ### Source Files (Committed)
 - `*.txt` - txt2bin source files (human-readable hex with comments)
 - `*.d*` - Command files for disassembler
-- `*.expected` - Expected output (reference from specifications)
+- `*.expected` - Reviewed output snapshots used by generated suites
+- `*.reference` - YAML specification intent for generated suites
 - `Makefile` - Build automation
 
 ### Generated Files (Not Committed, in .gitignore)
@@ -84,9 +87,11 @@ python3 run_tests.py -v
 
 ### Update Golden Files
 ```bash
-cd tool_features
+cd dasmz80/generated
 make golden
 ```
+
+Review the resulting `.expected` diff before committing it.
 
 ## Adding Tests
 
@@ -187,18 +192,8 @@ make test
 The test suite is designed for CI/CD integration:
 
 ```yaml
-# Example GitHub Actions workflow
-steps:
-  - name: Build disassemblers
-    run: cd src && make
-
-  - name: Run tool feature tests
-    run: cd test/tool_features && make test
-
-  - name: Run processor tests
-    run: |
-      cd test/dasmz80/generated && make test
-      # Add more processors as available
+# Run all processor, generated instruction, and tool feature tests
+make -C test test
 ```
 
 ## Troubleshooting

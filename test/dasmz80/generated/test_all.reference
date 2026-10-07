@@ -1,0 +1,161 @@
+# Specification reference for Z80 instruction tests
+# This records YAML intent; make test compares test_all.expected instead.
+# Total instructions: 142
+
+# 16-bit Arithmetic
+0000  09                    ADD HL,BC  # page 111
+0001  19                    ADD HL,DE  # page 111
+0002  29                    ADD HL,HL  # page 111
+0003  39                    ADD HL,SP  # page 111
+0004  03                    INC BC  # page 112
+0005  13                    INC DE  # page 112
+0006  23                    INC HL  # page 112
+0007  33                    INC SP  # page 112
+0008  0B                    DEC BC  # page 113
+0009  1B                    DEC DE  # page 113
+000A  2B                    DEC HL  # page 113
+000B  3B                    DEC SP  # page 113
+
+# 16-bit Load
+000C  01 34 12              LD BC,#$1234  # page 82
+000F  11 34 12              LD DE,#$1234  # page 82
+0012  21 34 12              LD HL,#$1234  # page 82
+0015  31 34 12              LD SP,#$1234  # page 82
+0018  2A 34 12              LD HL,($1234)  # page 83
+001B  22 34 12              LD ($1234),HL  # page 84
+001E  F9                    LD SP,HL  # page 85
+001F  C5                    PUSH BC  # page 86
+0020  D5                    PUSH DE  # page 86
+0021  E5                    PUSH HL  # page 86
+0022  F5                    PUSH AF  # page 86
+0023  C1                    POP BC  # page 87
+0024  D1                    POP DE  # page 87
+0025  E1                    POP HL  # page 87
+0026  F1                    POP AF  # page 87
+
+# 8-bit Arithmetic
+0027  80                    ADD A,B  # page 90
+0028  81                    ADD A,C  # page 90
+0029  82                    ADD A,D  # page 90
+002A  83                    ADD A,E  # page 90
+002B  84                    ADD A,H  # page 90
+002C  85                    ADD A,L  # page 90
+002D  87                    ADD A,A  # page 90
+002E  C6 42                 ADD A,#$42  # page 91
+0030  86                    ADD A,(HL)  # page 92
+0031  88                    ADC A,B  # page 93
+0032  CE 42                 ADC A,#$42  # page 94
+0034  90                    SUB B  # page 95
+0035  91                    SUB C  # page 95
+0036  D6 42                 SUB #$42  # page 96
+0038  98                    SBC A,B  # page 97
+0039  DE 42                 SBC A,#$42  # page 98
+003B  A0                    AND B  # page 99
+003C  E6 42                 AND #$42  # page 100
+003E  B0                    OR B  # page 101
+003F  F6 42                 OR #$42  # page 102
+0041  A8                    XOR B  # page 103
+0042  EE 42                 XOR #$42  # page 104
+0044  B8                    CP B  # page 105
+0045  FE 42                 CP #$42  # page 106
+0047  04                    INC B  # page 107
+0048  05                    DEC B  # page 108
+0049  34                    INC (HL)  # page 109
+004A  35                    DEC (HL)  # page 110
+
+# 8-bit Load
+004B  40                    LD B,B  # page 69
+004C  41                    LD B,C  # page 69
+004D  42                    LD B,D  # page 69
+004E  43                    LD B,E  # page 69
+004F  44                    LD B,H  # page 69
+0050  45                    LD B,L  # page 69
+0051  47                    LD B,A  # page 69
+0052  48                    LD C,B  # page 69
+0053  49                    LD C,C  # page 69
+0054  4A                    LD C,D  # page 69
+0055  4B                    LD C,E  # page 69
+0056  4C                    LD C,H  # page 69
+0057  4D                    LD C,L  # page 69
+0058  4F                    LD C,A  # page 69
+0059  06 42                 LD B,#$42  # page 70
+005B  0E 42                 LD C,#$42  # page 70
+005D  16 42                 LD D,#$42  # page 70
+005F  1E 42                 LD E,#$42  # page 70
+0061  26 42                 LD H,#$42  # page 70
+0063  2E 42                 LD L,#$42  # page 70
+0065  3E 42                 LD A,#$42  # page 70
+0067  46                    LD B,(HL)  # page 71
+0068  4E                    LD C,(HL)  # page 71
+0069  56                    LD D,(HL)  # page 71
+006A  5E                    LD E,(HL)  # page 71
+006B  66                    LD H,(HL)  # page 71
+006C  6E                    LD L,(HL)  # page 71
+006D  7E                    LD A,(HL)  # page 71
+006E  70                    LD (HL),B  # page 72
+006F  71                    LD (HL),C  # page 72
+0070  72                    LD (HL),D  # page 72
+0071  73                    LD (HL),E  # page 72
+0072  74                    LD (HL),H  # page 72
+0073  75                    LD (HL),L  # page 72
+0074  77                    LD (HL),A  # page 72
+0075  36 42                 LD (HL),#$42  # page 73
+0077  0A                    LD A,(BC)  # page 74
+0078  1A                    LD A,(DE)  # page 74
+0079  02                    LD (BC),A  # page 75
+007A  12                    LD (DE),A  # page 75
+007B  3A 34 12              LD A,($1234)  # page 76
+007E  32 34 12              LD ($1234),A  # page 77
+
+# Bit Operations
+0081  CB 40                 BIT 0,B  # page 125
+0083  CB 7F                 BIT 7,A  # page 125
+0085  CB C0                 SET 0,B  # page 126
+0087  CB FF                 SET 7,A  # page 126
+0089  CB 80                 RES 0,B  # page 127
+008B  CB BF                 RES 7,A  # page 127
+
+# CPU Control
+008D  00                    NOP  # page 141
+008E  76                    HALT  # page 142
+008F  F3                    DI  # page 143
+0090  FB                    EI  # page 144
+0091  EB                    EX DE,HL  # page 145
+0092  08                    EX AF,AF'  # page 146
+0093  D9                    EXX  # page 147
+
+# Jump, Call, Return
+0094  C3 34 12              JP $1234  # page 130
+0097  C2 34 12              JP NZ,$1234  # page 131
+009A  CA 34 12              JP Z,$1234  # page 131
+009D  D2 34 12              JP NC,$1234  # page 131
+00A0  DA 34 12              JP C,$1234  # page 131
+00A3  18 03                 JR $+5  # page 132
+00A5  20 03                 JR NZ,$+5  # page 133
+00A7  28 03                 JR Z,$+5  # page 133
+00A9  E9                    JP (HL)  # page 134
+00AA  10 03                 DJNZ $+5  # page 135
+00AC  CD 34 12              CALL $1234  # page 136
+00AF  C4 34 12              CALL NZ,$1234  # page 137
+00B2  CC 34 12              CALL Z,$1234  # page 137
+00B5  C9                    RET  # page 138
+00B6  C0                    RET NZ  # page 139
+00B7  C8                    RET Z  # page 139
+00B8  D0                    RET NC  # page 139
+00B9  D8                    RET C  # page 139
+00BA  C7                    RST $00  # page 140
+00BB  CF                    RST $08  # page 140
+00BC  FF                    RST $38  # page 140
+
+# Rotate and Shift
+00BD  07                    RLCA  # page 114
+00BE  0F                    RRCA  # page 115
+00BF  17                    RLA  # page 116
+00C0  1F                    RRA  # page 117
+00C1  CB 00                 RLC B  # page 118
+00C3  CB 10                 RL B  # page 119
+00C5  CB 08                 RRC B  # page 120
+00C7  CB 18                 RR B  # page 121
+00C9  CB 20                 SLA B  # page 122
+00CB  CB 28                 SRA B  # page 123
+00CD  CB 38                 SRL B  # page 124

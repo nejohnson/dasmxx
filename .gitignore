@@ -31,6 +31,7 @@ src/dasmz80
 
 # Test framework output
 test/*/output/
+test/*/generated/output/
 test/*/generated/*.bin
 test/tool_features/testdata/*.bin
 test/*/test.bin

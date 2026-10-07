@@ -26,50 +26,26 @@ Comprehensive instruction set tests generated from specifications.
 
 ## Files
 
-**Source files (committed to version control):**
-- `test_all.txt` - txt2bin source with all instructions (source of truth)
-- `test_all.dz80` - Command file for disassembler
-- `test_all.expected` - Expected disassembly output (reference from spec)
-- `Makefile` - Build and test automation
+- `test_all.txt` - txt2bin source with all instructions
+- `test_all.bin` - Binary test file
+- `test_all.dz80` - Command file
+- `test_all.reference` - Generated YAML intent (not a test oracle)
+- `test_all.expected` - Reviewed disassembler output used by `make test`
 
-**Generated files (not committed, built from .txt):**
-- `test_all.bin` - Binary test file (built from test_all.txt)
-- `test_all.out` - Disassembler output from test run
-- `test_all.golden` - Verified output from disassembler (optional)
+## Running Tests
 
-## Building and Running Tests
-
-### Quick Start
 ```bash
-# Build binary and run test (one command)
+# Build inputs, run the disassembler, and compare its output
 make test
-
-# Compare output with expected
-diff test_all.expected test_all.out
 ```
 
-### Step by Step
-```bash
-# 1. Build binary from source
-make test_all.bin
-# This runs: txt2bin test_all.txt test_all.bin
-
-# 2. Run disassembler
-make test
-
-# 3. Compare with expected output
-diff test_all.expected test_all.out
-```
-
-### Create Golden File
-```bash
-# After verifying output is correct, create golden file
-make golden
-```
+To accept an intentional output change, run `make golden` and review the diff.
+The YAML reference may differ from current decoder behavior; reconcile those
+differences before treating it as an independent correctness check.
 
 ## Regenerating Tests
 
 ```bash
-cd ../../tools
+cd ../../../tools
 ./gen_instruction_tests.py z80
 ```

@@ -2,8 +2,10 @@
 
 DASM = ../../../src/dasmz80
 TXT2BIN = ../../../src/txt2bin
+DIFF ?= diff -u
+SHELL := /bin/bash
 
-.PHONY: all test golden clean
+.PHONY: all test golden clean help
 
 all: test_all.bin
 
@@ -19,25 +21,26 @@ $(DASM):
 $(TXT2BIN):
 	$(MAKE) -C ../../../src txt2bin
 
-# Run test and compare with expected output
-test: test_all.bin $(DASM)
-	$(DASM) test_all.dz80 > test_all.out
-	@echo "Test completed. Output saved to test_all.out"
-	@echo "To compare with expected: diff test_all.expected test_all.out"
+# Capture the full listing, including instruction addresses and bytes.
+output/test_all.out: test_all.bin test_all.dz80 $(DASM)
+	mkdir -p output
+	set -o pipefail; $(DASM) test_all.dz80 | sed 's/[[:space:]]*$$//' | sed '$${/^$$/d;}' > $@
 
-# Create/update golden file from current disassembler output
-golden: test_all.bin $(DASM)
-	$(DASM) test_all.dz80 > test_all.golden
-	@echo "Golden file updated: test_all.golden"
+test: output/test_all.out
+	$(DIFF) test_all.expected output/test_all.out
+
+# Update the reviewed snapshot after inspecting the output change.
+golden: output/test_all.out
+	cp output/test_all.out test_all.expected
 
 # Clean generated files
 clean:
-	rm -f test_all.bin test_all.out
+	rm -f test_all.bin
+	rm -rf output/
 
-.PHONY: help
 help:
 	@echo "Targets:"
 	@echo "  all    - Build test_all.bin from test_all.txt (default)"
-	@echo "  test   - Run disassembler and generate output"
-	@echo "  golden - Create/update golden file from current output"
+	@echo "  test   - Compare disassembler output with reviewed snapshot"
+	@echo "  golden - Update reviewed snapshot from current output"
 	@echo "  clean  - Remove generated files (.bin, .out)"

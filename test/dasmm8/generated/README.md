@@ -36,25 +36,23 @@ Comprehensive instruction set tests generated from specifications.
 - `test_all.txt` - txt2bin source with all instructions
 - `test_all.bin` - Binary test file
 - `test_all.dm8` - Command file
-- `test_all.expected` - Expected disassembly output
-- `test_all.golden` - Verified output from disassembler (run `make golden`)
+- `test_all.reference` - Generated YAML intent (not a test oracle)
+- `test_all.expected` - Reviewed disassembler output used by `make test`
 
 ## Running Tests
 
 ```bash
-# Build disassembler
-cd ../../src && make dasmm8
-
-# Run test
-../../src/dasmm8 test_all.dm8 > output.txt
-
-# Compare with expected
-diff test_all.expected output.txt
+# Build inputs, run the disassembler, and compare its output
+make test
 ```
+
+To accept an intentional output change, run `make golden` and review the diff.
+The YAML reference may differ from current decoder behavior; reconcile those
+differences before treating it as an independent correctness check.
 
 ## Regenerating Tests
 
 ```bash
-cd ../../tools
+cd ../../../tools
 ./gen_instruction_tests.py m8
 ```
