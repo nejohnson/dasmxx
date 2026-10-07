@@ -23,8 +23,9 @@ AC 00 00 20 # 001B: JPF 000020
 81          # 0020: RET
 8D 00 00 30 # 0021: CALLF 000030
 9D          # 0025: filler
-72 00 00 00 2A 01 # 0026: BTJT 002A,#0,002D
-81          # 002C: filler
+72 00 00 2A 02 # 0026: BTJT 002A,#0,002D
+9D          # 002B: filler
+81          # 002C: RET
 81          # 002D: RET
 81          # 002E: RET
 9D          # 002F: filler

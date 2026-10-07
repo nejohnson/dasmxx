@@ -37,8 +37,26 @@ def decoded_z80(text):
     return decoded
 
 
-def verify_z80(spec_path, binary_path, listing_path):
-    processor, variants = InstructionSpecParser(spec_path).parse()
+def normalize_m8(text):
+    text = normalize(text).replace(".W]", "]")
+    return re.sub(r"\$([0-9A-F]+)", lambda match: f"${int(match.group(1), 16):X}", text)
+
+
+def expected_m8(test):
+    aliases = {"JRT": "JRA", "JRUGE": "JRNC", "JRULT": "JRC"}
+    mnemonic = aliases.get(test.expected_mnemonic.upper(), test.expected_mnemonic.upper())
+    operands = re.sub(
+        r"\$\+(\d+)",
+        lambda match: f"${test.address + int(match.group(1)):X}",
+        test.expected_operands,
+    )
+    return normalize_m8(f"{mnemonic} {operands}")
+
+
+def verify_spec(processor, spec_path, binary_path, listing_path):
+    spec_processor, variants = InstructionSpecParser(spec_path).parse()
+    if spec_processor != processor:
+        raise ValueError(f"{spec_path} declares {spec_processor}, expected {processor}")
     suite = TestGenerator(processor, variants).generate_tests()
     expected_binary = b"".join(bytes(test.bytes) for test in suite.tests)
     errors = []
@@ -59,19 +77,22 @@ def verify_z80(spec_path, binary_path, listing_path):
             errors.append(f"case {index}: address {address:04X}, expected {test.address:04X}")
         if displayed_bytes != bytes(test.bytes):
             errors.append(f"case {index}: displayed bytes {displayed_bytes.hex(' ')} differ from YAML {bytes(test.bytes).hex(' ')}")
-        if decoded_z80(decoded_text) != expected_z80(test):
+        decoded = decoded_z80(decoded_text) if processor == "z80" else normalize_m8(decoded_text)
+        expected = expected_z80(test) if processor == "z80" else expected_m8(test)
+        if decoded != expected:
             errors.append(f"case {index} at {test.address:04X}: {decoded_text.strip()} != {test.expected_mnemonic} {test.expected_operands}")
     return suite, errors
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("processor", choices=["z80"])
+    parser.add_argument("processor", choices=["z80", "m8"])
     args = parser.parse_args()
     root = Path(__file__).resolve().parent.parent
     suite_dir = root / "test" / f"dasm{args.processor}" / "generated"
-    spec = root / "tools" / "instruction_specs" / f"{args.processor}.yaml"
-    suite, errors = verify_z80(spec, suite_dir / "test_all.bin", suite_dir / "output" / "test_all.out")
+    spec_name = "stm8" if args.processor == "m8" else args.processor
+    spec = root / "tools" / "instruction_specs" / f"{spec_name}.yaml"
+    suite, errors = verify_spec(args.processor, spec, suite_dir / "test_all.bin", suite_dir / "output" / "test_all.out")
     if errors:
         for error in errors:
             print(error)

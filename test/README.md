@@ -24,9 +24,9 @@ Tests for dasmxx command codes and features that work across all processors:
 Processor test directories check disassembler output against reviewed expectations.
 The Z80 and STM8 generated suites exercise byte sequences from
 `../tools/instruction_specs/` and compare complete listings against checked-in
-regression snapshots. Z80 also checks the decoded instructions against its
-YAML specification, accounting for equivalent accumulator and branch notation.
-The STM8 specification still needs reconciliation with decoder behavior.
+regression snapshots. Both generated suites also check decoded instructions
+and input bytes against their YAML specifications, accounting for equivalent
+operand and branch notation.
 
 Current processors with generated tests:
 - Z80 (142 generated cases)

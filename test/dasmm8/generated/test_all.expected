@@ -1,184 +1,183 @@
    dasmm8 -- ST Micro STM8 Disassembler --
 -----------------------------------------------------------------
 
-;   Processing "test_all.bin" (329 bytes)
+;   Processing "test_all.bin" (350 bytes)
 ;   Disassembly start address: 0x0000
 ;   String terminator: 0x00
 
 ___CL_0001:
-    0000:    AE 34 12          ldw    X, #$1234
+    0000:    AE 12 34          ldw    X, #$1234
     0003:    BE 10             ldw    X, $10
-    0005:    CE 00 10          ldw    X, $1000
-    0008:    FE                ldw    (X)
+    0005:    CE 10 00          ldw    X, $1000
+    0008:    FE                ldw    X, (X)
     0009:    EE 10             ldw    X, ($10, X)
     000B:    1E 10             ldw    X, ($10, SP)
-    000D:    90 AE 34 12       ldw    Y, #$1234
+    000D:    90 AE 12 34       ldw    Y, #$1234
     0011:    BF 10             ldw    $10, X
-    0013:    CF 00 10          ldw    $1000, X
+    0013:    CF 10 00          ldw    $1000, X
     0016:    93                ldw    X, Y
     0017:    90 93             ldw    Y, X
     0019:    AB 42             add    A, #$42
     001B:    BB 10             add    A, $10
-    001D:    CB 00 10          add    A, $1000
+    001D:    CB 10 00          add    A, $1000
     0020:    FB                add    A, (X)
     0021:    EB 10             add    A, ($10, X)
     0023:    A9 42             adc    A, #$42
     0025:    B9 10             adc    A, $10
-    0027:    1C 34 12          addw   X, #$1234
-    002A:    BB 10             add    A, $10
-    002C:    72 A9 34 12       addw   Y, #$1234
-    0030:    5B 42             addw   SP, #$42
-    0032:    A0 42             sub    A, #$42
-    0034:    B0 10             sub    A, $10
-    0036:    C0 00 10          sub    A, $1000
-    0039:    A2 42             sbc    A, #$42
-    003B:    1D 34 12          subw   X, #$1234
-    003E:    72 A2 34 12       subw   Y, #$1234
-    0042:    4C                inc    A
-    0043:    3C 10             inc    $10
-    0045:    7C                inc    (X)
-    0046:    5C                incw   X
-    0047:    4A                dec    A
-    0048:    3A 10             dec    $10
-    004A:    5A                decw   X
-    004B:    40                neg    A
-    004C:    30 10             neg    $10
-    004E:    50                negw   X
-    004F:    42                mul    X, A
-    0050:    62                div    X, A
-    0051:    65                divw   X, Y
-    0052:    10 10             sub    A, ($10, SP)
-    0054:    1E 10             ldw    X, ($10, SP)
-    0056:    11 10             cp     A, ($10, SP)
-    0058:    1F 10             ldw    ($10, SP), X
-    005A:    10 10             sub    A, ($10, SP)
-    005C:    00 10             neg    ($10, SP)
-    005E:    03 01             cpl    ($01, SP)
-    0060:    10 03             sub    A, ($03, SP)
-    0062:    CD 34 12          call   $1234
-    0065:    AD 12             callr  $0079
-    0067:    8D 12 34 56       callf  $123456
-    006B:    AD 03             callr  $0070
-    006D:    81                ret
-    006E:    87                retf
-    006F:    A1 42             cp     A, #$42
-    0071:    B1 10             cp     A, $10
-    0073:    C1 00 10          cp     A, $1000
-    0076:    F1                cp     A, (X)
-    0077:    A3 34 12          cpw    X, #$1234
-    007A:    B3 10             cpw    X, $10
-    007C:    90 A3 34 12       cpw    Y, #$1234
-    0080:    4D                tnz    A
-    0081:    3D 10             tnz    $10
-    0083:    5D                tnzw   X
-    0084:    8C                ccf
-    0085:    98                rcf
-    0086:    9C                rvf
-    0087:    99                scf
-    0088:    27 03             jreq   $008D
-    008A:    26 03             jrne   $008F
-    008C:    25 03             jrc    $0091
-    008E:    24 03             jrnc   $0093
-    0090:    2B 03             jrmi   $0095
-    0092:    2A 03             jrpl   $0097
-    0094:    29 03             jrv    $0099
-    0096:    28 03             jrnv   $009B
-    0098:    2F 03             jrslt  $009D
-    009A:    2E 03             jrsge  $009F
-    009C:    24 03             jrnc   $00A1
-    009E:    25 03             jrc    $00A3
-    00A0:    22 03             jrugt  $00A5
-    00A2:    23 03             jrule  $00A7
-    00A4:    2C 03             jrsgt  $00A9
-    00A6:    2D 03             jrsle  $00AB
-    00A8:    2E 03             jrsge  $00AD
-    00AA:    2D 03             jrsle  $00AF
-    00AC:    41                exg    A, XL
-    00AD:    61                exg    A, YL
-    00AE:    51                exgw   X, Y
-    00AF:    35 42 45 10       mov    $1045, #$42
-    00B3:    20 10             jra    $00C5
-    00B5:    55 10 20 82 00    mov    $0082, $2010
-    00BA:    12 34             sbc    A, ($34, SP)
-    00BC:    56                rrcw   X
-    00BD:    9A                rim
-    00BE:    9B                sim
-    00BF:    A6 42             ld     A, #$42
-    00C1:    B6 10             ld     A, $10
-    00C3:    C6 00 10          ld     A, $1000
-    00C6:    F6                ld     A, (X)
-    00C7:    E6 10             ld     A, ($10, X)
-    00C9:    D6 00 10          ld     A, ($1000, X)
-    00CC:    90 F6             ld     A, (Y)
-    00CE:    90 E6 10          ld     A, ($10, Y)
-    00D1:    90 D6 00 10       ld     A, ($1000, Y)
-    00D5:    7B 10             ld     A, ($10, SP)
-    00D7:    92 C6 10          ld     A, [$10]
-    00DA:    92 D6 10          ld     A, ([$10], X)
-    00DD:    91 D6 10          ld     A, ([$10], Y)
-    00E0:    B7 10             ld     $10, A
-    00E2:    C7 00 10          ld     $1000, A
-    00E5:    F7                ld     (X), A
-    00E6:    E7 10             ld     ($10, X), A
-    00E8:    D7 00 10          ld     ($1000, X), A
-    00EB:    97                ld     XL, A
-    00EC:    97                ld     XL, A
-    00ED:    95                ld     XH, A
-    00EE:    9F                ld     A, XL
-    00EF:    9E                ld     A, XH
-    00F0:    90 97             ld     YL, A
-    00F2:    90 97             ld     YL, A
-    00F4:    90 95             ld     YH, A
-    00F6:    90 9F             ld     A, YL
-    00F8:    90 9E             ld     A, YH
-    00FA:    A4 42             and    A, #$42
-    00FC:    B4 10             and    A, $10
-    00FE:    C4 00 10          and    A, $1000
-    0101:    AA 42             or     A, #$42
-    0103:    BA 10             or     A, $10
-    0105:    A8 42             xor    A, #$42
-    0107:    B8 10             xor    A, $10
-    0109:    43                cpl    A
-    010A:    33 10             cpl    $10
-    010C:    53                cplw   X
-    010D:    48                sll    A
-    010E:    38 10             sll    $10
-    0110:    58                sllw   X
-    0111:    44                srl    A
-    0112:    34 10             srl    $10
-    0114:    54                srlw   X
-    0115:    47                sra    A
-    0116:    37 10             sra    $10
-    0118:    57                sraw   X
-    0119:    49                rlc    A
-    011A:    39 10             rlc    $10
-    011C:    59                rlcw   X
-    011D:    02                rlwa   X
-    011E:    46                rrc    A
-    011F:    36 10             rrc    $10
-    0121:    56                rrcw   X
-    0122:    01                rrwa   X
-    0123:    4E                swap   A
-    0124:    3E 10             swap   $10
-    0126:    5E                swapw  X
-    0127:    88                push   A
-    0128:    8A                push   CC
-    0129:    4B 42             push   #$42
-    012B:    89                pushw  X
-    012C:    90 89             pushw  Y
-    012E:    84                pop    A
-    012F:    86                pop    CC
-    0130:    85                popw   X
-    0131:    90 85             popw   Y
-    0133:    8B                break
-    0134:    8E                halt
-    0135:    80                iret
-    0136:    9D                nop
-    0137:    83                trap
-    0138:    8F                wfi
-    0139:    8D CC 12 34       callf  $CC1234
-    013D:    AC 12 AC 12       jpf    $12AC12
-    0141:    34 56             srl    $56
-    0143:    20 03             jra    $0148
-    0145:    20 03             jra    $014A
-    0147:    21 00             jrf    $0149
+    0027:    1C 12 34          addw   X, #$1234
+    002A:    72 BB 10 00       addw   X, $1000
+    002E:    72 A9 12 34       addw   Y, #$1234
+    0032:    5B 42             addw   SP, #$42
+    0034:    A0 42             sub    A, #$42
+    0036:    B0 10             sub    A, $10
+    0038:    C0 10 00          sub    A, $1000
+    003B:    A2 42             sbc    A, #$42
+    003D:    1D 12 34          subw   X, #$1234
+    0040:    72 A2 12 34       subw   Y, #$1234
+    0044:    4C                inc    A
+    0045:    3C 10             inc    $10
+    0047:    7C                inc    (X)
+    0048:    5C                incw   X
+    0049:    4A                dec    A
+    004A:    3A 10             dec    $10
+    004C:    5A                decw   X
+    004D:    40                neg    A
+    004E:    30 10             neg    $10
+    0050:    50                negw   X
+    0051:    42                mul    X, A
+    0052:    62                div    X, A
+    0053:    65                divw   X, Y
+    0054:    72 10 00 10       bset   $0010, #0
+    0058:    72 1E 00 10       bset   $0010, #7
+    005C:    72 11 00 10       bres   $0010, #0
+    0060:    72 1F 00 10       bres   $0010, #7
+    0064:    90 10 00 10       bcpl   $0010, #0
+    0068:    72 00 00 10 00    btjt   $0010, #0, $006D
+    006D:    72 01 00 10 00    btjf   $0010, #0, $0072
+    0072:    CD 12 34          call   $1234
+    0075:    FD                call   (X)
+    0076:    8D 12 34 56       callf  $123456
+    007A:    AD 03             callr  $007F
+    007C:    81                ret
+    007D:    87                retf
+    007E:    A1 42             cp     A, #$42
+    0080:    B1 10             cp     A, $10
+    0082:    C1 10 00          cp     A, $1000
+    0085:    F1                cp     A, (X)
+    0086:    A3 12 34          cpw    X, #$1234
+    0089:    B3 10             cpw    X, $10
+    008B:    90 A3 12 34       cpw    Y, #$1234
+    008F:    4D                tnz    A
+    0090:    3D 10             tnz    $10
+    0092:    5D                tnzw   X
+    0093:    8C                ccf
+    0094:    98                rcf
+    0095:    9C                rvf
+    0096:    99                scf
+    0097:    27 03             jreq   $009C
+    0099:    26 03             jrne   $009E
+    009B:    25 03             jrc    $00A0
+    009D:    24 03             jrnc   $00A2
+    009F:    2B 03             jrmi   $00A4
+    00A1:    2A 03             jrpl   $00A6
+    00A3:    90 29 02          jrh    $00A8
+    00A6:    90 28 02          jrnh   $00AB
+    00A9:    90 2F 02          jrih   $00AE
+    00AC:    90 2E 02          jril   $00B1
+    00AF:    24 03             jrnc   $00B4
+    00B1:    25 03             jrc    $00B6
+    00B3:    22 03             jrugt  $00B8
+    00B5:    23 03             jrule  $00BA
+    00B7:    2C 03             jrsgt  $00BC
+    00B9:    2D 03             jrsle  $00BE
+    00BB:    2E 03             jrsge  $00C0
+    00BD:    2F 03             jrslt  $00C2
+    00BF:    41                exg    A, XL
+    00C0:    61                exg    A, YL
+    00C1:    51                exgw   X, Y
+    00C2:    35 42 00 10       mov    $0010, #$42
+    00C6:    45 20 10          mov    $10, $20
+    00C9:    55 00 20 10 00    mov    $1000, $0020
+    00CE:    82 12 34 56       int    $123456
+    00D2:    9A                rim
+    00D3:    9B                sim
+    00D4:    A6 42             ld     A, #$42
+    00D6:    B6 10             ld     A, $10
+    00D8:    C6 10 00          ld     A, $1000
+    00DB:    F6                ld     A, (X)
+    00DC:    E6 10             ld     A, ($10, X)
+    00DE:    D6 10 00          ld     A, ($1000, X)
+    00E1:    90 F6             ld     A, (Y)
+    00E3:    90 E6 10          ld     A, ($10, Y)
+    00E6:    90 D6 10 00       ld     A, ($1000, Y)
+    00EA:    7B 10             ld     A, ($10, SP)
+    00EC:    92 C6 10          ld     A, [$10]
+    00EF:    92 D6 10          ld     A, ([$10], X)
+    00F2:    91 D6 10          ld     A, ([$10], Y)
+    00F5:    B7 10             ld     $10, A
+    00F7:    C7 10 00          ld     $1000, A
+    00FA:    F7                ld     (X), A
+    00FB:    E7 10             ld     ($10, X), A
+    00FD:    D7 10 00          ld     ($1000, X), A
+    0100:    97                ld     XL, A
+    0101:    97                ld     XL, A
+    0102:    95                ld     XH, A
+    0103:    9F                ld     A, XL
+    0104:    9E                ld     A, XH
+    0105:    90 97             ld     YL, A
+    0107:    90 97             ld     YL, A
+    0109:    90 95             ld     YH, A
+    010B:    90 9F             ld     A, YL
+    010D:    90 9E             ld     A, YH
+    010F:    A4 42             and    A, #$42
+    0111:    B4 10             and    A, $10
+    0113:    C4 10 00          and    A, $1000
+    0116:    AA 42             or     A, #$42
+    0118:    BA 10             or     A, $10
+    011A:    A8 42             xor    A, #$42
+    011C:    B8 10             xor    A, $10
+    011E:    43                cpl    A
+    011F:    33 10             cpl    $10
+    0121:    53                cplw   X
+    0122:    48                sll    A
+    0123:    38 10             sll    $10
+    0125:    58                sllw   X
+    0126:    44                srl    A
+    0127:    34 10             srl    $10
+    0129:    54                srlw   X
+    012A:    47                sra    A
+    012B:    37 10             sra    $10
+    012D:    57                sraw   X
+    012E:    49                rlc    A
+    012F:    39 10             rlc    $10
+    0131:    59                rlcw   X
+    0132:    02                rlwa   X
+    0133:    46                rrc    A
+    0134:    36 10             rrc    $10
+    0136:    56                rrcw   X
+    0137:    01                rrwa   X
+    0138:    4E                swap   A
+    0139:    3E 10             swap   $10
+    013B:    5E                swapw  X
+    013C:    88                push   A
+    013D:    8A                push   CC
+    013E:    4B 42             push   #$42
+    0140:    89                pushw  X
+    0141:    90 89             pushw  Y
+    0143:    84                pop    A
+    0144:    86                pop    CC
+    0145:    85                popw   X
+    0146:    90 85             popw   Y
+    0148:    8B                break
+    0149:    8E                halt
+    014A:    80                iret
+    014B:    9D                nop
+    014C:    83                trap
+    014D:    8F                wfi
+    014E:    72 8F             wfe
+    0150:    CC 12 34          jp     $1234
+    0153:    FC                jp     (X)
+    0154:    AC 12 34 56       jpf    $123456
+    0158:    20 03             jra    $015D
+    015A:    20 03             jra    $015F
+    015C:    21 00             jrf    $015E

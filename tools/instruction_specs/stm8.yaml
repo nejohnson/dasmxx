@@ -49,7 +49,7 @@ instructions:
 
       - mnemonic: "WFE"
         operands: ""
-        opcode: [0x8D]
+        opcode: [0x72, 0x8F]
         reference: "Table 12"
         description: "Wait for event"
 
@@ -216,7 +216,7 @@ instructions:
 
       # LD X variants
       - mnemonic: "LD"
-        operands: "X,A"
+        operands: "XL,A"
         opcode: [0x97]
         reference: "Table 13"
         description: "Load A to X (low byte)"
@@ -247,7 +247,7 @@ instructions:
 
       # LD Y variants
       - mnemonic: "LD"
-        operands: "Y,A"
+        operands: "YL,A"
         opcode: [0x90, 0x97]
         reference: "Table 13"
         description: "Load A to Y (low byte)"
@@ -457,10 +457,10 @@ instructions:
         description: "Add 16-bit immediate to X"
 
       - mnemonic: "ADDW"
-        operands: "X,$10"
-        opcode: [0xBB, 0x10]
+        operands: "X,$1000"
+        opcode: [0x72, 0xBB, 0x10, 0x00]
         reference: "Table 16"
-        description: "Add 16-bit short direct to X"
+        description: "Add 16-bit long direct to X"
 
       - mnemonic: "ADDW"
         operands: "Y,#$1234"
@@ -733,43 +733,43 @@ instructions:
     variants:
       - mnemonic: "BSET"
         operands: "$10,#0"
-        opcode: [0x10, 0x10]
+        opcode: [0x72, 0x10, 0x00, 0x10]
         reference: "Table 19"
-        description: "Set bit 0 in short direct"
+        description: "Set bit 0 in long direct"
 
       - mnemonic: "BSET"
         operands: "$10,#7"
-        opcode: [0x1E, 0x10]
+        opcode: [0x72, 0x1E, 0x00, 0x10]
         reference: "Table 19"
-        description: "Set bit 7 in short direct"
+        description: "Set bit 7 in long direct"
 
       - mnemonic: "BRES"
         operands: "$10,#0"
-        opcode: [0x11, 0x10]
+        opcode: [0x72, 0x11, 0x00, 0x10]
         reference: "Table 19"
-        description: "Reset bit 0 in short direct"
+        description: "Reset bit 0 in long direct"
 
       - mnemonic: "BRES"
         operands: "$10,#7"
-        opcode: [0x1F, 0x10]
+        opcode: [0x72, 0x1F, 0x00, 0x10]
         reference: "Table 19"
-        description: "Reset bit 7 in short direct"
+        description: "Reset bit 7 in long direct"
 
       - mnemonic: "BCPL"
         operands: "$10,#0"
-        opcode: [0x10, 0x10]
+        opcode: [0x90, 0x10, 0x00, 0x10]
         reference: "Table 19"
-        description: "Complement bit 0 in short direct (BCCM prefix required)"
+        description: "Complement bit 0 in long direct"
 
       - mnemonic: "BTJT"
         operands: "$10,#0,$+5"
-        opcode: [0x00, 0x10, 0x03]
+        opcode: [0x72, 0x00, 0x00, 0x10, 0x00]
         reference: "Table 19"
         description: "Bit test and jump if true (bit set)"
 
       - mnemonic: "BTJF"
         operands: "$10,#0,$+5"
-        opcode: [0x01, 0x10, 0x03]
+        opcode: [0x72, 0x01, 0x00, 0x10, 0x00]
         reference: "Table 19"
         description: "Bit test and jump if false (bit reset)"
 
@@ -852,7 +852,7 @@ instructions:
         description: "Rotate left through carry X"
 
       - mnemonic: "RLWA"
-        operands: "X,A"
+        operands: "X"
         opcode: [0x02]
         reference: "Table 20"
         description: "Rotate left A through X"
@@ -877,7 +877,7 @@ instructions:
         description: "Rotate right through carry X"
 
       - mnemonic: "RRWA"
-        operands: "X,A"
+        operands: "X"
         opcode: [0x01]
         reference: "Table 20"
         description: "Rotate right A through X"
@@ -911,10 +911,10 @@ instructions:
         description: "Jump absolute long"
 
       - mnemonic: "JP"
-        operands: "$12"
-        opcode: [0xAC, 0x12]
+        operands: "(X)"
+        opcode: [0xFC]
         reference: "Table 21"
-        description: "Jump absolute extended (lower page)"
+        description: "Jump through X"
 
       - mnemonic: "JPF"
         operands: "$123456"
@@ -981,25 +981,25 @@ instructions:
 
       - mnemonic: "JRH"
         operands: "$+5"
-        opcode: [0x29, 0x03]
+        opcode: [0x90, 0x29, 0x02]
         reference: "Table 22"
         description: "Jump relative if half-carry (H=1)"
 
       - mnemonic: "JRNH"
         operands: "$+5"
-        opcode: [0x28, 0x03]
+        opcode: [0x90, 0x28, 0x02]
         reference: "Table 22"
         description: "Jump relative if no half-carry (H=0)"
 
       - mnemonic: "JRIH"
         operands: "$+5"
-        opcode: [0x2F, 0x03]
+        opcode: [0x90, 0x2F, 0x02]
         reference: "Table 22"
         description: "Jump relative if interrupt mask high (I1:I0=11)"
 
       - mnemonic: "JRIL"
         operands: "$+5"
-        opcode: [0x2E, 0x03]
+        opcode: [0x90, 0x2E, 0x02]
         reference: "Table 22"
         description: "Jump relative if interrupt mask low (I1:I0!=11)"
 
@@ -1047,7 +1047,7 @@ instructions:
 
       - mnemonic: "JRSLT"
         operands: "$+5"
-        opcode: [0x2D, 0x03]
+        opcode: [0x2F, 0x03]
         reference: "Table 22"
         description: "Jump relative signed less than"
 
@@ -1061,10 +1061,10 @@ instructions:
         description: "Call subroutine long"
 
       - mnemonic: "CALL"
-        operands: "$12"
-        opcode: [0xAD, 0x12]
+        operands: "(X)"
+        opcode: [0xFD]
         reference: "Table 23"
-        description: "Call subroutine extended"
+        description: "Call through X"
 
       - mnemonic: "CALLF"
         operands: "$123456"
@@ -1113,9 +1113,9 @@ instructions:
 
       - mnemonic: "MOV"
         operands: "$10,#$42"
-        opcode: [0x35, 0x42, 0x10]
+        opcode: [0x35, 0x42, 0x00, 0x10]
         reference: "Table 24"
-        description: "Move immediate to short direct"
+        description: "Move immediate to long direct"
 
       - mnemonic: "MOV"
         operands: "$10,$20"
@@ -1125,6 +1125,6 @@ instructions:
 
       - mnemonic: "MOV"
         operands: "$1000,$20"
-        opcode: [0x55, 0x20, 0x10, 0x00]
+        opcode: [0x55, 0x00, 0x20, 0x10, 0x00]
         reference: "Table 24"
-        description: "Move short direct to long direct"
+        description: "Move long direct to long direct"

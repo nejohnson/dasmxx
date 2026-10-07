@@ -59,6 +59,15 @@ DASM_PROFILE( "dasmm8", "ST Micro STM8", 5, 7, 1, 1, 1 )
 /* Construct a 24-bit word out of low, mid and high bytes */
 #define MK_LONG_WORD(l,m,h)     ( MK_WORD(l,m) | (((h) & 0xFF) << 16) )
 
+/* STM8 words are big endian. Read bytes individually so the listing keeps
+ * their original order as well as the correct numeric value. */
+static UWORD next_be_word( FILE *f, ADDR *addr )
+{
+    UWORD hi = next( f, addr );
+    UWORD lo = next( f, addr );
+    return (hi << 8) | lo;
+}
+
 int dasm_cfg_supported( void )
 {
     return 1;
@@ -255,14 +264,14 @@ OPERAND_FUNC(off8)
 
 OPERAND_FUNC(imm16)
 {
-    UWORD word = nextw( f, addr );
+    UWORD word = next_be_word( f, addr );
 
     operand( "#" FORMAT_NUM_16BIT, word );
 }
 
 OPERAND_FUNC(off16)
 {
-    UWORD word = nextw( f, addr );
+    UWORD word = next_be_word( f, addr );
 
     operand( FORMAT_NUM_16BIT, word );
 }
@@ -301,7 +310,7 @@ OPERAND_FUNC(rel8)
 
 OPERAND_FUNC(mem16)
 {
-    ADDR addr16     = nextw( f, addr );
+    ADDR addr16     = next_be_word( f, addr );
 
     operand( xref_genwordaddr( NULL, FORMAT_NUM_16BIT, addr16 ) );
     xref_addxref( xtype, g_insn_addr, addr16 );
@@ -365,6 +374,7 @@ TWO_OPERAND_PAIR(A, indX)
 TWO_OPERAND_PAIR(A, indY)
 
 TWO_OPERAND_PAIR(X,  indY)
+TWO_OPERAND(X,  indX)
 TWO_OPERAND_PAIR(X,  ind8)
 TWO_OPERAND_PAIR(X,  mem8)
 TWO_OPERAND(X,  imm16)
@@ -466,7 +476,7 @@ OPERAND_FUNC(ind16Y)
  */
 OPERAND_FUNC(mem16_bit)
 {
-    UBYTE pos = next( f, addr );
+    UBYTE pos = opc;
 
     operand_mem16( f, addr, opc, xtype );
     COMMA;
@@ -494,7 +504,7 @@ OPERAND_FUNC(mem8_mem8)
 
 OPERAND_FUNC(mem16_mem16)
 {
-    ADDR src = (ADDR)nextw( f, addr );
+    ADDR src = (ADDR)next_be_word( f, addr );
 
     operand_mem16( f, addr, opc, xtype );
     COMMA;
@@ -936,7 +946,7 @@ optab_t base_optab[] = {
     INSN ( "ldw",   X_imm16,     0xAE, X_NONE )
     INSN ( "ldw",   X_mem8,      0xBE, X_NONE )
     INSN ( "ldw",   X_mem16,     0xCE, X_NONE )
-    INSN ( "ldw",   indX,        0xFE, X_NONE )
+    INSN ( "ldw",   X_indX,      0xFE, X_NONE )
     INSN ( "ldw",   X_off8X,    0xEE, X_NONE )
     INSN ( "ldw",   X_off16X,   0xDE, X_NONE )
     INSN ( "ldw",   X_off8SP,   0x1E, X_NONE )

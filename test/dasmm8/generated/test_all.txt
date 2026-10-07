@@ -66,9 +66,11 @@ B9
 1C
 12
 34
-# ADDW X,$10                     (Table 16)
+# ADDW X,$1000                   (Table 16)
+72
 BB
 10
+00
 # ADDW Y,#$1234                  (Table 16)
 72
 A9
@@ -131,37 +133,50 @@ A2
 
 # Bit Operations
 # BSET $10,#0                    (Table 19)
+72
 10
-10
-# BSET $10,#7                    (Table 19)
-1E
-10
-# BRES $10,#0                    (Table 19)
-11
-10
-# BRES $10,#7                    (Table 19)
-1F
-10
-# BCPL $10,#0                    (Table 19)
-10
-10
-# BTJT $10,#0,$+5                (Table 19)
 00
 10
-03
-# BTJF $10,#0,$+5                (Table 19)
-01
+# BSET $10,#7                    (Table 19)
+72
+1E
+00
 10
-03
+# BRES $10,#0                    (Table 19)
+72
+11
+00
+10
+# BRES $10,#7                    (Table 19)
+72
+1F
+00
+10
+# BCPL $10,#0                    (Table 19)
+90
+10
+00
+10
+# BTJT $10,#0,$+5                (Table 19)
+72
+00
+00
+10
+00
+# BTJF $10,#0,$+5                (Table 19)
+72
+01
+00
+10
+00
 
 # Call and Return
 # CALL $1234                     (Table 23)
 CD
 12
 34
-# CALL $12                       (Table 23)
-AD
-12
+# CALL (X)                       (Table 23)
+FD
 # CALLF $123456                  (Table 23)
 8D
 12
@@ -238,17 +253,21 @@ A3
 2A
 03
 # JRH $+5                        (Table 22)
+90
 29
-03
+02
 # JRNH $+5                       (Table 22)
+90
 28
-03
+02
 # JRIH $+5                       (Table 22)
+90
 2F
-03
+02
 # JRIL $+5                       (Table 22)
+90
 2E
-03
+02
 # JRUGE $+5                      (Table 22)
 24
 03
@@ -271,7 +290,7 @@ A3
 2E
 03
 # JRSLT $+5                      (Table 22)
-2D
+2F
 03
 
 # Exchange
@@ -284,6 +303,7 @@ A3
 # MOV $10,#$42                   (Table 24)
 35
 42
+00
 10
 # MOV $10,$20                    (Table 24)
 45
@@ -291,6 +311,7 @@ A3
 10
 # MOV $1000,$20                  (Table 24)
 55
+00
 20
 10
 00
@@ -369,7 +390,7 @@ E7
 D7
 10
 00
-# LD X,A                         (Table 13)
+# LD XL,A                        (Table 13)
 97
 # LD XL,A                        (Table 13)
 97
@@ -379,7 +400,7 @@ D7
 9F
 # LD A,XH                        (Table 13)
 9E
-# LD Y,A                         (Table 13)
+# LD YL,A                        (Table 13)
 90
 97
 # LD YL,A                        (Table 13)
@@ -455,7 +476,7 @@ B8
 10
 # RLCW X                         (Table 20)
 59
-# RLWA X,A                       (Table 20)
+# RLWA X                         (Table 20)
 02
 # RRC A                          (Table 20)
 46
@@ -464,7 +485,7 @@ B8
 10
 # RRCW X                         (Table 20)
 56
-# RRWA X,A                       (Table 20)
+# RRWA X                         (Table 20)
 01
 # SWAP A                         (Table 20)
 4E
@@ -511,16 +532,16 @@ B8
 # WFI                            (Table 12)
 8F
 # WFE                            (Table 12)
-8D
+72
+8F
 
 # Unconditional Jump
 # JP $1234                       (Table 21)
 CC
 12
 34
-# JP $12                         (Table 21)
-AC
-12
+# JP (X)                         (Table 21)
+FC
 # JPF $123456                    (Table 21)
 AC
 12

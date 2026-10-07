@@ -41,8 +41,8 @@ make test
 
 To accept an intentional output change, run `make golden` and review the diff.
 `make test` also checks the YAML opcodes and instruction meanings.
-It treats an implicit accumulator and resolved relative targets as
-equivalent notation.
+The verifier accepts equivalent syntax for implicit operands,
+hex number width, branch aliases, and resolved relative targets.
 
 ## Regenerating Tests
 

@@ -77,6 +77,11 @@ The generated test suite in `generated/` includes:
 - All major addressing modes
 - Representative examples from PM0044
 
+Its YAML opcodes and decoded instruction meanings are checked by `make test`.
+The corrected STM8 bit, branch, MOV, and WFE encodings were cross-checked with
+the independent SDCC `sdasstm8` assembler. The checked-in listing also checks
+the byte order shown for 16-bit operands.
+
 For comprehensive testing, ensure coverage of:
 - All addressing modes for each instruction
 - Boundary conditions (0x00, 0xFF, 0x0000, 0xFFFF)

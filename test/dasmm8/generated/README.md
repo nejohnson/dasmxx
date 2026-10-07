@@ -36,7 +36,7 @@ Comprehensive instruction set tests generated from specifications.
 - `test_all.txt` - txt2bin source with all instructions
 - `test_all.bin` - Binary test file
 - `test_all.dm8` - Command file
-- `test_all.reference` - Generated YAML intent (not a test oracle)
+- `test_all.reference` - YAML intent checked by `make test`
 - `test_all.expected` - Reviewed disassembler output used by `make test`
 
 ## Running Tests
@@ -47,8 +47,9 @@ make test
 ```
 
 To accept an intentional output change, run `make golden` and review the diff.
-The YAML reference may differ from current decoder behavior; reconcile those
-differences before treating it as an independent correctness check.
+`make test` also checks the YAML opcodes and instruction meanings.
+The verifier accepts equivalent syntax for implicit operands,
+hex number width, branch aliases, and resolved relative targets.
 
 ## Regenerating Tests
 

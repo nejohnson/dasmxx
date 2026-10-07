@@ -51,10 +51,11 @@ block start=0021 end=0025 label="FarCall"
 block_insn block=0021 addr=0021 text="callf  FarSub"
 block start=0025 end=0026
 block_insn block=0025 addr=0025 text="nop    "
-block start=0026 end=002C label="BitBranch"
+block start=0026 end=002B label="BitBranch"
 block_insn block=0026 addr=0026 text="btjt   $002A, #0, BitTarget"
-block start=002C end=002D
-block_insn block=002C addr=002C text="ret    "
+block start=002B end=002D
+block_insn block=002B addr=002B text="nop    "
+block_insn block=002B addr=002C text="ret    "
 block start=002D end=002E label="BitTarget"
 block_insn block=002D addr=002D text="ret    "
 block start=0030 end=0031 label="FarSub"
@@ -80,7 +81,8 @@ insn addr=001B next=001F flow=jump text="jpf    FarTarget" target0=0020
 insn addr=0020 next=0021 flow=return text="ret    "
 insn addr=0021 next=0025 flow=call text="callf  FarSub" target0=0030
 insn addr=0025 next=0026 flow=normal text="nop    "
-insn addr=0026 next=002C flow=cond_jump text="btjt   $002A, #0, BitTarget" target0=002D
+insn addr=0026 next=002B flow=cond_jump text="btjt   $002A, #0, BitTarget" target0=002D
+insn addr=002B next=002C flow=normal text="nop    "
 insn addr=002C next=002D flow=return text="ret    "
 insn addr=002D next=002E flow=return text="ret    "
 insn addr=0030 next=0031 flow=return text="ret    "
@@ -110,8 +112,9 @@ edge from=0020 kind=return
 edge from=0021 to=0025 kind=fallthrough
 edge from=0021 to=0030 kind=call
 edge from=0025 to=0026 kind=fallthrough
-edge from=0026 to=002C kind=fallthrough
+edge from=0026 to=002B kind=fallthrough
 edge from=0026 to=002D kind=branch
+edge from=002B to=002C kind=fallthrough
 edge from=002C kind=return
 edge from=002D kind=return
 edge from=0030 kind=return
