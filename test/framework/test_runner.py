@@ -2,17 +2,16 @@
 """
 Test runner for dasmxx disassembler suite.
 
-This script orchestrates running tests for the dasmxx disassemblers,
-including both tool feature tests and per-CPU instruction tests.
+This script runs Python-defined test suites for the dasmxx disassemblers.
 """
 
 import sys
-import os
 import subprocess
 import argparse
 import json
+import importlib.util
 from pathlib import Path
-from typing import List, Dict, Optional, Tuple
+from typing import List, Optional, Tuple
 from dataclasses import dataclass
 
 # Add framework directory to path for imports
@@ -130,8 +129,21 @@ class TestRunner:
                 message=error
             )
 
+        # A successful process exit alone does not make a test pass.
+        if not test.golden_file and not test.expected_patterns:
+            return TestResult(test.name, False, "No expected output or patterns configured")
+        if test.golden_file and not test.golden_file.exists() and not self.update_golden:
+            return TestResult(test.name, False, f"Expected file not found: {test.golden_file}")
+
+        # Explicit golden update accepts this run's output for later review.
+        if self.update_golden and test.golden_file:
+            test.golden_file.parent.mkdir(parents=True, exist_ok=True)
+            import shutil
+            shutil.copy(test.output_file, test.golden_file)
+            self.log(f"Updated golden file: {test.golden_file}")
+
         # Verify output
-        if test.golden_file and test.golden_file.exists():
+        if test.golden_file:
             # Compare against golden file
             verification = self.verifier.verify_output(
                 test.output_file,
@@ -160,17 +172,6 @@ class TestRunner:
                         message=f"Pattern check failed: {verification.message}",
                         output_file=test.output_file
                     )
-        else:
-            # No verification specified - just check it ran
-            self.log(f"Warning: No verification for test {test.name}")
-
-        # Update golden file if requested
-        if self.update_golden and test.golden_file:
-            test.golden_file.parent.mkdir(parents=True, exist_ok=True)
-            import shutil
-            shutil.copy(test.output_file, test.golden_file)
-            self.log(f"Updated golden file: {test.golden_file}")
-
         return TestResult(
             test_name=test.name,
             passed=True,
@@ -223,7 +224,7 @@ class TestRunner:
                         for line in result.diff.split('\n')[:20]:  # Limit diff output
                             print(f"      {line}")
 
-        return failed == 0
+        return total > 0 and failed == 0
 
     def save_results(self, output_file: Path):
         """Save test results to JSON file."""
@@ -249,6 +250,30 @@ class TestRunner:
         self.log(f"Results saved to {output_file}")
 
 
+def load_suite(suite_path: Path) -> TestSuite:
+    """Load a suite file that exports create_suite()."""
+    if not suite_path.is_file():
+        raise ValueError(f"Suite file not found: {suite_path}")
+    spec = importlib.util.spec_from_file_location(f"dasmxx_suite_{suite_path.stem}", suite_path)
+    if spec is None or spec.loader is None:
+        raise ValueError(f"Cannot load suite file: {suite_path}")
+    module = importlib.util.module_from_spec(spec)
+    sys.path.insert(0, str(suite_path.parent.resolve()))
+    try:
+        spec.loader.exec_module(module)
+    finally:
+        sys.path.pop(0)
+    factory = getattr(module, "create_suite", None)
+    if not callable(factory):
+        raise ValueError(f"Suite must define create_suite(): {suite_path}")
+    suite = factory()
+    if not isinstance(suite, TestSuite):
+        raise ValueError(f"create_suite() must return TestSuite: {suite_path}")
+    if not suite.tests:
+        raise ValueError(f"Suite contains no tests: {suite_path}")
+    return suite
+
+
 def main():
     """Main entry point for test runner."""
     parser = argparse.ArgumentParser(
@@ -272,37 +297,30 @@ def main():
     parser.add_argument(
         'suites',
         nargs='*',
-        help='Test suite files to run (default: run all)'
+        help='Suite files exporting create_suite() (default: discover */test_suite.py)'
     )
 
     args = parser.parse_args()
 
     runner = TestRunner(verbose=args.verbose, update_golden=args.update_golden)
 
-    # If no suites specified, find all test suites
+    test_dir = Path(__file__).parent.parent
     if not args.suites:
-        # Look for test suite definitions
-        test_dir = Path(__file__).parent.parent
-        suite_files = list(test_dir.glob('*/test_suite.py'))
-        suite_files.extend(test_dir.glob('test_*/test_suite.py'))
-        args.suites = suite_files
+        args.suites = sorted(test_dir.glob('*/test_suite.py'))
 
     if not args.suites:
         print("No test suites found")
         return 1
 
-    # Run each suite
+    # Load and run each suite. A broken suite makes the invocation fail.
+    load_failed = False
     for suite_file in args.suites:
         suite_path = Path(suite_file)
-        if not suite_path.exists():
-            print(f"Warning: Suite file not found: {suite_path}")
-            continue
-
-        # Import and run the suite
-        # For now, we'll use a simple approach
-        # TODO: Implement dynamic loading of test suites
-        print(f"Note: Dynamic suite loading not yet implemented")
-        print(f"      Please define suites in test code")
+        try:
+            runner.run_suite(load_suite(suite_path))
+        except (OSError, ImportError, ValueError, AttributeError) as exc:
+            print(f"Failed to load {suite_path}: {exc}", file=sys.stderr)
+            load_failed = True
 
     # Print summary
     success = runner.print_summary()
@@ -311,7 +329,7 @@ def main():
     if args.output:
         runner.save_results(args.output)
 
-    return 0 if success else 1
+    return 0 if success and not load_failed else 1
 
 
 if __name__ == '__main__':
